@@ -128,8 +128,8 @@ describe('upgradeDocument', () => {
   it('upgrades a format 1 workbook (before formatting existed) without changes', () => {
     const saved = sheetDocument(createId(), createId())
     const upgraded = upgradeDocument(saved)
-    expect(upgraded).toEqual({ ...saved, formatVersion: 2 })
-    expect(DocumentSchema.parse(upgraded)).toEqual({ ...saved, formatVersion: 2 })
+    expect(upgraded).toEqual({ ...saved, formatVersion: 3 })
+    expect(DocumentSchema.parse(upgraded)).toEqual({ ...saved, formatVersion: 3 })
   })
 
   it('applies upgrade steps one format at a time', () => {

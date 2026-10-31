@@ -36,10 +36,54 @@ owner.
 **Phase 3: "Productivity Depth"** (in progress). Milestones:
 
 - [x] 3.1 Docs: a real document editor with templates, autosave and version history
-- [ ] 3.2 Advanced Sheets: charts, sorting, filtering, conditional formatting, validation
+- [x] 3.2 Advanced Sheets: charts, sorting, filtering, conditional formatting, validation
 - [ ] 3.3 Slides: a real presentation editor with themes, layouts and presentation mode
 - [ ] 3.4 Integration: charts across apps, attachments, submitting work by email
 - [ ] 3.5 Multi-application assignments
+
+---
+
+## 2026-10-31 · Milestone 3.2: advanced Sheets
+
+### Built
+
+- **Charts** (toolbar: Chart): column, bar, line and pie charts drawn live from a
+  range (first column = labels, first row = series names), with a title; edit the
+  type, title and range, or delete. They redraw as the data changes and are saved with
+  the workbook.
+- **Sorting** (A→Z, Z→A, also from a filter menu): sorts the table around the cursor
+  by the current column, keeps a header row in place, puts empty cells last, keeps
+  formatting with its row and adjusts formulas like cut-and-paste (`=B2-C2` moves
+  with its row).
+- **Filtering** (toolbar: Filter): filter buttons on the header row; tick the values to
+  show. Hidden rows are saved, and an active filter is highlighted.
+- **Conditional formatting** (toolbar: Rules): highlight cells when they are greater
+  or less than, between, equal to, contain text, or are empty, with a fill, text
+  colour and/or bold. Uses calculated values, so formulas count.
+- **Data validation** (Rules): a list of choices (with a dropdown on the cell, and
+  typing in any case is tidied to the listed spelling) or a number with optional
+  minimum, maximum and whole-number rule. Invalid input is refused with an
+  explanation; formulas and clearing a cell are always allowed.
+- **Formatting**: underline (Ctrl+U) and text colour.
+- **Sheets data in reports**: Docs can insert a chart from any workbook, or a range of
+  cells as a table (as displayed, with its number formats), from the new "Chart" and
+  "Data" toolbar buttons.
+- Workbook format 3 (the new fields are optional; older workbooks open unchanged).
+
+### Fixed
+
+- Inserting a chart or table in Docs selected it, so a second insert replaced it. The
+  cursor now moves to a new line below.
+- Category labels under a single-series chart were drawn outside the chart.
+
+### Tested
+
+- Unit tests: chart data from ranges (labels, series, calculated values, pie),
+  conditions and conditional styles, list and number validation, filters, the table
+  around a cell, sorting with a header and formulas.
+- Browser tests: sort, filter, chart and reload; conditional formatting; validation
+  (refusal, tidying, dropdown); a chart and a table from Sheets in a Docs report,
+  surviving a reload. The formula engine and all earlier tests are unchanged.
 
 ---
 

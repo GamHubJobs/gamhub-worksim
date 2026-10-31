@@ -43,6 +43,9 @@ export const CellAddressSchema = z
   .string()
   .regex(/^[A-Z]{1,3}[1-9][0-9]{0,6}$/, { message: 'Invalid cell address' })
 
+/** Text colours a cell can have. */
+export const TEXT_COLORS = ['red', 'green', 'blue', 'amber', 'gray'] as const
+
 /** Background colours a cell can have (named, so themes can adjust them). */
 export const FILL_COLORS = ['yellow', 'green', 'blue', 'red', 'gray'] as const
 
@@ -56,6 +59,8 @@ export const CellFormatSchema = z.object({
   /** Decimal places for numberFormat. */
   decimals: z.number().int().min(0).max(6).optional(),
   fill: z.enum(FILL_COLORS).optional(),
+  underline: z.boolean().optional(),
+  textColor: z.enum(TEXT_COLORS).optional(),
 })
 
 /**
@@ -67,6 +72,73 @@ export const CellSchema = z.object({
   format: CellFormatSchema.optional(),
 })
 
+/** A range such as "A1:C7" (or a single cell). */
+const RangeTextSchema = z
+  .string()
+  .regex(/^[A-Z]{1,3}[1-9][0-9]{0,6}(:[A-Z]{1,3}[1-9][0-9]{0,6})?$/, {
+    message: 'Invalid range',
+  })
+
+/** A chart drawn live from a range of the sheet. */
+export const SheetChartSchema = z.object({
+  id: IdSchema,
+  type: z.enum(['column', 'bar', 'line', 'pie']),
+  title: z.string().max(200),
+  range: RangeTextSchema,
+})
+
+/** Formatting applied automatically to cells that meet a condition. */
+export const ConditionalFormatSchema = z.object({
+  id: IdSchema,
+  range: RangeTextSchema,
+  rule: z.object({
+    op: z.enum([
+      'gt',
+      'gte',
+      'lt',
+      'lte',
+      'eq',
+      'neq',
+      'between',
+      'contains',
+      'blank',
+      'notBlank',
+    ]),
+    value: z.string().max(200),
+    value2: z.string().max(200).optional(),
+  }),
+  style: z.object({
+    fill: z.enum(FILL_COLORS).optional(),
+    bold: z.boolean().optional(),
+    textColor: z.enum(TEXT_COLORS).optional(),
+  }),
+})
+
+/** What may be typed into a range: an item from a list, or a number within limits. */
+export const DataValidationSchema = z.object({
+  id: IdSchema,
+  range: RangeTextSchema,
+  rule: z.discriminatedUnion('type', [
+    z.object({
+      type: z.literal('list'),
+      items: z.array(z.string().min(1).max(100)).min(1).max(100),
+    }),
+    z.object({
+      type: z.literal('number'),
+      min: z.number().optional(),
+      max: z.number().optional(),
+      wholeNumber: z.boolean().optional(),
+    }),
+  ]),
+})
+
+/** A filter on a table: its range (header row first) and the values shown per column. */
+export const SheetFilterSchema = z.object({
+  range: RangeTextSchema,
+  /** Column letters → the values to show. Columns not listed show everything. */
+  shown: z.record(z.string().regex(/^[A-Z]{1,3}$/), z.array(z.string().max(500))),
+})
+
 export const SheetSchema = z.object({
   id: IdSchema,
   name: z.string().min(1).max(100),
@@ -76,6 +148,10 @@ export const SheetSchema = z.object({
   columnWidths: z
     .record(z.string().regex(/^[A-Z]{1,3}$/), z.number().int().min(20).max(800))
     .optional(),
+  charts: z.array(SheetChartSchema).max(50).optional(),
+  conditionalFormats: z.array(ConditionalFormatSchema).max(100).optional(),
+  validations: z.array(DataValidationSchema).max(100).optional(),
+  filter: SheetFilterSchema.optional(),
 })
 
 export const SheetContentSchema = z.object({
@@ -287,7 +363,7 @@ export const DocumentSchema = z.discriminatedUnion('kind', [
  * `documentMigrations.ts`.
  */
 export const DOCUMENT_FORMAT_VERSIONS = {
-  sheet: 2,
+  sheet: 3,
   doc: 1,
   slides: 1,
 } as const satisfies Record<z.infer<typeof DocumentSchema>['kind'], number>
@@ -531,6 +607,11 @@ export type SyncFields = z.infer<typeof SyncFieldsSchema>
 export type Cell = z.infer<typeof CellSchema>
 export type CellFormat = z.infer<typeof CellFormatSchema>
 export type FillColor = (typeof FILL_COLORS)[number]
+export type TextColor = (typeof TEXT_COLORS)[number]
+export type SheetChart = z.infer<typeof SheetChartSchema>
+export type ConditionalFormat = z.infer<typeof ConditionalFormatSchema>
+export type DataValidation = z.infer<typeof DataValidationSchema>
+export type SheetFilter = z.infer<typeof SheetFilterSchema>
 export type Sheet = z.infer<typeof SheetSchema>
 export type SheetContent = z.infer<typeof SheetContentSchema>
 export type SheetDocument = z.infer<typeof SheetDocumentSchema>

@@ -77,7 +77,7 @@ export function ChartView({
         <Axes
           chart={chart}
           top={titleSpace}
-          bottom={H - legendSpace - 4}
+          bottom={H - legendSpace - 26}
           textColor={textColor}
           gridColor={gridColor}
         />

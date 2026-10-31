@@ -34,7 +34,7 @@ test('a document can be written, formatted, renamed and reopened', async ({ page
   )
 
   // A table from the Table menu.
-  await toolbar(page).getByRole('button', { name: 'Table' }).click()
+  await toolbar(page).getByRole('button', { name: 'Table', exact: true }).click()
   await page.getByRole('menuitem', { name: /Insert table/ }).click()
   await expect(body(page).locator('table tr')).toHaveCount(3)
 

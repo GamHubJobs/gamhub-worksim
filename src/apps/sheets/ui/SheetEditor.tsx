@@ -64,10 +64,24 @@ import {
   type CellPosition,
   type CellRange,
 } from '../model'
-import { FILL_CLASSES, REFERENCE_COLORS } from './cellStyles'
+import {
+  checkInput,
+  conditionalStyles,
+  dataRegion,
+  filterValues,
+  hiddenRows,
+  looksLikeHeader,
+  normaliseInput,
+  setFilter,
+  sortRange,
+  validationFor,
+  type ConditionalStyle,
+} from '../features'
+import { FILL_CLASSES, REFERENCE_COLORS, TEXT_CLASSES } from './cellStyles'
+import { DataPanel, type DataPanelMode } from './DataPanel'
 import { FormulaBar } from './FormulaBar'
 import { SheetTabs } from './SheetTabs'
-import { Toolbar, type FormatAction } from './Toolbar'
+import { Toolbar, ToolButton, type FormatAction } from './Toolbar'
 
 export interface SheetEditorProps {
   content: SheetContent
@@ -161,6 +175,16 @@ export function SheetEditor({
   const [copied, setCopiedState] = useState<CopiedCells | null>(null)
   const copiedRef = useRef<CopiedCells | null>(null)
   const [resizing, setResizing] = useState<{ column: number; width: number } | null>(null)
+  const [panel, setPanel] = useState<DataPanelMode | null>(null)
+  /** Why the value being typed is not allowed (data validation). */
+  const [inputProblem, setInputProblem] = useState<string | null>(null)
+  const [filterMenu, setFilterMenu] = useState<{
+    column: number
+    left: number
+    top: number
+  } | null>(null)
+  const [listOpen, setListOpen] = useState(false)
+  const [activeBox, setActiveBox] = useState<CSSProperties | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -169,6 +193,11 @@ export function SheetEditor({
   const dragRef = useRef<'select' | 'point' | null>(null)
 
   const calculator = useMemo(() => createCalculator(content), [content])
+  const hidden = useMemo(() => hiddenRows(calculator, sheet), [calculator, sheet])
+  const extraStyles = useMemo(
+    () => conditionalStyles(calculator, sheet),
+    [calculator, sheet],
+  )
   const used = useMemo(() => usedSize(sheet), [sheet])
   const rowCount = Math.min(
     MAX_ROWS,
@@ -188,6 +217,7 @@ export function SheetEditor({
   const activeCell = sheet.cells[activeAddress]
   const activeValue = calculator.getValue(sheet.id, activeAddress)
   const editingHere = editing?.sheetId === sheet.id ? editing : null
+  const activeValidation = validationFor(sheet, activeAddress)
 
   function setEditing(value: Editing | null) {
     editingRef.current = value
@@ -237,6 +267,7 @@ export function SheetEditor({
 
   function setEditingText(text: string) {
     const current = editingRef.current
+    setInputProblem(null)
     if (current) setEditing({ ...current, text, point: null })
   }
 
@@ -244,8 +275,18 @@ export function SheetEditor({
   function commit(rowChange = 0, columnChange = 0, refocus = true): boolean {
     const current = editingRef.current
     if (!current) return false
+    const typed = completeFormula(current.text)
+    const target = content.sheets.find((s) => s.id === current.sheetId)
+    const validation = target ? validationFor(target, current.address) : null
+    const problem = checkInput(validation, typed)
+    if (problem) {
+      // Not allowed here: keep editing and explain why.
+      setInputProblem(problem)
+      return true
+    }
+    setInputProblem(null)
     setEditing(null)
-    const text = completeFormula(current.text)
+    const text = normaliseInput(validation, typed)
     update((latest) => {
       const target = latest.sheets.find((s) => s.id === current.sheetId)
       if (!target || getCellInput(target, current.address) === text) return latest
@@ -526,6 +567,8 @@ export function SheetEditor({
         return handled(() => applyFormat({ type: 'toggle', field: 'bold' }))
       if (lower === 'i')
         return handled(() => applyFormat({ type: 'toggle', field: 'italic' }))
+      if (lower === 'u')
+        return handled(() => applyFormat({ type: 'toggle', field: 'underline' }))
       if (lower === 'd')
         return handled(() => update((c) => fill(c, sheet.id, selection, 'down')))
       if (lower === 'r')
@@ -647,6 +690,8 @@ export function SheetEditor({
         }
         case 'fill':
           return formatRange(latest, sheetId, range, { fill: action.fill })
+        case 'textColor':
+          return formatRange(latest, sheetId, range, { textColor: action.color })
         case 'clear':
           return formatRange(latest, sheetId, range, {
             bold: undefined,
@@ -655,6 +700,8 @@ export function SheetEditor({
             numberFormat: undefined,
             decimals: undefined,
             fill: undefined,
+            underline: undefined,
+            textColor: undefined,
           })
       }
     })
@@ -766,7 +813,18 @@ export function SheetEditor({
       })
     }
     setOverlays(boxes)
-  }, [highlights, copied, sheet.id, selection, active, widths, rowCount, columnCount])
+    setActiveBox(activeStyle)
+  }, [
+    highlights,
+    copied,
+    sheet.id,
+    selection,
+    active,
+    widths,
+    rowCount,
+    columnCount,
+    hidden,
+  ])
 
   // Keep the active cell visible when moving with the keyboard.
   useEffect(() => {
@@ -801,7 +859,60 @@ export function SheetEditor({
     () => Array.from({ length: columnCount }, (_, c) => c),
     [columnCount],
   )
-  const rows = useMemo(() => Array.from({ length: rowCount }, (_, r) => r), [rowCount])
+  const rows = useMemo(
+    () => Array.from({ length: rowCount }, (_, r) => r).filter((r) => !hidden.has(r)),
+    [rowCount, hidden],
+  )
+  const filterRange = sheet.filter ? parseRange(sheet.filter.range) : null
+  const filterRef = useRef<(column: number, button: HTMLElement) => void>(() => {})
+  useEffect(() => {
+    filterRef.current = (column, button) => {
+      const container = containerRef.current?.getBoundingClientRect()
+      const rect = button.getBoundingClientRect()
+      setFilterMenu((open) =>
+        open?.column === column
+          ? null
+          : {
+              column,
+              left: rect.left - (container?.left ?? 0),
+              top: rect.bottom - (container?.top ?? 0),
+            },
+      )
+    }
+  })
+  const onFilterButton = useMemo(
+    () => (column: number, button: HTMLElement) => filterRef.current(column, button),
+    [],
+  )
+
+  /** The table to sort, filter or chart: the selection, or the data around the cursor. */
+  const dataRange = useMemo(() => dataRegion(sheet, selection), [sheet, selection])
+
+  function sort(direction: 'asc' | 'desc') {
+    commit()
+    const region = dataRange
+    if (region.bottom <= region.top) return
+    const column = Math.min(region.right, Math.max(region.left, active.column))
+    update((latest) => {
+      const calc = createCalculator(latest)
+      const header = looksLikeHeader(calc, sheet.id, region)
+      return sortRange(latest, calc, sheet.id, region, column, direction, header)
+    })
+    setFilterMenu(null)
+  }
+
+  function toggleFilter() {
+    commit()
+    setFilterMenu(null)
+    if (sheet.filter) {
+      update((latest) => setFilter(latest, sheet.id, undefined))
+      return
+    }
+    if (dataRange.bottom <= dataRange.top) return
+    update((latest) =>
+      setFilter(latest, sheet.id, { range: rangeToText(dataRange), shown: {} }),
+    )
+  }
   const totalWidth = ROW_HEADER_WIDTH + widths.reduce((a, b) => a + b, 0)
 
   const editorElement =
@@ -851,6 +962,46 @@ export function SheetEditor({
           onRedo?.()
         }}
         onFormat={applyFormat}
+        dataTools={
+          <>
+            <ToolButton
+              label="Sort A to Z"
+              disabled={!editable}
+              onClick={() => sort('asc')}
+            >
+              <span className="text-xs">A→Z</span>
+            </ToolButton>
+            <ToolButton
+              label="Sort Z to A"
+              disabled={!editable}
+              onClick={() => sort('desc')}
+            >
+              <span className="text-xs">Z→A</span>
+            </ToolButton>
+            <ToolButton
+              label={sheet.filter ? 'Remove filter' : 'Filter'}
+              pressed={!!sheet.filter}
+              disabled={!editable}
+              onClick={toggleFilter}
+            >
+              <span className="text-xs">Filter</span>
+            </ToolButton>
+            <ToolButton
+              label="Charts"
+              pressed={panel === 'charts'}
+              onClick={() => setPanel((open) => (open === 'charts' ? null : 'charts'))}
+            >
+              <span className="text-xs">Chart</span>
+            </ToolButton>
+            <ToolButton
+              label="Rules: conditional formatting and validation"
+              pressed={panel === 'rules'}
+              onClick={() => setPanel((open) => (open === 'rules' ? null : 'rules'))}
+            >
+              <span className="text-xs">Rules</span>
+            </ToolButton>
+          </>
+        }
       />
       <FormulaBar
         inputRef={barRef}
@@ -882,92 +1033,208 @@ export function SheetEditor({
         }}
       />
 
-      <div
-        ref={gridRef}
-        tabIndex={0}
-        role="grid"
-        aria-label={`Spreadsheet ${sheet.name}`}
-        aria-readonly={!editable}
-        onKeyDown={onGridKeyDown}
-        onCopy={(event) => onCopyOrCut(event, false)}
-        onCut={(event) => onCopyOrCut(event, true)}
-        onPaste={onPaste}
-        className="relative min-h-0 flex-1 scroll-pt-7 scroll-pl-12 overflow-auto outline-none"
-        data-testid="sheet-grid"
-      >
-        <div className="relative" style={{ width: totalWidth }}>
-          <table
-            ref={tableRef}
-            className="border-separate border-spacing-0 text-sm select-none"
-            style={{ tableLayout: 'fixed', width: totalWidth }}
-            onMouseDown={onGridMouseDown}
-            onMouseOver={onGridMouseOver}
-            onDoubleClick={onGridDoubleClick}
-          >
-            <colgroup>
-              <col style={{ width: ROW_HEADER_WIDTH }} />
-              {columns.map((column) => (
-                <col key={column} style={{ width: widths[column] }} />
-              ))}
-            </colgroup>
-            <thead>
-              <tr>
-                <th className="sticky top-0 left-0 z-20 h-7 border-r border-b border-slate-300 bg-slate-100" />
+      {inputProblem && (
+        <div
+          role="alert"
+          className="border-b border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-900"
+          data-testid="input-problem"
+        >
+          {inputProblem} Press Escape to cancel.
+        </div>
+      )}
+      <div className="flex min-h-0 flex-1">
+        <div
+          ref={gridRef}
+          tabIndex={0}
+          role="grid"
+          aria-label={`Spreadsheet ${sheet.name}`}
+          aria-readonly={!editable}
+          onKeyDown={onGridKeyDown}
+          onCopy={(event) => onCopyOrCut(event, false)}
+          onCut={(event) => onCopyOrCut(event, true)}
+          onPaste={onPaste}
+          className="relative min-h-0 flex-1 scroll-pt-7 scroll-pl-12 overflow-auto outline-none"
+          data-testid="sheet-grid"
+        >
+          <div className="relative" style={{ width: totalWidth }}>
+            <table
+              ref={tableRef}
+              className="border-separate border-spacing-0 text-sm select-none"
+              style={{ tableLayout: 'fixed', width: totalWidth }}
+              onMouseDown={onGridMouseDown}
+              onMouseOver={onGridMouseOver}
+              onDoubleClick={onGridDoubleClick}
+            >
+              <colgroup>
+                <col style={{ width: ROW_HEADER_WIDTH }} />
                 {columns.map((column) => (
-                  <th
-                    key={column}
-                    className={`sticky top-0 z-10 h-7 border-r border-b border-slate-300 font-medium ${
-                      column >= selection.left && column <= selection.right
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {columnToLetters(column)}
-                    {editable && (
-                      <span
-                        role="separator"
-                        aria-label={`Resize column ${columnToLetters(column)}`}
-                        title="Drag to resize. Double-click to fit the contents."
-                        onMouseDown={(event) => startResize(event, column)}
-                        onDoubleClick={() => autoFitColumn(column)}
-                        className="absolute top-0 -right-1 z-10 h-full w-2 cursor-col-resize hover:bg-blue-400/50"
-                      />
-                    )}
-                  </th>
+                  <col key={column} style={{ width: widths[column] }} />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <Row
-                  key={row}
-                  row={row}
-                  columns={columns}
-                  sheet={sheet}
-                  calculator={calculator}
-                  selected={row >= selection.top && row <= selection.bottom}
-                  editingColumn={
-                    editingPosition?.row === row ? editingPosition.column : -1
-                  }
-                  editingText={
-                    editingPosition?.row === row && editingHere ? editingHere.text : null
-                  }
-                  editor={editingPosition?.row === row ? editorElement : null}
+              </colgroup>
+              <thead>
+                <tr>
+                  <th className="sticky top-0 left-0 z-20 h-7 border-r border-b border-slate-300 bg-slate-100" />
+                  {columns.map((column) => (
+                    <th
+                      key={column}
+                      className={`sticky top-0 z-10 h-7 border-r border-b border-slate-300 font-medium ${
+                        column >= selection.left && column <= selection.right
+                          ? 'bg-blue-100 text-blue-900'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {columnToLetters(column)}
+                      {editable && (
+                        <span
+                          role="separator"
+                          aria-label={`Resize column ${columnToLetters(column)}`}
+                          title="Drag to resize. Double-click to fit the contents."
+                          onMouseDown={(event) => startResize(event, column)}
+                          onDoubleClick={() => autoFitColumn(column)}
+                          className="absolute top-0 -right-1 z-10 h-full w-2 cursor-col-resize hover:bg-blue-400/50"
+                        />
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <Row
+                    key={row}
+                    row={row}
+                    columns={columns}
+                    sheet={sheet}
+                    calculator={calculator}
+                    styles={extraStyles}
+                    filter={
+                      filterRange && filterRange.top === row
+                        ? {
+                            left: filterRange.left,
+                            right: filterRange.right,
+                            active: Object.keys(sheet.filter?.shown ?? {}),
+                            onOpen: onFilterButton,
+                          }
+                        : null
+                    }
+                    selected={row >= selection.top && row <= selection.bottom}
+                    editingColumn={
+                      editingPosition?.row === row ? editingPosition.column : -1
+                    }
+                    editingText={
+                      editingPosition?.row === row && editingHere
+                        ? editingHere.text
+                        : null
+                    }
+                    editor={editingPosition?.row === row ? editorElement : null}
+                  />
+                ))}
+              </tbody>
+            </table>
+            <div className="pointer-events-none absolute inset-0 z-5" aria-hidden>
+              {overlays.map((overlay) => (
+                <div
+                  key={overlay.key}
+                  className={`absolute ${overlay.className}`}
+                  style={overlay.style}
                 />
               ))}
-            </tbody>
-          </table>
-          <div className="pointer-events-none absolute inset-0 z-5" aria-hidden>
-            {overlays.map((overlay) => (
-              <div
-                key={overlay.key}
-                className={`absolute ${overlay.className}`}
-                style={overlay.style}
-              />
-            ))}
+            </div>
+            {editable &&
+              !editingHere &&
+              activeValidation?.rule.type === 'list' &&
+              activeBox &&
+              typeof activeBox.left === 'number' &&
+              typeof activeBox.width === 'number' &&
+              typeof activeBox.top === 'number' &&
+              typeof activeBox.height === 'number' && (
+                <div
+                  className="absolute z-20"
+                  style={{
+                    left: activeBox.left + activeBox.width - 20,
+                    top: activeBox.top + 2,
+                  }}
+                >
+                  <button
+                    type="button"
+                    aria-label="Choose a value"
+                    aria-expanded={listOpen}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => setListOpen((open) => !open)}
+                    className="flex h-5 w-5 items-center justify-center rounded bg-white text-xs text-slate-600 shadow ring-1 ring-slate-300 hover:bg-slate-50"
+                  >
+                    ▾
+                  </button>
+                  {listOpen && (
+                    <ul
+                      role="listbox"
+                      aria-label="Allowed values"
+                      className="absolute top-6 right-0 min-w-36 rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-slate-200"
+                    >
+                      {activeValidation.rule.items.map((item) => (
+                        <li key={item}>
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={activeCell?.input === item}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              const address = activeAddress
+                              update((latest) =>
+                                setCellInput(latest, sheet.id, address, item),
+                              )
+                              setListOpen(false)
+                              focusGrid()
+                            }}
+                            className="block w-full px-3 py-1 text-left hover:bg-blue-50"
+                          >
+                            {item}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
           </div>
         </div>
+        {panel && (
+          <DataPanel
+            mode={panel}
+            sheet={sheet}
+            calculator={calculator}
+            selectionText={rangeToText(dataRange)}
+            readOnly={!editable}
+            onUpdate={update}
+            onMode={setPanel}
+            onClose={() => setPanel(null)}
+          />
+        )}
       </div>
+      {filterMenu && sheet.filter && (
+        <FilterMenu
+          key={filterMenu.column}
+          left={filterMenu.left}
+          top={filterMenu.top}
+          values={filterValues(calculator, sheet, sheet.filter, filterMenu.column)}
+          shown={sheet.filter.shown[columnToLetters(filterMenu.column)] ?? null}
+          onSort={(direction) => {
+            setActive({ row: active.row, column: filterMenu.column })
+            sort(direction)
+          }}
+          onApply={(values) => {
+            const filter = sheet.filter
+            if (!filter) return
+            const letters = columnToLetters(filterMenu.column)
+            const shown = { ...filter.shown }
+            if (values === null) delete shown[letters]
+            else shown[letters] = values
+            update((latest) => setFilter(latest, sheet.id, { ...filter, shown }))
+            setFilterMenu(null)
+          }}
+          onClose={() => setFilterMenu(null)}
+        />
+      )}
 
       <div
         className="flex h-6 items-center justify-end gap-4 border-t border-slate-200 px-3 text-xs text-slate-600"
@@ -1017,6 +1284,16 @@ interface RowProps {
   columns: number[]
   sheet: Sheet
   calculator: WorkbookCalculator
+  /** Styles from conditional formatting, by address. */
+  styles: Map<string, ConditionalStyle>
+  /** Set on the header row of a filtered table: where the filter buttons go. */
+  filter: {
+    left: number
+    right: number
+    /** Column letters with an active filter. */
+    active: string[]
+    onOpen: (column: number, button: HTMLElement) => void
+  } | null
   /** Whether the row is inside the selection (highlights the row number). */
   selected: boolean
   editingColumn: number
@@ -1030,6 +1307,8 @@ const Row = memo(function Row({
   columns,
   sheet,
   calculator,
+  styles,
+  filter,
   selected,
   editingColumn,
   editingText,
@@ -1056,16 +1335,27 @@ const Row = memo(function Row({
               cell?.format,
             )
         const format = cell?.format
+        const extra = styles.get(address)
+        const fillColor = extra?.fill ?? format?.fill
+        const textColor = extra?.textColor ?? format?.textColor
+        const filterHere =
+          filter !== null && column >= filter.left && column <= filter.right
         return (
           <td
             key={column}
             data-address={address}
             role="gridcell"
             className={`relative h-7 overflow-hidden border-r border-b border-slate-200 px-1.5 whitespace-nowrap ${
-              format?.fill ? FILL_CLASSES[format.fill] : ''
-            } ${format?.bold ? 'font-semibold' : ''} ${format?.italic ? 'italic' : ''} ${
-              shown?.isError ? 'text-red-600' : 'text-slate-900'
+              fillColor ? FILL_CLASSES[fillColor] : ''
+            } ${format?.bold || extra?.bold ? 'font-semibold' : ''} ${format?.italic ? 'italic' : ''} ${
+              format?.underline ? 'underline' : ''
             } ${
+              shown?.isError
+                ? 'text-red-600'
+                : textColor
+                  ? TEXT_CLASSES[textColor]
+                  : 'text-slate-900'
+            } ${filterHere ? 'pr-6' : ''} ${
               shown?.align === 'right'
                 ? 'text-right tabular-nums'
                 : shown?.align === 'center'
@@ -1076,9 +1366,121 @@ const Row = memo(function Row({
             {isEditing
               ? (editor ?? <span className="font-mono">{editingText}</span>)
               : shown?.text}
+            {filterHere && !isEditing && (
+              <button
+                type="button"
+                aria-label={`Filter column ${columnToLetters(column)}`}
+                onMouseDown={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }}
+                onClick={(event) => filter.onOpen(column, event.currentTarget)}
+                className={`absolute top-1 right-0.5 flex h-5 w-5 items-center justify-center rounded text-xs ring-1 ${
+                  filter.active.includes(columnToLetters(column))
+                    ? 'bg-blue-600 text-white ring-blue-600'
+                    : 'bg-white text-slate-600 ring-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                ▾
+              </button>
+            )}
           </td>
         )
       })}
     </tr>
   )
 })
+
+/** Choose which values of a column to show, or sort by it. */
+function FilterMenu({
+  left,
+  top,
+  values,
+  shown,
+  onSort,
+  onApply,
+  onClose,
+}: {
+  left: number
+  top: number
+  values: string[]
+  /** The values currently shown, or null for all. */
+  shown: string[] | null
+  onSort: (direction: 'asc' | 'desc') => void
+  onApply: (values: string[] | null) => void
+  onClose: () => void
+}) {
+  const [checked, setChecked] = useState<Set<string>>(() => new Set(shown ?? values))
+  const all = values.every((v) => checked.has(v))
+  return (
+    <div
+      className="absolute z-40 w-56 rounded-md bg-white p-2 text-sm shadow-xl ring-1 ring-slate-200"
+      style={{ left: Math.max(4, left - 200), top }}
+      role="dialog"
+      aria-label="Filter"
+      data-testid="filter-menu"
+    >
+      <div className="flex gap-1 border-b border-slate-100 pb-2">
+        <button
+          type="button"
+          onClick={() => onSort('asc')}
+          className="flex-1 rounded px-2 py-1 hover:bg-slate-100"
+        >
+          Sort A→Z
+        </button>
+        <button
+          type="button"
+          onClick={() => onSort('desc')}
+          className="flex-1 rounded px-2 py-1 hover:bg-slate-100"
+        >
+          Sort Z→A
+        </button>
+      </div>
+      <label className="mt-2 flex items-center gap-2 px-1 font-medium">
+        <input
+          type="checkbox"
+          checked={all}
+          onChange={() => setChecked(all ? new Set() : new Set(values))}
+        />
+        Select all
+      </label>
+      <ul className="mt-1 max-h-48 overflow-y-auto">
+        {values.map((value) => (
+          <li key={value}>
+            <label className="flex items-center gap-2 rounded px-1 py-0.5 hover:bg-slate-50">
+              <input
+                type="checkbox"
+                checked={checked.has(value)}
+                onChange={() =>
+                  setChecked((current) => {
+                    const next = new Set(current)
+                    if (next.has(value)) next.delete(value)
+                    else next.add(value)
+                    return next
+                  })
+                }
+              />
+              <span className="truncate">{value === '' ? '(Empty)' : value}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-2 flex justify-end gap-2 border-t border-slate-100 pt-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded px-2 py-1 hover:bg-slate-100"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={() => onApply(all ? null : [...checked])}
+          className="rounded bg-blue-700 px-3 py-1 font-medium text-white hover:bg-blue-800"
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  )
+}

@@ -145,6 +145,8 @@ function listOr(names: string[]): string {
 const FORMAT_DESCRIPTIONS: Record<keyof CellFormat, (value: unknown) => string> = {
   bold: () => 'bold',
   italic: () => 'italic',
+  underline: () => 'underlined',
+  textColor: (value) => `in ${String(value)} text`,
   align: (value) => `aligned ${String(value)}`,
   numberFormat: (value) =>
     value === 'currency'

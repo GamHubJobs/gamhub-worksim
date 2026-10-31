@@ -2,13 +2,16 @@
 import { useState, type ReactNode } from 'react'
 import {
   FILL_COLORS,
+  TEXT_COLORS,
   type CellFormat,
   type FillColor,
+  type TextColor,
 } from '../../../persistence/schemas'
-import { FILL_CLASSES } from './cellStyles'
+import { FILL_CLASSES, TEXT_COLOR_NAMES } from './cellStyles'
 
 export type FormatAction =
-  | { type: 'toggle'; field: 'bold' | 'italic' }
+  | { type: 'toggle'; field: 'bold' | 'italic' | 'underline' }
+  | { type: 'textColor'; color: TextColor | undefined }
   | { type: 'align'; align: NonNullable<CellFormat['align']> }
   | { type: 'numberFormat'; numberFormat: NonNullable<CellFormat['numberFormat']> }
   | { type: 'decimals'; change: 1 | -1 }
@@ -24,6 +27,8 @@ interface ToolbarProps {
   onUndo: () => void
   onRedo: () => void
   onFormat: (action: FormatAction) => void
+  /** Data tools (sort, filter, charts…) shown after the formatting buttons. */
+  dataTools?: ReactNode
 }
 
 const FILL_NAMES: Record<FillColor, string> = {
@@ -34,7 +39,7 @@ const FILL_NAMES: Record<FillColor, string> = {
   gray: 'Grey',
 }
 
-function ToolButton({
+export function ToolButton({
   label,
   shortcut,
   pressed,
@@ -80,6 +85,7 @@ export function Toolbar({
   onUndo,
   onRedo,
   onFormat,
+  dataTools,
 }: ToolbarProps) {
   const [fillOpen, setFillOpen] = useState(false)
 
@@ -124,6 +130,34 @@ export function Toolbar({
       >
         <span className="font-serif italic">I</span>
       </ToolButton>
+      <ToolButton
+        label="Underline"
+        shortcut="Ctrl+U"
+        pressed={!!format?.underline}
+        disabled={disabled}
+        onClick={() => onFormat({ type: 'toggle', field: 'underline' })}
+      >
+        <span className="underline">U</span>
+      </ToolButton>
+      <select
+        aria-label="Text colour"
+        disabled={disabled}
+        value={format?.textColor ?? ''}
+        onChange={(event) =>
+          onFormat({
+            type: 'textColor',
+            color: (event.target.value || undefined) as TextColor | undefined,
+          })
+        }
+        className="ml-0.5 h-7 rounded border border-slate-200 px-1 text-xs text-slate-700"
+      >
+        <option value="">Text: default</option>
+        {TEXT_COLORS.map((color) => (
+          <option key={color} value={color}>
+            Text: {TEXT_COLOR_NAMES[color]}
+          </option>
+        ))}
+      </select>
       <Divider />
       {(['left', 'center', 'right'] as const).map((align) => (
         <ToolButton
@@ -231,6 +265,12 @@ export function Toolbar({
       >
         <span className="text-xs">Clear format</span>
       </ToolButton>
+      {dataTools && (
+        <>
+          <Divider />
+          {dataTools}
+        </>
+      )}
     </div>
   )
 }

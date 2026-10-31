@@ -24,6 +24,9 @@ export const DOCUMENT_MIGRATIONS: DocumentMigrations = {
     // that an older app refuses workbooks with formatting instead of
     // silently dropping it.
     1: (doc) => doc,
+    // Format 3 added optional charts, conditional formatting, data validation,
+    // filters, underline and text colour. Same reasoning as format 2.
+    2: (doc) => doc,
   },
 }
 

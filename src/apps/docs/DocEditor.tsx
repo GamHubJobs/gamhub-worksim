@@ -5,6 +5,8 @@
 import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { ChartSpec, DocContent, RichNode } from '../../persistence/schemas'
+import type { PickerMode } from '../shared/SheetsPicker'
+import { table } from './templates'
 import { docExtensions, FONT_SIZES } from './editor'
 import { countWords, outline } from './text'
 
@@ -23,15 +25,23 @@ interface DocEditorProps {
   content: DocContent
   readOnly?: boolean
   onChange?: (content: DocContent) => void
-  /** Opens the "insert a chart from Sheets" picker; the chart is inserted at the cursor. */
-  onPickChart?: (insert: (chart: ChartSpec) => void) => void
+  /**
+   * Opens the "insert from Sheets" picker; what the player picks is inserted
+   * at the cursor.
+   */
+  onPickFromSheets?: (mode: PickerMode, insert: SheetsInsert) => void
+}
+
+export interface SheetsInsert {
+  chart: (chart: ChartSpec) => void
+  table: (rows: string[][]) => void
 }
 
 export function DocEditor({
   content,
   readOnly = false,
   onChange,
-  onPickChart,
+  onPickFromSheets,
 }: DocEditorProps) {
   const latest = useRef(content)
   const onChangeRef = useRef(onChange)
@@ -68,16 +78,27 @@ export function DocEditor({
           editor={editor}
           page={content.page}
           onPage={setPage}
-          onPickChart={
-            onPickChart
-              ? () =>
-                  onPickChart((chart) =>
-                    editor
-                      .chain()
-                      .focus()
-                      .insertContent({ type: 'chart', attrs: { spec: chart } })
-                      .run(),
-                  )
+          onPickFromSheets={
+            onPickFromSheets
+              ? (mode) =>
+                  onPickFromSheets(mode, {
+                    chart: (chart) =>
+                      editor
+                        .chain()
+                        .focus()
+                        .insertContent([
+                          { type: 'chart', attrs: { spec: chart } },
+                          // Continue typing below it, so the next insert does not replace it.
+                          { type: 'paragraph' },
+                        ])
+                        .run(),
+                    table: (rows) =>
+                      editor
+                        .chain()
+                        .focus()
+                        .insertContent([table(rows), { type: 'paragraph' }])
+                        .run(),
+                  })
               : undefined
           }
         />
@@ -174,12 +195,12 @@ function Toolbar({
   editor,
   page,
   onPage,
-  onPickChart,
+  onPickFromSheets,
 }: {
   editor: Editor
   page: DocContent['page']
   onPage: (page: Partial<DocContent['page']>) => void
-  onPickChart?: () => void
+  onPickFromSheets?: (mode: PickerMode) => void
 }) {
   const [tableMenu, setTableMenu] = useState(false)
   const state = useEditorState({
@@ -390,10 +411,21 @@ function Toolbar({
           </div>
         )}
       </div>
-      {onPickChart && (
-        <ToolbarButton label="Insert chart from Sheets" onClick={onPickChart}>
-          Chart
-        </ToolbarButton>
+      {onPickFromSheets && (
+        <>
+          <ToolbarButton
+            label="Insert chart from Sheets"
+            onClick={() => onPickFromSheets('chart')}
+          >
+            Chart
+          </ToolbarButton>
+          <ToolbarButton
+            label="Insert table from Sheets"
+            onClick={() => onPickFromSheets('table')}
+          >
+            Data
+          </ToolbarButton>
+        </>
       )}
       <ToolbarButton
         label="Horizontal line"

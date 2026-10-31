@@ -1,5 +1,5 @@
 /** Shared visual styles for cells. Class names are written out in full so Tailwind includes them. */
-import type { FillColor } from '../../../persistence/schemas'
+import type { FillColor, TextColor } from '../../../persistence/schemas'
 
 export const FILL_CLASSES: Record<FillColor, string> = {
   yellow: 'bg-yellow-100',
@@ -10,6 +10,23 @@ export const FILL_CLASSES: Record<FillColor, string> = {
 }
 
 /** Colours for the references in a formula being edited, in order of appearance. */
+/** Text colours. */
+export const TEXT_CLASSES: Record<TextColor, string> = {
+  red: 'text-red-700',
+  green: 'text-emerald-700',
+  blue: 'text-blue-700',
+  amber: 'text-amber-700',
+  gray: 'text-slate-500',
+}
+
+export const TEXT_COLOR_NAMES: Record<TextColor, string> = {
+  red: 'Red',
+  green: 'Green',
+  blue: 'Blue',
+  amber: 'Amber',
+  gray: 'Grey',
+}
+
 export const REFERENCE_COLORS = [
   'border-blue-600 bg-blue-500/10',
   'border-rose-600 bg-rose-500/10',
