@@ -11,6 +11,10 @@ import {
   setVersionKept,
 } from './versions'
 
+/** The sheets of a document that is known to be a workbook. */
+const sheetsOf = (document: { content: unknown }) =>
+  (document.content as SheetContent).sheets
+
 let database: WorkSimDatabase
 
 beforeEach(() => {
@@ -35,7 +39,7 @@ async function newDocument(value = 'first'): Promise<AnyDocument> {
 }
 
 function editedContent(document: AnyDocument, value: string): SheetContent {
-  return contentWithValidSheetId(document.content.sheets[0].id, value)
+  return contentWithValidSheetId(sheetsOf(document)[0].id, value)
 }
 
 /** Makes every call to Date.now() return a later time, so versions have distinct times. */
@@ -56,7 +60,7 @@ describe('createVersion and listVersions', () => {
 
     const versions = await listVersions(document.id, database)
     expect(versions).toHaveLength(1)
-    expect(versions[0].snapshot.content.sheets[0].cells.A1.input).toBe('first')
+    expect(sheetsOf(versions[0].snapshot)[0].cells.A1.input).toBe('first')
     expect(versions[0].reason).toBe('auto')
   })
 
@@ -117,7 +121,7 @@ describe('restoreVersion', () => {
     )
 
     const restored = await restoreVersion(document.id, version.id, database)
-    expect(restored.content.sheets[0].cells.A1.input).toBe('original')
+    expect(sheetsOf(restored)[0].cells.A1.input).toBe('original')
     expect(restored.rev).toBe(3)
     expect(await getDocument(document.id, database)).toEqual(restored)
   })
@@ -135,10 +139,10 @@ describe('restoreVersion', () => {
 
     const [safetyCopy] = await listVersions(document.id, database)
     expect(safetyCopy.reason).toBe('before-restore')
-    expect(safetyCopy.snapshot.content.sheets[0].cells.A1.input).toBe('latest')
+    expect(sheetsOf(safetyCopy.snapshot)[0].cells.A1.input).toBe('latest')
 
     const undone = await restoreVersion(document.id, safetyCopy.id, database)
-    expect(undone.content.sheets[0].cells.A1.input).toBe('latest')
+    expect(sheetsOf(undone)[0].cells.A1.input).toBe('latest')
   })
 
   it("refuses to restore another document's version", async () => {

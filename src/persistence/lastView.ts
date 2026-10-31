@@ -10,12 +10,15 @@ const KEY = 'gamhub-worksim:view'
 
 export const ViewSchema = z.object({
   /** 'office' is the 3D office; the others are apps on the work computer. */
-  app: z.enum(['office', 'mail', 'tasks', 'sheets', 'career']),
+  app: z.enum(['office', 'mail', 'tasks', 'sheets', 'docs', 'slides', 'career']),
   /** In the office: where the player is standing. */
   spot: z.enum(['reception', 'desk', 'manager', 'breakroom']).optional(),
   /** In the office: a workplace event to open straight away. */
   event: z.string().optional(),
-  /** In Sheets: an open workbook ID, or "practice" for the practice workbook. */
+  /**
+   * In Sheets: an open workbook ID, or "practice" for the practice workbook.
+   * In Docs and Slides: the open file.
+   */
   document: z.string().optional(),
   /** In Tasks: the selected assignment. */
   assignmentId: z.string().optional(),

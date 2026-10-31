@@ -10,6 +10,13 @@ const PATHS = {
   clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
   history: 'M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4M12 8v4l3 2',
   file: 'M7 3h7l5 5v13H7V3Zm7 0v5h5',
+  docs: 'M7 3h7l5 5v13H7V3Zm7 0v5h5M10 12h6M10 15h6M10 18h3',
+  slides: 'M3 5h18v11H3V5Zm9 11v4m-4 0h8M7 9h6M7 12h9',
+  chart: 'M4 4v16h16M8 16v-5M12 16V8M16 16v-3',
+  present: 'M8 5.5v13l10-6.5-10-6.5Z',
+  attach:
+    'M16.5 9.5l-6 6a2.1 2.1 0 0 1-3-3l7-7a3.5 3.5 0 0 1 5 5l-7.5 7.5a5 5 0 0 1-7-7L11 5',
+  print: 'M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7v-6Z',
   close: 'M6 6l12 12M18 6L6 18',
   info: 'M12 8h.01M11 12h1v5h1M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
   send: 'M4 12l16-8-6 16-2.5-6.5L4 12Z',

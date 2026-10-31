@@ -35,7 +35,10 @@ export async function sitAtComputer(page: Page) {
 }
 
 /** Opens a dock app such as "Mail" or "Sheets". */
-export async function openApp(page: Page, name: 'Mail' | 'Tasks' | 'Sheets' | 'Career') {
+export async function openApp(
+  page: Page,
+  name: 'Mail' | 'Tasks' | 'Sheets' | 'Docs' | 'Slides' | 'Career',
+) {
   await sitAtComputer(page)
   await page
     .getByRole('navigation', { name: 'Apps' })

@@ -13,7 +13,18 @@ export default defineConfig({
   // The 3D office is loaded only when needed. Pre-bundle its libraries when the
   // dev server starts, so the first visit does not trigger a page reload.
   optimizeDeps: {
-    include: ['three', '@react-three/fiber', '@react-three/drei'],
+    include: [
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+      '@tiptap/react',
+      '@tiptap/core',
+      '@tiptap/starter-kit',
+      '@tiptap/extension-table',
+      '@tiptap/extension-text-align',
+      '@tiptap/extension-text-style',
+      '@tiptap/extensions',
+    ],
   },
   build: {
     // three.js makes the 3D office file large (about 250 kB compressed), but it

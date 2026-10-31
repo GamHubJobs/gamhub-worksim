@@ -33,6 +33,59 @@ owner.
 
 **Phase 2 is complete.**
 
+**Phase 3: "Productivity Depth"** (in progress). Milestones:
+
+- [x] 3.1 Docs: a real document editor with templates, autosave and version history
+- [ ] 3.2 Advanced Sheets: charts, sorting, filtering, conditional formatting, validation
+- [ ] 3.3 Slides: a real presentation editor with themes, layouts and presentation mode
+- [ ] 3.4 Integration: charts across apps, attachments, submitting work by email
+- [ ] 3.5 Multi-application assignments
+
+---
+
+## 2026-10-31 · Milestone 3.1: Docs
+
+### Built
+
+- **A document editor** built on TipTap (MIT licence, on ProseMirror, MIT; licences
+  checked, no other licences in the dependency tree): headings 1–3, paragraphs, bold,
+  italic, underline, strikethrough, font sizes, text colour, alignment (left, centre,
+  right, justified), bulleted and numbered lists, tables (insert, add/delete rows and
+  columns, header row), horizontal lines and page breaks. Keyboard shortcuts work
+  (Ctrl+B, Ctrl+Z…), as does undo/redo.
+- **Page layout**: an A4 or Letter page with normal, narrow or wide margins; page
+  breaks; **Print** (or save as PDF from the print dialog) prints just the page.
+- **Document organisation**: an outline of the headings (click to jump), a word count,
+  and a file list with rename and delete.
+- **Templates**: business report (summary, background, findings table,
+  recommendations, next steps), memo, business letter and meeting minutes (details
+  table, agenda, decisions, action table), each with [placeholders] and the player's
+  name filled in.
+- **Saving like every other file**: autosave, the emergency journal (crash recovery),
+  version history (preview, restore, keep), backups and restore. A new
+  `doc` document type in the same database; nothing else had to change.
+
+### Decisions
+
+- **One save hook for every app**: the spreadsheet's save logic was generalised into
+  `useSavedDocument` (autosave, journal, versions, crash recovery, restore, rename);
+  Sheets, Docs and Slides all use it. Docs keeps its own undo history (the editor's),
+  so it replaces content without adding app-level undo steps.
+- **A shared document window** (`DocumentFrame`): rename by clicking the title, save
+  indicator, version history, recovery banner.
+- Documents are stored as the editor's JSON (validated loosely on load, strictly by
+  the editor), so formatting is never lost and grading can read the structure.
+- **Charts** are drawn by a small in-house SVG component (`ChartView`: column, bar,
+  line, pie), shared by Sheets, Docs and Slides. No chart library was needed.
+
+### Tested
+
+- Unit tests: text extraction, word count, outline, every template is a valid
+  document, documents and their versions survive a backup and restore.
+- Browser tests: writing and formatting (heading, bold, list, table), outline,
+  renaming, autosave and reload, keeping a version, the file list; a template, and
+  deleting a file.
+
 ---
 
 ## 2026-10-31 · Milestone 2.5: career expansion, reviews and promotion criteria

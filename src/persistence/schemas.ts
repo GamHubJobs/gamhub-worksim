@@ -97,11 +97,189 @@ export const SheetDocumentSchema = DocumentBaseSchema.extend({
   content: SheetContentSchema,
 })
 
+// ---------------------------------------------------------------------------
+// Charts (shared by Sheets, Docs and Slides)
+// ---------------------------------------------------------------------------
+
+export const CHART_TYPES = ['column', 'bar', 'line', 'pie'] as const
+
+/**
+ * A chart's data, frozen when it is placed in a document or slide (like
+ * pasting a chart from a spreadsheet into a report).
+ */
+export const ChartSpecSchema = z.object({
+  type: z.enum(CHART_TYPES),
+  title: z.string().max(200),
+  labels: z.array(z.string().max(200)).max(200),
+  series: z
+    .array(
+      z.object({
+        name: z.string().max(200),
+        values: z.array(z.number()).max(200),
+      }),
+    )
+    .max(12),
+})
+
+// ---------------------------------------------------------------------------
+// Rich text documents (Docs)
+// ---------------------------------------------------------------------------
+
+/**
+ * One node of a rich-text document, in the editor's own JSON form: a
+ * paragraph, heading, list, table, text run… Only the outline is checked
+ * here; the editor checks the details when it loads the document.
+ */
+export interface RichNode {
+  type: string
+  attrs?: Record<string, unknown>
+  content?: RichNode[]
+  marks?: Array<{ type: string; attrs?: Record<string, unknown> }>
+  text?: string
+}
+
+export const RichNodeSchema: z.ZodType<RichNode> = z.lazy(() =>
+  z.object({
+    type: z.string().min(1).max(50),
+    attrs: z.record(z.string(), z.unknown()).optional(),
+    content: z.array(RichNodeSchema).optional(),
+    marks: z
+      .array(
+        z.object({
+          type: z.string().min(1).max(50),
+          attrs: z.record(z.string(), z.unknown()).optional(),
+        }),
+      )
+      .optional(),
+    text: z.string().optional(),
+  }),
+)
+
+export const DocContentSchema = z.object({
+  /** The document body (type "doc"). */
+  body: RichNodeSchema,
+  page: z.object({
+    size: z.enum(['a4', 'letter']),
+    margins: z.enum(['normal', 'narrow', 'wide']),
+  }),
+})
+
+export const DocDocumentSchema = DocumentBaseSchema.extend({
+  kind: z.literal('doc'),
+  content: DocContentSchema,
+})
+
+// ---------------------------------------------------------------------------
+// Presentations (Slides)
+// ---------------------------------------------------------------------------
+
+/** Slides are 960 × 540 units (16:9); elements are placed in these units. */
+export const SLIDE_WIDTH = 960
+export const SLIDE_HEIGHT = 540
+
+const ColorSchema = z.string().regex(/^#[0-9a-f]{6}$/i, { message: 'Invalid colour' })
+
+const SlideElementBaseSchema = z.object({
+  id: IdSchema,
+  x: z
+    .number()
+    .min(-SLIDE_WIDTH)
+    .max(2 * SLIDE_WIDTH),
+  y: z
+    .number()
+    .min(-SLIDE_HEIGHT)
+    .max(2 * SLIDE_HEIGHT),
+  w: z
+    .number()
+    .min(4)
+    .max(2 * SLIDE_WIDTH),
+  h: z
+    .number()
+    .min(4)
+    .max(2 * SLIDE_HEIGHT),
+})
+
+export const TextStyleSchema = z.object({
+  size: z.number().int().min(8).max(120),
+  bold: z.boolean(),
+  italic: z.boolean(),
+  align: z.enum(['left', 'center', 'right']),
+  /** A colour, or null for the theme's text colour. */
+  color: ColorSchema.nullable(),
+  /** Bulleted lines. */
+  bullets: z.boolean(),
+})
+
+export const SlideElementSchema = z.discriminatedUnion('type', [
+  SlideElementBaseSchema.extend({
+    type: z.literal('text'),
+    /** Lines separated by newlines. */
+    text: z.string().max(5000),
+    style: TextStyleSchema,
+    /** Text boxes placed by a layout keep their role (title, body…). */
+    role: z.enum(['title', 'subtitle', 'body']).optional(),
+  }),
+  SlideElementBaseSchema.extend({
+    type: z.literal('shape'),
+    shape: z.enum(['rect', 'rounded', 'ellipse', 'arrow', 'line']),
+    /** Colours, or null for the theme's accent colour / no outline. */
+    fill: ColorSchema.nullable(),
+    stroke: ColorSchema.nullable(),
+    text: z.string().max(1000),
+  }),
+  SlideElementBaseSchema.extend({
+    type: z.literal('image'),
+    /** The picture itself, as a data URL (resized when inserted). */
+    src: z
+      .string()
+      .max(3_000_000)
+      .regex(/^data:image\/(png|jpeg|gif|webp);base64,/),
+    alt: z.string().max(300),
+  }),
+  SlideElementBaseSchema.extend({
+    type: z.literal('chart'),
+    chart: ChartSpecSchema,
+  }),
+])
+
+export const SLIDE_LAYOUTS = [
+  'title',
+  'title-content',
+  'two-column',
+  'section',
+  'title-only',
+  'blank',
+] as const
+
+export const SLIDE_THEMES = ['corporate', 'midnight', 'fresh', 'warm'] as const
+
+export const SlideSchema = z.object({
+  id: IdSchema,
+  layout: z.enum(SLIDE_LAYOUTS),
+  elements: z.array(SlideElementSchema).max(100),
+  /** Speaker notes. */
+  notes: z.string().max(5000),
+})
+
+export const SlidesContentSchema = z.object({
+  theme: z.enum(SLIDE_THEMES),
+  slides: z.array(SlideSchema).min(1).max(200),
+})
+
+export const SlidesDocumentSchema = DocumentBaseSchema.extend({
+  kind: z.literal('slides'),
+  content: SlidesContentSchema,
+})
+
 /**
  * Any saved document. New apps (Docs, Slides, ...) are added here as new
  * `kind`s, and they automatically share autosave, versions and backups.
  */
-export const DocumentSchema = z.discriminatedUnion('kind', [SheetDocumentSchema])
+export const DocumentSchema = z.discriminatedUnion('kind', [
+  SheetDocumentSchema,
+  DocDocumentSchema,
+  SlidesDocumentSchema,
+])
 
 /**
  * The current content-format version of each document kind. When a kind's
@@ -110,6 +288,8 @@ export const DocumentSchema = z.discriminatedUnion('kind', [SheetDocumentSchema]
  */
 export const DOCUMENT_FORMAT_VERSIONS = {
   sheet: 2,
+  doc: 1,
+  slides: 1,
 } as const satisfies Record<z.infer<typeof DocumentSchema>['kind'], number>
 
 /** Why a version snapshot was taken. */
@@ -354,6 +534,17 @@ export type FillColor = (typeof FILL_COLORS)[number]
 export type Sheet = z.infer<typeof SheetSchema>
 export type SheetContent = z.infer<typeof SheetContentSchema>
 export type SheetDocument = z.infer<typeof SheetDocumentSchema>
+export type ChartSpec = z.infer<typeof ChartSpecSchema>
+export type ChartType = (typeof CHART_TYPES)[number]
+export type DocContent = z.infer<typeof DocContentSchema>
+export type DocDocument = z.infer<typeof DocDocumentSchema>
+export type TextStyle = z.infer<typeof TextStyleSchema>
+export type SlideElement = z.infer<typeof SlideElementSchema>
+export type SlideLayout = (typeof SLIDE_LAYOUTS)[number]
+export type SlideTheme = (typeof SLIDE_THEMES)[number]
+export type Slide = z.infer<typeof SlideSchema>
+export type SlidesContent = z.infer<typeof SlidesContentSchema>
+export type SlidesDocument = z.infer<typeof SlidesDocumentSchema>
 export type AnyDocument = z.infer<typeof DocumentSchema>
 export type DocumentKind = AnyDocument['kind']
 export type VersionReason = z.infer<typeof VersionReasonSchema>

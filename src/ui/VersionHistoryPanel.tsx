@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { formatDateTime } from '../../../lib/time'
-import type { DocumentVersion, VersionReason } from '../../../persistence/schemas'
-import { listVersions } from '../../../persistence/versions'
-import { countFilledCells } from '../model'
+import { formatDateTime } from '../lib/time'
+import type { DocumentVersion, VersionReason } from '../persistence/schemas'
+import { listVersions } from '../persistence/versions'
+import { describeContent } from './documentSummary'
 
 const REASON_LABELS: Record<VersionReason, string> = {
   auto: 'Automatic',
@@ -102,8 +102,7 @@ export function VersionHistoryPanel({
                   {formatDateTime(version.createdAt)}
                 </div>
                 <div className="text-xs text-slate-500">
-                  {REASON_LABELS[version.reason]} ·{' '}
-                  {countFilledCells(version.snapshot.content)} filled cells
+                  {REASON_LABELS[version.reason]} · {describeContent(version.snapshot)}
                 </div>
               </button>
               <button

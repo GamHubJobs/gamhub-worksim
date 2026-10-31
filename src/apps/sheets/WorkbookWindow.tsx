@@ -16,7 +16,7 @@ import { SaveIndicator } from '../../ui/SaveIndicator'
 import { SubmissionResults } from '../tasks/SubmissionResults'
 import { AssignmentPane } from './ui/AssignmentPane'
 import { SheetEditor } from './ui/SheetEditor'
-import { VersionHistoryPanel } from './ui/VersionHistoryPanel'
+import { VersionHistoryPanel } from '../../ui/VersionHistoryPanel'
 import { useSheetDocument } from './useSheetDocument'
 
 interface WorkbookWindowProps {
@@ -212,7 +212,11 @@ export function WorkbookWindow({
             <SheetEditor
               // Remount when switching between preview and live content, to reset editing.
               key={preview ? `preview-${preview.id}` : 'live'}
-              content={(preview?.snapshot ?? state).content}
+              content={
+                preview?.snapshot.kind === 'sheet'
+                  ? preview.snapshot.content
+                  : state.content
+              }
               readOnly={preview !== null}
               onUpdate={sheet.update}
               onUndo={sheet.undo}

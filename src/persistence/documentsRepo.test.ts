@@ -10,7 +10,11 @@ import {
   type NewDocument,
 } from './documentsRepo'
 import { InvalidRecordError, NewerFormatError, RecordNotFoundError } from './errors'
-import { DOCUMENT_FORMAT_VERSIONS } from './schemas'
+import { DOCUMENT_FORMAT_VERSIONS, type SheetContent } from './schemas'
+
+/** The sheets of a document that is known to be a workbook. */
+const sheetsOf = (document: { content: unknown }) =>
+  (document.content as SheetContent).sheets
 
 let database: WorkSimDatabase
 
@@ -64,7 +68,7 @@ describe('updateDocument', () => {
   it('saves new content and raises the revision number', async () => {
     const created = await createDocument(newSheet(), database)
     const content = {
-      sheets: [{ ...created.content.sheets[0], cells: { B2: { input: '42' } } }],
+      sheets: [{ ...sheetsOf(created)[0], cells: { B2: { input: '42' } } }],
     }
 
     const updated = await updateDocument(created.id, { content }, database)
