@@ -11,7 +11,7 @@ import {
 } from '../../game/career'
 import { formatDateTime } from '../../lib/time'
 import type { Profile } from '../../persistence/schemas'
-import { Icon } from '../../ui/Icon'
+import { Icon, type IconName } from '../../ui/Icon'
 import { CheckResultsList } from './CheckResultsList'
 
 const STATUS_BADGES: Record<AssignmentStatus, { label: string; className: string }> = {
@@ -28,6 +28,10 @@ interface TasksAppProps {
   onSelect: (assignmentId: string) => void
   /** Opens the assignment's workbook, starting the assignment if needed. */
   onOpenWorkbook: (assignmentId: string) => Promise<void>
+  /** Opens a task's report or presentation. */
+  onOpenFile: (kind: 'doc' | 'slides', documentId: string) => void
+  /** Opens a reply to the task's email, to hand the work in. */
+  onHandIn: (mailId: string) => void
 }
 
 export function TasksApp({
@@ -35,6 +39,8 @@ export function TasksApp({
   selectedId,
   onSelect,
   onOpenWorkbook,
+  onOpenFile,
+  onHandIn,
 }: TasksAppProps) {
   const assignments = careerAssignments(profile.careerId)
   const selected =
@@ -100,6 +106,8 @@ export function TasksApp({
             assignment={selected}
             profile={profile}
             onOpenWorkbook={onOpenWorkbook}
+            onOpenFile={onOpenFile}
+            onHandIn={onHandIn}
           />
         )}
       </div>
@@ -111,10 +119,14 @@ function TaskDetail({
   assignment,
   profile,
   onOpenWorkbook,
+  onOpenFile,
+  onHandIn,
 }: {
   assignment: Assignment
   profile: Profile
   onOpenWorkbook: (assignmentId: string) => Promise<void>
+  onOpenFile: (kind: 'doc' | 'slides', documentId: string) => void
+  onHandIn: (mailId: string) => void
 }) {
   const [opening, setOpening] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -123,6 +135,9 @@ function TaskDetail({
   const attempts = progress?.attempts ?? []
   const latest = attempts.at(-1)
   const manager = getPerson(assignment.from)
+  const briefing = profile.inbox.find(
+    (mail) => mail.kind === 'briefing' && mail.assignmentId === assignment.id,
+  )
   const previous = careerAssignments(assignment.careerId).find(
     (a) => a.order === assignment.order - 1,
   )
@@ -187,6 +202,56 @@ function TaskDetail({
         </div>
       )}
 
+      {assignment.deliverables.length > 0 && progress && (
+        <section
+          className="rounded-lg border border-blue-200 bg-white p-5"
+          data-testid="task-files"
+        >
+          <h3 className="font-semibold text-slate-900">Your files for this task</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            This task uses several apps. When everything is ready, reply to{' '}
+            {manager.name.split(' ')[0]}’s email with the files attached.
+          </p>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-3">
+            <li>
+              <FileButton
+                icon="sheets"
+                title={assignment.workbook.title}
+                kind="Workbook (Sheets)"
+                onClick={() => void open()}
+              />
+            </li>
+            {assignment.deliverables.map((deliverable) => {
+              const id = progress.files?.[deliverable.kind]
+              return id ? (
+                <li key={deliverable.kind}>
+                  <FileButton
+                    icon={deliverable.kind === 'doc' ? 'docs' : 'slides'}
+                    title={deliverable.title}
+                    kind={
+                      deliverable.kind === 'doc'
+                        ? 'Report (Docs)'
+                        : 'Presentation (Slides)'
+                    }
+                    onClick={() => onOpenFile(deliverable.kind, id)}
+                  />
+                </li>
+              ) : null
+            })}
+          </ul>
+          {briefing && (
+            <button
+              type="button"
+              onClick={() => onHandIn(briefing.id)}
+              className="mt-4 flex items-center gap-1.5 rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
+            >
+              <Icon name="send" className="h-4 w-4" /> Reply to{' '}
+              {manager.name.split(' ')[0]} with your work
+            </button>
+          )}
+        </section>
+      )}
+
       <section className="rounded-lg border border-slate-200 bg-white p-5">
         <h3 className="font-semibold text-slate-900">Why this matters at work</h3>
         <p className="mt-1 text-slate-700">{assignment.whyItMatters}</p>
@@ -244,5 +309,31 @@ function TaskDetail({
         </section>
       )}
     </article>
+  )
+}
+
+function FileButton({
+  icon,
+  title,
+  kind,
+  onClick,
+}: {
+  icon: IconName
+  title: string
+  kind: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-md border border-slate-200 p-3 text-left hover:border-blue-300 hover:bg-blue-50"
+    >
+      <Icon name={icon} className="h-6 w-6 shrink-0 text-slate-600" />
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium text-slate-900">{title}</span>
+        <span className="block text-xs text-slate-500">{kind}</span>
+      </span>
+    </button>
   )
 }

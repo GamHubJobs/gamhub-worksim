@@ -48,7 +48,81 @@ export const CheckSchema = z.discriminatedUnion('type', [
   CheckBaseSchema.extend({
     type: z.literal('unchanged'),
   }),
+  /** The sheet has a chart drawn from (part of) these cells. */
+  CheckBaseSchema.extend({
+    type: z.literal('chart'),
+  }),
 ])
+
+const FileCheckBaseSchema = z.object({
+  id: z.string().regex(/^[a-z0-9-]+$/),
+  title: z.string().min(1),
+  why: z.string().min(1),
+  hint: z.string().min(1),
+  points: z.number().int().positive(),
+})
+
+/** Alternative wordings, any of which counts, e.g. ["Summary", "Executive summary"]. */
+const AlternativesSchema = z.array(z.string().min(1)).min(1)
+
+/**
+ * A check on a report (Docs) or presentation (Slides). Reports are checked
+ * for structure, correct figures and key facts, the way a manager reads them.
+ */
+export const FileCheckSchema = z.discriminatedUnion('type', [
+  /** Sections with these headings (reports) or slide titles (presentations). */
+  FileCheckBaseSchema.extend({
+    type: z.literal('sections'),
+    sections: z.array(AlternativesSchema).min(1),
+  }),
+  /**
+   * The text states these figures, taken from the model answer of the
+   * workbook. Any sensible formatting and rounding is accepted.
+   */
+  FileCheckBaseSchema.extend({
+    type: z.literal('figures'),
+    figures: z
+      .array(
+        z.object({
+          label: z.string().min(1),
+          /** "Sheet!B9": a cell of the model answer. */
+          cell: SheetRangeSchema,
+          percent: z.boolean().default(false),
+        }),
+      )
+      .min(1),
+  }),
+  /** The text mentions each of these (e.g. the departments that are over budget). */
+  FileCheckBaseSchema.extend({
+    type: z.literal('mentions'),
+    terms: z.array(AlternativesSchema).min(1),
+  }),
+  /** At least this many charts. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('charts'),
+    min: z.number().int().positive().default(1),
+  }),
+  /** At least one table (reports only). */
+  FileCheckBaseSchema.extend({
+    type: z.literal('table'),
+  }),
+  /** Words (reports) or slides (presentations), between these limits. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('length'),
+    min: z.number().int().positive(),
+    max: z.number().int().positive().optional(),
+  }),
+])
+
+/** A report or presentation the player hands in with the workbook. */
+export const DeliverableSchema = z.object({
+  kind: z.enum(['doc', 'slides']),
+  /** The file created for the player when the task starts. */
+  title: z.string().min(1),
+  /** The Docs or Slides template it starts from. */
+  template: z.string().min(1),
+  checks: z.array(FileCheckSchema).min(1),
+})
 
 const StartingCellSchema = z.union([
   z.string(),
@@ -112,6 +186,12 @@ export const AssignmentSchema = z.object({
     )
     .default([]),
   checks: z.array(CheckSchema).min(1),
+  /**
+   * Other files to hand in: a report and/or a presentation. Tasks with
+   * deliverables are submitted by replying to the briefing email with the
+   * files attached.
+   */
+  deliverables: z.array(DeliverableSchema).default([]),
   /** Score (0–100) needed to pass. */
   passScore: z.number().int().min(1).max(100),
   /** XP for a perfect score. */
@@ -128,6 +208,8 @@ export const AssignmentSchema = z.object({
 })
 
 export type Check = z.infer<typeof CheckSchema>
+export type FileCheck = z.infer<typeof FileCheckSchema>
+export type Deliverable = z.infer<typeof DeliverableSchema>
 export type AssignmentInput = z.input<typeof AssignmentSchema>
 export type Assignment = z.infer<typeof AssignmentSchema>
 export type StartingCell = z.infer<typeof StartingCellSchema>

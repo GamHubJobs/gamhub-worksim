@@ -65,11 +65,14 @@ export function SubmissionResults({
   result,
   onClose,
   onOpenTask,
+  closeLabel,
 }: {
   assignment: Assignment
   result: SubmissionResult
   onClose: () => void
   onOpenTask: (assignmentId: string) => void
+  /** The close button's label (default: back to the workbook). */
+  closeLabel?: string
 }) {
   const { grade, reward } = result
   const rating = RATING_TEXT[grade.rating]
@@ -161,7 +164,7 @@ export function SubmissionResults({
             onClick={onClose}
             className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
           >
-            {grade.score === 100 ? 'Close' : 'Back to my workbook'}
+            {closeLabel ?? (grade.score === 100 ? 'Close' : 'Back to my workbook')}
           </button>
         </div>
       </div>

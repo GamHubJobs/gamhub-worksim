@@ -24,6 +24,8 @@ export const ViewSchema = z.object({
   assignmentId: z.string().optional(),
   /** In Mail: the selected message. */
   mailId: z.string().optional(),
+  /** In Mail: writing a reply to the selected message. */
+  compose: z.boolean().optional(),
 })
 
 export type View = z.infer<typeof ViewSchema>

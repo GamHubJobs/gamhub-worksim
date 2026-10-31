@@ -15,7 +15,9 @@ import {
   PROFILE_FORMAT_VERSION,
   ProfileSchema,
   type AnyDocument,
+  type DocContent,
   type Profile,
+  type SlidesContent,
   type SheetContent,
   type SyncFields,
 } from './schemas'
@@ -145,8 +147,10 @@ export async function updateProfile(
 }
 
 /**
- * Starts an assignment: creates its workbook (with an "original" version in
- * its history) and records it in the profile, all at once. If the assignment was already started, nothing changes.
+ * Starts an assignment: creates its workbook, and its report and presentation
+ * if it has them (each with an "original" version in its history), and
+ * records them in the profile, all at once. If the assignment was already
+ * started, nothing changes.
  */
 export async function startAssignment(
   profileId: string,
@@ -155,6 +159,11 @@ export async function startAssignment(
     assignmentVersion: number
     title: string
     content: SheetContent
+    /** A report and/or presentation to create with the workbook. */
+    files?: Array<
+      | { kind: 'doc'; title: string; content: DocContent }
+      | { kind: 'slides'; title: string; content: SlidesContent }
+    >
   },
   database: WorkSimDatabase = defaultDb,
 ): Promise<{ profile: Profile; documentId: string }> {
@@ -178,6 +187,12 @@ export async function startAssignment(
       )
       // Kept forever, so the workbook as received can always be restored.
       await createVersion(document, 'original', { keep: true }, database)
+      const files: { doc?: string; slides?: string } = {}
+      for (const file of input.files ?? []) {
+        const created = await createDocument(file, database)
+        await createVersion(created, 'original', { keep: true }, database)
+        files[file.kind] = created.id
+      }
       const profile = await saveProfile(
         current,
         {
@@ -191,6 +206,7 @@ export async function startAssignment(
               startedAt: Date.now(),
               completedSteps: [],
               attempts: [],
+              ...(input.files?.length ? { files } : {}),
             },
           },
         },
@@ -202,22 +218,29 @@ export async function startAssignment(
 }
 
 /**
- * Records a submission: keeps a copy of the workbook as submitted (in version
- * history) and saves the updated profile, together.
+ * Records a submission: keeps a copy of every file as submitted (in their
+ * version history) and saves the updated profile, together. `change`
+ * receives the version ID of the first file (the workbook).
  */
 export async function saveSubmission(
   profileId: string,
-  document: AnyDocument,
-  change: (profile: Profile, versionId: string) => ProfileFields,
+  documents: AnyDocument | AnyDocument[],
+  change: (profile: Profile, versionId: string | undefined) => ProfileFields,
   database: WorkSimDatabase = defaultDb,
 ): Promise<Profile> {
+  const list = Array.isArray(documents) ? documents : [documents]
   return database.transaction(
     'rw',
     [database.meta, database.profiles, database.documentVersions, database.outbox],
     async () => {
       const current = await loadForUpdate(profileId, database)
-      const version = await createVersion(document, 'submitted', { keep: true }, database)
-      return saveProfile(current, change(current, version.id), database)
+      const versions = []
+      for (const document of list) {
+        versions.push(
+          await createVersion(document, 'submitted', { keep: true }, database),
+        )
+      }
+      return saveProfile(current, change(current, versions[0]?.id), database)
     },
   )
 }

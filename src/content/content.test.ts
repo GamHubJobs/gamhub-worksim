@@ -9,6 +9,9 @@ import { buildSolutionContent, buildStartingContent, findSheet } from '../game/w
 import { formatRange, parseRange } from '../apps/sheets/model'
 import { ASSIGNMENTS } from './assignments'
 import { CAREERS, SKILLS } from './careers'
+import { addChart } from '../apps/sheets/features'
+import { getDocTemplate } from '../apps/docs/templates'
+import { getSlidesTemplate } from '../apps/slides/model'
 import { PEOPLE } from './company'
 
 describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
@@ -40,7 +43,10 @@ describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
 
     it('has unique step and check IDs', () => {
       const steps = assignment.steps.map((s) => s.id)
-      const checks = assignment.checks.map((c) => c.id)
+      const checks = [
+        ...assignment.checks.map((c) => c.id),
+        ...assignment.deliverables.flatMap((d) => d.checks.map((c) => c.id)),
+      ]
       expect(new Set(steps).size).toBe(steps.length)
       expect(new Set(checks).size).toBe(checks.length)
     })
@@ -55,10 +61,36 @@ describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
           solution = formatRange(solution, sheet.id, parseRange(range)!, check.format)
         }
       }
+      // Charts are part of the model answer too.
+      for (const check of assignment.checks) {
+        if (check.type !== 'chart') continue
+        const [sheetName, range] = check.cells[0].split('!')
+        const sheet = findSheet(solution, sheetName)!
+        solution = addChart(
+          solution,
+          sheet.id,
+          parseRange(range)!,
+          'column',
+          'Chart',
+        ).content
+      }
       const result = gradeAssignment(assignment, solution)
-      const failures = result.checks.filter((c) => c.status !== 'passed')
+      const failures = result.checks
+        .filter((c) => c.status !== 'passed')
+        // Reports and presentations are checked in deliverables.test.ts.
+        .filter((c) => assignment.checks.some((check) => check.id === c.id))
       expect(failures).toEqual([])
-      expect(result.score).toBe(100)
+      if (assignment.deliverables.length === 0) expect(result.score).toBe(100)
+    })
+
+    it('starts its report and presentation from real templates', () => {
+      for (const deliverable of assignment.deliverables) {
+        const template =
+          deliverable.kind === 'doc'
+            ? getDocTemplate(deliverable.template)
+            : getSlidesTemplate(deliverable.template)
+        expect(template.id).toBe(deliverable.template)
+      }
     })
 
     it('cannot be passed without doing any work', () => {

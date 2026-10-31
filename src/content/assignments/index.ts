@@ -4,7 +4,9 @@ import { budgetReport } from './budgetReport'
 import { expenseSummary } from './expenseSummary'
 import { invoiceCheck } from './invoiceCheck'
 import { paymentRun } from './paymentRun'
+import { performanceReport } from './performanceReport'
 import { pettyCash } from './pettyCash'
+import { savingsProposal } from './savingsProposal'
 import { suppliesOrder } from './suppliesOrder'
 
 const SOURCES = [
@@ -14,6 +16,8 @@ const SOURCES = [
   budgetReport,
   paymentRun,
   pettyCash,
+  performanceReport,
+  savingsProposal,
 ]
 
 export const ASSIGNMENTS: Assignment[] = SOURCES.map((source) =>

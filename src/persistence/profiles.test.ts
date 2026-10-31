@@ -14,6 +14,8 @@ import {
   type ProfileFields,
 } from './profiles'
 import type { SheetContent } from './schemas'
+import { DOC_TEMPLATES } from '../apps/docs/templates'
+import { SLIDES_TEMPLATES } from '../apps/slides/model'
 import { listVersions } from './versions'
 import { startingWorkState } from './workState'
 
@@ -88,6 +90,28 @@ describe('profiles', () => {
     expect(loaded?.xp).toBe(profile.xp)
   })
 
+  it('starts a task with a report and a presentation as well as the workbook', async () => {
+    const profile = await createProfile(fields, database)
+    const { profile: started } = await startAssignment(
+      profile.id,
+      {
+        assignmentId: 'performance-report',
+        assignmentVersion: 1,
+        title: 'Workbook',
+        content: content(),
+        files: [
+          { kind: 'doc', title: 'Report', content: DOC_TEMPLATES[1].build('Alex') },
+          { kind: 'slides', title: 'Deck', content: SLIDES_TEMPLATES[1].build('Alex') },
+        ],
+      },
+      database,
+    )
+    const files = started.assignments['performance-report'].files!
+    expect((await getDocument(files.doc!, database))?.title).toBe('Report')
+    expect((await getDocument(files.slides!, database))?.kind).toBe('slides')
+    expect((await listVersions(files.doc!, database))[0].reason).toBe('original')
+  })
+
   it('reports a missing profile', async () => {
     await expect(updateProfile(createId(), (p) => p, database)).rejects.toThrow(
       RecordNotFoundError,
@@ -129,7 +153,7 @@ describe('assignments', () => {
     const saved = await saveSubmission(
       profile.id,
       document,
-      (p, versionId) => ({ ...p, xp: 50, name: `${p.name} ${versionId.length}` }),
+      (p, versionId) => ({ ...p, xp: 50, name: `${p.name} ${versionId?.length}` }),
       database,
     )
     expect(saved.xp).toBe(50)

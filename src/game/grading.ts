@@ -36,6 +36,7 @@ import {
   findSheet,
   splitSheetAddress,
 } from './workbooks'
+import { gradeDeliverables, type SubmittedFiles } from './deliverables'
 
 export type CheckStatus = 'passed' | 'partial' | 'failed'
 export type Rating = 'excellent' | 'good' | 'pass' | 'fail'
@@ -174,6 +175,7 @@ interface Workbooks {
 }
 
 function gradeCheck(check: Check, books: Workbooks): CheckResult {
+  if (check.type === 'chart') return gradeChartCheck(check, books)
   const cells = expandCells(check.cells)
   const problems: string[] = []
   let correct = 0
@@ -220,6 +222,40 @@ function gradeCheck(check: Check, books: Workbooks): CheckResult {
   }
 }
 
+/** The sheet must have a chart drawn from (part of) the checked cells. */
+function gradeChartCheck(
+  check: Extract<Check, { type: 'chart' }>,
+  books: Workbooks,
+): CheckResult {
+  const [first] = check.cells
+  const [sheetName, rangeText] = first.split('!')
+  const target = parseRange(rangeText)
+  const sheet = findSheet(books.player, sheetName)
+  const found = (sheet?.charts ?? []).some((chart) => {
+    const range = parseRange(chart.range)
+    return (
+      !!range &&
+      !!target &&
+      range.left <= target.right &&
+      range.right >= target.left &&
+      range.top <= target.bottom &&
+      range.bottom >= target.top
+    )
+  })
+  return {
+    id: check.id,
+    title: check.title,
+    why: check.why,
+    hint: check.hint,
+    status: found ? 'passed' : 'failed',
+    earned: found ? check.points : 0,
+    points: check.points,
+    problems: found
+      ? []
+      : [`There is no chart of ${rangeText} on the ${sheetName} sheet.`],
+  }
+}
+
 /** What is wrong with one cell, or null if it is right. */
 function cellProblem(check: Check, ref: CellRef, books: Workbooks): string | null {
   const { address } = ref
@@ -244,7 +280,8 @@ function cellProblem(check: Check, ref: CellRef, books: Workbooks): string | nul
       .join(' and ')}.`
   }
 
-  // Values
+  // Values (charts are graded separately)
+  if (check.type === 'chart') return null
   const actual = valueOf(books.playerCalc, books.player, ref) ?? null
   const expected = valueOf(books.solutionCalc, books.solution, ref) ?? null
   if (!sameValue(actual, expected, check.tolerance)) {
@@ -281,13 +318,19 @@ export function ratingFor(score: number, passScore: number): Rating {
   return 'pass'
 }
 
-/** Grades the player's workbook for an assignment. */
+/**
+ * Grades the player's work for an assignment: the workbook, and the report
+ * and presentation when the task has them. A workbook that was not handed in
+ * (null) scores nothing on the workbook checks.
+ */
 export function gradeAssignment(
   assignment: Assignment,
-  player: SheetContent,
+  handedIn: SheetContent | null,
+  files: SubmittedFiles = {},
 ): GradeResult {
   const start = buildStartingContent(assignment)
   const solution = buildSolutionContent(assignment)
+  const player = handedIn ?? start
   const books: Workbooks = {
     player,
     start,
@@ -307,7 +350,25 @@ export function gradeAssignment(
     }),
   }
 
-  const checks = assignment.checks.map((check) => gradeCheck(check, books))
+  const sheetChecks = assignment.checks.map((check) =>
+    handedIn
+      ? gradeCheck(check, books)
+      : {
+          id: check.id,
+          title: check.title,
+          why: check.why,
+          hint: check.hint,
+          status: 'failed' as const,
+          earned: 0,
+          points: check.points,
+          problems: ['The workbook was not attached. Attach it to your email to Priya.'],
+        },
+  )
+  const fileChecks = gradeDeliverables(assignment.deliverables, files, {
+    calculator: books.solutionCalc,
+    content: solution,
+  })
+  const checks = [...sheetChecks, ...fileChecks]
   const earned = checks.reduce((total, check) => total + check.earned, 0)
   const maxPoints = checks.reduce((total, check) => total + check.points, 0)
   const score = maxPoints === 0 ? 0 : Math.round((100 * earned) / maxPoints)

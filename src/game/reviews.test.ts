@@ -121,7 +121,12 @@ describe('performance reviews', () => {
       xp: 950,
       work: { ...profile.work, reputation: 60 },
     }
-    for (const id of ['budget-report', 'payment-run', 'petty-cash']) {
+    for (const id of [
+      'budget-report',
+      'payment-run',
+      'petty-cash',
+      'performance-report',
+    ]) {
       profile = submit(profile, id, 95)
     }
     // Everything else is done, but there is no review yet.

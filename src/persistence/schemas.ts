@@ -423,6 +423,8 @@ export const AssignmentProgressSchema = z.object({
   startedAt: TimestampSchema,
   /** Steps the player ticked off in the task pane. */
   completedSteps: z.array(z.string()),
+  /** The report and presentation created for the task, if it has them. */
+  files: z.object({ doc: IdSchema.optional(), slides: IdSchema.optional() }).optional(),
   attempts: z.array(AttemptSchema),
 })
 
@@ -435,7 +437,28 @@ export const MailMessageSchema = z.object({
   body: z.string(),
   receivedAt: TimestampSchema,
   readAt: TimestampSchema.nullable(),
-  kind: z.enum(['welcome', 'briefing', 'feedback', 'promotion', 'review', 'info']),
+  kind: z.enum([
+    'welcome',
+    'briefing',
+    'feedback',
+    'promotion',
+    'review',
+    'info',
+    'sent',
+  ]),
+  /** For messages the player sent: who to ("manager"). */
+  to: z.string().optional(),
+  /** Files attached to the message. */
+  attachments: z
+    .array(
+      z.object({
+        documentId: IdSchema,
+        kind: z.enum(['sheet', 'doc', 'slides']),
+        title: z.string(),
+      }),
+    )
+    .max(20)
+    .optional(),
   assignmentId: z.string().optional(),
   /** For feedback: which attempt (0-based) it is about. */
   attemptIndex: z.number().int().nonnegative().optional(),

@@ -22,7 +22,9 @@ export function CheckResultsList({
   return (
     <ul className="space-y-2" data-testid="check-results">
       {checks.map((check) => {
-        const definition = assignment.checks.find((c) => c.id === check.id)
+        const definition =
+          assignment.checks.find((c) => c.id === check.id) ??
+          assignment.deliverables.flatMap((d) => d.checks).find((c) => c.id === check.id)
         const style = STATUS_STYLES[check.status]
         return (
           <li

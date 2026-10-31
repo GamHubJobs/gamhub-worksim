@@ -85,6 +85,9 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/persistence/`                    | Everything that touches storage (see above)                       |
 | `src/apps/sheets/engine/`             | Formula engine: parser, functions, calculation, formats (pure TS) |
 | `src/apps/sheets/`                    | Spreadsheet model, clipboard, editor UI, workbook window          |
+| `src/apps/docs/`                      | Docs: TipTap editor, templates, reading document text             |
+| `src/apps/slides/`                    | Slides: model, themes, layouts, editor, presentation mode         |
+| `src/apps/shared/`                    | Save hook, document window, file browser, "insert from Sheets"    |
 | `src/apps/mail/`, `tasks/`, `career/` | The other desktop apps                                            |
 | `src/content/`                        | Content as validated data: company, people, careers, assignments  |
 | `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
@@ -108,6 +111,30 @@ Player clicks Submit
   → career rules (src/game/career.ts): XP, skills, feedback email, unlock, promotion
   → one transaction: "Submitted" copy in version history + updated profile
 ```
+
+Tasks with a report and/or presentation (`deliverables`) are handed in by
+replying to the task email with files attached:
+
+```
+Player clicks Send in Mail (attachments chosen from all their files)
+  → the attached workbook, report and presentation are loaded
+    (the task's own files first; any other attached file of each kind counts)
+  → grader: workbook checks as above (no workbook attached → zero, explained)
+    + deliverable checks (src/game/deliverables.ts) on the report and slides:
+      sections (headings / slide titles), figures (compared with the model
+      answer, any sensible rounding), mentions, charts, tables, length
+  → one transaction: "Submitted" copy of every file + the sent email + the
+    profile (XP, feedback email, unlocks, events)
+```
+
+### Documents of every kind
+
+Workbooks (`sheet`), documents (`doc`, the editor's ProseMirror JSON) and
+presentations (`slides`) are stored the same way and share
+`useSavedDocument`: autosave, the emergency journal, versions, restore and
+rename. A change that would make a file invalid is refused before it is saved.
+Charts are drawn by `src/ui/ChartView.tsx` (SVG) everywhere: live in Sheets,
+and as frozen copies in Docs and Slides (like pasting a chart into a report).
 
 ### The working life (Phase 2)
 
@@ -160,6 +187,8 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 | Styling        | Tailwind CSS                             |
 | Tests          | Vitest (unit), Playwright (browser)      |
 | 3D             | three.js + React Three Fiber + drei      |
+| Docs editor    | TipTap (on ProseMirror), MIT             |
+| Charts, Slides | Own SVG charts and slide editor          |
 | Spreadsheet    | Own engine and grid, built incrementally |
 
 ## Roadmap
@@ -167,8 +196,8 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 0. Foundations: saving, recovery, backups, tooling (done)
 1. Vertical slice: "Your First Day as an Intern" (done, including the 3D office)
 2. The Living Workplace: workday, wellbeing, colleagues, events, career growth (done)
-3. Productivity depth (Docs app, richer spreadsheet) ← _next_
-4. More careers and departments
+3. Productivity depth: Docs, advanced Sheets, Slides, multi-app assignments (done)
+4. More careers and departments ← _next_
 5. Achievements and customisation
 6. Polish
 7. Cloud accounts and sync

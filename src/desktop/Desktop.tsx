@@ -14,6 +14,7 @@ import { MailApp } from '../apps/mail/MailApp'
 import { SheetsApp } from '../apps/sheets/SheetsApp'
 import { WorkbookWindow } from '../apps/sheets/WorkbookWindow'
 import { TasksApp } from '../apps/tasks/TasksApp'
+import { getAssignment } from '../content/assignments'
 import { COMPANY } from '../content/company'
 import {
   assignmentStatus,
@@ -32,6 +33,7 @@ import type { SpotId } from '../content/office'
 import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
 import { workPace } from '../game/wellbeing'
+import { skipToAssignment } from '../game/devTools'
 import { passTime, startNextDay } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
 import { Icon, type IconName } from '../ui/Icon'
@@ -97,6 +99,15 @@ export function Desktop({
     [career, setView],
   )
 
+  /** Reports and presentations that belong to tasks, with the task's title. */
+  const taskFiles: Record<string, string> = {}
+  for (const progress of Object.values(profile.assignments)) {
+    const title = getAssignment(progress.assignmentId)?.title ?? 'a task'
+    for (const id of [progress.files?.doc, progress.files?.slides]) {
+      if (id) taskFiles[id] = title
+    }
+  }
+
   const { markRead, act } = career
   const onMarkRead = useCallback((id: string) => void markRead(id), [markRead])
 
@@ -120,6 +131,8 @@ export function Desktop({
       /** Jumps to a day and time without anything happening on the way. */
       setTime: (day: number, minute: number) =>
         act((p) => ({ ...p, work: { ...p.work, day, minute } })),
+      /** Marks every task before this one as done (e.g. 'performance-report'). */
+      skipTo: (assignmentId: string) => act((p) => skipToAssignment(p, assignmentId)),
     }
     Object.assign(window, { __worksim: hooks })
   }, [act])
@@ -250,10 +263,16 @@ export function Desktop({
                 <MailApp
                   profile={profile}
                   selectedId={view.mailId}
-                  onSelect={(mailId) => setView({ app: 'mail', mailId })}
+                  composing={!!view.compose}
+                  onSelect={(mailId, compose) =>
+                    setView({ app: 'mail', mailId, ...(compose ? { compose } : {}) })
+                  }
                   onMarkRead={onMarkRead}
                   onOpenTask={openTask}
                   onOpenCareer={() => setView({ app: 'career' })}
+                  // Files open in other apps were saved when the player left them.
+                  onFlush={async () => true}
+                  onSend={career.sendMail}
                 />
               )}
               {view.app === 'tasks' && (
@@ -262,6 +281,10 @@ export function Desktop({
                   selectedId={view.assignmentId}
                   onSelect={openTask}
                   onOpenWorkbook={openAssignmentWorkbook}
+                  onOpenFile={(kind, document) =>
+                    setView({ app: kind === 'doc' ? 'docs' : 'slides', document })
+                  }
+                  onHandIn={(mailId) => setView({ app: 'mail', mailId, compose: true })}
                 />
               )}
               {view.app === 'sheets' &&
@@ -289,7 +312,7 @@ export function Desktop({
                 ) : (
                   <DocsApp
                     playerName={profile.name}
-                    linked={{}}
+                    linked={taskFiles}
                     onOpen={(document) => setView({ app: 'docs', document })}
                   />
                 ))}
@@ -303,7 +326,7 @@ export function Desktop({
                 ) : (
                   <SlidesApp
                     playerName={profile.name}
-                    linked={{}}
+                    linked={taskFiles}
                     onOpen={(document) => setView({ app: 'slides', document })}
                   />
                 ))}

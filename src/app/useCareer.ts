@@ -26,7 +26,16 @@ import {
   startAssignment as startAssignmentInStorage,
   updateProfile,
 } from '../persistence/profiles'
-import type { Profile } from '../persistence/schemas'
+import { createId } from '../lib/ids'
+import type {
+  AnyDocument,
+  DocContent,
+  MailMessage,
+  Profile,
+  SheetDocument,
+  SlidesContent,
+} from '../persistence/schemas'
+import { deliverableFile } from '../game/deliverables'
 
 export type CareerState =
   | { status: 'loading' }
@@ -73,36 +82,83 @@ export function useCareer() {
     async (assignmentId: string): Promise<string> => {
       const assignment = getAssignment(assignmentId)
       if (!profileId || !assignment) throw new Error('This task could not be found.')
+      const playerName = state.status === 'ready' ? state.profile.name : ''
       const { profile, documentId } = await startAssignmentInStorage(profileId, {
         assignmentId,
         assignmentVersion: assignment.version,
         title: assignment.workbook.title,
         content: buildStartingContent(assignment),
+        files: assignment.deliverables.map((d) => deliverableFile(d, playerName)),
       })
       setState({ status: 'ready', profile })
       return documentId
     },
-    [profileId],
+    [profileId, state],
   )
 
   /**
-   * Grades the saved workbook of an assignment and records the result. The
-   * caller must make sure all changes are saved first.
+   * Grades an assignment and records the result. Without `attachments`, the
+   * task's own workbook is graded (Submit in the task pane). With them (an
+   * email to the manager), exactly the attached files are graded: the
+   * workbook, report and presentation found among them. The caller must make
+   * sure all changes are saved first. `sent` is the email to keep in Sent.
    */
   const submitAssignment = useCallback(
-    async (assignmentId: string): Promise<SubmissionResult> => {
+    async (
+      assignmentId: string,
+      attachments?: string[],
+      sent?: MailMessage,
+    ): Promise<SubmissionResult> => {
       const assignment = getAssignment(assignmentId)
       if (!profileId || !assignment) throw new Error('This task could not be found.')
       if (state.status !== 'ready') throw new Error('Your career is not loaded yet.')
       const progress = state.profile.assignments[assignmentId]
-      const document = progress ? await getDocument(progress.documentId) : undefined
-      if (!document || document.kind !== 'sheet') {
-        throw new Error('The workbook for this task could not be found.')
+      if (!progress) throw new Error('This task has not been started yet.')
+
+      let workbook: SheetDocument | null = null
+      const files: { doc?: DocContent; slides?: SlidesContent } = {}
+      const handedIn: AnyDocument[] = []
+      if (!attachments) {
+        const document = await getDocument(progress.documentId)
+        if (!document || document.kind !== 'sheet') {
+          throw new Error('The workbook for this task could not be found.')
+        }
+        workbook = document
+        handedIn.push(document)
+      } else {
+        // The task's own files first, then any other attached file of each kind.
+        const preferred = [
+          progress.documentId,
+          progress.files?.doc,
+          progress.files?.slides,
+        ]
+        const ordered = [
+          ...attachments.filter((id) => preferred.includes(id)),
+          ...attachments.filter((id) => !preferred.includes(id)),
+        ]
+        for (const id of ordered) {
+          const document = await getDocument(id)
+          if (!document) continue
+          if (document.kind === 'sheet' && !workbook) workbook = document
+          else if (document.kind === 'doc' && !files.doc) files.doc = document.content
+          else if (document.kind === 'slides' && !files.slides)
+            files.slides = document.content
+          else continue
+          handedIn.push(document)
+        }
       }
-      const grade = gradeAssignment(assignment, document.content)
+
+      const grade = gradeAssignment(assignment, workbook?.content ?? null, files)
       let reward: Reward | null = null
-      const profile = await saveSubmission(profileId, document, (latest, versionId) => {
-        const result = recordSubmission(latest, assignment, grade, Date.now(), versionId)
+      const profile = await saveSubmission(profileId, handedIn, (latest, versionId) => {
+        const withSent = sent ? { ...latest, inbox: [...latest.inbox, sent] } : latest
+        const result = recordSubmission(
+          withSent,
+          assignment,
+          grade,
+          Date.now(),
+          workbook ? versionId : undefined,
+        )
         reward = result.reward
         return {
           ...latest,
@@ -115,6 +171,58 @@ export function useCareer() {
       return { assignmentId, grade, reward: reward! }
     },
     [profileId, state],
+  )
+
+  /**
+   * Sends an email (a reply to a colleague), with files attached. A reply to a
+   * task email of a started task hands the work in: the attachments are
+   * graded and the manager replies with feedback. Returns the result then.
+   */
+  const sendMail = useCallback(
+    async (input: {
+      replyTo: MailMessage
+      body: string
+      attachments: Array<{
+        documentId: string
+        kind: 'sheet' | 'doc' | 'slides'
+        title: string
+      }>
+    }): Promise<SubmissionResult | null> => {
+      if (!profileId || state.status !== 'ready') return null
+      const now = Date.now()
+      const subject = input.replyTo.subject.startsWith('Re:')
+        ? input.replyTo.subject
+        : `Re: ${input.replyTo.subject}`
+      const sent: MailMessage = {
+        id: createId(),
+        from: 'me',
+        to: input.replyTo.from,
+        kind: 'sent',
+        subject,
+        body: input.body,
+        receivedAt: now,
+        readAt: now,
+        ...(input.replyTo.assignmentId
+          ? { assignmentId: input.replyTo.assignmentId }
+          : {}),
+        attachments: input.attachments,
+      }
+      const assignmentId = input.replyTo.assignmentId
+      if (assignmentId && state.profile.assignments[assignmentId]) {
+        return submitAssignment(
+          assignmentId,
+          input.attachments.map((a) => a.documentId),
+          sent,
+        )
+      }
+      const profile = await updateProfile(profileId, (latest) => ({
+        ...latest,
+        inbox: [...latest.inbox, sent],
+      }))
+      setState({ status: 'ready', profile })
+      return null
+    },
+    [profileId, state, submitAssignment],
   )
 
   const markRead = useCallback(
@@ -184,6 +292,7 @@ export function useCareer() {
     createCareer,
     startAssignment,
     submitAssignment,
+    sendMail,
     markRead,
     toggleStep,
     act,

@@ -38,8 +38,78 @@ owner.
 - [x] 3.1 Docs: a real document editor with templates, autosave and version history
 - [x] 3.2 Advanced Sheets: charts, sorting, filtering, conditional formatting, validation
 - [x] 3.3 Slides: a real presentation editor with themes, layouts and presentation mode
-- [ ] 3.4 Integration: charts across apps, attachments, submitting work by email
-- [ ] 3.5 Multi-application assignments
+- [x] 3.4 Integration: charts across apps, attachments, submitting work by email
+- [x] 3.5 Multi-application assignments
+
+**Phase 3 is complete.**
+
+---
+
+## 2026-10-31 · Milestones 3.4–3.5: connected apps and multi-application assignments
+
+### Built
+
+- **Assignments with several files**: a task can include a report (Docs) and a
+  presentation (Slides) as well as its workbook. Starting the task creates all three
+  from templates (each with an "Original" version) and links them to the task. The
+  Tasks app lists them ("Your files for this task") with buttons to open each one, and
+  Docs and Slides show which task a file belongs to (task files cannot be deleted).
+- **Mail with attachments**: Reply to a colleague's email, write a message, and attach
+  any of your files (workbooks, documents, presentations). A Sent folder keeps what
+  you sent, with its attachments.
+- **Handing in by email**: replying to a task email hands the work in. Exactly the
+  attached files are graded, so forgetting to attach the report is a real mistake
+  with a clear explanation ("No report was attached"). Priya replies with feedback, and
+  the usual results window shows every check. The task's own files are attached
+  automatically; any other file can be attached instead.
+- **Grading reports and presentations** (`src/game/deliverables.ts`), the way a
+  manager reads them:
+  - **sections**: the expected headings (report) or slide titles (presentation);
+  - **figures**: the key numbers, compared with the model answer of the workbook, so
+    a report built on a wrong analysis is caught; formatting and sensible rounding are
+    accepted ("$227,300", "227.3k", "about $227,000");
+  - **mentions**: the important facts (e.g. which departments overspent);
+  - **charts**, **tables** and **length** (words or slides).
+- **A workbook chart check**: a task can require a chart of certain cells.
+- **Two multi-application assignments**, progressively harder:
+  - **Monthly departmental performance report** (Junior, task 7): variances, totals
+    and a chart in Sheets; a report with an executive summary, findings and
+    recommendations, the key figures and the chart; 4–8 slides with the headline
+    figure and the chart; then email all three. Step-by-step guidance.
+  - **Supplier cost review and savings proposal** (Finance Assistant, task 8):
+    percentage changes, a 10% threshold, a SUMIF-based savings estimate; a proposal
+    (problem, proposal, savings, recommendation) naming the suppliers to renegotiate;
+    5–10 slides with the saving and a recommendation. Much less guidance.
+- In the workbook's task pane, multi-file tasks offer "Hand in all your files…"
+  instead of submitting the workbook alone.
+- A development-only `window.__worksim.skipTo('performance-report')` marks earlier
+  tasks as done, for testing.
+
+### Tested
+
+- Unit tests: numbers in text (separators, decimals, k, %, rounding, signs); a
+  correct report and presentation get full marks; a vague report gets specific notes
+  (missing headings, figures, departments, chart, length); missing attachments score
+  zero with an explanation; starting a task creates its report and presentation.
+  Content tests check every deliverable's template and every check ID.
+- Browser tests: the whole journey (email → task → analysis and chart in Sheets →
+  report with the chart in Docs → slides with the figure and chart → reply with three
+  attachments → 100%); and handing in without the report.
+
+### Known limitations (Phase 3)
+
+- **Docs**: no pictures inside documents, no comments or tracked changes, and no
+  export to Word files (Print / Save as PDF works). Page breaks are shown as lines
+  rather than as separate pages while editing.
+- **Sheets**: charts live in a side panel rather than floating over the grid; one
+  filter per sheet; sorting is by one column at a time.
+- **Slides**: no rotation, animations or tables; text formatting applies to a whole
+  text box; no export to PowerPoint files.
+- **Grading of reports and slides is rule-based**: it checks structure, figures, key
+  facts, charts and length, not the quality of the writing. Priya's written feedback
+  makes this clear by pointing at specific, fixable problems.
+- Charts placed in Docs and Slides are copies: they do not change when the workbook
+  changes (insert the chart again to update it).
 
 ---
 

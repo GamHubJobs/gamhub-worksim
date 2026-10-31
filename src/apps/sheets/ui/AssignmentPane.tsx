@@ -210,17 +210,29 @@ export function AssignmentPane({
             <span className="text-blue-700">View feedback</span>
           </button>
         )}
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={submitting}
-          className="flex w-full items-center justify-center gap-2 rounded-md bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800 disabled:opacity-60"
-        >
-          <Icon name="send" className="h-4 w-4" />
-          {submitting
-            ? 'Checking your work…'
-            : `${latest ? 'Submit again' : 'Submit'} to ${manager.name.split(' ')[0]}`}
-        </button>
+        {assignment.deliverables.length > 0 ? (
+          // Work with a report and slides is handed in by email.
+          <button
+            type="button"
+            onClick={onShowResults}
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800"
+          >
+            <Icon name="send" className="h-4 w-4" />
+            Hand in all your files…
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-800 disabled:opacity-60"
+          >
+            <Icon name="send" className="h-4 w-4" />
+            {submitting
+              ? 'Checking your work…'
+              : `${latest ? 'Submit again' : 'Submit'} to ${manager.name.split(' ')[0]}`}
+          </button>
+        )}
       </div>
     </aside>
   )
