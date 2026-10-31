@@ -139,11 +139,18 @@ export const SkillSchema = z.object({
 })
 export type Skill = z.infer<typeof SkillSchema>
 
+/** Overall ratings of a performance review, from lowest to highest. */
+export const REVIEW_RATINGS = ['developing', 'solid', 'strong', 'outstanding'] as const
+
 export const CareerLevelSchema = z.object({
   id: z.string(),
   title: z.string(),
   /** XP needed (in total) to be considered for this level. */
   xpRequired: z.number().int().nonnegative(),
+  /** Professional reputation (0–100) needed to be promoted to this level. */
+  minReputation: z.number().int().min(0).max(100),
+  /** The latest weekly review must be at least this good, if set. */
+  minReview: z.enum(REVIEW_RATINGS).optional(),
 })
 
 export const CareerSchema = z.object({

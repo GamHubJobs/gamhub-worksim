@@ -205,14 +205,75 @@ describe('the first week', () => {
       profile = result.profile
       rewards.push(result.reward)
     }
+    // The promotion unlocks the first task of the new level.
     expect(rewards.map((r) => r.unlocked?.id ?? null)).toEqual([
       'expense-summary',
       'invoice-check',
-      null,
+      'budget-report',
     ])
     expect(rewards[2].promotedTo).toBe('Junior Finance Assistant')
     expect(careerLevel(profile).current.title).toBe('Junior Finance Assistant')
-    expect(profile.inbox.at(-1)?.kind).toBe('promotion')
+    expect(profile.inbox.at(-2)?.kind).toBe('promotion')
+    expect(profile.inbox.at(-1)).toMatchObject({
+      kind: 'briefing',
+      assignmentId: 'budget-report',
+    })
+    expect(profile.work.deadlines['budget-report']?.status).toBe('open')
+  })
+
+  it('keeps the next level’s tasks locked until the promotion', () => {
+    let profile = newProfileData('Alex', 0)
+    for (const id of ['supplies-order', 'expense-summary', 'invoice-check']) {
+      profile = {
+        ...profile,
+        assignments: {
+          ...profile.assignments,
+          [id]: {
+            assignmentId: id,
+            assignmentVersion: 1,
+            documentId: createId(),
+            startedAt: 1,
+            completedSteps: [],
+            attempts: [],
+          },
+        },
+      }
+      // Passing, but only just: not enough XP for a promotion yet.
+      profile = recordSubmission(profile, getAssignment(id)!, grade(70), 10).profile
+    }
+    expect(careerLevel(profile).current.id).toBe('intern')
+    expect(assignmentStatus(profile, getAssignment('budget-report')!)).toBe('locked')
+    expect(promotionProgress(profile).xpNeeded).toBeGreaterThan(0)
+  })
+
+  it('needs a professional reputation, and for senior roles a good review', () => {
+    const profile = started(newProfileData('Alex', 0))
+    const done = {
+      ...profile,
+      xp: 5000,
+      assignments: {},
+      levelId: 'junior',
+      work: { ...profile.work, reputation: 40 },
+    }
+    // Junior → Finance Assistant: reputation 50 and at least a "solid" review.
+    let progress = promotionProgress(done)
+    expect(progress.next?.id).toBe('assistant')
+    expect(progress.reputationMet).toBe(false)
+    expect(progress.reviewMet).toBe(false)
+    const review = {
+      day: 5,
+      week: 1,
+      rating: 'solid' as const,
+      scores: {},
+      strengths: [],
+      improvements: [],
+    }
+    progress = promotionProgress({
+      ...done,
+      work: { ...done.work, reputation: 55, reviews: [review] },
+    })
+    expect(progress.reputationMet).toBe(true)
+    expect(progress.reviewMet).toBe(true)
   })
 
   it('later tasks stay locked until the previous one is passed', () => {

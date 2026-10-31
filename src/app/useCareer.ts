@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getAssignment } from '../content/assignments'
 import {
+  advanceCareer,
   newProfileData,
   recordSubmission,
   type ProfileData,
@@ -15,6 +16,7 @@ import {
 import { gradeAssignment, type GradeResult } from '../game/grading'
 import { buildStartingContent } from '../game/workbooks'
 import { checkEvents } from '../game/events'
+import { checkReviews } from '../game/reviews'
 import { afterSubmission } from '../game/workday'
 import { getDocument } from '../persistence/documentsRepo'
 import {
@@ -164,10 +166,13 @@ export function useCareer() {
   const act = useCallback(
     async (change: (profile: ProfileData) => ProfileData): Promise<Profile | null> => {
       if (!profileId) return null
-      const profile = await updateProfile(profileId, (latest) => ({
-        ...latest,
-        ...checkEvents(change(latest)),
-      }))
+      const now = Date.now()
+      const profile = await updateProfile(profileId, (latest) => {
+        // After the action: promotions and new tasks, Friday's review if it
+        // was missed, then any workplace event the new situation causes.
+        const changed = advanceCareer(change(latest), now).profile
+        return { ...latest, ...checkEvents(checkReviews(changed, now)) }
+      })
       setState({ status: 'ready', profile })
       return profile
     },

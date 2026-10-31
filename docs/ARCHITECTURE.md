@@ -127,6 +127,25 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 - **Scenes** (`src/game/scenes.ts`): meetings, conversations and events are dialogues
   with choices; each choice has visible effects (trust, reputation, wellbeing, time)
   and a workplace lesson. Finished scenes are remembered in `work.events.done`.
+- **After every action** (`career.act` in `src/app/useCareer.ts`), three checks
+  run on the result, all pure and idempotent:
+  1. `advanceCareer`: promotion if every requirement is met; briefings and deadlines
+     for tasks that have become available;
+  2. `checkReviews`: the weekly review by email if Friday ended without a one-to-one;
+  3. `checkEvents`: starts the next workplace event whose cause is present (never
+     random, one at a time) and lets ignored requests lapse.
+
+| Module (`src/game/`) | Responsibility                                           |
+| -------------------- | -------------------------------------------------------- |
+| `clock.ts`           | Office calendar: weekdays, weeks, formatting             |
+| `workday.ts`         | Time passing, meetings, lunch, breaks, deadlines, days   |
+| `wellbeing.ts`       | Energy, stress, engagement, fatigue and their readings   |
+| `relationships.ts`   | Trust per colleague and professional reputation          |
+| `conversations.ts`   | Talking to colleagues: small talk, one-off conversations |
+| `meetings.ts`        | Stand-up and planning scenes                             |
+| `events.ts`          | Workplace events and their triggers                      |
+| `reviews.ts`         | Weekly performance reviews                               |
+| `notices.ts`         | Reminders shown at the computer                          |
 
 ## Technology
 
@@ -147,9 +166,8 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 
 0. Foundations: saving, recovery, backups, tooling (done)
 1. Vertical slice: "Your First Day as an Intern" (done, including the 3D office)
-2. The Living Workplace: workday, wellbeing, colleagues, events, career growth ←
-   _in progress_
-3. Productivity depth (Docs app, richer spreadsheet)
+2. The Living Workplace: workday, wellbeing, colleagues, events, career growth (done)
+3. Productivity depth (Docs app, richer spreadsheet) ← _next_
 4. More careers and departments
 5. Achievements and customisation
 6. Polish

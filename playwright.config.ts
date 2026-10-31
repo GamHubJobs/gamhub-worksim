@@ -12,7 +12,9 @@ export default defineConfig({
   timeout: 60_000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // One retry absorbs the occasional overload on slower computers; tests that only
+  // pass on the retry are still reported as "flaky".
+  retries: 1,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,

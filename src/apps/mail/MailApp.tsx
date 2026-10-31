@@ -158,7 +158,7 @@ function MessageView({
           </button>
         </div>
       )}
-      {mail.kind === 'promotion' && (
+      {(mail.kind === 'promotion' || mail.kind === 'review') && (
         <button
           type="button"
           onClick={onOpenCareer}

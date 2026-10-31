@@ -29,7 +29,57 @@ owner.
 - [x] 2.3 Colleague relationships: trust, reputation, personalities, mentorship,
       conflicts with ethical choices
 - [x] 2.4 Workplace events: requests, mistakes, recognition, decisions
-- [ ] 2.5 Career expansion: Junior-level tasks, performance reviews, promotion criteria
+- [x] 2.5 Career expansion: Junior-level tasks, performance reviews, promotion criteria
+
+**Phase 2 is complete.**
+
+---
+
+## 2026-10-31 · Milestone 2.5: career expansion, reviews and promotion criteria
+
+### Built
+
+- **Three Junior Finance Assistant tasks**, unlocked by the promotion (each with a
+  briefing, steps, hints, a model answer, "what if the data changes" scenarios and
+  feedback):
+  - **Budget vs actual report**: SUMIF across sheets with absolute references
+    (`$C$2:$C$17`), variance, percentage of budget used (percent format), over-budget
+    flags and monthly totals.
+  - **Weekly payment run**: IF with AND (approved and due within 7 days; overdue but
+    unapproved invoices stay on hold), COUNTIF with `"<0"`, and one payment per
+    supplier with SUMIF.
+  - **Petty cash reconciliation**: expected vs counted cash, ROUND against tiny
+    calculation differences, ABS for a tolerance either way, and missing receipts with
+    COUNTIF and SUMIF.
+- **Tasks are tied to levels**: Junior tasks stay locked until the promotion; a
+  promotion emails the first task of the new level (with a deadline), and Priya
+  congratulates the player in person.
+- **Weekly performance reviews** (`src/game/reviews.ts`) at Friday's one-to-one, or
+  by email if it is missed. Four areas scored 1–5 from the player's real record:
+  quality of work (best scores), reliability (deadlines and meetings this week),
+  teamwork (colleagues' trust) and professionalism (reputation). Overall: Developing,
+  Solid, Strong or Outstanding, with strengths and things to work on. Wellbeing is
+  discussed (long days, skipped lunches, fatigue) but never scored. At the meeting the
+  player can ask how to improve, respectfully point out missed evidence, or argue.
+- **Promotion criteria** beyond XP and tasks: Junior needs a reputation of 35; Finance
+  Assistant needs 50 and a review of at least "Solid"; Finance Officer needs 60 and
+  "Strong". A good review can complete a promotion that was waiting for it.
+- **Career app**: the promotion checklist shows the new requirements; a "Performance
+  reviews" section keeps every review. Review emails link to the Career app.
+- `advanceCareer` runs after every change, so promotions and new tasks are never
+  missed (also for careers saved before this version).
+- A development-only `window.__worksim.setTime(day, minute)` hook for browser tests.
+
+### Tested
+
+- Content tests: every new task's model answer scores 100% and an untouched workbook
+  fails.
+- Unit tests: level locks, the promotion unlocking the Junior tasks, reputation and
+  review requirements; reviews of a good week and of a week with missed meetings and
+  deadlines; wellbeing mentioned but not scored; one review per week; the email
+  review after a Friday without a one-to-one; a promotion completed by a review.
+- New browser test: Friday's one-to-one, the review conversation, the written review
+  and the Career app.
 
 ---
 

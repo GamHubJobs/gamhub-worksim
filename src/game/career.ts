@@ -7,7 +7,7 @@ import { createId } from '../lib/ids'
 import { ASSIGNMENTS } from '../content/assignments'
 import { getCareer, SKILL_LEVELS } from '../content/careers'
 import { COMPANY } from '../content/company'
-import type { Assignment } from '../content/schemas'
+import { REVIEW_RATINGS, type Assignment } from '../content/schemas'
 import type {
   AssignmentProgress,
   Attempt,
@@ -130,6 +130,10 @@ export function careerAssignments(careerId: string): Assignment[] {
   return ASSIGNMENTS.filter((assignment) => assignment.careerId === careerId)
 }
 
+function levelIndex(careerId: string, levelId: string): number {
+  return getCareer(careerId).levels.findIndex((level) => level.id === levelId)
+}
+
 export function assignmentStatus(
   profile: ProfileData,
   assignment: Assignment,
@@ -138,6 +142,13 @@ export function assignmentStatus(
   if (isPassed(assignment, progress)) return 'completed'
   if (progress && progress.attempts.length > 0) return 'needs-revision'
   if (progress) return 'in-progress'
+  // Work for a higher level waits for the promotion.
+  if (
+    levelIndex(assignment.careerId, assignment.levelId) >
+    levelIndex(profile.careerId, profile.levelId)
+  ) {
+    return 'locked'
+  }
   const previous = careerAssignments(assignment.careerId).find(
     (a) => a.order === assignment.order - 1,
   )
@@ -169,9 +180,16 @@ export function careerLevel(profile: ProfileData) {
   }
 }
 
+export type ReviewRating = (typeof REVIEW_RATINGS)[number]
+
+export function ratingAtLeast(rating: ReviewRating, minimum: ReviewRating): boolean {
+  return REVIEW_RATINGS.indexOf(rating) >= REVIEW_RATINGS.indexOf(minimum)
+}
+
 /**
- * What is still needed for the next promotion: enough XP, and every
- * assignment of the current level passed.
+ * What is still needed for the next promotion: enough XP, every assignment
+ * of the current level passed, a good enough professional reputation and,
+ * for senior roles, a good enough latest performance review.
  */
 export function promotionProgress(profile: ProfileData) {
   const { current, next } = careerLevel(profile)
@@ -181,16 +199,27 @@ export function promotionProgress(profile: ProfileData) {
   const passed = levelAssignments.filter((a) =>
     isPassed(a, profile.assignments[a.id]),
   ).length
+  const latestReview = profile.work.reviews.at(-1)?.rating ?? null
+  const reputationMet = next === null || profile.work.reputation >= next.minReputation
+  const reviewMet =
+    !next?.minReview ||
+    (latestReview !== null && ratingAtLeast(latestReview, next.minReview))
   return {
     next,
     xpNeeded: next ? Math.max(0, next.xpRequired - profile.xp) : 0,
     assignmentsPassed: passed,
     assignmentsTotal: levelAssignments.length,
+    reputation: profile.work.reputation,
+    reputationMet,
+    latestReview,
+    reviewMet,
     eligible:
       next !== null &&
       profile.xp >= next.xpRequired &&
       levelAssignments.length > 0 &&
-      passed === levelAssignments.length,
+      passed === levelAssignments.length &&
+      reputationMet &&
+      reviewMet,
   }
 }
 
@@ -276,6 +305,47 @@ Priya`,
 }
 
 /**
+ * Promotes the player if they now meet every requirement, and sends the
+ * briefing (with a deadline) for any task that has become available. Safe to
+ * call after any change: it does nothing when nothing is due.
+ */
+export function advanceCareer(
+  profile: ProfileData,
+  now: number,
+): { profile: ProfileData; promotedTo: string | null; unlocked: Assignment | null } {
+  let updated = profile
+  let promotedTo: string | null = null
+  const promotion = promotionProgress(updated)
+  if (promotion.eligible && promotion.next) {
+    promotedTo = promotion.next.title
+    updated = {
+      ...updated,
+      levelId: promotion.next.id,
+      inbox: [
+        ...updated.inbox,
+        promotionMessage(profile.name, promotion.next.title, now + 3),
+      ],
+    }
+  }
+
+  let unlocked: Assignment | null = null
+  for (const assignment of careerAssignments(updated.careerId)) {
+    if (assignmentStatus(updated, assignment) !== 'available') continue
+    const briefed = updated.inbox.some(
+      (mail) => mail.kind === 'briefing' && mail.assignmentId === assignment.id,
+    )
+    if (briefed) continue
+    updated = {
+      ...updated,
+      inbox: [...updated.inbox, briefingMessage(assignment, profile.name, now + 4)],
+      work: addDeadline(updated.work, assignment.id),
+    }
+    unlocked ??= assignment
+  }
+  return { profile: updated, promotedTo, unlocked }
+}
+
+/**
  * Records a submission: the attempt, XP and skill rewards, the manager's
  * reply, the next assignment (on a first pass) and a promotion if earned.
  */
@@ -341,36 +411,12 @@ export function recordSubmission(
     ],
   }
 
-  // A first pass unlocks the next assignment.
+  // A first pass unlocks the next assignment; a promotion may follow, which
+  // unlocks the next level's first assignment.
   const firstPass = grade.passed && !wasPassed
-  let unlocked: Assignment | null = null
-  if (firstPass) {
-    unlocked =
-      careerAssignments(assignment.careerId).find(
-        (a) => a.order === assignment.order + 1,
-      ) ?? null
-    if (unlocked) {
-      updated = {
-        ...updated,
-        inbox: [...updated.inbox, briefingMessage(unlocked, profile.name, now + 2)],
-      }
-    }
-  }
-
-  // Promotion when everything for this level is done and enough XP is earned.
-  let promotedTo: string | null = null
-  const promotion = promotionProgress(updated)
-  if (promotion.eligible && promotion.next) {
-    promotedTo = promotion.next.title
-    updated = {
-      ...updated,
-      levelId: promotion.next.id,
-      inbox: [
-        ...updated.inbox,
-        promotionMessage(profile.name, promotion.next.title, now + 3),
-      ],
-    }
-  }
+  const advanced = advanceCareer(updated, now)
+  updated = advanced.profile
+  const { promotedTo, unlocked } = advanced
 
   return {
     profile: updated,

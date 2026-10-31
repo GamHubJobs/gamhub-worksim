@@ -2,6 +2,8 @@
 import { SKILLS } from '../../content/careers'
 import { COMPANY, PEOPLE } from '../../content/company'
 import { isMentor } from '../../game/conversations'
+import { RATING_NAMES, REVIEW_AREAS } from '../../game/reviews'
+import { weekdayName } from '../../game/clock'
 import { reputationReading, trustOf, trustReading } from '../../game/relationships'
 import { Avatar } from '../../ui/Avatar'
 import {
@@ -76,8 +78,8 @@ export function CareerApp({ profile }: { profile: Profile }) {
           <section className="rounded-xl border border-slate-200 bg-white p-6">
             <h2 className="font-semibold text-slate-900">Next promotion: {next.title}</h2>
             <p className="mt-1 text-sm text-slate-600">
-              Promotions are based on experience and on completing all the work of your
-              current level.
+              Promotions are based on experience, on completing all the work of your
+              current level, and on how you work with others.
             </p>
             <ul className="mt-3 space-y-2 text-sm">
               <Requirement
@@ -91,6 +93,18 @@ export function CareerApp({ profile }: { profile: Profile }) {
                 }
                 text={`Pass every ${current.title.toLowerCase()} task (${promotion.assignmentsPassed} of ${promotion.assignmentsTotal})`}
               />
+              {next.minReputation > 0 && (
+                <Requirement
+                  met={promotion.reputationMet}
+                  text={`A professional reputation of at least ${next.minReputation} (now ${promotion.reputation})`}
+                />
+              )}
+              {next.minReview && (
+                <Requirement
+                  met={promotion.reviewMet}
+                  text={`A weekly review of at least “${RATING_NAMES[next.minReview]}”${promotion.latestReview ? ` (latest: ${RATING_NAMES[promotion.latestReview]})` : ' (reviews happen at Friday’s one-to-one)'}`}
+                />
+              )}
             </ul>
           </section>
         )}
@@ -122,6 +136,8 @@ export function CareerApp({ profile }: { profile: Profile }) {
         </section>
 
         <TeamSection profile={profile} />
+
+        <ReviewsSection profile={profile} />
 
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="font-semibold text-slate-900">Work record</h2>
@@ -219,6 +235,53 @@ function TeamSection({ profile }: { profile: Profile }) {
           )
         })}
       </ul>
+    </section>
+  )
+}
+
+/** Weekly performance reviews, newest first. */
+function ReviewsSection({ profile }: { profile: Profile }) {
+  const reviews = [...profile.work.reviews].reverse()
+  return (
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-6"
+      data-testid="reviews"
+    >
+      <h2 className="font-semibold text-slate-900">Performance reviews</h2>
+      {reviews.length === 0 ? (
+        <p className="mt-1 text-sm text-slate-600">
+          Priya reviews your week at your one-to-one every Friday afternoon: quality of
+          work, reliability, teamwork and professionalism.
+        </p>
+      ) : (
+        <ul className="mt-3 space-y-4">
+          {reviews.map((review) => (
+            <li key={review.week}>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-medium text-slate-800">
+                  Week {review.week}: {RATING_NAMES[review.rating]}
+                </span>
+                <span className="text-xs text-slate-500">{weekdayName(review.day)}</span>
+              </div>
+              <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 text-sm sm:grid-cols-4">
+                {REVIEW_AREAS.map((area) => (
+                  <div key={area.id} className="flex justify-between gap-2">
+                    <dt className="text-slate-500">{area.name}</dt>
+                    <dd className="font-medium text-slate-800">
+                      {review.scores[area.id]}/5
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              {review.improvements.length > 0 && (
+                <p className="mt-1 text-xs text-slate-600">
+                  To work on: {review.improvements.join(' ')}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

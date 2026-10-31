@@ -56,7 +56,7 @@ function managerDialogue(profile: ProfileData): Dialogue {
   const name = firstName(profile.name)
   const task = currentTask(profile)
   const promotion = promotionProgress(profile)
-  const { current } = careerLevel(profile)
+  const { current, career } = careerLevel(profile)
   const base = { speaker: 'manager', title: 'Priya Raman' }
 
   if (!task) {
@@ -88,10 +88,17 @@ function managerDialogue(profile: ProfileData): Dialogue {
     open: { app: 'tasks' as const, assignmentId: assignment.id },
   }
   if (status === 'available') {
+    const firstOfLevel =
+      current.id !== career.levels[0].id &&
+      careerAssignments(profile.careerId)
+        .filter((a) => a.levelId === current.id)
+        .every((a) => !profile.assignments[a.id])
     return {
       ...base,
       lines: [
-        `Hi ${name}! I’ve emailed you a new task: “${assignment.title}”.`,
+        firstOfLevel
+          ? `Congratulations again on the promotion, ${name}! Your first task as ${current.title} is in your inbox: “${assignment.title}”.`
+          : `Hi ${name}! I’ve emailed you a new task: “${assignment.title}”.`,
         `It should take about ${assignment.estimatedMinutes} minutes. Everything you need is in the task, and the steps will guide you.`,
       ],
       actions: [open],
@@ -158,21 +165,24 @@ function colleagueDialogue(tipIndex: number): Dialogue {
 }
 
 function whiteboardDialogue(profile: ProfileData): Dialogue {
-  const lines = careerAssignments(profile.careerId).map((assignment) => {
-    const status = assignmentStatus(profile, assignment)
-    const best = bestScore(profile.assignments[assignment.id])
-    const mark =
-      status === 'completed'
-        ? `✓ done (${best}%)`
-        : status === 'locked'
-          ? 'coming up'
-          : status === 'needs-revision'
-            ? `needs another look (${best}%)`
-            : status === 'in-progress'
-              ? 'in progress'
-              : 'new'
-    return `${assignment.title}: ${mark}`
-  })
+  const { current } = careerLevel(profile)
+  const lines = careerAssignments(profile.careerId)
+    .filter((assignment) => assignment.levelId === current.id)
+    .map((assignment) => {
+      const status = assignmentStatus(profile, assignment)
+      const best = bestScore(profile.assignments[assignment.id])
+      const mark =
+        status === 'completed'
+          ? `✓ done (${best}%)`
+          : status === 'locked'
+            ? 'coming up'
+            : status === 'needs-revision'
+              ? `needs another look (${best}%)`
+              : status === 'in-progress'
+                ? 'in progress'
+                : 'new'
+      return `${assignment.title}: ${mark}`
+    })
   return {
     speaker: null,
     title: `This week: ${firstName(profile.name)}`,

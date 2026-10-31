@@ -179,7 +179,7 @@ export const MailMessageSchema = z.object({
   body: z.string(),
   receivedAt: TimestampSchema,
   readAt: TimestampSchema.nullable(),
-  kind: z.enum(['welcome', 'briefing', 'feedback', 'promotion', 'info']),
+  kind: z.enum(['welcome', 'briefing', 'feedback', 'promotion', 'review', 'info']),
   assignmentId: z.string().optional(),
   /** For feedback: which attempt (0-based) it is about. */
   attemptIndex: z.number().int().nonnegative().optional(),

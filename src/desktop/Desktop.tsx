@@ -111,6 +111,9 @@ export function Desktop({
           ...p,
           work: { ...p.work, wellbeing: { ...p.work.wellbeing, ...change } },
         })),
+      /** Jumps to a day and time without anything happening on the way. */
+      setTime: (day: number, minute: number) =>
+        act((p) => ({ ...p, work: { ...p.work, day, minute } })),
     }
     Object.assign(window, { __worksim: hooks })
   }, [act])

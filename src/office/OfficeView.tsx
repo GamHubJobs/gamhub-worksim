@@ -37,6 +37,7 @@ import {
   type ColleagueId,
 } from '../game/conversations'
 import { meetingScene } from '../game/meetings'
+import { holdReview, reviewFor, reviewScene } from '../game/reviews'
 import {
   COFFEE_DIALOGUE,
   dialogueFor,
@@ -218,6 +219,12 @@ export function OfficeView({
   }
 
   function joinMeeting(meetingId: string) {
+    if (meetingId === 'one-to-one') {
+      // Friday's one-to-one is the weekly performance review.
+      void onAct((p) => holdReview(attendMeeting(p, meetingId), true))
+      setDialogue(reviewScene(profile, reviewFor(profile)))
+      return
+    }
     void onAct((p) => attendMeeting(p, meetingId))
     const scene = meetingScene(profile, meetingId)
     if (scene) setDialogue(scene)

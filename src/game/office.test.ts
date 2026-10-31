@@ -82,7 +82,11 @@ describe('what Priya says', () => {
       profile = start(profile, id)
       profile = recordSubmission(profile, getAssignment(id)!, grade(100), 1).profile
     }
-    expect(currentTask(profile)).toBeNull()
+    // The first Junior task arrives with the promotion.
+    expect(currentTask(profile)?.assignment.id).toBe('budget-report')
+    expect(dialogueFor('manager', profile).lines[0]).toContain(
+      'Congratulations again on the promotion',
+    )
     expect(dialogueFor('manager', profile).lines[0]).toContain('Junior Finance Assistant')
   })
 })

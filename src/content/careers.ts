@@ -51,10 +51,27 @@ export const CAREERS: Career[] = [
     name: 'Office Administration & Finance',
     department: 'Finance & Administration',
     levels: [
-      { id: 'intern', title: 'Finance & Admin Intern', xpRequired: 0 },
-      { id: 'junior', title: 'Junior Finance Assistant', xpRequired: 300 },
-      { id: 'assistant', title: 'Finance Assistant', xpRequired: 900 },
-      { id: 'officer', title: 'Finance Officer', xpRequired: 2000 },
+      { id: 'intern', title: 'Finance & Admin Intern', xpRequired: 0, minReputation: 0 },
+      {
+        id: 'junior',
+        title: 'Junior Finance Assistant',
+        xpRequired: 300,
+        minReputation: 35,
+      },
+      {
+        id: 'assistant',
+        title: 'Finance Assistant',
+        xpRequired: 900,
+        minReputation: 50,
+        minReview: 'solid',
+      },
+      {
+        id: 'officer',
+        title: 'Finance Officer',
+        xpRequired: 2000,
+        minReputation: 60,
+        minReview: 'strong',
+      },
     ],
   },
 ]
