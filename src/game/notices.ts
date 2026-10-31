@@ -5,7 +5,9 @@
  */
 import type { SpotId } from '../content/office'
 import { BREAK_DUE_AFTER, HOURS } from '../content/workday'
+import { PEOPLE } from '../content/company'
 import type { ProfileData } from './career'
+import { pendingEvents } from './events'
 import { formatTime } from './clock'
 import { lunchAvailability, openMeeting } from './workday'
 
@@ -13,13 +15,25 @@ export interface Notice {
   id: string
   text: string
   tone: 'info' | 'warning'
-  action: { label: string; spot: SpotId }
+  /** Where the button takes the player, and the event to open there. */
+  action: { label: string; spot: SpotId; event?: string }
 }
 
 export function computerNotices(profile: ProfileData): Notice[] {
   const { work } = profile
   if (work.dayOver) return []
   const notices: Notice[] = []
+
+  // Someone came over to the player's desk.
+  for (const event of pendingEvents(profile)) {
+    const name = PEOPLE[event.person]?.name.split(' ')[0] ?? 'A colleague'
+    notices.push({
+      id: `event:${event.id}`,
+      text: `${name} has come over to your desk: “${event.opener}”`,
+      tone: 'warning',
+      action: { label: `Talk to ${name}`, spot: 'desk', event: event.id },
+    })
+  }
 
   const meeting = openMeeting(work)
   if (meeting) {

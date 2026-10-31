@@ -23,7 +23,7 @@ import {
   DEFAULT_VIEW,
   type View,
 } from '../persistence/lastView'
-import type { Profile } from '../persistence/schemas'
+import type { Profile, Wellbeing } from '../persistence/schemas'
 import type { SpotId } from '../content/office'
 import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
@@ -106,6 +106,11 @@ export function Desktop({
     if (!import.meta.env.DEV) return
     const hooks = {
       passTime: (minutes: number) => act((p) => passTime(p, minutes, 'work')),
+      setWellbeing: (change: Partial<Wellbeing>) =>
+        act((p) => ({
+          ...p,
+          work: { ...p.work, wellbeing: { ...p.work.wellbeing, ...change } },
+        })),
     }
     Object.assign(window, { __worksim: hooks })
   }, [act])
@@ -176,6 +181,7 @@ export function Desktop({
         <OfficeView
           profile={profile}
           spot={view.spot ?? 'reception'}
+          openEvent={view.event}
           onGo={(spot) => setView({ app: 'office', spot })}
           onUseComputer={(open) => setView(open ?? { app: 'mail' })}
           onAct={act}
@@ -228,7 +234,7 @@ export function Desktop({
           <main className="flex min-w-0 flex-1 flex-col">
             <Notices
               profile={profile}
-              onGo={(spot) => setView({ app: 'office', spot })}
+              onGo={(spot, event) => setView({ app: 'office', spot, event })}
             />
             <div className="min-h-0 flex-1">
               {view.app === 'mail' && (
@@ -292,7 +298,13 @@ function WorkClock({
 }
 
 /** Reminders at the top of the computer screen; each can be dismissed. */
-function Notices({ profile, onGo }: { profile: Profile; onGo: (spot: SpotId) => void }) {
+function Notices({
+  profile,
+  onGo,
+}: {
+  profile: Profile
+  onGo: (spot: SpotId, event?: string) => void
+}) {
   const [dismissed, setDismissed] = useState<string[]>([])
   const notices = computerNotices(profile).filter((n) => !dismissed.includes(n.id))
   if (notices.length === 0) return null
@@ -314,7 +326,7 @@ function Notices({ profile, onGo }: { profile: Profile; onGo: (spot: SpotId) => 
           <span className="flex-1">{notice.text}</span>
           <button
             type="button"
-            onClick={() => onGo(notice.action.spot)}
+            onClick={() => onGo(notice.action.spot, notice.action.event)}
             className="rounded-md bg-white px-2.5 py-1 text-xs font-medium shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
           >
             {notice.action.label}

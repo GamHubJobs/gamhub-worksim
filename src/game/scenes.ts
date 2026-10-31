@@ -13,7 +13,7 @@ import { log, passTime, requestExtension } from './workday'
 
 export interface Effects {
   /** Trust change per person ID. */
-  trust?: Record<string, number>
+  trust?: Partial<Record<string, number>>
   reputation?: number
   wellbeing?: Partial<Wellbeing>
   /** Office minutes the choice takes (helping someone, a longer talk). */
@@ -37,7 +37,7 @@ export interface Choice {
 export function applyEffects(profile: ProfileData, effects: Effects): ProfileData {
   let work = profile.work
   for (const [personId, delta] of Object.entries(effects.trust ?? {})) {
-    work = changeTrust(work, personId, delta)
+    work = changeTrust(work, personId, delta ?? 0)
   }
   work = changeReputation(work, effects.reputation ?? 0)
   if (effects.wellbeing)
@@ -94,7 +94,7 @@ export function describeEffects(effects: Effects): EffectNote[] {
   const notes: EffectNote[] = []
   const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`)
   for (const [personId, delta] of Object.entries(effects.trust ?? {})) {
-    if (delta === 0) continue
+    if (!delta) continue
     notes.push({
       text: `${getPerson(personId).name.split(' ')[0]}: trust ${signed(delta)}`,
       tone: delta > 0 ? 'good' : 'bad',

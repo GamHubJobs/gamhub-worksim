@@ -28,8 +28,55 @@ owner.
 - [x] 2.2 Energy, stress, engagement and fatigue
 - [x] 2.3 Colleague relationships: trust, reputation, personalities, mentorship,
       conflicts with ethical choices
-- [ ] 2.4 Workplace events: requests, mistakes, recognition, decisions
+- [x] 2.4 Workplace events: requests, mistakes, recognition, decisions
 - [ ] 2.5 Career expansion: Junior-level tasks, performance reviews, promotion criteria
+
+---
+
+## 2026-10-31 · Milestone 2.4: workplace events
+
+### Built
+
+- **An event system** (`src/game/events.ts`). Events are never random: each is caused
+  by the player's own results, workload, deadlines, relationships or wellbeing, and is
+  checked after every change. At most one waits at a time, only during working hours.
+  The person comes to the player: a "wants a word" card in the office, and a reminder
+  at the computer ("Priya has come over to your desk"), which never blocks work.
+- **The events**, each with choices, visible effects and a workplace tip:
+  - **Feedback on a mistake** (after any submission that does not pass, once per
+    task): own it, blame the instructions, or doubt yourself. Dropped if the player
+    fixes the work before Priya comes over.
+  - **Recognition** (first excellent result on a first attempt): accept it, share
+    credit with Marcus (if he helped), or downplay it.
+  - **Jealousy** (after recognition, if Marcus is not yet an ally): acknowledge his
+    experience, stay professional, snap back, or complain to Priya.
+  - **Credit-taking** (after the expense summary, once the next task has started):
+    Marcus presented your summary as his. Clarify calmly with evidence, talk to him
+    privately first (his response depends on trust), accuse him publicly, or let it go.
+  - **A difficult manager** (after a missed deadline): Priya is curt and under
+    pressure. Respond to the need, not the tone; or make excuses; or silently overwork.
+  - **An unexpected request** from Tom (help check a delivery, 15 minutes). Saying no
+    with a reason is fine when busy; "later" without meaning it is noticed. Ignored
+    for an hour, the request lapses with a small cost.
+  - **An urgent request** from Priya (only when the player is not about to miss a
+    deadline): do it now, ask whether it comes before your current task (she moves
+    your deadline), or decline.
+  - **A decision** that follows: Marcus's figure is £480 short. Tell him privately so he
+    can fix it, report it to Priya, or quietly fix it and say nothing.
+  - **A wellbeing check-in** (stress or fatigue very high, at most once a week): being
+    honest earns a deadline extension and lower stress.
+- A development-only `window.__worksim.setWellbeing()` hook for browser tests.
+
+### Tested
+
+- Unit tests: no events on the first morning; mistake feedback (and dropping it when
+  fixed); recognition followed by jealousy; a lapsing request; helping takes time; one
+  event at a time; the urgent request leading to the decision about Marcus's mistake;
+  Priya after a missed deadline (waiting until the next working day); the wellbeing
+  check-in; nothing outside working hours.
+- New browser test: an overloaded player gets a visit from Priya at the computer, and an
+  honest answer extends a deadline.
+- All 36 browser tests and all unit tests pass.
 
 ---
 

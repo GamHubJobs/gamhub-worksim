@@ -13,6 +13,8 @@ export const ViewSchema = z.object({
   app: z.enum(['office', 'mail', 'tasks', 'sheets', 'career']),
   /** In the office: where the player is standing. */
   spot: z.enum(['reception', 'desk', 'manager', 'breakroom']).optional(),
+  /** In the office: a workplace event to open straight away. */
+  event: z.string().optional(),
   /** In Sheets: an open workbook ID, or "practice" for the practice workbook. */
   document: z.string().optional(),
   /** In Tasks: the selected assignment. */

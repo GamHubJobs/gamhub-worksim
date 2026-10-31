@@ -14,6 +14,7 @@ import {
 } from '../game/career'
 import { gradeAssignment, type GradeResult } from '../game/grading'
 import { buildStartingContent } from '../game/workbooks'
+import { checkEvents } from '../game/events'
 import { afterSubmission } from '../game/workday'
 import { getDocument } from '../persistence/documentsRepo'
 import {
@@ -103,7 +104,9 @@ export function useCareer() {
         reward = result.reward
         return {
           ...latest,
-          ...afterSubmission(result.profile, assignment, grade, result.reward),
+          ...checkEvents(
+            afterSubmission(result.profile, assignment, grade, result.reward),
+          ),
         }
       })
       setState({ status: 'ready', profile })
@@ -154,15 +157,16 @@ export function useCareer() {
   )
 
   /**
-   * Applies a game action (see `src/game`) to the latest saved profile and
-   * saves the result. Returns the saved profile.
+   * Applies a game action (see `src/game`) to the latest saved profile,
+   * starts any workplace event it causes, and saves the result. Returns the
+   * saved profile.
    */
   const act = useCallback(
     async (change: (profile: ProfileData) => ProfileData): Promise<Profile | null> => {
       if (!profileId) return null
       const profile = await updateProfile(profileId, (latest) => ({
         ...latest,
-        ...change(latest),
+        ...checkEvents(change(latest)),
       }))
       setState({ status: 'ready', profile })
       return profile

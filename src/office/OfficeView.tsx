@@ -43,6 +43,7 @@ import {
   type Dialogue,
   type DialogueAction,
 } from '../game/office'
+import { eventScene, pendingEvents } from '../game/events'
 import { applyEffects, describeEffects, recordScene, type Choice } from '../game/scenes'
 import {
   attendMeeting,
@@ -65,6 +66,8 @@ type Act = (change: (profile: ProfileData) => ProfileData) => Promise<unknown>
 interface OfficeViewProps {
   profile: Profile
   spot: SpotId
+  /** A workplace event to open on arrival (from a reminder at the computer). */
+  openEvent?: string
   onGo: (spot: SpotId) => void
   onUseComputer: (open?: DialogueAction['open']) => void
   onAct: Act
@@ -117,12 +120,17 @@ const LEAVE_EARLY_DIALOGUE: Dialogue = {
 export function OfficeView({
   profile,
   spot,
+  openEvent,
   onGo,
   onUseComputer,
   onAct,
 }: OfficeViewProps) {
   const [webgl] = useState(supportsWebGL)
-  const [dialogue, setDialogue] = useState<Dialogue | null>(null)
+  const [dialogue, setDialogue] = useState<Dialogue | null>(() =>
+    openEvent && profile.work.events.pending.some((p) => p.id === openEvent)
+      ? eventScene(profile, openEvent)
+      : null,
+  )
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * 100))
   const current = getSpot(spot)
   const unread = unreadCount(profile)
@@ -312,6 +320,29 @@ export function OfficeView({
             </button>
           </div>
         )}
+        {pendingEvents(profile).map((event) => {
+          const person = getPerson(event.person)
+          return (
+            <div
+              key={event.id}
+              className="mt-3 flex items-center gap-2 rounded-md bg-blue-50 p-2 text-sm text-blue-900"
+              data-testid="event-waiting"
+            >
+              <Avatar personId={event.person} />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{person.name.split(' ')[0]} wants a word</p>
+                <p className="truncate text-xs">“{event.opener}”</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDialogue(eventScene(profile, event.id))}
+                className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-800"
+              >
+                Talk
+              </button>
+            </div>
+          )
+        })}
         {!meetingNow && upcoming && (
           <p className="mt-2 text-xs text-slate-500">
             Next: {upcoming.title} at {formatTime(upcoming.start)} (
