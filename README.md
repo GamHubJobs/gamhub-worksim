@@ -32,6 +32,8 @@ Stop the app with `Ctrl+C` in the terminal.
 | `npm run check`        | Run all checks below (do this before committing) |
 | `npm run lint`         | Check the code for common mistakes (Oxlint)      |
 | `npm run typecheck`    | Check that data types are used correctly         |
+| `npm test`             | Run the automated tests once                     |
+| `npm run test:watch`   | Re-run tests automatically whenever you save     |
 | `npm run format`       | Automatically tidy the formatting of all files   |
 | `npm run format:check` | Report files that are not tidily formatted       |
 
