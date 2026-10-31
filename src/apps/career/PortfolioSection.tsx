@@ -4,18 +4,20 @@
  * player can show and talk about.
  */
 import { getSkill } from '../../content/careers'
+import { getTool } from '../../tools/registry'
 import { getCareer } from '../../content/careers'
 import { bestScore, careerAssignments, isPassed } from '../../game/career'
 import { formatDateTime } from '../../lib/time'
 import type { Profile } from '../../persistence/schemas'
 import { Icon, type IconName } from '../../ui/Icon'
 
-export type PortfolioFileKind = 'sheet' | 'tickets' | 'code' | 'doc' | 'slides'
+export type PortfolioFileKind = 'sheet' | 'tickets' | 'code' | 'tool' | 'doc' | 'slides'
 
 const FILE_ICONS: Record<PortfolioFileKind, IconName> = {
   sheet: 'sheets',
   tickets: 'helpdesk',
   code: 'code',
+  tool: 'file',
   doc: 'docs',
   slides: 'slides',
 }
@@ -24,6 +26,7 @@ const FILE_NAMES: Record<PortfolioFileKind, string> = {
   sheet: 'Workbook',
   tickets: 'Ticket queue',
   code: 'Code project',
+  tool: 'File',
   doc: 'Report',
   slides: 'Presentation',
 }
@@ -41,6 +44,7 @@ export function PortfolioSection({
     if (!progress || !isPassed(assignment, progress)) return []
     const passedAt = progress.attempts.find((a) => a.score >= assignment.passScore)
     const level = career.levels.find((l) => l.id === assignment.levelId)
+    const tool = assignment.tool ? getTool(assignment.tool.id) : undefined
     const files: Array<{ kind: PortfolioFileKind; id: string }> = [
       { kind: assignment.kind, id: progress.documentId },
       ...(progress.files?.doc ? [{ kind: 'doc' as const, id: progress.files.doc }] : []),
@@ -48,7 +52,7 @@ export function PortfolioSection({
         ? [{ kind: 'slides' as const, id: progress.files.slides }]
         : []),
     ]
-    return [{ assignment, progress, passedAt, level, files }]
+    return [{ assignment, progress, passedAt, level, files, tool }]
   })
 
   return (
@@ -67,7 +71,7 @@ export function PortfolioSection({
         </p>
       ) : (
         <ul className="mt-4 space-y-3">
-          {items.map(({ assignment, progress, passedAt, level, files }) => (
+          {items.map(({ assignment, progress, passedAt, level, files, tool }) => (
             <li
               key={assignment.id}
               className="rounded-lg border border-slate-200 p-3"
@@ -102,8 +106,13 @@ export function PortfolioSection({
                     onClick={() => onOpenFile(file.kind, file.id)}
                     className="flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-50"
                   >
-                    <Icon name={FILE_ICONS[file.kind]} className="h-3.5 w-3.5" />
-                    {FILE_NAMES[file.kind]}
+                    <Icon
+                      name={
+                        file.kind === 'tool' && tool ? tool.icon : FILE_ICONS[file.kind]
+                      }
+                      className="h-3.5 w-3.5"
+                    />
+                    {file.kind === 'tool' && tool ? tool.name : FILE_NAMES[file.kind]}
                   </button>
                 ))}
               </div>

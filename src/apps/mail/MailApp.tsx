@@ -20,7 +20,7 @@ import { SubmissionResults } from '../tasks/SubmissionResults'
 
 export interface Attachment {
   documentId: string
-  kind: 'sheet' | 'doc' | 'slides' | 'tickets' | 'code'
+  kind: 'sheet' | 'doc' | 'slides' | 'tickets' | 'code' | 'tool'
   title: string
 }
 
@@ -48,6 +48,7 @@ const KIND_ICONS: Record<Attachment['kind'], IconName> = {
   slides: 'slides',
   tickets: 'helpdesk',
   code: 'code',
+  tool: 'file',
 }
 
 const KIND_NAMES: Record<Attachment['kind'], string> = {
@@ -56,6 +57,7 @@ const KIND_NAMES: Record<Attachment['kind'], string> = {
   slides: 'Presentation',
   tickets: 'Ticket queue',
   code: 'Code project',
+  tool: 'Tool file',
 }
 
 function preview(body: string): string {

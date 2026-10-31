@@ -1,5 +1,6 @@
 /** A short description of a document's contents, e.g. "120 filled cells". */
 import { countWords } from '../apps/docs/text'
+import { getTool } from '../tools/registry'
 import { countFilledCells } from '../apps/sheets/model'
 import type { AnyDocument } from '../persistence/schemas'
 
@@ -10,6 +11,11 @@ export function describeContent(document: AnyDocument): string {
     case 'doc': {
       const words = countWords(document.content.body)
       return `${words} word${words === 1 ? '' : 's'}`
+    }
+    case 'tool': {
+      const tool = getTool(document.content.tool)
+      const parsed = tool?.state.safeParse(document.content.state)
+      return tool && parsed?.success ? tool.summary(parsed.data) : 'File'
     }
     case 'code': {
       const files = document.content.files.length

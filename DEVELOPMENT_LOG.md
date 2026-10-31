@@ -56,13 +56,58 @@ owner.
 working simulations of the professional software used in its field (see
 [docs/PROFESSIONAL_TOOLS.md](docs/PROFESSIONAL_TOOLS.md) for the research and design).
 
-- [ ] 4.7 Professional-tools framework (registry, saving, tool tasks, grading,
+- [x] 4.7 Professional-tools framework (registry, saving, tool tasks, grading,
       progressive unlocks, guides, practice data)
 - [ ] 4.8 Accounting: Books (ledger, sales, purchases, banking, payroll, reports)
 - [ ] 4.9 IT Help Desk: Service Desk, Directory and assets, Network Tools
 - [ ] 4.10 Digital Marketing: Campaigns, Social Planner, Site Analytics, SEO Audit
 - [ ] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
 - [ ] 4.12 Software Development: terminal, Git, debug console, API Client
+
+---
+
+## 2026-10-31 · Milestone 4.7: the professional-tools framework, and Books
+
+### Built
+
+- **Research and plan**: [docs/PROFESSIONAL_TOOLS.md](docs/PROFESSIONAL_TOOLS.md) records
+  the software professionals in each field use, what WorkSim simulates (original names
+  and interfaces, no copied branding), the framework design and the build order.
+- **The professional-tools framework** (`src/tools/`): a tool registers once (its
+  saved-state schema, sections, practice data, guide and glossary, the checks tasks can
+  use and a pure grader); a career lists the tools it uses, from which level, and when
+  each section unlocks. The desktop, saving, grading and portfolio need no changes for
+  new tools:
+  - **Saving**: tool files are one generic document kind (`tool`), validated by the
+    tool’s own schema, so they get autosave, the emergency journal, **undo and redo**,
+    version history, backups and restore.
+  - **Tasks**: `kind: 'tool'` tasks carry the starting file (the scenario), a model
+    answer and the tool’s checks, all validated against the tool when the game loads.
+  - **Desktop**: tools appear on the career’s dock; locked tools show a lock and when
+    they unlock. Each tool has a start page (sections, task files, a practice file with
+    sample data, the guide) and a window with the task pane, Guide, Undo/Redo and
+    Version history.
+  - Screens are loaded only when a tool is first opened.
+- **Books**, the accounting software (first tool): a chart of accounts; journals with a
+  live balance check and plain-English problems (“Debits (418.80) and credits (481.80)
+  must be equal”); posting (posted journals are never edited, only reversed); account
+  ledgers with running balances; and live reports (trial balance, profit and loss,
+  balance sheet, as at any date). The data model already covers sales, purchases,
+  banking and payroll for milestone 4.8.
+- **First Books task** (Accounts Trainee): _Post March’s journals in Books_: rent,
+  equipment (not an expense), a transfer, interest and an accrual, plus a colleague’s
+  draft with a transposition error to find and fix. Graded on the journals actually
+  posted, the resulting balances, and nothing left in draft. The Accounting path is now
+  five tasks; earlier saves are unaffected.
+
+### Tested
+
+- Ledger tests (posting rules, every refusal message, reversals, reports by date, penny
+  accuracy) and framework tests (every tool complete; careers only list tools, levels
+  and sections that exist; unlocking by level; every tool task’s model answer scores
+  100%, its starting file fails, and a missing or wrong file scores nothing).
+- Browser tests: the Books task done end to end in the real interface (100%), and the
+  practice file with undo, redo and saving across a reload.
 
 ---
 

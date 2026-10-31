@@ -20,6 +20,7 @@ import {
   type SlidesContent,
   type TicketsContent,
   type CodeContent,
+  type ToolContent,
   type SheetContent,
   type SyncFields,
 } from './schemas'
@@ -189,9 +190,9 @@ export async function startAssignment(
     assignmentId: string
     assignmentVersion: number
     /** The main file: a workbook (default) or a ticket queue. */
-    kind?: 'sheet' | 'tickets' | 'code'
+    kind?: 'sheet' | 'tickets' | 'code' | 'tool'
     title: string
-    content: SheetContent | TicketsContent | CodeContent
+    content: SheetContent | TicketsContent | CodeContent | ToolContent
     /** A report and/or presentation to create with the workbook. */
     files?: Array<
       | { kind: 'doc'; title: string; content: DocContent }
@@ -215,21 +216,28 @@ export async function startAssignment(
       if (existing) return { profile: current, documentId: existing.documentId }
 
       const document = await createDocument(
-        (input.kind === 'code'
-          ? { kind: 'code', title: input.title, content: input.content, owner: profileId }
-          : input.kind === 'tickets'
+        (input.kind === 'tool'
+          ? { kind: 'tool', title: input.title, content: input.content, owner: profileId }
+          : input.kind === 'code'
             ? {
-                kind: 'tickets',
+                kind: 'code',
                 title: input.title,
                 content: input.content,
                 owner: profileId,
               }
-            : {
-                kind: 'sheet',
-                title: input.title,
-                content: input.content,
-                owner: profileId,
-              }) as NewDocument,
+            : input.kind === 'tickets'
+              ? {
+                  kind: 'tickets',
+                  title: input.title,
+                  content: input.content,
+                  owner: profileId,
+                }
+              : {
+                  kind: 'sheet',
+                  title: input.title,
+                  content: input.content,
+                  owner: profileId,
+                }) as NewDocument,
         database,
       )
       // Kept forever, so the workbook as received can always be restored.

@@ -1,5 +1,6 @@
 /** Tasks: the assignments of the player's career, their status and results. */
 import { useState } from 'react'
+import { getTool } from '../../tools/registry'
 import { getSkill } from '../../content/careers'
 import { getPerson } from '../../content/departments'
 import type { Assignment } from '../../content/schemas'
@@ -216,24 +217,29 @@ function TaskDetail({
             <li>
               <FileButton
                 icon={
-                  assignment.kind === 'tickets'
-                    ? 'helpdesk'
-                    : assignment.kind === 'code'
-                      ? 'code'
-                      : 'sheets'
+                  assignment.tool
+                    ? (getTool(assignment.tool.id)?.icon ?? 'file')
+                    : assignment.kind === 'tickets'
+                      ? 'helpdesk'
+                      : assignment.kind === 'code'
+                        ? 'code'
+                        : 'sheets'
                 }
                 title={
                   assignment.workbook?.title ??
                   assignment.queue?.title ??
                   assignment.project?.title ??
+                  assignment.tool?.title ??
                   assignment.title
                 }
                 kind={
-                  assignment.kind === 'tickets'
-                    ? 'Ticket queue (Help Desk)'
-                    : assignment.kind === 'code'
-                      ? 'Project (Code)'
-                      : 'Workbook (Sheets)'
+                  assignment.tool
+                    ? (getTool(assignment.tool.id)?.name ?? 'Tool file')
+                    : assignment.kind === 'tickets'
+                      ? 'Ticket queue (Help Desk)'
+                      : assignment.kind === 'code'
+                        ? 'Project (Code)'
+                        : 'Workbook (Sheets)'
                 }
                 onClick={() => void open()}
               />

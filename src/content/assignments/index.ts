@@ -1,7 +1,9 @@
 /** All assignments, checked against the content blueprint when the app starts. */
 import { departmentFor, fill, type Department } from '../departments'
+import { getTool } from '../../tools/registry'
 import { AssignmentSchema, type Assignment } from '../schemas'
 import { bankReconciliation } from './accounting/bankReconciliation'
+import { booksJournals } from './accounting/booksJournals'
 import { depreciation } from './accounting/depreciation'
 import { journalEntries } from './accounting/journalEntries'
 import { monthEnd } from './accounting/monthEnd'
@@ -41,6 +43,7 @@ const SOURCES = [
   savingsProposal,
   // Accounting
   journalEntries,
+  booksJournals,
   bankReconciliation,
   depreciation,
   monthEnd,
@@ -78,8 +81,28 @@ function fillAll<T>(value: T, department: Department): T {
   return value
 }
 
+/**
+ * A task done in a professional tool: its starting file, model answer and
+ * checks are checked against the tool's own schemas (defaults filled in).
+ */
+function withToolData(assignment: Assignment): Assignment {
+  if (assignment.kind !== 'tool') return assignment
+  const task = assignment.tool
+  const tool = task && getTool(task.id)
+  if (!task || !tool) throw new Error(`${assignment.id}: unknown tool ${task?.id}`)
+  return {
+    ...assignment,
+    tool: {
+      ...task,
+      start: tool.state.parse(task.start),
+      solution: tool.state.parse(task.solution),
+      checks: task.checks.map((check) => tool.check.parse(check)),
+    },
+  }
+}
+
 export const ASSIGNMENTS: Assignment[] = SOURCES.map((source) => {
-  const assignment = AssignmentSchema.parse(source)
+  const assignment = withToolData(AssignmentSchema.parse(source))
   // {manager}, {senior} and {director} become the names in this career's department.
   return fillAll(assignment, departmentFor(assignment.careerId))
 }).sort((a, b) => a.order - b.order)

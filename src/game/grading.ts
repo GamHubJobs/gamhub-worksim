@@ -330,14 +330,14 @@ export function ratingFor(score: number, passScore: number): Rating {
  * code, and the report and presentation when the task has them. A main file
  * that was not handed in (null) scores nothing on its checks.
  *
- * The code checks of a Code task run the player's code, so they are graded
- * beforehand (safely, in a worker: see `game/code`) and passed in.
+ * Code and tool checks are graded beforehand by their own graders (code runs
+ * safely in a worker: see `game/code`; tools: see `src/tools`) and passed in.
  */
 export function gradeAssignment(
   assignment: Assignment,
   main: SheetContent | TicketsContent | CodeContent | null,
   files: SubmittedFiles = {},
-  codeChecks: CheckResult[] = [],
+  extraChecks: CheckResult[] = [],
 ): GradeResult {
   const tickets = assignment.kind === 'tickets'
   const handedIn = main && 'sheets' in main ? main : null
@@ -386,7 +386,7 @@ export function gradeAssignment(
   const ticketChecks = tickets
     ? gradeTickets(assignment, main && 'tickets' in main ? main : null)
     : []
-  const checks = [...sheetChecks, ...ticketChecks, ...codeChecks, ...fileChecks]
+  const checks = [...sheetChecks, ...ticketChecks, ...extraChecks, ...fileChecks]
   const earned = checks.reduce((total, check) => total + check.earned, 0)
   const maxPoints = checks.reduce((total, check) => total + check.points, 0)
   const score = maxPoints === 0 ? 0 : Math.round((100 * earned) / maxPoints)

@@ -421,6 +421,24 @@ export const CodeDocumentSchema = DocumentBaseSchema.extend({
   content: CodeContentSchema,
 })
 
+// ---------------------------------------------------------------------------
+// Professional tools (Books, Network Tools, Data Studio, …)
+// ---------------------------------------------------------------------------
+
+/**
+ * A file of a professional tool. The tool validates its own state (see
+ * `src/tools`), so new tools need no change here.
+ */
+export const ToolContentSchema = z.object({
+  tool: z.string().regex(/^[a-z][a-z0-9-]*$/),
+  state: z.unknown(),
+})
+
+export const ToolDocumentSchema = DocumentBaseSchema.extend({
+  kind: z.literal('tool'),
+  content: ToolContentSchema,
+})
+
 /**
  * Any saved document. New apps (Docs, Slides, ...) are added here as new
  * `kind`s, and they automatically share autosave, versions and backups.
@@ -431,6 +449,7 @@ export const DocumentSchema = z.discriminatedUnion('kind', [
   SlidesDocumentSchema,
   TicketsDocumentSchema,
   CodeDocumentSchema,
+  ToolDocumentSchema,
 ])
 
 /**
@@ -444,6 +463,7 @@ export const DOCUMENT_FORMAT_VERSIONS = {
   slides: 1,
   tickets: 1,
   code: 1,
+  tool: 1,
 } as const satisfies Record<z.infer<typeof DocumentSchema>['kind'], number>
 
 /** Why a version snapshot was taken. */
@@ -531,7 +551,7 @@ export const MailMessageSchema = z.object({
     .array(
       z.object({
         documentId: IdSchema,
-        kind: z.enum(['sheet', 'doc', 'slides', 'tickets', 'code']),
+        kind: z.enum(['sheet', 'doc', 'slides', 'tickets', 'code', 'tool']),
         title: z.string(),
       }),
     )
@@ -735,6 +755,8 @@ export type TicketsDocument = z.infer<typeof TicketsDocumentSchema>
 export type CodeFile = z.infer<typeof CodeFileSchema>
 export type CodeContent = z.infer<typeof CodeContentSchema>
 export type CodeDocument = z.infer<typeof CodeDocumentSchema>
+export type ToolContent = z.infer<typeof ToolContentSchema>
+export type ToolDocument = z.infer<typeof ToolDocumentSchema>
 export type AnyDocument = z.infer<typeof DocumentSchema>
 export type DocumentKind = AnyDocument['kind']
 export type VersionReason = z.infer<typeof VersionReasonSchema>

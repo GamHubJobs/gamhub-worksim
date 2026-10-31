@@ -95,6 +95,8 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/content/departments/`            | One file per department: its people, meetings, tips and news      |
 | `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
 | `src/game/code/`                      | Code runner, code grading, and the Web Worker that runs them      |
+| `src/tools/`                          | Professional tools framework and the tools (Books, …): see below  |
+| `src/apps/tools/`                     | Shared tool screens: start page, tool window, guide               |
 | `src/desktop/`                        | Onboarding and the simulated desktop (dock, top bar, navigation)  |
 | `src/office/`                         | The 3D office (loaded on demand) and its 2D fallback floor plan   |
 | `src/workday/`                        | Office clock, "Your day" panel, end-of-day screen                 |
@@ -167,6 +169,16 @@ own files, colleagues and progress. Finance needed no changes to its saves.
 | Digital Marketing    | Marketing       | Sheets, Docs, Slides    | —               |
 | Data Analysis        | Data & Insights | Sheets, Docs, Slides    | (new functions) |
 | Software Development | Engineering     | Code, Docs              | Code            |
+
+### Professional tools
+
+Each career uses simulations of its profession’s software (research, design and plan:
+[PROFESSIONAL_TOOLS.md](PROFESSIONAL_TOOLS.md)). A tool registers once in
+`src/tools/registry.ts` with a `ToolDefinition`: its state schema, sections, practice
+data, guide, check schema and a pure grader. Its screens are registered in
+`src/tools/ui.tsx` and loaded on demand. A career lists its tools
+(`tools: [{ tool, fromLevel, sections }]`), and the dock, start page, locks, saving
+(document kind `tool`), tasks (`kind: 'tool'`) and grading follow automatically.
 
 ### Documents of every kind
 

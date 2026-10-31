@@ -44,7 +44,7 @@ export const bankReconciliation: AssignmentInput = {
   version: 1,
   careerId: 'accounting',
   levelId: 'accounts-trainee',
-  order: 2,
+  order: 3,
   title: 'Reconcile the bank account',
   summary: 'Match the cash book with the bank statement and explain every difference.',
   estimatedMinutes: 30,

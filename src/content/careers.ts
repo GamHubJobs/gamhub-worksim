@@ -213,6 +213,7 @@ CAREERS.push({
     'accuracy',
   ],
   apps: ['sheets', 'docs'],
+  tools: [{ tool: 'books', fromLevel: 'accounts-trainee' }],
   levels: [
     {
       id: 'accounts-trainee',

@@ -24,7 +24,7 @@ export const depreciation: AssignmentInput = {
   version: 1,
   careerId: 'accounting',
   levelId: 'assistant-accountant',
-  order: 3,
+  order: 4,
   title: 'Depreciation schedule and memo',
   summary:
     'Calculate depreciation for every fixed asset and explain this year’s charge in a memo.',

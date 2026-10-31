@@ -10,6 +10,10 @@ import { DocsApp } from '../apps/docs/DocsApp'
 import { CodeApp } from '../apps/code/CodeApp'
 import { CodeWindow } from '../apps/code/CodeWindow'
 import { HelpDeskApp } from '../apps/helpdesk/HelpDeskApp'
+import { ToolHome } from '../apps/tools/ToolHome'
+import { ToolWindow } from '../apps/tools/ToolWindow'
+import { openPracticeFile } from '../persistence/toolPractice'
+import { careerTools } from '../tools/registry'
 import { HelpDeskWindow } from '../apps/helpdesk/HelpDeskWindow'
 import { DocWindow } from '../apps/docs/DocWindow'
 import { SlidesApp } from '../apps/slides/SlidesApp'
@@ -79,6 +83,7 @@ export function Desktop({
 
   const { current, next, career: careerInfo } = careerLevel(profile)
   const careerApps = careerInfo.apps
+  const tools = careerTools(careerInfo, current.id)
   const unread = unreadCount(profile)
   const openTasks = careerAssignments(profile.careerId).filter((a) => {
     const status = assignmentStatus(profile, a)
@@ -102,7 +107,12 @@ export function Desktop({
     async (assignmentId: string) => {
       const documentId = await career.startAssignment(assignmentId)
       // Each task opens in the app its main file belongs to.
-      const kind = getAssignment(assignmentId)?.kind
+      const assignment = getAssignment(assignmentId)
+      const kind = assignment?.kind
+      if (kind === 'tool' && assignment?.tool) {
+        setView({ app: 'tool', tool: assignment.tool.id, document: documentId })
+        return
+      }
       setView({
         app: kind === 'tickets' ? 'helpdesk' : kind === 'code' ? 'code' : 'sheets',
         document: documentId,
@@ -226,20 +236,45 @@ export function Desktop({
             className="flex w-20 shrink-0 flex-col items-center gap-1 border-r border-slate-200 bg-white py-3"
             aria-label="Apps"
           >
-            {APPS.filter(
-              (app) =>
-                app.id === 'mail' ||
-                app.id === 'tasks' ||
-                app.id === 'career' ||
-                (careerApps as string[]).includes(app.id),
-            ).map((app) => {
-              const active = view.app === app.id
+            {[
+              ...APPS.filter(
+                (app) =>
+                  app.id === 'mail' ||
+                  app.id === 'tasks' ||
+                  (careerApps as string[]).includes(app.id),
+              ).map((app) => ({
+                ...app,
+                key: app.id as string,
+                view: { app: app.id } as View,
+              })),
+              // The career's professional tools; locked ones say when they unlock.
+              ...tools.map(({ tool, unlocksAt }) => ({
+                key: `tool:${tool.id}`,
+                id: 'tool' as const,
+                label: tool.name,
+                icon: tool.icon,
+                view: { app: 'tool', tool: tool.id } as View,
+                locked: unlocksAt,
+              })),
+              ...APPS.filter((app) => app.id === 'career').map((app) => ({
+                ...app,
+                key: app.id as string,
+                view: { app: app.id } as View,
+              })),
+            ].map((app) => {
+              const locked = 'locked' in app ? app.locked : null
+              const active =
+                view.app === app.id && (app.id !== 'tool' || view.tool === app.view.tool)
               const badge = badges[app.id] ?? 0
               return (
                 <button
-                  key={app.id}
+                  key={app.key}
                   type="button"
-                  onClick={() => setView({ app: app.id })}
+                  onClick={() => setView(app.view)}
+                  disabled={!!locked}
+                  title={
+                    locked ? `${app.label} unlocks when you become ${locked}.` : undefined
+                  }
                   aria-current={active ? 'page' : undefined}
                   className={`relative flex w-16 flex-col items-center gap-1 rounded-lg py-2 text-xs ${
                     active
@@ -247,7 +282,7 @@ export function Desktop({
                       : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <Icon name={app.icon} className="h-6 w-6" />
+                  <Icon name={locked ? 'lock' : app.icon} className="h-6 w-6" />
                   {app.label}
                   {badge > 0 && (
                     <span
@@ -392,6 +427,48 @@ export function Desktop({
                     onOpen={(document) => setView({ app: 'code', document })}
                   />
                 ))}
+              {view.app === 'tool' &&
+                (() => {
+                  const access = tools.find((t) => t.tool.id === view.tool)
+                  if (!access?.unlocked) {
+                    return (
+                      <p className="p-6 text-sm text-slate-600">
+                        {access
+                          ? `${access.tool.name} unlocks when you become ${access.unlocksAt}.`
+                          : 'This tool is not part of your career.'}
+                      </p>
+                    )
+                  }
+                  return view.document ? (
+                    <ToolWindow
+                      key={view.document}
+                      documentId={view.document}
+                      toolId={access.tool.id}
+                      assignmentId={
+                        Object.values(profile.assignments).find(
+                          (p) => p.documentId === view.document,
+                        )?.assignmentId ?? null
+                      }
+                      career={career}
+                      lockedSections={access.lockedSections}
+                      onBack={() => setView({ app: 'tool', tool: access.tool.id })}
+                      onOpenTask={openTask}
+                    />
+                  ) : (
+                    <ToolHome
+                      key={access.tool.id}
+                      profile={profile}
+                      access={access}
+                      onOpen={(document) =>
+                        setView({ app: 'tool', tool: access.tool.id, document })
+                      }
+                      onOpenPractice={async () => {
+                        const document = await openPracticeFile(profile.id, access.tool)
+                        setView({ app: 'tool', tool: access.tool.id, document })
+                      }}
+                    />
+                  )
+                })()}
               {view.app === 'career' && (
                 <CareerApp
                   profile={profile}
@@ -401,18 +478,30 @@ export function Desktop({
                     await career.switchCareer(careerId)
                   }}
                   onOpenFile={(kind, document) =>
-                    setView({
-                      app: (
-                        {
-                          sheet: 'sheets',
-                          tickets: 'helpdesk',
-                          code: 'code',
-                          doc: 'docs',
-                          slides: 'slides',
-                        } as const
-                      )[kind],
-                      document,
-                    })
+                    setView(
+                      kind === 'tool'
+                        ? {
+                            app: 'tool',
+                            tool: getAssignment(
+                              Object.values(profile.assignments).find(
+                                (p) => p.documentId === document,
+                              )?.assignmentId ?? '',
+                            )?.tool?.id,
+                            document,
+                          }
+                        : {
+                            app: (
+                              {
+                                sheet: 'sheets',
+                                tickets: 'helpdesk',
+                                code: 'code',
+                                doc: 'docs',
+                                slides: 'slides',
+                              } as const
+                            )[kind],
+                            document,
+                          },
+                    )
                   }
                 />
               )}

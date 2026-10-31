@@ -19,15 +19,18 @@ export const ViewSchema = z.object({
     'slides',
     'helpdesk',
     'code',
+    'tool',
     'career',
   ]),
+  /** For 'tool': which professional tool (e.g. "books"). */
+  tool: z.string().optional(),
   /** In the office: where the player is standing. */
   spot: z.enum(['reception', 'desk', 'manager', 'breakroom']).optional(),
   /** In the office: a workplace event to open straight away. */
   event: z.string().optional(),
   /**
    * In Sheets: an open workbook ID, or "practice" for the practice workbook.
-   * In Docs and Slides: the open file.
+   * In Docs, Slides and the professional tools: the open file.
    */
   document: z.string().optional(),
   /** In Tasks: the selected assignment. */

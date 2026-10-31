@@ -54,7 +54,7 @@ export const CheckSchema = z.discriminatedUnion('type', [
   }),
 ])
 
-const FileCheckBaseSchema = z.object({
+export const FileCheckBaseSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
   title: z.string().min(1),
   why: z.string().min(1),
@@ -256,7 +256,22 @@ export const AssignmentSchema = z.object({
    * (Help Desk) or a code project (Code). Reports and presentations can be
    * added to any of them.
    */
-  kind: z.enum(['sheet', 'tickets', 'code']).default('sheet'),
+  kind: z.enum(['sheet', 'tickets', 'code', 'tool']).default('sheet'),
+  /**
+   * For tasks done in a professional tool (`kind: 'tool'`): the tool, the
+   * file's starting state (the scenario), the model answer, and the tool's
+   * own checks. The tool's schemas validate them (see `src/tools`).
+   */
+  tool: z
+    .object({
+      id: z.string(),
+      /** The name of the file the player works in. */
+      title: z.string().min(1),
+      start: z.unknown(),
+      solution: z.unknown(),
+      checks: z.array(z.unknown()).min(1),
+    })
+    .optional(),
   /** The starting files, for Code tasks. */
   project: z
     .object({
@@ -378,6 +393,19 @@ export const CareerSchema = z.object({
   skills: z.array(z.string()).min(1),
   /** The work apps on the dock, in order. */
   apps: z.array(z.enum(WORK_APPS)).min(1),
+  /**
+   * The professional tools this career uses (see `src/tools`): each from a
+   * level, with sections that unlock with later promotions.
+   */
+  tools: z
+    .array(
+      z.object({
+        tool: z.string(),
+        fromLevel: z.string().optional(),
+        sections: z.record(z.string(), z.string()).optional(),
+      }),
+    )
+    .optional(),
   levels: z.array(CareerLevelSchema).min(1),
 })
 export type WorkApp = (typeof WORK_APPS)[number]
