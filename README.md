@@ -24,12 +24,16 @@ Stop the app with `Ctrl+C` in the terminal.
 
 ## Commands
 
-| Command           | What it does                                     |
-| ----------------- | ------------------------------------------------ |
-| `npm run dev`     | Run the app locally with instant reload          |
-| `npm run build`   | Check types and build the production version     |
-| `npm run preview` | Preview the production build locally             |
-| `npm run lint`    | Check the code for common mistakes (Oxlint)      |
+| Command                | What it does                                     |
+| ---------------------- | ------------------------------------------------ |
+| `npm run dev`          | Run the app locally with instant reload          |
+| `npm run build`        | Check types and build the production version     |
+| `npm run preview`      | Preview the production build locally             |
+| `npm run check`        | Run all checks below (do this before committing) |
+| `npm run lint`         | Check the code for common mistakes (Oxlint)      |
+| `npm run typecheck`    | Check that data types are used correctly         |
+| `npm run format`       | Automatically tidy the formatting of all files   |
+| `npm run format:check` | Report files that are not tidily formatted       |
 
 ## Documentation
 
