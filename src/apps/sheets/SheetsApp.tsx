@@ -13,7 +13,7 @@ interface SheetsAppProps {
 export function SheetsApp({ profile, onOpen }: SheetsAppProps) {
   // Workbooks of tasks done in Sheets (Help Desk tasks have a ticket queue instead).
   const started = Object.values(profile.assignments)
-    .filter((p) => getAssignment(p.assignmentId)?.kind !== 'tickets')
+    .filter((p) => (getAssignment(p.assignmentId)?.kind ?? 'sheet') === 'sheet')
     .sort((a, b) => b.startedAt - a.startedAt)
 
   return (

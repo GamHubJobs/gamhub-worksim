@@ -10,11 +10,12 @@ import { formatDateTime } from '../../lib/time'
 import type { Profile } from '../../persistence/schemas'
 import { Icon, type IconName } from '../../ui/Icon'
 
-export type PortfolioFileKind = 'sheet' | 'tickets' | 'doc' | 'slides'
+export type PortfolioFileKind = 'sheet' | 'tickets' | 'code' | 'doc' | 'slides'
 
 const FILE_ICONS: Record<PortfolioFileKind, IconName> = {
   sheet: 'sheets',
   tickets: 'helpdesk',
+  code: 'code',
   doc: 'docs',
   slides: 'slides',
 }
@@ -22,6 +23,7 @@ const FILE_ICONS: Record<PortfolioFileKind, IconName> = {
 const FILE_NAMES: Record<PortfolioFileKind, string> = {
   sheet: 'Workbook',
   tickets: 'Ticket queue',
+  code: 'Code project',
   doc: 'Report',
   slides: 'Presentation',
 }

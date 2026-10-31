@@ -9,6 +9,10 @@ import { cleanCustomers } from './data/cleanCustomers'
 import { portfolioReview } from './data/portfolioReview'
 import { salesSummary } from './data/salesSummary'
 import { surveyAnalysis } from './data/surveyAnalysis'
+import { billingReport } from './dev/billingReport'
+import { invoiceBug } from './dev/invoiceBug'
+import { timesheetValidation } from './dev/timesheetValidation'
+import { workingDaysTests } from './dev/workingDaysTests'
 import { majorIncident } from './it/majorIncident'
 import { abTest } from './marketing/abTest'
 import { campaignMetrics } from './marketing/campaignMetrics'
@@ -55,6 +59,11 @@ const SOURCES = [
   salesSummary,
   surveyAnalysis,
   portfolioReview,
+  // Software Development
+  invoiceBug,
+  timesheetValidation,
+  workingDaysTests,
+  billingReport,
 ]
 
 /** Every text in a value with role names filled in for a department. */

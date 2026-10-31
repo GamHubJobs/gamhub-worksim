@@ -11,6 +11,7 @@ import { ASSIGNMENTS } from './assignments'
 import { CAREERS, SKILLS } from './careers'
 import { addChart } from '../apps/sheets/features'
 import { applyTicketSolution, buildQueueContent } from '../game/tickets'
+import { buildCodeSolution, gradeCode } from '../game/code/grading'
 import { getDocTemplate } from '../apps/docs/templates'
 import { getSlidesTemplate } from '../apps/slides/model'
 import { findPerson } from './departments'
@@ -47,6 +48,7 @@ describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
       const checks = [
         ...assignment.checks.map((c) => c.id),
         ...assignment.ticketChecks.map((c) => c.id),
+        ...assignment.codeChecks.map((c) => c.id),
         ...assignment.deliverables.flatMap((d) => d.checks.map((c) => c.id)),
       ]
       expect(new Set(steps).size).toBe(steps.length)
@@ -76,8 +78,10 @@ describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
           'Chart',
         ).content
       }
-      const result =
-        assignment.kind === 'tickets'
+      const project = assignment.kind === 'code' ? buildCodeSolution(assignment) : null
+      const result = project
+        ? gradeAssignment(assignment, project, {}, gradeCode(assignment, project))
+        : assignment.kind === 'tickets'
           ? gradeAssignment(
               assignment,
               applyTicketSolution(assignment, buildQueueContent(assignment)),
@@ -90,6 +94,7 @@ describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
         .filter(
           (c) =>
             assignment.checks.some((check) => check.id === c.id) ||
+            assignment.codeChecks.some((check) => check.id === c.id) ||
             assignment.ticketChecks.some((t) => t.id === c.id && t.type === 'field'),
         )
       expect(failures).toEqual([])

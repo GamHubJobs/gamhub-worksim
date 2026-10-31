@@ -395,6 +395,32 @@ export const TicketsDocumentSchema = DocumentBaseSchema.extend({
   content: TicketsContentSchema,
 })
 
+// ---------------------------------------------------------------------------
+// Code projects (Code)
+// ---------------------------------------------------------------------------
+
+export const CodeFileSchema = z.object({
+  /** A plain file name such as "invoice.js" (no folders). */
+  name: z
+    .string()
+    .min(1)
+    .max(60)
+    .regex(/^[\w.-]+$/),
+  text: z.string().max(200_000),
+  /** Files the task provides that must not be changed, e.g. the code under test. */
+  readOnly: z.boolean().default(false),
+})
+
+export const CodeContentSchema = z.object({
+  language: z.literal('javascript'),
+  files: z.array(CodeFileSchema).min(1).max(20),
+})
+
+export const CodeDocumentSchema = DocumentBaseSchema.extend({
+  kind: z.literal('code'),
+  content: CodeContentSchema,
+})
+
 /**
  * Any saved document. New apps (Docs, Slides, ...) are added here as new
  * `kind`s, and they automatically share autosave, versions and backups.
@@ -404,6 +430,7 @@ export const DocumentSchema = z.discriminatedUnion('kind', [
   DocDocumentSchema,
   SlidesDocumentSchema,
   TicketsDocumentSchema,
+  CodeDocumentSchema,
 ])
 
 /**
@@ -416,6 +443,7 @@ export const DOCUMENT_FORMAT_VERSIONS = {
   doc: 1,
   slides: 1,
   tickets: 1,
+  code: 1,
 } as const satisfies Record<z.infer<typeof DocumentSchema>['kind'], number>
 
 /** Why a version snapshot was taken. */
@@ -503,7 +531,7 @@ export const MailMessageSchema = z.object({
     .array(
       z.object({
         documentId: IdSchema,
-        kind: z.enum(['sheet', 'doc', 'slides', 'tickets']),
+        kind: z.enum(['sheet', 'doc', 'slides', 'tickets', 'code']),
         title: z.string(),
       }),
     )
@@ -704,6 +732,9 @@ export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
 export type TicketStatus = (typeof TICKET_STATUSES)[number]
 export type TicketsContent = z.infer<typeof TicketsContentSchema>
 export type TicketsDocument = z.infer<typeof TicketsDocumentSchema>
+export type CodeFile = z.infer<typeof CodeFileSchema>
+export type CodeContent = z.infer<typeof CodeContentSchema>
+export type CodeDocument = z.infer<typeof CodeDocumentSchema>
 export type AnyDocument = z.infer<typeof DocumentSchema>
 export type DocumentKind = AnyDocument['kind']
 export type VersionReason = z.infer<typeof VersionReasonSchema>

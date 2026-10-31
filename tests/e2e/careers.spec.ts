@@ -320,3 +320,58 @@ test('a Data Analysis career: the customer export cleaned end to end', async ({
     '100%',
   )
 })
+
+test('a Software Development career: a bug fixed in Code, tested and handed in', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await startCareer(page, 'Alex Morgan', 'Software Development')
+  await openApp(page, 'Tasks')
+  // The dock has the career's tools: Code instead of Sheets.
+  await expect(apps(page).getByRole('button', { name: /^Code/ })).toBeVisible()
+  await expect(apps(page).getByRole('button', { name: /^Sheets/ })).toHaveCount(0)
+  await expect(page.getByTestId('task-detail')).toContainText('Fix the invoice totals')
+  await page
+    .getByTestId('task-detail')
+    .getByRole('button', { name: 'Start task' })
+    .click()
+  await expect(page.getByTestId('code-app')).toBeVisible()
+
+  // The tests show what is wrong before anything is changed.
+  await page.getByTestId('run-tests').click()
+  await expect(page.getByTestId('run-summary')).toHaveText('0 passed, 3 failed')
+  await expect(page.getByTestId('test-results')).toContainText('Expected 1420, received')
+
+  // The test file cannot be edited.
+  await page
+    .getByRole('navigation', { name: 'Files' })
+    .getByText('invoice.test.js')
+    .click()
+  await expect(page.getByTestId('code-editor')).toHaveAttribute('readonly', '')
+
+  // Code that never finishes is stopped instead of freezing the page.
+  await page.getByRole('navigation', { name: 'Files' }).getByText('invoice.js').click()
+  const editor = page.getByTestId('code-editor')
+  const original = await editor.inputValue()
+  await editor.fill(`export function invoiceTotals() {\n  while (true) {}\n}\n`)
+  await page.getByTestId('run-tests').click()
+  await expect(page.getByTestId('run-error')).toContainText('did not finish', {
+    timeout: 15_000,
+  })
+
+  // Fix the three bugs.
+  await editor.fill(
+    original
+      .replace('let i = 1', 'let i = 0')
+      .replace('quantity + lines', 'quantity * lines')
+      .replace('subtotal * discountPercent', 'subtotal * (discountPercent / 100)'),
+  )
+  await page.getByTestId('run-tests').click()
+  await expect(page.getByTestId('run-summary')).toHaveText('3 passed, 0 failed')
+
+  await page.getByRole('button', { name: /Submit to Samuel/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click()
+  await expect(page.getByTestId('submission-results').getByTestId('score')).toHaveText(
+    '100%',
+  )
+})

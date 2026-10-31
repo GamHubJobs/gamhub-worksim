@@ -50,7 +50,53 @@ owner.
 - [x] 4.3 IT Help Desk (with a Help Desk ticketing app)
 - [x] 4.4 Digital Marketing
 - [x] 4.5 Data Analysis
-- [ ] 4.6 Software Development (with a Code editor and tests)
+- [x] 4.6 Software Development (with a Code editor and tests)
+
+---
+
+## 2026-10-31 · Milestone 4.6: the Software Development career and the Code app
+
+### Built
+
+- **Code**, a new app (developers genuinely need one): a file list, a plain-text
+  editor with line numbers, Tab and auto-indent, read-only files, and **Run tests**
+  with a pass/fail list, the reason for each failure (“Expected 1420, received 121”)
+  and console.log output. Projects are a new document kind (`code`), so they get
+  autosave, version history, backups and the portfolio like every other file.
+- **Safe test runner**: the player’s JavaScript runs in a fresh **Web Worker** for every
+  run, with a 5-second limit, so an endless loop is stopped with a clear message instead
+  of freezing the game. Files can use `import`/`export`; tests use `test`,
+  `describe` and `expect(...).toBe/toEqual/toThrow/…`. No external services.
+- **Code grading** (pure, unit-tested): hidden tests (like a reviewer’s), the project’s
+  own tests as the task wrote them (editing the test file does not help), the player’s
+  own tests (enough of them, all passing), and **mutation testing**: the player’s
+  tests are run against copies of the code with bugs planted in them, and must catch
+  each one.
+- **Engineering department**: Engineering Manager Samuel Adeyemi and Senior Software
+  Engineer Rosa Ferreira. Levels: Junior Developer → Software Developer → Senior
+  Developer → Lead Developer. New skills: programming, debugging, software testing and
+  software design. Tools: Code and Docs.
+- **Four tasks**, beginner to advanced:
+  1. **Fix the invoice totals**: three real bugs (a loop that skips the first line,
+     - instead of ×, a percentage used as a fraction), found from failing tests.
+  2. **Check timesheet entries**: turn written rules into validation code with the
+     exact messages, in order, and total the valid hours per project.
+  3. **Write the tests for working days**: the code is correct; the player writes the
+     tests, which must catch five planted bugs (Saturdays, Sundays, holidays, the last
+     day, reversed ranges).
+  4. **Build the billing report**: a feature from a specification (billable time only,
+     rates, rounding, sorting, an error for a missing rate), the player’s own tests, and
+     a design note in Docs (Problem, Approach, Testing).
+
+### Tested
+
+- Runner tests (modules, matchers, syntax errors, missing files) and code grading tests
+  (model answers score full marks, untouched projects score under half, partial fixes
+  get partial credit, editing the test file doesn’t help, failing tests can’t earn
+  mutation credit, every planted bug exists in its file).
+- Browser test: a Software Development career from onboarding; the tests fail first, the
+  test file is read-only, an endless loop is stopped after 5 seconds, the fixed code
+  passes and the task scores 100%.
 
 ---
 

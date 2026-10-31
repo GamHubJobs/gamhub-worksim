@@ -87,10 +87,14 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/apps/sheets/`                    | Spreadsheet model, clipboard, editor UI, workbook window          |
 | `src/apps/docs/`                      | Docs: TipTap editor, templates, reading document text             |
 | `src/apps/slides/`                    | Slides: model, themes, layouts, editor, presentation mode         |
+| `src/apps/helpdesk/`                  | Help Desk: ticket queue, ticket detail, knowledge base            |
+| `src/apps/code/`                      | Code: file list, editor, Run tests panel                          |
 | `src/apps/shared/`                    | Save hook, document window, file browser, "insert from Sheets"    |
 | `src/apps/mail/`, `tasks/`, `career/` | The other desktop apps                                            |
-| `src/content/`                        | Content as validated data: company, people, careers, assignments  |
+| `src/content/`                        | Content as validated data: company, careers, assignments          |
+| `src/content/departments/`            | One file per department: its people, meetings, tips and news      |
 | `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
+| `src/game/code/`                      | Code runner, code grading, and the Web Worker that runs them      |
 | `src/desktop/`                        | Onboarding and the simulated desktop (dock, top bar, navigation)  |
 | `src/office/`                         | The 3D office (loaded on demand) and its 2D fallback floor plan   |
 | `src/workday/`                        | Office clock, "Your day" panel, end-of-day screen                 |
@@ -127,10 +131,48 @@ Player clicks Send in Mail (attachments chosen from all their files)
     profile (XP, feedback email, unlocks, events)
 ```
 
+Help Desk tasks grade the ticket queue (`src/game/tickets.ts`: priority,
+category and status against the model answer, and what each reply says).
+Code tasks run tests:
+
+```
+Player clicks Submit (or attaches the project to an email)
+  → the saved project is sent to a new Web Worker (src/game/code/codeWorker.ts)
+      runner: the files are loaded as modules (import/export supported) and
+      the tests run with a small test/expect API (src/game/code/runner.ts)
+      code checks: "tests" (the project's own test file as the task wrote it,
+      or hidden tests), "own-tests" (the player's tests, all passing),
+      "mutants" (the player's tests must fail on copies with planted bugs)
+  → no answer within 5 seconds → the worker is stopped, every code check
+    fails with "Is there a loop that never ends?"
+  → the results join the other checks in gradeAssignment (still pure)
+```
+
+### Careers and departments
+
+A career (`src/content/careers.ts`) has levels, skills and the apps its dock
+shows. Its department (`src/content/departments/`) supplies the manager, the
+senior colleague, the director, stand-up and planning lines, tips and news.
+Shared text is written with placeholders (`{manager}`, `{senior}`,
+`{director}`, …) and filled for the active career at the edges: dialogue,
+emails, notices, grading feedback and assignments. Each career is a separate
+save (profile), and documents carry their `owner`, so every career has its
+own files, colleagues and progress. Finance needed no changes to its saves.
+
+| Career               | Department      | Main tool               | New tool        |
+| -------------------- | --------------- | ----------------------- | --------------- |
+| Finance & Admin      | Finance         | Sheets, Docs, Slides    | —               |
+| Accounting           | Accounting      | Sheets, Docs, Slides    | —               |
+| IT Help Desk         | IT Services     | Help Desk, Docs, Slides | Help Desk       |
+| Digital Marketing    | Marketing       | Sheets, Docs, Slides    | —               |
+| Data Analysis        | Data & Insights | Sheets, Docs, Slides    | (new functions) |
+| Software Development | Engineering     | Code, Docs              | Code            |
+
 ### Documents of every kind
 
-Workbooks (`sheet`), documents (`doc`, the editor's ProseMirror JSON) and
-presentations (`slides`) are stored the same way and share
+Workbooks (`sheet`), documents (`doc`, the editor's ProseMirror JSON),
+presentations (`slides`), ticket queues (`tickets`) and code projects
+(`code`) are stored the same way and share
 `useSavedDocument`: autosave, the emergency journal, versions, restore and
 rename. A change that would make a file invalid is refused before it is saved.
 Charts are drawn by `src/ui/ChartView.tsx` (SVG) everywhere: live in Sheets,
@@ -197,8 +239,9 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 1. Vertical slice: "Your First Day as an Intern" (done, including the 3D office)
 2. The Living Workplace: workday, wellbeing, colleagues, events, career growth (done)
 3. Productivity depth: Docs, advanced Sheets, Slides, multi-app assignments (done)
-4. More careers and departments ← _next_
-5. Achievements and customisation
+4. More careers and departments (done: Accounting, IT Help Desk, Digital Marketing,
+   Data Analysis, Software Development)
+5. Achievements and customisation ← _next_
 6. Polish
 7. Cloud accounts and sync
 8. Future: optional cosmetics, GamHub Jobs connection

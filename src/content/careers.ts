@@ -119,6 +119,32 @@ SKILLS.push(
   },
 )
 
+SKILLS.push(
+  {
+    id: 'programming',
+    name: 'Programming',
+    description: 'Writing clear, correct code that does what the specification says.',
+  },
+  {
+    id: 'debugging',
+    name: 'Debugging',
+    description:
+      'Finding the cause of a bug from failing tests and error messages, and fixing it.',
+  },
+  {
+    id: 'software-testing',
+    name: 'Software testing',
+    description:
+      'Writing tests that cover the rules and their edges, and catch real bugs.',
+  },
+  {
+    id: 'software-design',
+    name: 'Software design',
+    description:
+      'Shaping code and its behaviour, including errors, so others can trust and change it.',
+  },
+)
+
 export const SKILL_LEVELS = [
   { level: 1, name: 'Novice', xpRequired: 0 },
   { level: 2, name: 'Learner', xpRequired: 40 },
@@ -343,6 +369,52 @@ CAREERS.push({
     {
       id: 'lead-data-analyst',
       title: 'Lead Data Analyst',
+      xpRequired: 550,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
+
+CAREERS.push({
+  id: 'software-development',
+  name: 'Software Development',
+  department: 'Engineering',
+  description:
+    'Build and fix the company’s own software: debug, write features from specifications, test them and explain your design.',
+  toolsIntro:
+    'Your work is done in Code, a JavaScript editor with tests you can run, and Docs for design notes.',
+  skills: [
+    'programming',
+    'debugging',
+    'software-testing',
+    'software-design',
+    'technical-writing',
+  ],
+  apps: ['code', 'docs'],
+  levels: [
+    {
+      id: 'junior-developer',
+      title: 'Junior Developer',
+      xpRequired: 0,
+      minReputation: 0,
+    },
+    {
+      id: 'software-developer',
+      title: 'Software Developer',
+      xpRequired: 200,
+      minReputation: 35,
+    },
+    {
+      id: 'senior-developer',
+      title: 'Senior Developer',
+      xpRequired: 350,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'lead-developer',
+      title: 'Lead Developer',
       xpRequired: 550,
       minReputation: 60,
       minReview: 'strong',

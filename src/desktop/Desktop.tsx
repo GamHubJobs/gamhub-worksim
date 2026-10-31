@@ -7,6 +7,8 @@ import { useCallback, useEffect, useState } from 'react'
 import type { Career } from '../app/useCareer'
 import { CareerApp } from '../apps/career/CareerApp'
 import { DocsApp } from '../apps/docs/DocsApp'
+import { CodeApp } from '../apps/code/CodeApp'
+import { CodeWindow } from '../apps/code/CodeWindow'
 import { HelpDeskApp } from '../apps/helpdesk/HelpDeskApp'
 import { HelpDeskWindow } from '../apps/helpdesk/HelpDeskWindow'
 import { DocWindow } from '../apps/docs/DocWindow'
@@ -58,6 +60,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'docs', label: 'Docs', icon: 'docs' },
     { id: 'slides', label: 'Slides', icon: 'slides' },
     { id: 'helpdesk', label: 'Help Desk', icon: 'helpdesk' },
+    { id: 'code', label: 'Code', icon: 'code' },
     { id: 'career', label: 'Career', icon: 'career' },
   ]
 
@@ -100,7 +103,10 @@ export function Desktop({
       const documentId = await career.startAssignment(assignmentId)
       // Each task opens in the app its main file belongs to.
       const kind = getAssignment(assignmentId)?.kind
-      setView({ app: kind === 'tickets' ? 'helpdesk' : 'sheets', document: documentId })
+      setView({
+        app: kind === 'tickets' ? 'helpdesk' : kind === 'code' ? 'code' : 'sheets',
+        document: documentId,
+      })
     },
     [career, setView],
   )
@@ -366,6 +372,26 @@ export function Desktop({
                     onOpen={(document) => setView({ app: 'helpdesk', document })}
                   />
                 ))}
+              {view.app === 'code' &&
+                (view.document ? (
+                  <CodeWindow
+                    key={view.document}
+                    documentId={view.document}
+                    assignmentId={
+                      Object.values(profile.assignments).find(
+                        (p) => p.documentId === view.document,
+                      )?.assignmentId ?? null
+                    }
+                    career={career}
+                    onBack={() => setView({ app: 'code' })}
+                    onOpenTask={openTask}
+                  />
+                ) : (
+                  <CodeApp
+                    profile={profile}
+                    onOpen={(document) => setView({ app: 'code', document })}
+                  />
+                ))}
               {view.app === 'career' && (
                 <CareerApp
                   profile={profile}
@@ -380,6 +406,7 @@ export function Desktop({
                         {
                           sheet: 'sheets',
                           tickets: 'helpdesk',
+                          code: 'code',
                           doc: 'docs',
                           slides: 'slides',
                         } as const

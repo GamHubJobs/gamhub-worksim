@@ -15,6 +15,8 @@ import {
 } from '../game/career'
 import { gradeAssignment, type GradeResult } from '../game/grading'
 import { buildQueueContent } from '../game/tickets'
+import { buildProjectContent } from '../game/code/grading'
+import { gradeCodeSafely } from '../game/code/runInWorker'
 import { buildStartingContent } from '../game/workbooks'
 import { checkEvents } from '../game/events'
 import { checkReviews } from '../game/reviews'
@@ -125,17 +127,23 @@ export function useCareer() {
       const { profile, documentId } = await startAssignmentInStorage(profileId, {
         assignmentId,
         assignmentVersion: assignment.version,
-        ...(assignment.kind === 'tickets'
+        ...(assignment.kind === 'code'
           ? {
-              kind: 'tickets' as const,
-              title: assignment.queue?.title ?? assignment.title,
-              content: buildQueueContent(assignment),
+              kind: 'code' as const,
+              title: assignment.project?.title ?? assignment.title,
+              content: buildProjectContent(assignment),
             }
-          : {
-              kind: 'sheet' as const,
-              title: assignment.workbook?.title ?? assignment.title,
-              content: buildStartingContent(assignment),
-            }),
+          : assignment.kind === 'tickets'
+            ? {
+                kind: 'tickets' as const,
+                title: assignment.queue?.title ?? assignment.title,
+                content: buildQueueContent(assignment),
+              }
+            : {
+                kind: 'sheet' as const,
+                title: assignment.workbook?.title ?? assignment.title,
+                content: buildStartingContent(assignment),
+              }),
         files: assignment.deliverables.map((d) => deliverableFile(d, playerName)),
       })
       show(profile)
@@ -198,11 +206,16 @@ export function useCareer() {
         }
       }
 
-      const grade = gradeAssignment(
-        assignment,
-        main?.kind === 'sheet' || main?.kind === 'tickets' ? main.content : null,
-        files,
-      )
+      const mainContent =
+        main?.kind === 'sheet' || main?.kind === 'tickets' || main?.kind === 'code'
+          ? main.content
+          : null
+      // The player's code runs in a worker, with a time limit.
+      const codeChecks =
+        assignment.kind === 'code'
+          ? await gradeCodeSafely(assignment, main?.kind === 'code' ? main.content : null)
+          : []
+      const grade = gradeAssignment(assignment, mainContent, files, codeChecks)
       let reward: Reward | null = null
       const profile = await saveSubmission(profileId, handedIn, (latest, versionId) => {
         const withSent = sent ? { ...latest, inbox: [...latest.inbox, sent] } : latest
@@ -238,7 +251,7 @@ export function useCareer() {
       body: string
       attachments: Array<{
         documentId: string
-        kind: 'sheet' | 'doc' | 'slides' | 'tickets'
+        kind: 'sheet' | 'doc' | 'slides' | 'tickets' | 'code'
         title: string
       }>
     }): Promise<SubmissionResult | null> => {

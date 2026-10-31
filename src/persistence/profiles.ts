@@ -19,6 +19,7 @@ import {
   type Profile,
   type SlidesContent,
   type TicketsContent,
+  type CodeContent,
   type SheetContent,
   type SyncFields,
 } from './schemas'
@@ -188,9 +189,9 @@ export async function startAssignment(
     assignmentId: string
     assignmentVersion: number
     /** The main file: a workbook (default) or a ticket queue. */
-    kind?: 'sheet' | 'tickets'
+    kind?: 'sheet' | 'tickets' | 'code'
     title: string
-    content: SheetContent | TicketsContent
+    content: SheetContent | TicketsContent | CodeContent
     /** A report and/or presentation to create with the workbook. */
     files?: Array<
       | { kind: 'doc'; title: string; content: DocContent }
@@ -214,19 +215,21 @@ export async function startAssignment(
       if (existing) return { profile: current, documentId: existing.documentId }
 
       const document = await createDocument(
-        (input.kind === 'tickets'
-          ? {
-              kind: 'tickets',
-              title: input.title,
-              content: input.content,
-              owner: profileId,
-            }
-          : {
-              kind: 'sheet',
-              title: input.title,
-              content: input.content,
-              owner: profileId,
-            }) as NewDocument,
+        (input.kind === 'code'
+          ? { kind: 'code', title: input.title, content: input.content, owner: profileId }
+          : input.kind === 'tickets'
+            ? {
+                kind: 'tickets',
+                title: input.title,
+                content: input.content,
+                owner: profileId,
+              }
+            : {
+                kind: 'sheet',
+                title: input.title,
+                content: input.content,
+                owner: profileId,
+              }) as NewDocument,
         database,
       )
       // Kept forever, so the workbook as received can always be restored.

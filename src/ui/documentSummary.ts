@@ -11,6 +11,10 @@ export function describeContent(document: AnyDocument): string {
       const words = countWords(document.content.body)
       return `${words} word${words === 1 ? '' : 's'}`
     }
+    case 'code': {
+      const files = document.content.files.length
+      return `${files} file${files === 1 ? '' : 's'}`
+    }
     case 'tickets': {
       const tickets = document.content.tickets.length
       return `${tickets} ticket${tickets === 1 ? '' : 's'}`

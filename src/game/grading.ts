@@ -28,7 +28,12 @@ import {
   type WorkbookCalculator,
 } from '../apps/sheets/engine/workbook'
 import type { Assignment, Check } from '../content/schemas'
-import type { CellFormat, SheetContent, TicketsContent } from '../persistence/schemas'
+import type {
+  CellFormat,
+  CodeContent,
+  SheetContent,
+  TicketsContent,
+} from '../persistence/schemas'
 import { gradeTickets } from './tickets'
 import {
   applyScenario,
@@ -321,17 +326,21 @@ export function ratingFor(score: number, passScore: number): Rating {
 }
 
 /**
- * Grades the player's work for an assignment: the workbook, and the report
- * and presentation when the task has them. A workbook that was not handed in
- * (null) scores nothing on the workbook checks.
+ * Grades the player's work for an assignment: the workbook, ticket queue or
+ * code, and the report and presentation when the task has them. A main file
+ * that was not handed in (null) scores nothing on its checks.
+ *
+ * The code checks of a Code task run the player's code, so they are graded
+ * beforehand (safely, in a worker: see `game/code`) and passed in.
  */
 export function gradeAssignment(
   assignment: Assignment,
-  main: SheetContent | TicketsContent | null,
+  main: SheetContent | TicketsContent | CodeContent | null,
   files: SubmittedFiles = {},
+  codeChecks: CheckResult[] = [],
 ): GradeResult {
   const tickets = assignment.kind === 'tickets'
-  const handedIn = !tickets && main && 'sheets' in main ? main : null
+  const handedIn = main && 'sheets' in main ? main : null
   const start = buildStartingContent(assignment)
   const solution = buildSolutionContent(assignment)
   const player = handedIn ?? start
@@ -377,7 +386,7 @@ export function gradeAssignment(
   const ticketChecks = tickets
     ? gradeTickets(assignment, main && 'tickets' in main ? main : null)
     : []
-  const checks = [...sheetChecks, ...ticketChecks, ...fileChecks]
+  const checks = [...sheetChecks, ...ticketChecks, ...codeChecks, ...fileChecks]
   const earned = checks.reduce((total, check) => total + check.earned, 0)
   const maxPoints = checks.reduce((total, check) => total + check.points, 0)
   const score = maxPoints === 0 ? 0 : Math.round((100 * earned) / maxPoints)

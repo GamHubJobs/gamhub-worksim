@@ -133,6 +133,46 @@ export const TicketCheckSchema = z.discriminatedUnion('type', [
   }),
 ])
 
+/**
+ * A check on the code of a Code task. Every check runs tests, so a check
+ * gives credit for working code, not for code that looks right.
+ */
+export const CodeCheckSchema = z.discriminatedUnion('type', [
+  /**
+   * The tests in `file` pass with the player's code: the project's own test
+   * file as the task wrote it, or hidden tests given in `source`.
+   */
+  FileCheckBaseSchema.extend({
+    type: z.literal('tests'),
+    file: z.string().regex(/^[\w.-]+\.test\.js$/),
+    source: z.string().optional(),
+  }),
+  /** The player's own tests in `file`: at least `minTests`, all passing. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('own-tests'),
+    file: z.string().regex(/^[\w.-]+\.test\.js$/),
+    minTests: z.number().int().positive(),
+  }),
+  /**
+   * The player's tests catch bugs: they are run against copies of `target`
+   * with a bug planted in each, and should fail on every one.
+   */
+  FileCheckBaseSchema.extend({
+    type: z.literal('mutants'),
+    file: z.string().regex(/^[\w.-]+\.test\.js$/),
+    target: z.string(),
+    mutants: z
+      .array(
+        z.object({
+          description: z.string().min(1),
+          find: z.string().min(1),
+          replace: z.string(),
+        }),
+      )
+      .min(1),
+  }),
+])
+
 /** The starting ticket queue of a Help Desk task. */
 export const QueueSchema = z.object({
   title: z.string().min(1),
@@ -212,10 +252,29 @@ export const AssignmentSchema = z.object({
   objectives: z.array(z.string().min(1)).min(1),
   steps: z.array(StepSchema).min(1),
   /**
-   * What the main piece of work is: a workbook (Sheets) or a ticket queue
-   * (Help Desk). Reports and presentations can be added to either.
+   * What the main piece of work is: a workbook (Sheets), a ticket queue
+   * (Help Desk) or a code project (Code). Reports and presentations can be
+   * added to any of them.
    */
-  kind: z.enum(['sheet', 'tickets']).default('sheet'),
+  kind: z.enum(['sheet', 'tickets', 'code']).default('sheet'),
+  /** The starting files, for Code tasks. */
+  project: z
+    .object({
+      title: z.string().min(1),
+      files: z
+        .array(
+          z.object({
+            name: z.string().regex(/^[\w.-]+$/),
+            text: z.string(),
+            readOnly: z.boolean().default(false),
+          }),
+        )
+        .min(1),
+    })
+    .optional(),
+  /** The model answer for Code tasks: the full text of each changed file. */
+  codeSolution: z.record(z.string(), z.string()).default({}),
+  codeChecks: z.array(CodeCheckSchema).default([]),
   /** The ticket queue, for Help Desk tasks. */
   queue: QueueSchema.optional(),
   /** The model answer for the tickets: priority, category and status. */
@@ -276,6 +335,7 @@ export const AssignmentSchema = z.object({
 })
 
 export type Check = z.infer<typeof CheckSchema>
+export type CodeCheck = z.infer<typeof CodeCheckSchema>
 export type FileCheck = z.infer<typeof FileCheckSchema>
 export type Deliverable = z.infer<typeof DeliverableSchema>
 export type AssignmentInput = z.input<typeof AssignmentSchema>
