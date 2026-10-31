@@ -45,7 +45,7 @@ describe('database versions', () => {
   })
 })
 
-describe('database upgrade from version 1 to version 2', () => {
+describe('database upgrade from version 1 to the current version', () => {
   it('keeps all existing data and supports the new version-history index', async () => {
     const name = `test-${createId()}`
     databasesToDelete.push(name)
@@ -75,7 +75,7 @@ describe('database upgrade from version 1 to version 2', () => {
     // 2. Open it with the current app, which upgrades it automatically.
     const database = new WorkSimDatabase(name)
     await database.open()
-    expect(database.verno).toBe(2)
+    expect(database.verno).toBe(CURRENT_DATABASE_VERSION)
 
     // 3. Everything is still there and readable (upgraded to the current format).
     expect(await getDocument(documentId, database)).toEqual({
@@ -85,6 +85,29 @@ describe('database upgrade from version 1 to version 2', () => {
     const versions = await listVersions(documentId, database)
     expect(versions).toHaveLength(1)
     expect(versions[0].snapshot.title).toBe('Saved with version 1')
+    database.close()
+  })
+})
+
+describe('database upgrade from version 2 to version 3', () => {
+  it('keeps existing data and adds the profiles table', async () => {
+    const name = `test-${createId()}`
+    databasesToDelete.push(name)
+    const documentId = createId()
+    const deviceId = createId()
+    const document = sheetDocument(documentId, deviceId)
+
+    const oldDatabase = new Dexie(name)
+    oldDatabase.version(1).stores(DATABASE_VERSIONS[1])
+    oldDatabase.version(2).stores(DATABASE_VERSIONS[2])
+    await oldDatabase.table('meta').put({ key: 'deviceId', value: deviceId })
+    await oldDatabase.table('documents').put(document)
+    oldDatabase.close()
+
+    const database = new WorkSimDatabase(name)
+    await database.open()
+    expect(await getDocument(documentId, database)).toMatchObject({ id: documentId })
+    expect(await database.profiles.count()).toBe(0)
     database.close()
   })
 })

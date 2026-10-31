@@ -19,10 +19,12 @@ import {
 } from './db'
 import { upgradeDocument } from './documentMigrations'
 import { getMetaValue, setMetaValue } from './meta'
+import { upgradeProfile } from './profiles'
 import {
   DocumentSchema,
   DocumentVersionSchema,
   MetaEntrySchema,
+  ProfileSchema,
   TimestampSchema,
 } from './schemas'
 
@@ -55,6 +57,7 @@ export const TABLE_VALIDATORS: Record<string, (raw: unknown) => unknown> = {
       snapshot: upgradeDocument(row.snapshot),
     })
   },
+  profiles: (raw) => ProfileSchema.parse(upgradeProfile(raw)),
 }
 
 const BackupFileSchema = z.object({

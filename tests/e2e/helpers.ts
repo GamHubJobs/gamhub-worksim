@@ -4,10 +4,40 @@ export function cell(page: Page, address: string) {
   return page.locator(`[data-address="${address}"]`)
 }
 
-/** Opens the app and waits until the workbook is ready for editing. */
+/** Completes the first-day screen if it is shown. */
+export async function startCareerIfNeeded(page: Page, name = 'Alex') {
+  const onboarding = page.getByTestId('onboarding')
+  const desktop = page.getByTestId('desktop')
+  await expect(onboarding.or(desktop)).toBeVisible()
+  if (await onboarding.isVisible()) {
+    await page.getByLabel('Your first name').fill(name)
+    await page.getByRole('button', { name: 'Start my first day' }).click()
+    await expect(desktop).toBeVisible()
+  }
+}
+
+/** Opens a dock app such as "Mail" or "Sheets". */
+export async function openApp(page: Page, name: 'Mail' | 'Tasks' | 'Sheets' | 'Career') {
+  await page
+    .getByRole('navigation', { name: 'Apps' })
+    .getByRole('button', { name: new RegExp(`^${name}`) })
+    .click()
+}
+
+/**
+ * Opens the app and the Practice Workbook (starting a career first if needed),
+ * and waits until the workbook is ready for editing. After a reload, the app
+ * returns to the workbook by itself.
+ */
 export async function openWorkbook(page: Page, path = '/') {
   await page.goto(path)
-  await expect(page.getByTestId('sheet-grid')).toBeVisible()
+  await startCareerIfNeeded(page)
+  const grid = page.getByTestId('sheet-grid')
+  if (!(await grid.isVisible())) {
+    await openApp(page, 'Sheets')
+    await page.getByRole('button', { name: /Practice Workbook/ }).click()
+  }
+  await expect(grid).toBeVisible()
 }
 
 /** Selects a cell, types a value and confirms it with Enter. `shown` is what the cell displays. */

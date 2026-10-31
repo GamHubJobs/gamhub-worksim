@@ -118,6 +118,7 @@ export const VersionReasonSchema = z.enum([
   'close', // player left the document
   'before-restore', // safety copy taken just before restoring an older version
   'manual', // player chose to keep this version
+  'submitted', // the workbook as it was handed in for grading (always kept)
 ])
 
 /** A frozen copy of a document at one moment, for version history. */
@@ -128,6 +129,76 @@ export const DocumentVersionSchema = SyncFieldsSchema.extend({
   keep: z.boolean(),
   /** The full document as it was at that moment. */
   snapshot: DocumentSchema,
+})
+
+// ---------------------------------------------------------------------------
+// The player's career: progress, rewards and mail
+// ---------------------------------------------------------------------------
+
+/** The result of one submission of an assignment. */
+export const AttemptSchema = z.object({
+  submittedAt: TimestampSchema,
+  /** 0–100. */
+  score: z.number().int().min(0).max(100),
+  rating: z.enum(['excellent', 'good', 'pass', 'fail']),
+  checks: z.array(
+    z.object({
+      id: z.string(),
+      status: z.enum(['passed', 'partial', 'failed']),
+      earned: z.number().int().nonnegative(),
+      points: z.number().int().nonnegative(),
+      problems: z.array(z.string()),
+    }),
+  ),
+  /** XP this attempt added (only improvements on earlier attempts count). */
+  xpEarned: z.number().int().nonnegative(),
+  skillXpEarned: z.record(z.string(), z.number().int().nonnegative()),
+  /** The version-history copy of the workbook as submitted. */
+  versionId: IdSchema.optional(),
+})
+
+export const AssignmentProgressSchema = z.object({
+  assignmentId: z.string(),
+  /** The assignment's content version when it was started. */
+  assignmentVersion: z.number().int().positive(),
+  /** The player's workbook for this assignment. */
+  documentId: IdSchema,
+  startedAt: TimestampSchema,
+  /** Steps the player ticked off in the task pane. */
+  completedSteps: z.array(z.string()),
+  attempts: z.array(AttemptSchema),
+})
+
+export const MailMessageSchema = z.object({
+  id: IdSchema,
+  /** A person ID from the company content, e.g. "manager". */
+  from: z.string(),
+  subject: z.string(),
+  /** Plain text; blank lines separate paragraphs. */
+  body: z.string(),
+  receivedAt: TimestampSchema,
+  readAt: TimestampSchema.nullable(),
+  kind: z.enum(['welcome', 'briefing', 'feedback', 'promotion', 'info']),
+  assignmentId: z.string().optional(),
+  /** For feedback: which attempt (0-based) it is about. */
+  attemptIndex: z.number().int().nonnegative().optional(),
+})
+
+/** Current format of player profiles; raise it (with an upgrade) when the shape changes. */
+export const PROFILE_FORMAT_VERSION = 1
+
+/** One player's career save. */
+export const ProfileSchema = SyncFieldsSchema.extend({
+  formatVersion: z.number().int().min(1),
+  /** The name colleagues use, e.g. "Alex". */
+  name: z.string().trim().min(1).max(40),
+  careerId: z.string(),
+  levelId: z.string(),
+  xp: z.number().int().nonnegative(),
+  /** Skill XP per skill ID. */
+  skills: z.record(z.string(), z.number().int().nonnegative()),
+  assignments: z.record(z.string(), AssignmentProgressSchema),
+  inbox: z.array(MailMessageSchema),
 })
 
 // ---------------------------------------------------------------------------
@@ -172,5 +243,9 @@ export type AnyDocument = z.infer<typeof DocumentSchema>
 export type DocumentKind = AnyDocument['kind']
 export type VersionReason = z.infer<typeof VersionReasonSchema>
 export type DocumentVersion = z.infer<typeof DocumentVersionSchema>
+export type Attempt = z.infer<typeof AttemptSchema>
+export type AssignmentProgress = z.infer<typeof AssignmentProgressSchema>
+export type MailMessage = z.infer<typeof MailMessageSchema>
+export type Profile = z.infer<typeof ProfileSchema>
 export type MetaEntry = z.infer<typeof MetaEntrySchema>
 export type OutboxEntry = z.infer<typeof OutboxEntrySchema>

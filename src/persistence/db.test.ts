@@ -17,7 +17,13 @@ describe('WorkSimDatabase', () => {
   it('opens with all expected tables', async () => {
     await database.open()
     const tableNames = database.tables.map((table) => table.name).sort()
-    expect(tableNames).toEqual(['documentVersions', 'documents', 'meta', 'outbox'])
+    expect(tableNames).toEqual([
+      'documentVersions',
+      'documents',
+      'meta',
+      'outbox',
+      'profiles',
+    ])
   })
 
   it('stores and reads back a value', async () => {

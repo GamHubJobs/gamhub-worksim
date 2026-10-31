@@ -14,6 +14,7 @@ import {
   type DocumentVersion,
   type MetaEntry,
   type OutboxEntry,
+  type Profile,
 } from './schemas'
 
 export const DATABASE_NAME = 'gamhub-worksim'
@@ -40,21 +41,27 @@ export const DATABASE_VERSIONS = {
   2: {
     documentVersions: 'id, documentId, createdAt, [documentId+createdAt]',
   },
+  // Version 3: player profiles (career progress, rewards and mail).
+  3: {
+    profiles: 'id',
+  },
 } as const
 
 /** The newest database structure version this app understands. */
-export const CURRENT_DATABASE_VERSION = 2
+export const CURRENT_DATABASE_VERSION = 3
 
 export class WorkSimDatabase extends Dexie {
   meta!: EntityTable<MetaEntry, 'key'>
   documents!: EntityTable<AnyDocument, 'id'>
   documentVersions!: EntityTable<DocumentVersion, 'id'>
   outbox!: EntityTable<OutboxEntry, 'seq'>
+  profiles!: EntityTable<Profile, 'id'>
 
   constructor(name: string = DATABASE_NAME) {
     super(name)
     this.version(1).stores(DATABASE_VERSIONS[1])
     this.version(2).stores(DATABASE_VERSIONS[2])
+    this.version(3).stores(DATABASE_VERSIONS[3])
   }
 }
 

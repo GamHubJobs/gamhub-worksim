@@ -9,6 +9,7 @@ const REASON_LABELS: Record<VersionReason, string> = {
   close: 'When you left',
   'before-restore': 'Before a restore',
   manual: 'Saved by you',
+  submitted: 'Submitted',
 }
 
 interface VersionHistoryPanelProps {

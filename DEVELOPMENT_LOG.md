@@ -14,10 +14,76 @@ owner.
 
 - [x] 1.1 Formula engine (pure TypeScript, heavily tested)
 - [x] 1.2 Spreadsheet editor: formula bar, selection, copy/paste, undo/redo, formatting
-- [ ] 1.3 Assignment system: workplace data, instructions, submission, automatic grading
-- [ ] 1.4 Simulated desktop with Mail and Tasks; XP, skills, feedback and rewards
+- [x] 1.3 Assignment system: workplace data, instructions, submission, automatic grading
+- [x] 1.4 Simulated desktop with Mail and Tasks; XP, skills, feedback and rewards
 - [ ] 1.5 More assignments, polish, browser tests for the full journey
 - Later (after the above work well): minimal 3D office with hotspot navigation
+
+---
+
+## 2026-10-31 · Milestone 1.3–1.4: assignments, grading, desktop and career
+
+### Built
+
+- **Content as data** (`src/content/`): a fictional company (Cobalt Ridge Consulting),
+  colleagues (manager Priya Raman, Tom from Facilities, Grace from People & Culture),
+  six skills, the Office Administration & Finance career (Intern → Junior Finance
+  Assistant → Finance Assistant → Finance Officer), and assignments validated by Zod.
+- **First assignment, "Price the office supplies order"**: a realistic 10-line supplies
+  order. The player calculates line totals, fills the formula down, adds a SUM total
+  and formats money, guided by six steps with hints, a "why this matters" section and
+  learning objectives.
+- **Automatic grading** (`src/game/grading.ts`, pure TypeScript):
+  - compares every checked cell with the model answer (with a tolerance for cents);
+  - catches typed-in results ("E2 has the right number, but it was typed in");
+  - checks required functions ("E13 should use SUM");
+  - **robustness test**: changes the source data (the assignment's own scenarios plus
+    "every number changed") and recalculates both workbooks, which catches formulas
+    with hidden fixed numbers or wrong references;
+  - checks formatting cell by cell and that source data was not changed;
+  - partial credit per cell; every problem explained cell by cell, with a fix and why
+    it matters.
+- **Career rules** (`src/game/career.ts`): XP and skill XP only for passing work,
+  resubmissions only pay for improvements, +10% bonus for an excellent first attempt,
+  skill levels (Novice → Expert), promotion when the level's tasks are all passed and
+  enough XP is earned, next task unlocked on first pass, feedback emails listing what
+  to fix.
+- **Player profile** saved in the database (new table `profiles`, database version 3,
+  tested upgrade), included in backups. Starting a task (workbook + profile) and
+  submitting (kept "Submitted" copy in version history + profile) are each one
+  transaction.
+- **Simulated desktop**: first-day screen (name), dock with Mail, Tasks, Sheets and
+  Career (unread/new badges), top bar with title and XP.
+  - Mail: inbox and reading pane; task emails open the task, feedback emails open the
+    detailed results.
+  - Tasks: status (New, In progress, Needs revision, Completed, Locked), why it
+    matters, objectives, skills, rewards, feedback on the latest submission, history.
+  - Sheets: work files and the Practice Workbook; workbook window with save status,
+    version history and the **task pane** (steps checklist, hints, brief, Submit).
+  - Results screen: score, rating, XP and skill gains, level-ups, unlocked task,
+    feedback per check.
+  - Career: level, XP, promotion requirements, skills, work record.
+- The app reopens where the player left off (last view), so reloads and crash recovery
+  return to the open workbook.
+
+### Decisions
+
+- The model answer is a set of formulas, not a list of numbers, so grading always
+  matches the data, and scenario tests come for free.
+- Failed attempts earn no XP, so XP always means "work that passed".
+- One profile record holds the whole career for now (small, simple, syncs as one
+  unit). It can be split into tables later if it grows.
+
+### Tested
+
+- 370 unit tests (adds grading of correct, typed-in, hidden-number, wrong-row,
+  missing-SUM, unformatted and changed-data workbooks; career rules; profile storage,
+  transactions and backups; database upgrade 2→3; every assignment's model answer
+  scores 100% and an untouched workbook fails).
+- 29 browser tests (adds the full first-day journey: onboarding → email → task →
+  failed submission with feedback → doing the work → 100% → XP → reply email →
+  career page → reload; and typed-in results being caught). All earlier tests now run
+  through the new desktop.
 
 ---
 

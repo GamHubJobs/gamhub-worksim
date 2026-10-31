@@ -1,0 +1,388 @@
+/**
+ * Career rules: rewards for submitted work, unlocking assignments, skill
+ * levels, promotions and the emails that go with them. Pure functions: they
+ * take a profile and return a new one.
+ */
+import { createId } from '../lib/ids'
+import { ASSIGNMENTS } from '../content/assignments'
+import { getCareer, SKILL_LEVELS } from '../content/careers'
+import { COMPANY } from '../content/company'
+import type { Assignment } from '../content/schemas'
+import type {
+  AssignmentProgress,
+  Attempt,
+  MailMessage,
+  Profile,
+} from '../persistence/schemas'
+import type { GradeResult } from './grading'
+
+/** The parts of a profile the game controls (no save bookkeeping). */
+export type ProfileData = Pick<
+  Profile,
+  'name' | 'careerId' | 'levelId' | 'xp' | 'skills' | 'assignments' | 'inbox'
+>
+
+export const DEFAULT_CAREER_ID = 'office-admin-finance'
+
+/** Bonus for an excellent result on the first attempt, as a share of the XP. */
+export const FIRST_TRY_BONUS = 0.1
+
+export function firstName(name: string): string {
+  return name.trim().split(/\s+/)[0] ?? name
+}
+
+function personalise(text: string, name: string): string {
+  return text.replaceAll('{name}', firstName(name))
+}
+
+function message(
+  fields: Omit<MailMessage, 'id' | 'readAt'> & { readAt?: number | null },
+): MailMessage {
+  return { id: createId(), readAt: null, ...fields }
+}
+
+// ---------------------------------------------------------------------------
+// Starting a career
+// ---------------------------------------------------------------------------
+
+export function welcomeMessage(name: string, now: number): MailMessage {
+  return message({
+    from: 'hr',
+    kind: 'welcome',
+    receivedAt: now,
+    subject: `Welcome to ${COMPANY.name}!`,
+    body: `Hi ${firstName(name)},
+
+Welcome to ${COMPANY.name}! We are delighted to have you join the Finance & Administration team as an intern.
+
+Here is how things work:
+• Your manager, Priya Raman, will send you tasks by email. You will also find them in the Tasks app.
+• Your work is done in Sheets, our spreadsheet app. It saves automatically.
+• When you submit a task you get feedback straight away. You can improve your work and submit it again: we care more about getting it right than getting it right first time.
+• Every task earns experience (XP) and builds your skills. Do well and you will be considered for promotion.
+
+If you get stuck, every task has step-by-step instructions and hints.
+
+Have a great first day!
+
+Grace Okafor
+People & Culture`,
+  })
+}
+
+export function briefingMessage(
+  assignment: Assignment,
+  name: string,
+  now: number,
+): MailMessage {
+  return message({
+    from: assignment.from,
+    kind: 'briefing',
+    receivedAt: now,
+    subject: assignment.briefing.subject,
+    body: personalise(assignment.briefing.body, name),
+    assignmentId: assignment.id,
+  })
+}
+
+/** A brand-new career: a welcome email and the first assignment. */
+export function newProfileData(name: string, now: number): ProfileData {
+  const first = ASSIGNMENTS.find((a) => a.careerId === DEFAULT_CAREER_ID)
+  return {
+    name: name.trim(),
+    careerId: DEFAULT_CAREER_ID,
+    levelId: getCareer(DEFAULT_CAREER_ID).levels[0].id,
+    xp: 0,
+    skills: {},
+    assignments: {},
+    inbox: [
+      welcomeMessage(name, now),
+      ...(first ? [briefingMessage(first, name, now + 1)] : []),
+    ],
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Assignments
+// ---------------------------------------------------------------------------
+
+export type AssignmentStatus =
+  'locked' | 'available' | 'in-progress' | 'needs-revision' | 'completed'
+
+export function bestScore(progress: AssignmentProgress | undefined): number | null {
+  if (!progress || progress.attempts.length === 0) return null
+  return Math.max(...progress.attempts.map((attempt) => attempt.score))
+}
+
+export function isPassed(
+  assignment: Assignment,
+  progress: AssignmentProgress | undefined,
+): boolean {
+  const best = bestScore(progress)
+  return best !== null && best >= assignment.passScore
+}
+
+export function careerAssignments(careerId: string): Assignment[] {
+  return ASSIGNMENTS.filter((assignment) => assignment.careerId === careerId)
+}
+
+export function assignmentStatus(
+  profile: ProfileData,
+  assignment: Assignment,
+): AssignmentStatus {
+  const progress = profile.assignments[assignment.id]
+  if (isPassed(assignment, progress)) return 'completed'
+  if (progress && progress.attempts.length > 0) return 'needs-revision'
+  if (progress) return 'in-progress'
+  const previous = careerAssignments(assignment.careerId).find(
+    (a) => a.order === assignment.order - 1,
+  )
+  if (previous && !isPassed(previous, profile.assignments[previous.id])) return 'locked'
+  return 'available'
+}
+
+// ---------------------------------------------------------------------------
+// Levels
+// ---------------------------------------------------------------------------
+
+export function skillLevel(xp: number) {
+  let current: (typeof SKILL_LEVELS)[number] = SKILL_LEVELS[0]
+  for (const level of SKILL_LEVELS) if (xp >= level.xpRequired) current = level
+  const next = SKILL_LEVELS.find((level) => level.xpRequired > xp) ?? null
+  return { ...current, next }
+}
+
+export function careerLevel(profile: ProfileData) {
+  const career = getCareer(profile.careerId)
+  const index = Math.max(
+    0,
+    career.levels.findIndex((level) => level.id === profile.levelId),
+  )
+  return {
+    career,
+    current: career.levels[index],
+    next: career.levels[index + 1] ?? null,
+  }
+}
+
+/**
+ * What is still needed for the next promotion: enough XP, and every
+ * assignment of the current level passed.
+ */
+export function promotionProgress(profile: ProfileData) {
+  const { current, next } = careerLevel(profile)
+  const levelAssignments = careerAssignments(profile.careerId).filter(
+    (a) => a.levelId === current.id,
+  )
+  const passed = levelAssignments.filter((a) =>
+    isPassed(a, profile.assignments[a.id]),
+  ).length
+  return {
+    next,
+    xpNeeded: next ? Math.max(0, next.xpRequired - profile.xp) : 0,
+    assignmentsPassed: passed,
+    assignmentsTotal: levelAssignments.length,
+    eligible:
+      next !== null &&
+      profile.xp >= next.xpRequired &&
+      levelAssignments.length > 0 &&
+      passed === levelAssignments.length,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Submitting work
+// ---------------------------------------------------------------------------
+
+export interface Reward {
+  xp: number
+  /** Included in `xp`: the bonus for an excellent first attempt. */
+  bonusXp: number
+  skills: Record<string, number>
+  /** Skills that reached a new level. */
+  skillLevelUps: Array<{ skillId: string; level: number; name: string }>
+  promotedTo: string | null
+  unlocked: Assignment | null
+  firstPass: boolean
+}
+
+/**
+ * XP and skill XP for a score. Only passing work is rewarded, and only
+ * improvements on earlier attempts count, so resubmitting never pays twice.
+ */
+function earnings(assignment: Assignment, score: number, previousBest: number | null) {
+  const scale = (amount: number, s: number) => Math.round((amount * s) / 100)
+  const rewarded = (s: number | null) => (s !== null && s >= assignment.passScore ? s : 0)
+  const before = rewarded(previousBest)
+  score = rewarded(score)
+  const xp = Math.max(0, scale(assignment.xp, score) - scale(assignment.xp, before))
+  const skills: Record<string, number> = {}
+  for (const [skillId, amount] of Object.entries(assignment.skills)) {
+    const gain = Math.max(0, scale(amount, score) - scale(amount, before))
+    if (gain > 0) skills[skillId] = gain
+  }
+  return { xp, skills }
+}
+
+function feedbackMessage(
+  assignment: Assignment,
+  grade: GradeResult,
+  name: string,
+  attemptIndex: number,
+  now: number,
+): MailMessage {
+  const greeting = personalise(assignment.feedback[grade.rating], name)
+  const notes = grade.checks
+    .filter((check) => check.status !== 'passed')
+    .map((check) => `• ${check.title}: ${check.hint}`)
+  const body =
+    notes.length > 0
+      ? greeting.replace(
+          /\n\n(Priya|[^\n]+)$/,
+          `\n\nWhat to look at:\n${notes.join('\n')}\n\n$1`,
+        )
+      : greeting
+  return message({
+    from: assignment.from,
+    kind: 'feedback',
+    receivedAt: now,
+    subject: `Re: ${assignment.briefing.subject} (${grade.score}%)`,
+    body,
+    assignmentId: assignment.id,
+    attemptIndex,
+  })
+}
+
+function promotionMessage(name: string, title: string, now: number): MailMessage {
+  return message({
+    from: 'manager',
+    kind: 'promotion',
+    receivedAt: now,
+    subject: `Congratulations, you are now ${title}!`,
+    body: `Hi ${firstName(name)},
+
+I wanted to tell you personally: you have been promoted to ${title}.
+
+Your work has been accurate and reliable, and you have shown that you understand not just how to do the tasks, but why they matter. That is exactly what we look for.
+
+New responsibilities will follow soon. Well done, and thank you!
+
+Priya`,
+  })
+}
+
+/**
+ * Records a submission: the attempt, XP and skill rewards, the manager's
+ * reply, the next assignment (on a first pass) and a promotion if earned.
+ */
+export function recordSubmission(
+  profile: ProfileData,
+  assignment: Assignment,
+  grade: GradeResult,
+  now: number,
+  versionId?: string,
+): { profile: ProfileData; reward: Reward; attempt: Attempt } {
+  const progress = profile.assignments[assignment.id]
+  if (!progress) throw new Error('This assignment has not been started.')
+  const previousBest = bestScore(progress)
+  const wasPassed = isPassed(assignment, progress)
+  const isFirstAttempt = progress.attempts.length === 0
+
+  const earned = earnings(assignment, grade.score, previousBest)
+  const bonusXp =
+    isFirstAttempt && grade.rating === 'excellent'
+      ? Math.round(assignment.xp * FIRST_TRY_BONUS)
+      : 0
+  const xp = earned.xp + bonusXp
+
+  const attempt: Attempt = {
+    submittedAt: now,
+    score: grade.score,
+    rating: grade.rating,
+    checks: grade.checks.map(({ id, status, earned: points, points: max, problems }) => ({
+      id,
+      status,
+      earned: points,
+      points: max,
+      problems,
+    })),
+    xpEarned: xp,
+    skillXpEarned: earned.skills,
+    ...(versionId ? { versionId } : {}),
+  }
+
+  const skills = { ...profile.skills }
+  const skillLevelUps: Reward['skillLevelUps'] = []
+  for (const [skillId, gain] of Object.entries(earned.skills)) {
+    const before = skillLevel(skills[skillId] ?? 0)
+    skills[skillId] = (skills[skillId] ?? 0) + gain
+    const after = skillLevel(skills[skillId])
+    if (after.level > before.level) {
+      skillLevelUps.push({ skillId, level: after.level, name: after.name })
+    }
+  }
+
+  const attemptIndex = progress.attempts.length
+  let updated: ProfileData = {
+    ...profile,
+    xp: profile.xp + xp,
+    skills,
+    assignments: {
+      ...profile.assignments,
+      [assignment.id]: { ...progress, attempts: [...progress.attempts, attempt] },
+    },
+    inbox: [
+      ...profile.inbox,
+      feedbackMessage(assignment, grade, profile.name, attemptIndex, now),
+    ],
+  }
+
+  // A first pass unlocks the next assignment.
+  const firstPass = grade.passed && !wasPassed
+  let unlocked: Assignment | null = null
+  if (firstPass) {
+    unlocked =
+      careerAssignments(assignment.careerId).find(
+        (a) => a.order === assignment.order + 1,
+      ) ?? null
+    if (unlocked) {
+      updated = {
+        ...updated,
+        inbox: [...updated.inbox, briefingMessage(unlocked, profile.name, now + 2)],
+      }
+    }
+  }
+
+  // Promotion when everything for this level is done and enough XP is earned.
+  let promotedTo: string | null = null
+  const promotion = promotionProgress(updated)
+  if (promotion.eligible && promotion.next) {
+    promotedTo = promotion.next.title
+    updated = {
+      ...updated,
+      levelId: promotion.next.id,
+      inbox: [
+        ...updated.inbox,
+        promotionMessage(profile.name, promotion.next.title, now + 3),
+      ],
+    }
+  }
+
+  return {
+    profile: updated,
+    reward: {
+      xp,
+      bonusXp,
+      skills: earned.skills,
+      skillLevelUps,
+      promotedTo,
+      unlocked,
+      firstPass,
+    },
+    attempt,
+  }
+}
+
+export function unreadCount(profile: ProfileData): number {
+  return profile.inbox.filter((mail) => mail.readAt === null).length
+}
