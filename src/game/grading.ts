@@ -28,7 +28,8 @@ import {
   type WorkbookCalculator,
 } from '../apps/sheets/engine/workbook'
 import type { Assignment, Check } from '../content/schemas'
-import type { CellFormat, SheetContent } from '../persistence/schemas'
+import type { CellFormat, SheetContent, TicketsContent } from '../persistence/schemas'
+import { gradeTickets } from './tickets'
 import {
   applyScenario,
   buildSolutionContent,
@@ -326,9 +327,11 @@ export function ratingFor(score: number, passScore: number): Rating {
  */
 export function gradeAssignment(
   assignment: Assignment,
-  handedIn: SheetContent | null,
+  main: SheetContent | TicketsContent | null,
   files: SubmittedFiles = {},
 ): GradeResult {
+  const tickets = assignment.kind === 'tickets'
+  const handedIn = !tickets && main && 'sheets' in main ? main : null
   const start = buildStartingContent(assignment)
   const solution = buildSolutionContent(assignment)
   const player = handedIn ?? start
@@ -371,7 +374,10 @@ export function gradeAssignment(
     calculator: books.solutionCalc,
     content: solution,
   })
-  const checks = [...sheetChecks, ...fileChecks]
+  const ticketChecks = tickets
+    ? gradeTickets(assignment, main && 'tickets' in main ? main : null)
+    : []
+  const checks = [...sheetChecks, ...ticketChecks, ...fileChecks]
   const earned = checks.reduce((total, check) => total + check.earned, 0)
   const maxPoints = checks.reduce((total, check) => total + check.points, 0)
   const score = maxPoints === 0 ? 0 : Math.round((100 * earned) / maxPoints)

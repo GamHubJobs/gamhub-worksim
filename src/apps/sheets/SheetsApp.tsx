@@ -11,9 +11,10 @@ interface SheetsAppProps {
 }
 
 export function SheetsApp({ profile, onOpen }: SheetsAppProps) {
-  const started = Object.values(profile.assignments).sort(
-    (a, b) => b.startedAt - a.startedAt,
-  )
+  // Workbooks of tasks done in Sheets (Help Desk tasks have a ticket queue instead).
+  const started = Object.values(profile.assignments)
+    .filter((p) => getAssignment(p.assignmentId)?.kind !== 'tickets')
+    .sort((a, b) => b.startedAt - a.startedAt)
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50" data-testid="sheets-files">
@@ -45,7 +46,7 @@ export function SheetsApp({ profile, onOpen }: SheetsAppProps) {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-medium text-slate-900">
-                          {assignment?.workbook.title ?? 'Workbook'}
+                          {assignment?.workbook?.title ?? 'Workbook'}
                         </span>
                         <span className="block text-xs text-slate-500">
                           Task: {assignment?.title ?? progress.assignmentId} · started{' '}

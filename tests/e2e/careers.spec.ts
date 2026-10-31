@@ -153,3 +153,54 @@ test('switching careers keeps each one’s progress, colleagues and files', asyn
   await openApp(page, 'Career')
   await expect(page.getByTestId('career-title')).toHaveText('Finance & Admin Intern')
 })
+
+test('an IT Help Desk career: triage a ticket queue in the Help Desk app', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await startCareer(page, 'Alex Morgan', 'IT Help Desk')
+  await openApp(page, 'Tasks')
+  await page
+    .getByTestId('task-detail')
+    .getByRole('button', { name: 'Start task' })
+    .click()
+  const desk = page.getByTestId('helpdesk')
+  await expect(desk).toBeVisible()
+  await expect(
+    desk.getByRole('list', { name: 'Tickets' }).getByRole('button'),
+  ).toHaveCount(8)
+
+  const triage: Array<[string, string, string]> = [
+    ['INC-2041', 'P1', 'Network'],
+    ['INC-2042', 'P2', 'Access'],
+    ['INC-2043', 'P3', 'Hardware'],
+    ['INC-2044', 'P1', 'Security'],
+    ['INC-2045', 'P4', 'Software'],
+    ['INC-2046', 'P3', 'Email'],
+    ['INC-2047', 'P3', 'Network'],
+    ['INC-2048', 'P4', 'Access'],
+  ]
+  for (const [id, priority, category] of triage) {
+    await desk.getByRole('button', { name: new RegExp(id) }).click()
+    await desk.getByLabel('Priority').selectOption(priority)
+    await desk.getByLabel('Category').selectOption(category)
+  }
+  // The phishing report: escalate and reply.
+  await desk.getByRole('button', { name: /INC-2044/ }).click()
+  await desk.getByLabel('Status').selectOption('escalated')
+  await desk
+    .getByLabel('Reply to Liam')
+    .fill(
+      'Hi Liam, thank you for reporting this. It is a phishing email, so please delete it without clicking any link. IT will never ask for your password by email. I have passed it to our Security team.',
+    )
+  await desk.getByLabel('Internal note').click()
+  await expect(
+    desk.getByRole('list', { name: 'Tickets' }).getByRole('button', { name: /INC-2044/ }),
+  ).toContainText('Escalated')
+
+  await page.getByRole('button', { name: /Submit to Ravi/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click()
+  await expect(page.getByTestId('submission-results').getByTestId('score')).toHaveText(
+    '100%',
+  )
+})

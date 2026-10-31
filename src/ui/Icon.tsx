@@ -14,6 +14,9 @@ const PATHS = {
   slides: 'M3 5h18v11H3V5Zm9 11v4m-4 0h8M7 9h6M7 12h9',
   chart: 'M4 4v16h16M8 16v-5M12 16V8M16 16v-3',
   present: 'M8 5.5v13l10-6.5-10-6.5Z',
+  helpdesk:
+    'M4 13v-1a8 8 0 0 1 16 0v1M4 13h3v6H5a1 1 0 0 1-1-1v-5Zm16 0h-3v6h2a1 1 0 0 0 1-1v-5ZM17 19c0 1.5-2 2.5-5 2.5',
+  code: 'M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5M13.5 4.5l-3 15',
   attach:
     'M16.5 9.5l-6 6a2.1 2.1 0 0 1-3-3l7-7a3.5 3.5 0 0 1 5 5l-7.5 7.5a5 5 0 0 1-7-7L11 5',
   print: 'M7 9V4h10v5M7 17H5v-6h14v6h-2M7 14h10v6H7v-6Z',

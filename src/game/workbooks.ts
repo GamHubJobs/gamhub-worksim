@@ -10,8 +10,13 @@ function toCell(cell: StartingCell): Cell {
 
 /** The workbook the player starts the assignment with. */
 export function buildStartingContent(assignment: Assignment): SheetContent {
+  // Tasks without a workbook (Help Desk) grade against an empty one.
+  const workbook = assignment.workbook ?? {
+    title: assignment.title,
+    sheets: [{ name: 'Sheet1', cells: {} }],
+  }
   let content: SheetContent = {
-    sheets: assignment.workbook.sheets.map((sheet) => ({
+    sheets: workbook.sheets.map((sheet) => ({
       id: createId(),
       name: sheet.name,
       cells: {},
@@ -27,7 +32,7 @@ export function buildStartingContent(assignment: Assignment): SheetContent {
         : {}),
     })),
   }
-  assignment.workbook.sheets.forEach((sheet, i) => {
+  workbook.sheets.forEach((sheet, i) => {
     content = setCells(
       content,
       content.sheets[i].id,

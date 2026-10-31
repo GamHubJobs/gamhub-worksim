@@ -55,6 +55,29 @@ SKILLS.push(
     description:
       'Preparing schedules and statements, and explaining them to non-accountants.',
   },
+  {
+    id: 'troubleshooting',
+    name: 'Troubleshooting',
+    description:
+      'Diagnosing problems by asking the right questions and testing step by step.',
+  },
+  {
+    id: 'customer-service',
+    name: 'Customer service',
+    description:
+      'Helping people clearly, politely and completely, in writing and in person.',
+  },
+  {
+    id: 'incident-management',
+    name: 'Incident management',
+    description: 'Prioritising, escalating and communicating when things go wrong.',
+  },
+  {
+    id: 'technical-writing',
+    name: 'Technical writing',
+    description:
+      'Explaining technical things in plain words: guides, articles and reports.',
+  },
 )
 
 export const SKILL_LEVELS = [
@@ -148,6 +171,52 @@ CAREERS.push({
     {
       id: 'senior-accountant',
       title: 'Senior Accountant',
+      xpRequired: 550,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
+
+CAREERS.push({
+  id: 'it-support',
+  name: 'IT Help Desk',
+  department: 'IT Services',
+  description:
+    'Keep everyone working: triage and solve support tickets, help users in plain words, and handle incidents when systems fail.',
+  toolsIntro:
+    'Your work is done in the Help Desk, our ticketing system, with articles and reports in Docs and briefings in Slides.',
+  skills: [
+    'troubleshooting',
+    'customer-service',
+    'incident-management',
+    'technical-writing',
+    'accuracy',
+  ],
+  apps: ['helpdesk', 'docs', 'slides'],
+  levels: [
+    {
+      id: 'service-desk-trainee',
+      title: 'Service Desk Trainee',
+      xpRequired: 0,
+      minReputation: 0,
+    },
+    {
+      id: 'service-desk-analyst',
+      title: 'Service Desk Analyst',
+      xpRequired: 200,
+      minReputation: 35,
+    },
+    {
+      id: 'senior-support-analyst',
+      title: 'Senior Support Analyst',
+      xpRequired: 350,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'service-desk-lead',
+      title: 'Service Desk Team Lead',
       xpRequired: 550,
       minReputation: 60,
       minReview: 'strong',

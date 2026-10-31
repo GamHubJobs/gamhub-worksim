@@ -215,9 +215,17 @@ function TaskDetail({
           <ul className="mt-3 grid gap-2 sm:grid-cols-3">
             <li>
               <FileButton
-                icon="sheets"
-                title={assignment.workbook.title}
-                kind="Workbook (Sheets)"
+                icon={assignment.kind === 'tickets' ? 'helpdesk' : 'sheets'}
+                title={
+                  assignment.workbook?.title ??
+                  assignment.queue?.title ??
+                  assignment.title
+                }
+                kind={
+                  assignment.kind === 'tickets'
+                    ? 'Ticket queue (Help Desk)'
+                    : 'Workbook (Sheets)'
+                }
                 onClick={() => void open()}
               />
             </li>

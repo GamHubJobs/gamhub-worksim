@@ -14,6 +14,7 @@ import {
   type Reward,
 } from '../game/career'
 import { gradeAssignment, type GradeResult } from '../game/grading'
+import { buildQueueContent } from '../game/tickets'
 import { buildStartingContent } from '../game/workbooks'
 import { checkEvents } from '../game/events'
 import { checkReviews } from '../game/reviews'
@@ -35,7 +36,6 @@ import type {
   DocContent,
   MailMessage,
   Profile,
-  SheetDocument,
   SlidesContent,
 } from '../persistence/schemas'
 import { deliverableFile } from '../game/deliverables'
@@ -125,8 +125,17 @@ export function useCareer() {
       const { profile, documentId } = await startAssignmentInStorage(profileId, {
         assignmentId,
         assignmentVersion: assignment.version,
-        title: assignment.workbook.title,
-        content: buildStartingContent(assignment),
+        ...(assignment.kind === 'tickets'
+          ? {
+              kind: 'tickets' as const,
+              title: assignment.queue?.title ?? assignment.title,
+              content: buildQueueContent(assignment),
+            }
+          : {
+              kind: 'sheet' as const,
+              title: assignment.workbook?.title ?? assignment.title,
+              content: buildStartingContent(assignment),
+            }),
         files: assignment.deliverables.map((d) => deliverableFile(d, playerName)),
       })
       show(profile)
@@ -154,15 +163,17 @@ export function useCareer() {
       const progress = state.profile.assignments[assignmentId]
       if (!progress) throw new Error('This task has not been started yet.')
 
-      let workbook: SheetDocument | null = null
+      // The main file is a workbook, or a ticket queue for Help Desk tasks.
+      const mainKind = assignment.kind
+      let main: AnyDocument | null = null
       const files: { doc?: DocContent; slides?: SlidesContent } = {}
       const handedIn: AnyDocument[] = []
       if (!attachments) {
         const document = await getDocument(progress.documentId)
-        if (!document || document.kind !== 'sheet') {
-          throw new Error('The workbook for this task could not be found.')
+        if (!document || document.kind !== mainKind) {
+          throw new Error('The main file for this task could not be found.')
         }
-        workbook = document
+        main = document
         handedIn.push(document)
       } else {
         // The task's own files first, then any other attached file of each kind.
@@ -178,7 +189,7 @@ export function useCareer() {
         for (const id of ordered) {
           const document = await getDocument(id)
           if (!document) continue
-          if (document.kind === 'sheet' && !workbook) workbook = document
+          if (document.kind === mainKind && !main) main = document
           else if (document.kind === 'doc' && !files.doc) files.doc = document.content
           else if (document.kind === 'slides' && !files.slides)
             files.slides = document.content
@@ -187,7 +198,11 @@ export function useCareer() {
         }
       }
 
-      const grade = gradeAssignment(assignment, workbook?.content ?? null, files)
+      const grade = gradeAssignment(
+        assignment,
+        main?.kind === 'sheet' || main?.kind === 'tickets' ? main.content : null,
+        files,
+      )
       let reward: Reward | null = null
       const profile = await saveSubmission(profileId, handedIn, (latest, versionId) => {
         const withSent = sent ? { ...latest, inbox: [...latest.inbox, sent] } : latest
@@ -196,7 +211,7 @@ export function useCareer() {
           assignment,
           grade,
           Date.now(),
-          workbook ? versionId : undefined,
+          main ? versionId : undefined,
         )
         reward = result.reward
         return {
@@ -223,7 +238,7 @@ export function useCareer() {
       body: string
       attachments: Array<{
         documentId: string
-        kind: 'sheet' | 'doc' | 'slides'
+        kind: 'sheet' | 'doc' | 'slides' | 'tickets'
         title: string
       }>
     }): Promise<SubmissionResult | null> => {

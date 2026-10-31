@@ -11,6 +11,7 @@
 import { SHARED_PEOPLE, type Person } from '../company'
 import { accounting } from './accounting'
 import { finance } from './finance'
+import { itSupport } from './itSupport'
 import type { Department } from './types'
 
 export type { Department } from './types'
@@ -18,6 +19,7 @@ export type { Department } from './types'
 export const DEPARTMENTS: Record<string, Department> = {
   [finance.careerId]: finance,
   [accounting.careerId]: accounting,
+  [itSupport.careerId]: itSupport,
 }
 
 let activeCareerId = finance.careerId

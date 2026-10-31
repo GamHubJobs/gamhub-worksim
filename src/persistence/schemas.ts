@@ -352,6 +352,49 @@ export const SlidesDocumentSchema = DocumentBaseSchema.extend({
   content: SlidesContentSchema,
 })
 
+// ---------------------------------------------------------------------------
+// Ticket queues (Help Desk)
+// ---------------------------------------------------------------------------
+
+export const TICKET_PRIORITIES = ['P1', 'P2', 'P3', 'P4'] as const
+export const TICKET_STATUSES = [
+  'new',
+  'open',
+  'pending',
+  'escalated',
+  'resolved',
+] as const
+
+/** A support request from a colleague, and what the service desk did about it. */
+export const TicketSchema = z.object({
+  id: z.string().min(1).max(30),
+  from: z.string().max(100),
+  department: z.string().max(100),
+  /** When it arrived, e.g. "08:42". */
+  received: z.string().max(20),
+  subject: z.string().max(200),
+  body: z.string().max(5000),
+  priority: z.enum(TICKET_PRIORITIES).nullable(),
+  category: z.string().max(50).nullable(),
+  status: z.enum(TICKET_STATUSES),
+  /** The reply sent to the requester. */
+  reply: z.string().max(5000),
+  /** Internal notes for colleagues. */
+  note: z.string().max(5000),
+})
+
+export const TicketsContentSchema = z.object({
+  categories: z.array(z.string().min(1).max(50)).min(1).max(20),
+  tickets: z.array(TicketSchema).max(100),
+  /** Knowledge-base articles the desk works from (read-only). */
+  knowledge: z.array(z.object({ title: z.string(), body: z.string() })).max(30),
+})
+
+export const TicketsDocumentSchema = DocumentBaseSchema.extend({
+  kind: z.literal('tickets'),
+  content: TicketsContentSchema,
+})
+
 /**
  * Any saved document. New apps (Docs, Slides, ...) are added here as new
  * `kind`s, and they automatically share autosave, versions and backups.
@@ -360,6 +403,7 @@ export const DocumentSchema = z.discriminatedUnion('kind', [
   SheetDocumentSchema,
   DocDocumentSchema,
   SlidesDocumentSchema,
+  TicketsDocumentSchema,
 ])
 
 /**
@@ -371,6 +415,7 @@ export const DOCUMENT_FORMAT_VERSIONS = {
   sheet: 3,
   doc: 1,
   slides: 1,
+  tickets: 1,
 } as const satisfies Record<z.infer<typeof DocumentSchema>['kind'], number>
 
 /** Why a version snapshot was taken. */
@@ -458,7 +503,7 @@ export const MailMessageSchema = z.object({
     .array(
       z.object({
         documentId: IdSchema,
-        kind: z.enum(['sheet', 'doc', 'slides']),
+        kind: z.enum(['sheet', 'doc', 'slides', 'tickets']),
         title: z.string(),
       }),
     )
@@ -654,6 +699,11 @@ export type SlideTheme = (typeof SLIDE_THEMES)[number]
 export type Slide = z.infer<typeof SlideSchema>
 export type SlidesContent = z.infer<typeof SlidesContentSchema>
 export type SlidesDocument = z.infer<typeof SlidesDocumentSchema>
+export type Ticket = z.infer<typeof TicketSchema>
+export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
+export type TicketStatus = (typeof TICKET_STATUSES)[number]
+export type TicketsContent = z.infer<typeof TicketsContentSchema>
+export type TicketsDocument = z.infer<typeof TicketsDocumentSchema>
 export type AnyDocument = z.infer<typeof DocumentSchema>
 export type DocumentKind = AnyDocument['kind']
 export type VersionReason = z.infer<typeof VersionReasonSchema>

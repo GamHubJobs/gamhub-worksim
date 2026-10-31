@@ -10,16 +10,18 @@ import { formatDateTime } from '../../lib/time'
 import type { Profile } from '../../persistence/schemas'
 import { Icon, type IconName } from '../../ui/Icon'
 
-export type PortfolioFileKind = 'sheet' | 'doc' | 'slides'
+export type PortfolioFileKind = 'sheet' | 'tickets' | 'doc' | 'slides'
 
 const FILE_ICONS: Record<PortfolioFileKind, IconName> = {
   sheet: 'sheets',
+  tickets: 'helpdesk',
   doc: 'docs',
   slides: 'slides',
 }
 
 const FILE_NAMES: Record<PortfolioFileKind, string> = {
   sheet: 'Workbook',
+  tickets: 'Ticket queue',
   doc: 'Report',
   slides: 'Presentation',
 }
@@ -38,7 +40,7 @@ export function PortfolioSection({
     const passedAt = progress.attempts.find((a) => a.score >= assignment.passScore)
     const level = career.levels.find((l) => l.id === assignment.levelId)
     const files: Array<{ kind: PortfolioFileKind; id: string }> = [
-      { kind: 'sheet', id: progress.documentId },
+      { kind: assignment.kind, id: progress.documentId },
       ...(progress.files?.doc ? [{ kind: 'doc' as const, id: progress.files.doc }] : []),
       ...(progress.files?.slides
         ? [{ kind: 'slides' as const, id: progress.files.slides }]

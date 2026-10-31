@@ -114,6 +114,44 @@ export const FileCheckSchema = z.discriminatedUnion('type', [
   }),
 ])
 
+/** A check on the tickets of a Help Desk task. */
+export const TicketCheckSchema = z.discriminatedUnion('type', [
+  /** Each listed ticket's priority, category or status matches the model answer. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('field'),
+    field: z.enum(['priority', 'category', 'status']),
+    /** Ticket IDs to check; all tickets in the model answer if empty. */
+    tickets: z.array(z.string()).default([]),
+  }),
+  /** The reply to a ticket says the right things, in enough words. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('reply'),
+    ticket: z.string(),
+    /** Each group: any of these words counts. */
+    mentions: z.array(AlternativesSchema).default([]),
+    minWords: z.number().int().nonnegative().default(20),
+  }),
+])
+
+/** The starting ticket queue of a Help Desk task. */
+export const QueueSchema = z.object({
+  title: z.string().min(1),
+  categories: z.array(z.string().min(1)).min(1),
+  knowledge: z.array(z.object({ title: z.string(), body: z.string() })).default([]),
+  tickets: z
+    .array(
+      z.object({
+        id: z.string(),
+        from: z.string(),
+        department: z.string(),
+        received: z.string(),
+        subject: z.string(),
+        body: z.string(),
+      }),
+    )
+    .min(1),
+})
+
 /** A report or presentation the player hands in with the workbook. */
 export const DeliverableSchema = z.object({
   kind: z.enum(['doc', 'slides']),
@@ -173,15 +211,36 @@ export const AssignmentSchema = z.object({
   /** What the player will be able to do afterwards. */
   objectives: z.array(z.string().min(1)).min(1),
   steps: z.array(StepSchema).min(1),
-  workbook: z.object({
-    title: z.string().min(1),
-    sheets: z.array(StartingSheetSchema).min(1),
-  }),
+  /**
+   * What the main piece of work is: a workbook (Sheets) or a ticket queue
+   * (Help Desk). Reports and presentations can be added to either.
+   */
+  kind: z.enum(['sheet', 'tickets']).default('sheet'),
+  /** The ticket queue, for Help Desk tasks. */
+  queue: QueueSchema.optional(),
+  /** The model answer for the tickets: priority, category and status. */
+  ticketSolution: z
+    .record(
+      z.string(),
+      z.object({
+        priority: z.enum(['P1', 'P2', 'P3', 'P4']).optional(),
+        category: z.string().optional(),
+        status: z.enum(['new', 'open', 'pending', 'escalated', 'resolved']).optional(),
+      }),
+    )
+    .default({}),
+  ticketChecks: z.array(TicketCheckSchema).default([]),
+  workbook: z
+    .object({
+      title: z.string().min(1),
+      sheets: z.array(StartingSheetSchema).min(1),
+    })
+    .optional(),
   /**
    * The model answer: cell inputs added to the starting workbook. Grading
    * compares the player's results with the results of this answer.
    */
-  solution: z.record(z.string(), z.record(z.string(), StartingCellSchema)),
+  solution: z.record(z.string(), z.record(z.string(), StartingCellSchema)).default({}),
   /**
    * Changes to the data used to test that formulas really work, e.g. a
    * different quantity. Keys are "Sheet!A1".
@@ -194,7 +253,7 @@ export const AssignmentSchema = z.object({
       }),
     )
     .default([]),
-  checks: z.array(CheckSchema).min(1),
+  checks: z.array(CheckSchema).default([]),
   /**
    * Other files to hand in: a report and/or a presentation. Tasks with
    * deliverables are submitted by replying to the briefing email with the

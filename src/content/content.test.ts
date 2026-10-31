@@ -10,6 +10,7 @@ import { formatRange, parseRange } from '../apps/sheets/model'
 import { ASSIGNMENTS } from './assignments'
 import { CAREERS, SKILLS } from './careers'
 import { addChart } from '../apps/sheets/features'
+import { applyTicketSolution, buildQueueContent } from '../game/tickets'
 import { getDocTemplate } from '../apps/docs/templates'
 import { getSlidesTemplate } from '../apps/slides/model'
 import { findPerson } from './departments'
@@ -45,6 +46,7 @@ describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
       const steps = assignment.steps.map((s) => s.id)
       const checks = [
         ...assignment.checks.map((c) => c.id),
+        ...assignment.ticketChecks.map((c) => c.id),
         ...assignment.deliverables.flatMap((d) => d.checks.map((c) => c.id)),
       ]
       expect(new Set(steps).size).toBe(steps.length)
@@ -74,13 +76,27 @@ describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
           'Chart',
         ).content
       }
-      const result = gradeAssignment(assignment, solution)
+      const result =
+        assignment.kind === 'tickets'
+          ? gradeAssignment(
+              assignment,
+              applyTicketSolution(assignment, buildQueueContent(assignment)),
+            )
+          : gradeAssignment(assignment, solution)
       const failures = result.checks
         .filter((c) => c.status !== 'passed')
         // Reports and presentations are checked in deliverables.test.ts.
-        .filter((c) => assignment.checks.some((check) => check.id === c.id))
+        // Written replies are checked in tickets.test.ts.
+        .filter(
+          (c) =>
+            assignment.checks.some((check) => check.id === c.id) ||
+            assignment.ticketChecks.some((t) => t.id === c.id && t.type === 'field'),
+        )
       expect(failures).toEqual([])
-      if (assignment.deliverables.length === 0) expect(result.score).toBe(100)
+      const writtenWork =
+        assignment.deliverables.length > 0 ||
+        assignment.ticketChecks.some((t) => t.type === 'reply')
+      if (!writtenWork) expect(result.score).toBe(100)
     })
 
     it('starts its report and presentation from real templates', () => {

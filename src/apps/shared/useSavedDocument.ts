@@ -76,6 +76,7 @@ const NAMES: Record<DocumentKind, string> = {
   sheet: 'workbook',
   doc: 'document',
   slides: 'presentation',
+  tickets: 'ticket queue',
 }
 
 export function useSavedDocument<Content>(

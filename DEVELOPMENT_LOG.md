@@ -47,10 +47,54 @@ owner.
 
 - [x] 4.1 A reusable career and department framework
 - [x] 4.2 Accounting
-- [ ] 4.3 IT Help Desk (with a Help Desk ticketing app)
+- [x] 4.3 IT Help Desk (with a Help Desk ticketing app)
 - [ ] 4.4 Digital Marketing
 - [ ] 4.5 Data Analysis
 - [ ] 4.6 Software Development (with a Code editor and tests)
+
+---
+
+## 2026-10-31 · Milestone 4.3: the IT Help Desk career
+
+### Built
+
+- **A Help Desk app** (a new tool, because support work genuinely needs one): a ticket
+  queue with filters; each ticket shows the requester's message, and the analyst sets
+  the **priority** (P1–P4, with what each means and its response time), **category**
+  and **status** (new, open, pending, escalated, resolved), writes a **reply** to the
+  user and an **internal note**. A **knowledge base** panel holds the desk's guides.
+  Ticket queues are a new document type, so they autosave, recover after crashes,
+  have version history and are in backups like every other file.
+- **Tasks can be built around a ticket queue** instead of a workbook (the assignment
+  `kind`); reports and presentations can be added to either. Ticket checks compare
+  priorities, categories and statuses with the model answer, and check replies for
+  the things they must say (and enough words).
+- **IT Services department**: manager Ravi Menon (calm, measures everything), Senior
+  Support Analyst Jess Taylor (fixes things before you finish describing them).
+  Levels: Service Desk Trainee → Analyst → Senior Support Analyst → Team Lead. Skills:
+  troubleshooting, customer service, incident management, technical writing.
+- **Four tasks**, beginner to advanced:
+  1. **Triage the morning queue**: eight tickets by impact and urgency, the right
+     categories, and a phishing report escalated with a reassuring reply.
+  2. **Reply to users**: a password reset (self-service, never by email), printer
+     troubleshooting steps, asking the right questions about a VPN error, and an
+     access request that needs the manager's approval.
+  3. **One problem, many tickets**: spot five reports of one Outlook fault, resolve
+     them all with the tested fix, and write a knowledge-base article in Docs
+     (symptoms, cause, resolution).
+  4. **Major incident: email outage**: triage the flood, update users during the
+     outage, then write the incident report (summary, timeline, impact, root cause,
+     actions) and brief management in Slides.
+- Task text can name the department's people (`{manager}`, `{senior}`,
+  `{director}`); names are filled in for each task's career.
+
+### Tested
+
+- Unit tests: new queues start untouched; correct triage and a good reply get full
+  marks; wrong priorities and a weak reply get specific notes; a missing queue scores
+  nothing; names in task text. Content tests apply each task's model answer.
+- Browser test: an IT career from onboarding, triaging all eight tickets in the Help
+  Desk, escalating and replying to the phishing report, submitting (100%).
 
 ---
 
