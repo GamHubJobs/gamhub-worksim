@@ -103,6 +103,33 @@ export const DocumentVersionSchema = SyncFieldsSchema.extend({
 })
 
 // ---------------------------------------------------------------------------
+// Database housekeeping
+// ---------------------------------------------------------------------------
+
+/**
+ * A small named value stored in the `meta` table, e.g. this device's ID or the
+ * time of the last backup. Each value is validated where it is used.
+ */
+export const MetaEntrySchema = z.object({
+  key: z.string().min(1),
+  value: z.unknown(),
+})
+
+/**
+ * One entry in the change log ("outbox"). Every saved change is recorded here,
+ * so that future cloud sync knows exactly what to upload.
+ */
+export const OutboxEntrySchema = z.object({
+  /** Order number, assigned automatically by the database. */
+  seq: z.number().int().positive(),
+  /** Which table the changed record lives in, e.g. "documents". */
+  table: z.string().min(1),
+  recordId: IdSchema,
+  rev: z.number().int().min(1),
+  changedAt: TimestampSchema,
+})
+
+// ---------------------------------------------------------------------------
 // Types generated from the schemas
 // ---------------------------------------------------------------------------
 
@@ -115,3 +142,5 @@ export type AnyDocument = z.infer<typeof DocumentSchema>
 export type DocumentKind = AnyDocument['kind']
 export type VersionReason = z.infer<typeof VersionReasonSchema>
 export type DocumentVersion = z.infer<typeof DocumentVersionSchema>
+export type MetaEntry = z.infer<typeof MetaEntrySchema>
+export type OutboxEntry = z.infer<typeof OutboxEntrySchema>
