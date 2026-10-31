@@ -7,18 +7,77 @@ was tested, and known limitations.
 
 ## Current status
 
-**Phase 0: Foundations.** Stages A and B are complete.
+**Phase 0: Foundations is complete**, except the optional online deployment, which
+needs the owner's approval.
 
-**Next up: Stage C (storage protection and backups).**
+- [ ] 0.22 (Needs owner approval) Online test deployment on Cloudflare Pages (free)
 
-- [ ] 0.16 Storage health: persistent-storage request, usage/quota, private-mode and
-      low-storage warnings, clear error if IndexedDB is unavailable
-- [ ] 0.17 Backup export (JSON file with header and checksum)
-- [ ] 0.18 Backup import (validate, upgrade, preview, automatic safety backup first) and
-      backup reminders
-- [ ] 0.19 Multi-tab protection (Web Locks: only one tab edits)
-- [ ] 0.21 GitHub Actions: run checks on every push
-- [ ] 0.22 (Needs owner approval) Online test deployment on Cloudflare Pages
+**Next up: Phase 1, vertical slice "Your First Day as an Intern".** Planned order:
+
+1. Formula engine (pure TypeScript, heavily tested) and formula bar
+2. Reliable grid upgrades: virtualised rows, copy/paste, undo/redo, basic formatting
+3. Assignment system: data-driven assignments with automatic grading and feedback
+4. Workstation shell: simulated desktop with Mail, Tasks and Sheets windows
+5. Game core: XP, skills, energy, workday clock, promotion check
+6. Minimal 3D office with hotspot navigation (React Three Fiber)
+
+---
+
+## 2026-10-31 · Milestone: Stage C, storage protection and backups (Steps 0.16–0.21)
+
+### Built
+
+- **Storage health** (`storageHealth.ts`): asks the browser for persistent storage after
+  the first real save (not on first load); shows whether it was granted, usage and
+  quota; warns about low space and very small quotas (typical of private windows).
+  If IndexedDB is blocked, the player sees a clear explanation instead of a crash.
+- **Storage & backup panel** (`StoragePanel.tsx`): honest explanation of where work is
+  stored and what can delete it, protection status, last backup time.
+- **Backup export** (`backup.ts`): one JSON file with app version, database version,
+  date and a SHA-256 checksum. Every table is included automatically (a test fails if a
+  new table has no import validator). The outbox and device-specific values (device
+  ID, last backup time) are excluded.
+- **Backup import**: checks the file (is it a backup? newer app version? checksum?),
+  upgrades and validates every item, shows a preview (date, workbook names, number of
+  versions, damaged items to skip). Before replacing data it **downloads a safety
+  backup of the current data**. The import is one transaction (all or nothing) and marks
+  everything for future cloud sync.
+- **Backup reminders**: a banner after 7 days of changes without a backup, with "Remind
+  me later" (3 days). New players are not nagged in their first week.
+- **Multi-tab protection** (`tabLock.ts`): only one tab can edit (Web Locks API). A
+  second tab shows "already open in another tab" with **Use WorkSim in this tab**. The
+  first tab then saves everything, ends its session normally and hands over; if it does
+  not answer within 3 s, the lock is taken by force. A waiting tab takes over
+  automatically when the other tab closes. The crash banner is no longer triggered by
+  multiple tabs.
+- **GitHub Actions** (`.github/workflows/checks.yml`): every push runs formatting, lint,
+  type check, unit tests, production build and browser tests (free minutes for private
+  repos).
+
+### Decisions
+
+- Import **replaces** all data (no merging) for now. Merging is a sync problem, to be
+  solved together with cloud sync in Phase 8.
+- Damaged items in a backup are skipped (and reported in the preview) rather than
+  rejecting the whole file, so one bad record cannot make a backup useless.
+- The app reloads after an import, which is the simplest way to guarantee every screen
+  shows the restored data.
+
+### Tested
+
+- 151 unit tests (adds storage health, backup round trip, tampered, newer-version and
+  damaged-item handling, reminder rules, database-version consistency).
+- 18 browser tests (adds): backup restored into a **fresh browser profile**, safety
+  backup downloaded before restoring, non-backup and tampered files rejected without
+  changes, storage panel content, second tab blocked, "use here" hand-over with unsaved
+  changes carried over (and back), automatic take-over when the first tab closes.
+
+### Known limitations
+
+- The persistent-storage decision is the browser's. Chrome often says "no" for new
+  sites until they are used regularly or installed; the panel says so honestly.
+- Backups are manual downloads. Automatic backup to a folder (File System Access API,
+  Chrome only) or cloud sync can come later.
 
 ---
 

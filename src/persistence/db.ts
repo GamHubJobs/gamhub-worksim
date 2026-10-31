@@ -42,6 +42,9 @@ export const DATABASE_VERSIONS = {
   },
 } as const
 
+/** The newest database structure version this app understands. */
+export const CURRENT_DATABASE_VERSION = 2
+
 export class WorkSimDatabase extends Dexie {
   meta!: EntityTable<MetaEntry, 'key'>
   documents!: EntityTable<AnyDocument, 'id'>

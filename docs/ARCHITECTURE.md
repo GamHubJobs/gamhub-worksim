@@ -70,6 +70,9 @@ Next start → journal newer than saved document? → recovered and saved
 | `autosave.ts`           | Debounced, retrying, never-overlapping autosave               |
 | `emergencyJournal.ts`   | Last-second safety copy in LocalStorage                       |
 | `session.ts`            | Detects whether the previous session closed normally          |
+| `backup.ts`             | Backup export/import (checksum, validation), reminders        |
+| `storageHealth.ts`      | Persistent-storage request, usage/quota, warnings             |
+| `tabLock.ts`            | Only one tab edits at a time (Web Locks + BroadcastChannel)   |
 | `meta.ts`               | Small named values (e.g. which workbook to open)              |
 | `workbench.ts`          | Phase 0 practice workbook                                     |
 

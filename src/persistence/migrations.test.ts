@@ -5,7 +5,7 @@
 import { Dexie } from 'dexie'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createId } from '../lib/ids'
-import { DATABASE_VERSIONS, WorkSimDatabase } from './db'
+import { CURRENT_DATABASE_VERSION, DATABASE_VERSIONS, WorkSimDatabase } from './db'
 import { upgradeDocument, type DocumentMigrations } from './documentMigrations'
 import { getDocument } from './documentsRepo'
 import { NewerFormatError } from './errors'
@@ -35,6 +35,14 @@ function sheetDocument(id: string, deviceId: string) {
     },
   }
 }
+
+describe('database versions', () => {
+  it('CURRENT_DATABASE_VERSION is the newest defined version', () => {
+    const newest = Math.max(...Object.keys(DATABASE_VERSIONS).map(Number))
+    expect(CURRENT_DATABASE_VERSION).toBe(newest)
+    expect(new WorkSimDatabase('never-opened').verno).toBe(newest)
+  })
+})
 
 describe('database upgrade from version 1 to version 2', () => {
   it('keeps all existing data and supports the new version-history index', async () => {

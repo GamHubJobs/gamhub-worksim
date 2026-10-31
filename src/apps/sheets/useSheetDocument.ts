@@ -244,9 +244,13 @@ export function useSheetDocument(documentId: string | null) {
     [versionsChanged],
   )
 
+  /** Saves any pending changes now. Resolves to true if everything is saved. */
+  const flush = useCallback(async () => (await autosaverRef.current?.flush()) ?? true, [])
+
   return {
     state,
     saveStatus,
+    flush,
     recoveredUnsavedChanges,
     versionsRevision,
     setCell,

@@ -1,39 +1,99 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSheetDocument } from '../apps/sheets/useSheetDocument'
 import { Grid } from '../apps/sheets/ui/Grid'
 import { VersionHistoryPanel } from '../apps/sheets/ui/VersionHistoryPanel'
 import { formatDateTime } from '../lib/time'
+import {
+  getBackupStatus,
+  snoozeBackupReminder,
+  type BackupStatus,
+} from '../persistence/backup'
 import { getDeviceId } from '../persistence/db'
 import type { DocumentVersion } from '../persistence/schemas'
 import type { SessionStart } from '../persistence/session'
+import {
+  checkStorageHealth,
+  isIndexedDbUsable,
+  requestPersistentStorage,
+  type StorageHealth,
+} from '../persistence/storageHealth'
+import type { TabLock } from '../persistence/tabLock'
 import { openWorkbenchDocument } from '../persistence/workbench'
+import { BackupReminder } from '../ui/BackupReminder'
 import { RecoveryBanner } from '../ui/RecoveryBanner'
 import { SaveIndicator } from '../ui/SaveIndicator'
+import { StoragePanel } from '../ui/StoragePanel'
+import { handOverAppSession } from './lifecycle'
+
+const STORAGE_BLOCKED_MESSAGE =
+  "Your browser is not allowing WorkSim to store data, so your work can't be saved. " +
+  'Check that cookies and site data are allowed for this site in your browser settings, ' +
+  'then reload the page.'
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-export function App({ session }: { session: SessionStart }) {
+interface AppProps {
+  session: SessionStart
+  tabLock: TabLock
+}
+
+export function App({ session, tabLock }: AppProps) {
   const [documentId, setDocumentId] = useState<string | null>(null)
   const [deviceId, setDeviceId] = useState<string | null>(null)
   const [fatalError, setFatalError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [storageOpen, setStorageOpen] = useState(false)
   const [preview, setPreview] = useState<DocumentVersion | null>(null)
   const [bannerDismissed, setBannerDismissed] = useState(false)
+  const [health, setHealth] = useState<StorageHealth | null>(null)
+  const [backupStatus, setBackupStatus] = useState<BackupStatus | null>(null)
+
+  const refreshStorageInfo = useCallback(() => {
+    void checkStorageHealth().then(setHealth)
+    void getBackupStatus()
+      .then(setBackupStatus)
+      .catch(() => setBackupStatus(null))
+  }, [])
 
   useEffect(() => {
     openWorkbenchDocument()
       .then(setDocumentId)
-      .catch((error: unknown) => setFatalError(errorMessage(error)))
+      .catch(async (error: unknown) => {
+        setFatalError(
+          (await isIndexedDbUsable()) ? errorMessage(error) : STORAGE_BLOCKED_MESSAGE,
+        )
+      })
     getDeviceId()
       .then(setDeviceId)
       .catch(() => setDeviceId(null))
-  }, [])
+    refreshStorageInfo()
+  }, [refreshStorageInfo])
 
   const sheet = useSheetDocument(documentId)
-  const { state } = sheet
+  const { state, flush } = sheet
+
+  // Before another tab takes over: save everything and end this session normally.
+  useEffect(() => {
+    tabLock.setBeforeRelease(async () => {
+      await flush()
+      handOverAppSession()
+    })
+  }, [tabLock, flush])
+
+  // After the first real save, ask the browser to protect our storage.
+  const persistenceRequested = useRef(false)
+  useEffect(() => {
+    if (sheet.saveStatus.state === 'saved' && !persistenceRequested.current) {
+      persistenceRequested.current = true
+      void requestPersistentStorage().then(refreshStorageInfo)
+    }
+  }, [sheet.saveStatus.state, refreshStorageInfo])
+
+  const storageWarning =
+    health?.lowSpace || health?.restrictedQuota || backupStatus?.reminderDue || false
 
   async function runAction(action: () => Promise<void>) {
     setActionError(null)
@@ -70,8 +130,41 @@ export function App({ session }: { session: SessionStart }) {
           >
             Version history
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              refreshStorageInfo()
+              setStorageOpen(true)
+            }}
+            className="relative rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+          >
+            Storage &amp; backup
+            {storageWarning && (
+              <span
+                aria-label="needs attention"
+                className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-amber-500"
+              />
+            )}
+          </button>
         </div>
       </header>
+
+      {backupStatus?.reminderDue && (
+        <BackupReminder
+          onOpenBackup={() => setStorageOpen(true)}
+          onSnooze={() => void snoozeBackupReminder().then(refreshStorageInfo)}
+        />
+      )}
+
+      {storageOpen && (
+        <StoragePanel
+          health={health}
+          backupStatus={backupStatus}
+          beforeBackup={flush}
+          onBackupDone={refreshStorageInfo}
+          onClose={() => setStorageOpen(false)}
+        />
+      )}
 
       {!bannerDismissed && (
         <RecoveryBanner

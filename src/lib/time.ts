@@ -20,6 +20,16 @@ export function formatDateTime(timestamp: number): string {
   })
 }
 
+/** e.g. "2026-10-31-1405" (local time), safe to use in file names. */
+export function formatDateTimeForFilename(timestamp: number): string {
+  const date = new Date(timestamp)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}-` +
+    `${pad(date.getHours())}${pad(date.getMinutes())}`
+  )
+}
+
 /** e.g. "14:05:09". */
 export function formatTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString(undefined, {
