@@ -24,9 +24,16 @@ import {
   type View,
 } from '../persistence/lastView'
 import type { Profile } from '../persistence/schemas'
+import type { SpotId } from '../content/office'
 import { openWorkbenchDocument } from '../persistence/workbench'
+import { computerNotices } from '../game/notices'
+import { workPace } from '../game/wellbeing'
+import { passTime, startNextDay } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
 import { Icon, type IconName } from '../ui/Icon'
+import { DayEnd } from '../workday/DayEnd'
+import { useWorkClock } from '../workday/useWorkClock'
+import { WorkdayBar } from '../workday/WorkdayBar'
 
 interface DesktopProps {
   profile: Profile
@@ -84,8 +91,24 @@ export function Desktop({
     [career, setView],
   )
 
-  const { markRead } = career
+  const { markRead, act } = career
   const onMarkRead = useCallback((id: string) => void markRead(id), [markRead])
+
+  const dayOver = profile.work.dayOver
+  const atComputer = view.app !== 'office' && !dayOver
+  const onTimePassed = useCallback(
+    (minutes: number) => void act((p) => passTime(p, minutes, 'work')),
+    [act],
+  )
+
+  // Lets browser tests move the office clock without waiting (development only).
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    const hooks = {
+      passTime: (minutes: number) => act((p) => passTime(p, minutes, 'work')),
+    }
+    Object.assign(window, { __worksim: hooks })
+  }, [act])
 
   return (
     <div className="flex h-screen flex-col bg-slate-100" data-testid="desktop">
@@ -100,6 +123,7 @@ export function Desktop({
           </span>
         </div>
         <div className="flex items-center gap-4">
+          <WorkClock profile={profile} running={atComputer} onTimePassed={onTimePassed} />
           <button
             type="button"
             onClick={() => setView({ app: 'career' })}
@@ -140,12 +164,21 @@ export function Desktop({
         </div>
       </header>
 
-      {view.app === 'office' ? (
+      {dayOver ? (
+        <DayEnd
+          profile={profile}
+          onNextDay={() => {
+            void act(startNextDay)
+            setView({ app: 'office', spot: 'reception' })
+          }}
+        />
+      ) : view.app === 'office' ? (
         <OfficeView
           profile={profile}
           spot={view.spot ?? 'reception'}
           onGo={(spot) => setView({ app: 'office', spot })}
           onUseComputer={(open) => setView(open ?? { app: 'mail' })}
+          onAct={act}
         />
       ) : (
         <div className="flex min-h-0 flex-1">
@@ -192,44 +225,110 @@ export function Desktop({
             </button>
           </nav>
 
-          <main className="min-w-0 flex-1">
-            {view.app === 'mail' && (
-              <MailApp
-                profile={profile}
-                selectedId={view.mailId}
-                onSelect={(mailId) => setView({ app: 'mail', mailId })}
-                onMarkRead={onMarkRead}
-                onOpenTask={openTask}
-                onOpenCareer={() => setView({ app: 'career' })}
-              />
-            )}
-            {view.app === 'tasks' && (
-              <TasksApp
-                profile={profile}
-                selectedId={view.assignmentId}
-                onSelect={openTask}
-                onOpenWorkbook={openAssignmentWorkbook}
-              />
-            )}
-            {view.app === 'sheets' &&
-              (view.document ? (
-                <OpenWorkbook
-                  document={view.document}
+          <main className="flex min-w-0 flex-1 flex-col">
+            <Notices
+              profile={profile}
+              onGo={(spot) => setView({ app: 'office', spot })}
+            />
+            <div className="min-h-0 flex-1">
+              {view.app === 'mail' && (
+                <MailApp
                   profile={profile}
-                  career={career}
-                  onBack={() => setView({ app: 'sheets' })}
+                  selectedId={view.mailId}
+                  onSelect={(mailId) => setView({ app: 'mail', mailId })}
+                  onMarkRead={onMarkRead}
                   onOpenTask={openTask}
+                  onOpenCareer={() => setView({ app: 'career' })}
                 />
-              ) : (
-                <SheetsApp
+              )}
+              {view.app === 'tasks' && (
+                <TasksApp
                   profile={profile}
-                  onOpen={(document) => setView({ app: 'sheets', document })}
+                  selectedId={view.assignmentId}
+                  onSelect={openTask}
+                  onOpenWorkbook={openAssignmentWorkbook}
                 />
-              ))}
-            {view.app === 'career' && <CareerApp profile={profile} />}
+              )}
+              {view.app === 'sheets' &&
+                (view.document ? (
+                  <OpenWorkbook
+                    document={view.document}
+                    profile={profile}
+                    career={career}
+                    onBack={() => setView({ app: 'sheets' })}
+                    onOpenTask={openTask}
+                  />
+                ) : (
+                  <SheetsApp
+                    profile={profile}
+                    onOpen={(document) => setView({ app: 'sheets', document })}
+                  />
+                ))}
+              {view.app === 'career' && <CareerApp profile={profile} />}
+            </div>
           </main>
         </div>
       )}
+    </div>
+  )
+}
+
+/** The office clock, which runs while the player works at the computer. */
+function WorkClock({
+  profile,
+  running,
+  onTimePassed,
+}: {
+  profile: Profile
+  running: boolean
+  onTimePassed: (minutes: number) => void
+}) {
+  const { pendingMinutes, status } = useWorkClock(
+    running,
+    workPace(profile.work.wellbeing),
+    onTimePassed,
+  )
+  return <WorkdayBar profile={profile} pendingMinutes={pendingMinutes} status={status} />
+}
+
+/** Reminders at the top of the computer screen; each can be dismissed. */
+function Notices({ profile, onGo }: { profile: Profile; onGo: (spot: SpotId) => void }) {
+  const [dismissed, setDismissed] = useState<string[]>([])
+  const notices = computerNotices(profile).filter((n) => !dismissed.includes(n.id))
+  if (notices.length === 0) return null
+  return (
+    <div
+      className="space-y-1 border-b border-slate-200 bg-white px-4 py-2"
+      data-testid="notices"
+    >
+      {notices.map((notice) => (
+        <div
+          key={notice.id}
+          role="status"
+          className={`flex items-center gap-3 rounded-md px-3 py-1.5 text-sm ${
+            notice.tone === 'warning'
+              ? 'bg-amber-50 text-amber-900'
+              : 'bg-blue-50 text-blue-900'
+          }`}
+        >
+          <span className="flex-1">{notice.text}</span>
+          <button
+            type="button"
+            onClick={() => onGo(notice.action.spot)}
+            className="rounded-md bg-white px-2.5 py-1 text-xs font-medium shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
+          >
+            {notice.action.label}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDismissed((d) => [...d, notice.id])}
+            className="text-xs opacity-70 hover:opacity-100"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
     </div>
   )
 }

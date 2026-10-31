@@ -15,6 +15,7 @@ import {
 } from './profiles'
 import type { SheetContent } from './schemas'
 import { listVersions } from './versions'
+import { startingWorkState } from './workState'
 
 let database: WorkSimDatabase
 
@@ -35,6 +36,7 @@ const fields: ProfileFields = {
   skills: {},
   assignments: {},
   inbox: [],
+  work: startingWorkState(),
 }
 
 const content = (): SheetContent => ({
@@ -46,7 +48,7 @@ describe('profiles', () => {
     expect(await getActiveProfile(database)).toBeUndefined()
     const profile = await createProfile(fields, database)
     expect(profile.rev).toBe(1)
-    expect(profile.formatVersion).toBe(1)
+    expect(profile.formatVersion).toBe(2)
     expect(await getActiveProfile(database)).toEqual(profile)
     expect(await database.outbox.count()).toBe(1)
   })
@@ -74,6 +76,16 @@ describe('profiles', () => {
     const profile = await createProfile(fields, database)
     await database.profiles.update(profile.id, { formatVersion: 99 })
     await expect(getActiveProfile(database)).rejects.toThrow(NewerFormatError)
+  })
+
+  it('upgrades a format 1 profile: the career continues on a fresh Monday', async () => {
+    const profile = await createProfile(fields, database)
+    const { work: _work, ...old } = profile
+    await database.profiles.put({ ...old, formatVersion: 1 } as never)
+    const loaded = await getActiveProfile(database)
+    expect(loaded?.formatVersion).toBe(2)
+    expect(loaded?.work).toEqual(startingWorkState())
+    expect(loaded?.xp).toBe(profile.xp)
   })
 
   it('reports a missing profile', async () => {

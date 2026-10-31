@@ -4,6 +4,7 @@
  */
 import { COMPANY_NEWS, OFFICE_TIPS, type InteractionId } from '../content/office'
 import type { Assignment } from '../content/schemas'
+import type { Choice, EffectNote } from './scenes'
 import {
   assignmentStatus,
   bestScore,
@@ -23,11 +24,21 @@ export interface DialogueAction {
 }
 
 export interface Dialogue {
+  /**
+   * Set for scenes whose outcome is remembered (conversations with choices,
+   * meetings, events).
+   */
+  id?: string
   /** A person ID from the company content, or null for objects. */
   speaker: string | null
   title: string
   lines: string[]
   actions: DialogueAction[]
+  /** Ways the player can respond. */
+  choices?: Choice[]
+  /** After a choice: what changed, and why it matters. */
+  notes?: EffectNote[]
+  lesson?: string
 }
 
 /** The task the player should be working on now, if any. */
@@ -181,7 +192,10 @@ function noticeboardDialogue(profile: ProfileData): Dialogue {
 }
 
 export function dialogueFor(
-  interaction: Exclude<InteractionId, 'computer' | 'coffee'>,
+  interaction: Exclude<
+    InteractionId,
+    'computer' | 'coffee' | 'lunch' | 'home' | 'senior'
+  >,
   profile: ProfileData,
   tipIndex = 0,
 ): Dialogue {

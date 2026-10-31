@@ -13,7 +13,7 @@ async function goTo(page: Page, place: string) {
 test('a new starter arrives at reception in the 3D office and finds their way', async ({
   page,
 }) => {
-  test.setTimeout(90_000)
+  test.setTimeout(150_000)
   await page.goto('/')
   await startCareerIfNeeded(page, 'Alex Morgan')
 

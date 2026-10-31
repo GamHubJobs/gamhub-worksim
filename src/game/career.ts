@@ -14,12 +14,14 @@ import type {
   MailMessage,
   Profile,
 } from '../persistence/schemas'
+import { startingWorkState } from '../persistence/workState'
+import { addDeadline } from './deadlines'
 import type { GradeResult } from './grading'
 
 /** The parts of a profile the game controls (no save bookkeeping). */
 export type ProfileData = Pick<
   Profile,
-  'name' | 'careerId' | 'levelId' | 'xp' | 'skills' | 'assignments' | 'inbox'
+  'name' | 'careerId' | 'levelId' | 'xp' | 'skills' | 'assignments' | 'inbox' | 'work'
 >
 
 export const DEFAULT_CAREER_ID = 'office-admin-finance'
@@ -85,10 +87,12 @@ export function briefingMessage(
   })
 }
 
-/** A brand-new career: a welcome email and the first assignment. */
+/** A brand-new career: a welcome email, the first assignment and a Monday morning. */
 export function newProfileData(name: string, now: number): ProfileData {
   const first = ASSIGNMENTS.find((a) => a.careerId === DEFAULT_CAREER_ID)
+  const work = startingWorkState()
   return {
+    work: first ? addDeadline(work, first.id) : work,
     name: name.trim(),
     careerId: DEFAULT_CAREER_ID,
     levelId: getCareer(DEFAULT_CAREER_ID).levels[0].id,

@@ -6,6 +6,10 @@ const PORT = 5174
 
 export default defineConfig({
   testDir: 'tests/e2e',
+  // Tests run against the development server, where React is several times slower
+  // than in the built app (extra debugging checks), and the 3D office is drawn
+  // without a graphics card. Generous limits avoid false failures.
+  timeout: 60_000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

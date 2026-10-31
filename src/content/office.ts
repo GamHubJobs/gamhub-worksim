@@ -61,6 +61,9 @@ export type InteractionId =
   | 'colleague'
   | 'noticeboard'
   | 'whiteboard'
+  | 'lunch'
+  | 'home'
+  | 'senior'
 
 export interface Interaction {
   id: InteractionId
@@ -69,20 +72,55 @@ export interface Interaction {
   label: string
   /** A short name shown when hovering the object. */
   name: string
+  /** Office minutes it takes, shown on the button. */
+  minutes?: number
 }
 
 export const INTERACTIONS: Interaction[] = [
-  { id: 'receptionist', spot: 'reception', label: 'Talk to Nina', name: 'Nina Patel' },
+  {
+    id: 'receptionist',
+    spot: 'reception',
+    label: 'Talk to Nina',
+    name: 'Nina Patel',
+    minutes: 10,
+  },
+  { id: 'home', spot: 'reception', label: 'Go home', name: 'Exit' },
   { id: 'computer', spot: 'desk', label: 'Use your computer', name: 'Your computer' },
+  {
+    id: 'senior',
+    spot: 'desk',
+    label: 'Talk to Marcus',
+    name: 'Marcus Webb',
+    minutes: 10,
+  },
   {
     id: 'whiteboard',
     spot: 'desk',
     label: 'Read the team whiteboard',
     name: 'Team whiteboard',
   },
-  { id: 'manager', spot: 'manager', label: 'Talk to Priya', name: 'Priya Raman' },
-  { id: 'coffee', spot: 'breakroom', label: 'Make a coffee', name: 'Coffee machine' },
-  { id: 'colleague', spot: 'breakroom', label: 'Chat with Tom', name: 'Tom Becker' },
+  {
+    id: 'manager',
+    spot: 'manager',
+    label: 'Talk to Priya',
+    name: 'Priya Raman',
+    minutes: 10,
+  },
+  {
+    id: 'coffee',
+    spot: 'breakroom',
+    label: 'Make a coffee',
+    name: 'Coffee machine',
+    minutes: 10,
+  },
+  { id: 'lunch', spot: 'breakroom', label: 'Have lunch', name: 'Lunch', minutes: 45 },
+  {
+    id: 'colleague',
+    spot: 'breakroom',
+    label: 'Chat with Tom',
+    name: 'Tom Becker',
+    minutes: 10,
+  },
   {
     id: 'noticeboard',
     spot: 'breakroom',

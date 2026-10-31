@@ -21,6 +21,139 @@ owner.
 
 **Phase 1 is complete.**
 
+**Phase 2: "The Living Workplace"** (in progress). Milestones:
+
+- [x] 2.1 Workday and daily routine: office clock, schedule, meetings, lunch, deadlines,
+      end of day
+- [x] 2.2 Energy, stress, engagement and fatigue
+- [x] 2.3 Colleague relationships: trust, reputation, personalities, mentorship,
+      conflicts with ethical choices
+- [ ] 2.4 Workplace events: requests, mistakes, recognition, decisions
+- [ ] 2.5 Career expansion: Junior-level tasks, performance reviews, promotion criteria
+
+---
+
+## 2026-10-31 · Milestone 2.3: colleagues, trust and reputation
+
+### Built
+
+- **A new colleague, Marcus Webb** (Senior Finance Assistant), who sits next to the
+  player: ambitious, protective of his position, wary of newcomers, but a good teacher
+  once he trusts you. Clickable in the 3D office ("Talk to Marcus").
+- **Personalities** for Priya (direct, demanding, fair), Nina (warm, organised, hears
+  everything, sometimes wrongly), Tom (laid-back, practical, funny) and Marcus.
+- **Trust per colleague** and a **professional reputation**:
+  - built by talking to people (+2, then +1 per day; a third chat the same day gets a
+    polite "I need to get back to work"), by reliable work (deadlines met, meetings
+    attended) and by good choices;
+  - lowered by missed meetings and deadlines, leaving early and poor choices.
+- **Conversations that unlock over time** (`src/game/conversations.ts`), each with
+  choices, visible effects and a workplace tip:
+  - Marcus's introduction (curiosity, neutral, or an ill-judged joke about his job);
+  - Nina's invitation to lunch with the team (accepting means future lunches are with
+    Nina and Tom, a little extra trust each time);
+  - Tom asking how the first day went (honesty about the learning curve);
+  - **a misunderstanding**: Nina heard you belittled reception. Calmly clarifying
+    resolves it; apologising for something you did not do leaves it unresolved;
+    getting defensive damages the relationship and your reputation.
+- **Mentorship**: once Marcus trusts the player enough, he becomes their mentor and
+  gives practical advice on the current task, with a button to open it.
+- **Asking for more time**: when a deadline is less than four hours away, Priya can be
+  asked for one more day (granted once per task; her reply depends on trust).
+- **"Your team" in the Career app**: each colleague's role, personality and trust
+  ("Cautious", "Friendly", "Trusts you", "Close ally"), Marcus's mentor status, and the
+  player's reputation.
+
+### Performance
+
+- The 3D office now redraws only when what it shows changes (where the player stands,
+  the mail alert), not every time the career changes. This made office interactions
+  noticeably faster (the office browser test went from over 90 to 56 seconds).
+- Typing in the spreadsheet is about twice as slow in **development mode** as it was
+  in Phase 1 (React's extra debugging checks), but the built app is unaffected: about
+  1 second to type a 30-character formula, mostly the test robot's own typing speed.
+  Browser tests now allow 60 seconds each, because they run in development mode.
+
+### Tested
+
+- Unit tests for conversations: introductions, trust per chat, "busy" after three
+  chats, remembering one-off conversations, lunch with the team, the misunderstanding
+  and its ethical options, mentorship and asking for more time.
+- New browser test: talking to Marcus and Nina, choices with visible trust changes,
+  and the team in the Career app.
+- All 35 browser tests and all unit tests pass.
+
+---
+
+## 2026-10-31 · Milestones 2.1–2.2: the working day and wellbeing
+
+### Built
+
+- **An office clock** (top bar): weekday, week and time, with a dot showing whether it
+  is running. Time only moves when the player does something:
+  - at the computer it runs 6× faster than real time (10 real minutes = 1 office hour),
+    and **pauses** when the tab is hidden or there has been no keyboard/mouse use for 90
+    seconds;
+  - office actions take a set time (walking 2 min, coffee 10, a chat 10, lunch 45).
+- **A daily schedule**: arrive 8:50, work 9:00–5:30, a daily stand-up (9:15), weekly
+  planning (Wednesday 11:00), a one-to-one with Priya (Friday 3:30), lunch 11:45–2:00.
+  The office closes at 7 pm.
+- **Meetings are scenes with choices**, built from the player's real situation (their
+  current task, deadline, whether it is late). Each choice shows what it changed
+  ("Priya: trust +2", "Reputation +1") and a workplace tip. Missing a meeting costs a
+  little trust and reputation; being late costs a little reputation.
+- **Deadlines**: tasks received by 11 am are due at 5:30 pm that day; later ones at
+  midday the next working day. On time: reputation and trust go up. Late: a one-off
+  drop and some stress. One extension can be agreed in advance (used by conversations
+  in 2.3).
+- **Reminders at the computer** (never blocking): meeting starting, lunchtime, two hours
+  without a break, end of the day. Each has a button that walks the player to the right
+  place.
+- **"Your day" panel** (click the clock): today's schedule with what was attended or
+  missed, deadlines, wellbeing with plain advice, and a log of the day.
+- **Going home and the next morning**: "Go home" at reception (with a warning when
+  leaving before 5 pm with work open). An end-of-day summary shows time worked,
+  submissions, meetings, overtime, the day's log and advice. The next day starts at
+  8:50 at reception; Friday is followed by Monday.
+- **Wellbeing** (`src/game/wellbeing.ts`):
+  - **Energy** falls while working (faster after two hours without a break, or when
+    very stressed) and comes back with coffee breaks (most when a break is needed),
+    lunch and a night's rest.
+  - **Stress** rises slowly with work, faster with overdue tasks, overtime and long
+    stretches; breaks, lunch, good results and conversations bring it down.
+  - **Engagement** grows with meetings, conversations and finished work; motivated
+    players feel pressure less.
+  - **Fatigue** builds over several days from overtime, skipped lunches and ending
+    exhausted; evenings clear some of it and weekends much more. It lowers the next
+    morning's energy.
+  - **Consequences are gentle**: being tired makes work take longer in office time
+    (1.2× when tired, 1.5× when exhausted). Wellbeing never reduces XP or grades, and
+    every recovery is free.
+
+### Decisions
+
+- **Action-based time instead of a real-time clock.** Nothing happens while the player
+  is away, so nobody is punished for stepping out, and every cost is visible on the
+  button ("Have lunch · 45 min").
+- **All new state lives in the profile** (`profile.work`), so it autosaves and is part
+  of backup and restore with no extra work. Profile format 2; older careers are upgraded
+  to a fresh Monday morning with their progress intact.
+- **The computer clock saves every 30 seconds** (and when leaving the computer or hiding
+  the tab), not on every tick.
+- **Game rules stay pure** (`src/game/workday.ts`, `wellbeing.ts`, `meetings.ts`,
+  `scenes.ts`, `notices.ts`) and the interface applies them through one `act` function.
+- A development-only `window.__worksim.passTime(minutes)` hook lets browser tests move
+  the clock without waiting. It does not exist in the built app.
+
+### Tested
+
+- Unit tests for the calendar, deadlines, meetings (attended, late, missed), lunch,
+  breaks, deadlines (missed once, extension), submissions, closing time, leaving early,
+  weekends and wellbeing recovery; a test that format 1 profiles upgrade correctly.
+- New browser test: a full day (schedule, walking, stand-up reminder and choice, lunch
+  too early and on time, leaving early, end-of-day summary, Tuesday morning, reload).
+- All earlier tests still pass.
+
 ---
 
 ## 2026-10-31 · Milestone 1.6: the 3D office

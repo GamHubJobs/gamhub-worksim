@@ -90,6 +90,7 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
 | `src/desktop/`                        | Onboarding and the simulated desktop (dock, top bar, navigation)  |
 | `src/office/`                         | The 3D office (loaded on demand) and its 2D fallback floor plan   |
+| `src/workday/`                        | Office clock, "Your day" panel, end-of-day screen                 |
 | `src/app/`                            | Start-up, tab hand-over, shared services, the career hook         |
 
 ### How a submission is graded
@@ -107,6 +108,25 @@ Player clicks Submit
   → career rules (src/game/career.ts): XP, skills, feedback email, unlock, promotion
   → one transaction: "Submitted" copy in version history + updated profile
 ```
+
+### The working life (Phase 2)
+
+All of it is stored in `profile.work` (profile format 2), so it autosaves and is
+included in backups like the rest of the career.
+
+```
+Player action (walk, coffee, lunch, meeting, choice) or computer time
+  → a pure game function in src/game (passTime, haveLunch, attendMeeting, applyEffects…)
+      wellbeing changes, meetings missed, lunch skipped, deadlines passed, day ends
+  → career.act(change): the change is applied to the latest saved profile, in one
+    transaction (like every other profile change)
+```
+
+- **Time** moves only when the player does something. At the computer it runs 6× real
+  time and pauses when the player is away (`src/workday/useWorkClock.ts`).
+- **Scenes** (`src/game/scenes.ts`): meetings, conversations and events are dialogues
+  with choices; each choice has visible effects (trust, reputation, wellbeing, time)
+  and a workplace lesson. Finished scenes are remembered in `work.events.done`.
 
 ## Technology
 
@@ -127,11 +147,11 @@ Player clicks Submit
 
 0. Foundations: saving, recovery, backups, tooling (done)
 1. Vertical slice: "Your First Day as an Intern" (done, including the 3D office)
-2. Productivity depth (Docs app, richer spreadsheet) ← _next_
-3. People and workplace life
-4. Time and wellbeing
-5. Career breadth
-6. Achievements and customisation
-7. Polish
-8. Cloud accounts and sync
-9. Future: optional cosmetics, GamHub Jobs connection
+2. The Living Workplace: workday, wellbeing, colleagues, events, career growth ←
+   _in progress_
+3. Productivity depth (Docs app, richer spreadsheet)
+4. More careers and departments
+5. Achievements and customisation
+6. Polish
+7. Cloud accounts and sync
+8. Future: optional cosmetics, GamHub Jobs connection

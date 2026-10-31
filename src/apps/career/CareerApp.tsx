@@ -1,6 +1,9 @@
 /** Career: level, XP, promotion progress and skills. */
 import { SKILLS } from '../../content/careers'
-import { COMPANY } from '../../content/company'
+import { COMPANY, PEOPLE } from '../../content/company'
+import { isMentor } from '../../game/conversations'
+import { reputationReading, trustOf, trustReading } from '../../game/relationships'
+import { Avatar } from '../../ui/Avatar'
 import {
   assignmentStatus,
   bestScore,
@@ -118,6 +121,8 @@ export function CareerApp({ profile }: { profile: Profile }) {
           </ul>
         </section>
 
+        <TeamSection profile={profile} />
+
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="font-semibold text-slate-900">Work record</h2>
           <ul className="mt-3 divide-y divide-slate-100 text-sm">
@@ -148,6 +153,73 @@ export function CareerApp({ profile }: { profile: Profile }) {
         </section>
       </div>
     </div>
+  )
+}
+
+const TEAM = ['manager', 'senior', 'reception', 'facilities'] as const
+
+const TONE_TEXT = {
+  good: 'text-emerald-700',
+  neutral: 'text-slate-600',
+  bad: 'text-amber-700',
+} as const
+
+/** Colleagues, how much they trust the player, and the player's reputation. */
+function TeamSection({ profile }: { profile: Profile }) {
+  const { work } = profile
+  const reputation = reputationReading(work.reputation)
+  const mentor = isMentor(profile)
+  return (
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-6"
+      data-testid="team"
+    >
+      <div className="flex items-baseline justify-between gap-4">
+        <h2 className="font-semibold text-slate-900">Your team</h2>
+        <span className="text-sm">
+          <span className="text-slate-500">Professional reputation: </span>
+          <span className={`font-medium ${TONE_TEXT[reputation.tone]}`}>
+            {reputation.label}
+          </span>
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-slate-600">
+        Trust grows when you are reliable, honest and helpful, and when you take time to
+        talk to people. It falls when you miss meetings or deadlines, or handle
+        disagreements badly. Your reputation is how the wider office sees you.
+      </p>
+      <div className="mt-2">
+        <ProgressBar value={work.reputation} max={100} label="Professional reputation" />
+      </div>
+      <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+        {TEAM.map((id) => {
+          const person = PEOPLE[id]
+          const trust = trustOf(work, id)
+          const reading = trustReading(trust)
+          return (
+            <li key={id} className="flex gap-3" data-testid={`colleague-${id}`}>
+              <Avatar personId={id} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-medium text-slate-800">{person.name}</span>
+                  <span className={`text-xs ${TONE_TEXT[reading.tone]}`}>
+                    {reading.label}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {person.role}
+                  {id === 'senior' && mentor && ' · your mentor'}
+                </p>
+                <div className="my-1">
+                  <ProgressBar value={trust} max={100} label={`Trust: ${person.name}`} />
+                </div>
+                <p className="text-xs text-slate-500">{person.personality}</p>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 

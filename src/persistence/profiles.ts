@@ -20,6 +20,7 @@ import {
   type SyncFields,
 } from './schemas'
 import { createVersion } from './versions'
+import { startingWorkState } from './workState'
 
 const ACTIVE_PROFILE_KEY = 'activeProfileId'
 
@@ -27,16 +28,23 @@ const ACTIVE_PROFILE_KEY = 'activeProfileId'
 export type ProfileFields = Omit<Profile, keyof SyncFields | 'formatVersion'>
 
 /**
- * Upgrades an old profile to the current format. There is only one format
- * so far; future upgrade steps go here, like `documentMigrations.ts`.
+ * Upgrades an old profile to the current format, one step at a time, like
+ * `documentMigrations.ts`.
+ * - 1 → 2: adds the working life (office clock, wellbeing, colleagues). Older
+ *   careers continue on a fresh Monday morning; their tasks have no deadlines.
  */
 export function upgradeProfile(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw
   const version = (raw as { formatVersion?: unknown }).formatVersion
-  if (typeof version === 'number' && version > PROFILE_FORMAT_VERSION) {
+  if (typeof version !== 'number') return raw
+  if (version > PROFILE_FORMAT_VERSION) {
     throw new NewerFormatError('profile', version, PROFILE_FORMAT_VERSION)
   }
-  return raw
+  let upgraded = raw as Record<string, unknown>
+  if (version < 2) {
+    upgraded = { ...upgraded, formatVersion: 2, work: startingWorkState() }
+  }
+  return upgraded
 }
 
 export function parseStoredProfile(raw: unknown, id: string): Profile {

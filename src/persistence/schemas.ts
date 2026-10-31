@@ -185,8 +185,120 @@ export const MailMessageSchema = z.object({
   attemptIndex: z.number().int().nonnegative().optional(),
 })
 
+// ---------------------------------------------------------------------------
+// The working life: the office clock, wellbeing, colleagues and events
+// ---------------------------------------------------------------------------
+
+/**
+ * Office time. `day` 1 is the player's first Monday; `minute` counts minutes
+ * since midnight on that day (fractions build up while working).
+ * "Absolute" times used for deadlines are `(day - 1) * 1440 + minute`.
+ */
+const OfficeMinuteSchema = z
+  .number()
+  .min(0)
+  .max(24 * 60)
+const PercentSchema = z.number().min(0).max(100)
+
+export const WellbeingSchema = z.object({
+  /** How much the player has left in the tank today. */
+  energy: PercentSchema,
+  /** Pressure from workload, deadlines and conflict. */
+  stress: PercentSchema,
+  /** How motivated and involved the player feels. */
+  engagement: PercentSchema,
+  /** Tiredness that builds up over several days and needs evenings and weekends to clear. */
+  fatigue: PercentSchema,
+})
+
+export const RelationshipSchema = z.object({
+  /** How much this colleague trusts and respects the player. */
+  trust: PercentSchema,
+  /** Conversations so far. */
+  talks: z.number().int().nonnegative(),
+})
+
+/** One line in today's activity log, e.g. "Joined the team stand-up". */
+export const LogEntrySchema = z.object({
+  minute: OfficeMinuteSchema,
+  text: z.string(),
+  tone: z.enum(['good', 'neutral', 'bad']),
+})
+
+export const TodaySchema = z.object({
+  lunch: z.boolean(),
+  /** When the player last had a proper break (minute of today). */
+  lastBreakAt: OfficeMinuteSchema,
+  breaks: z.number().int().nonnegative(),
+  /** Office minutes spent working at the computer today. */
+  workMinutes: z.number().nonnegative(),
+  meetings: z.record(z.string(), z.enum(['attended', 'late', 'missed'])),
+  /** Conversations today per person, so chatting all day is not rewarded. */
+  talks: z.record(z.string(), z.number().int().nonnegative()),
+  submissions: z.number().int().nonnegative(),
+  log: z.array(LogEntrySchema),
+})
+
+export const DeadlineSchema = z.object({
+  /** Absolute office time the work is due. */
+  due: z.number().nonnegative(),
+  status: z.enum(['open', 'met', 'late']),
+  extended: z.boolean(),
+})
+
+export const DaySummarySchema = z.object({
+  day: z.number().int().min(1),
+  workMinutes: z.number().nonnegative(),
+  overtimeMinutes: z.number().nonnegative(),
+  submissions: z.number().int().nonnegative(),
+  meetingsAttended: z.number().int().nonnegative(),
+  meetingsMissed: z.number().int().nonnegative(),
+  lunch: z.boolean(),
+  breaks: z.number().int().nonnegative(),
+  wellbeing: WellbeingSchema,
+  log: z.array(LogEntrySchema),
+})
+
+export const ReviewSchema = z.object({
+  /** The day the review took place. */
+  day: z.number().int().min(1),
+  week: z.number().int().min(1),
+  rating: z.enum(['outstanding', 'strong', 'solid', 'developing']),
+  /** 1–5 per area, e.g. { quality: 4, reliability: 3, ... }. */
+  scores: z.record(z.string(), z.number().int().min(1).max(5)),
+  strengths: z.array(z.string()),
+  improvements: z.array(z.string()),
+})
+
+export const WorkStateSchema = z.object({
+  day: z.number().int().min(1),
+  minute: OfficeMinuteSchema,
+  /** The player has gone home; the next day starts when they are ready. */
+  dayOver: z.boolean(),
+  today: TodaySchema,
+  wellbeing: WellbeingSchema,
+  /** Per person ID; colleagues the player has not met yet are missing. */
+  relationships: z.record(z.string(), RelationshipSchema),
+  /** How the wider office sees the player's professionalism. */
+  reputation: PercentSchema,
+  /** Per assignment ID. */
+  deadlines: z.record(z.string(), DeadlineSchema),
+  events: z.object({
+    /** Finished events and conversations, with the choice the player made. */
+    done: z.record(
+      z.string(),
+      z.object({ at: z.number().nonnegative(), choice: z.string().nullable() }),
+    ),
+    /** Events waiting for the player (someone wants a word). */
+    pending: z.array(z.object({ id: z.string(), at: z.number().nonnegative() })),
+  }),
+  /** Finished days, newest last. */
+  history: z.array(DaySummarySchema),
+  reviews: z.array(ReviewSchema),
+})
+
 /** Current format of player profiles; raise it (with an upgrade) when the shape changes. */
-export const PROFILE_FORMAT_VERSION = 1
+export const PROFILE_FORMAT_VERSION = 2
 
 /** One player's career save. */
 export const ProfileSchema = SyncFieldsSchema.extend({
@@ -200,6 +312,8 @@ export const ProfileSchema = SyncFieldsSchema.extend({
   skills: z.record(z.string(), z.number().int().nonnegative()),
   assignments: z.record(z.string(), AssignmentProgressSchema),
   inbox: z.array(MailMessageSchema),
+  /** The working life around the tasks (added in profile format 2). */
+  work: WorkStateSchema,
 })
 
 // ---------------------------------------------------------------------------
@@ -247,6 +361,14 @@ export type DocumentVersion = z.infer<typeof DocumentVersionSchema>
 export type Attempt = z.infer<typeof AttemptSchema>
 export type AssignmentProgress = z.infer<typeof AssignmentProgressSchema>
 export type MailMessage = z.infer<typeof MailMessageSchema>
+export type Wellbeing = z.infer<typeof WellbeingSchema>
+export type Relationship = z.infer<typeof RelationshipSchema>
+export type LogEntry = z.infer<typeof LogEntrySchema>
+export type Today = z.infer<typeof TodaySchema>
+export type Deadline = z.infer<typeof DeadlineSchema>
+export type DaySummary = z.infer<typeof DaySummarySchema>
+export type Review = z.infer<typeof ReviewSchema>
+export type WorkState = z.infer<typeof WorkStateSchema>
 export type Profile = z.infer<typeof ProfileSchema>
 export type MetaEntry = z.infer<typeof MetaEntrySchema>
 export type OutboxEntry = z.infer<typeof OutboxEntrySchema>

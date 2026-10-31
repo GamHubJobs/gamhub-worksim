@@ -8,7 +8,7 @@
  */
 import { ContactShadows, Html, useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Vector3, type Group, type Mesh, type WebGLRenderer } from 'three'
 import { COMPANY } from '../../content/company'
 import {
@@ -47,7 +47,13 @@ function isSoftwareRenderer(gl: WebGLRenderer): boolean {
   return /swiftshader|llvmpipe|software|basic render/i.test(renderer)
 }
 
-export default function OfficeScene(props: OfficeSceneProps) {
+/**
+ * Only redrawn when what it shows changes (where the player stands, the mail
+ * alert), not on every change to the career, such as the clock moving.
+ */
+export default memo(OfficeScene)
+
+function OfficeScene(props: OfficeSceneProps) {
   const start = getSpot(props.spot).camera
   const [lowPower, setLowPower] = useState(false)
   return (
@@ -483,15 +489,31 @@ function Workspace({ computerAlert, onInteract }: Interact & { computerAlert: bo
           <group key={x}>
             <Desk position={[x, 0, 1.1]} />
             <OfficeChair position={[x, 0, 1.75]} />
-            {shirt && (
-              <Person
-                position={[x, 0, 1.65]}
-                look={{ shirt, skin: i + 2, hair: i + 1 }}
-                seated
-                typing
-                phase={i * 2.1}
-              />
-            )}
+            {shirt &&
+              (i === 0 ? (
+                // Marcus sits next to the player.
+                <Interactive
+                  id="senior"
+                  labelPosition={[x, 1.75, 1.65]}
+                  onInteract={onInteract}
+                >
+                  <Person
+                    position={[x, 0, 1.65]}
+                    look={{ shirt, skin: i + 2, hair: i + 1 }}
+                    seated
+                    typing
+                    phase={i * 2.1}
+                  />
+                </Interactive>
+              ) : (
+                <Person
+                  position={[x, 0, 1.65]}
+                  look={{ shirt, skin: i + 2, hair: i + 1 }}
+                  seated
+                  typing
+                  phase={i * 2.1}
+                />
+              ))}
           </group>
         ),
       )}
