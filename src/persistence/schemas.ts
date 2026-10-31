@@ -119,6 +119,7 @@ export const VersionReasonSchema = z.enum([
   'before-restore', // safety copy taken just before restoring an older version
   'manual', // player chose to keep this version
   'submitted', // the workbook as it was handed in for grading (always kept)
+  'original', // an assignment workbook as it was received (always kept)
 ])
 
 /** A frozen copy of a document at one moment, for version history. */

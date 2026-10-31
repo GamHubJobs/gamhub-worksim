@@ -60,21 +60,52 @@ Next start → journal newer than saved document? → recovered and saved
 
 ### Persistence modules (`src/persistence/`)
 
-| Module                  | Responsibility                                                |
-| ----------------------- | ------------------------------------------------------------- |
-| `schemas.ts`            | Zod blueprints and TypeScript types for all saved data        |
-| `db.ts`                 | Dexie database, versioned structure, device ID, outbox writes |
-| `documentsRepo.ts`      | Create / read / update / delete documents (validated)         |
-| `documentMigrations.ts` | Upgrade old document formats on load                          |
-| `versions.ts`           | Version history: snapshots, clean-up, restore                 |
-| `autosave.ts`           | Debounced, retrying, never-overlapping autosave               |
-| `emergencyJournal.ts`   | Last-second safety copy in LocalStorage                       |
-| `session.ts`            | Detects whether the previous session closed normally          |
-| `backup.ts`             | Backup export/import (checksum, validation), reminders        |
-| `storageHealth.ts`      | Persistent-storage request, usage/quota, warnings             |
-| `tabLock.ts`            | Only one tab edits at a time (Web Locks + BroadcastChannel)   |
-| `meta.ts`               | Small named values (e.g. which workbook to open)              |
-| `workbench.ts`          | Phase 0 practice workbook                                     |
+| Module                  | Responsibility                                                 |
+| ----------------------- | -------------------------------------------------------------- |
+| `schemas.ts`            | Zod blueprints and TypeScript types for all saved data         |
+| `db.ts`                 | Dexie database, versioned structure, device ID, outbox writes  |
+| `documentsRepo.ts`      | Create / read / update / delete documents (validated)          |
+| `documentMigrations.ts` | Upgrade old document formats on load                           |
+| `versions.ts`           | Version history: snapshots, clean-up, restore                  |
+| `autosave.ts`           | Debounced, retrying, never-overlapping autosave                |
+| `emergencyJournal.ts`   | Last-second safety copy in LocalStorage                        |
+| `session.ts`            | Detects whether the previous session closed normally           |
+| `backup.ts`             | Backup export/import (checksum, validation), reminders         |
+| `storageHealth.ts`      | Persistent-storage request, usage/quota, warnings              |
+| `tabLock.ts`            | Only one tab edits at a time (Web Locks + BroadcastChannel)    |
+| `meta.ts`               | Small named values (e.g. which workbook to open)               |
+| `workbench.ts`          | The practice workbook                                          |
+| `profiles.ts`           | Player profile (career, rewards, mail); start and submit tasks |
+| `lastView.ts`           | Which app/workbook was open, to return there after a reload    |
+
+## Source folders
+
+| Folder                                | What lives there                                                  |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| `src/persistence/`                    | Everything that touches storage (see above)                       |
+| `src/apps/sheets/engine/`             | Formula engine: parser, functions, calculation, formats (pure TS) |
+| `src/apps/sheets/`                    | Spreadsheet model, clipboard, editor UI, workbook window          |
+| `src/apps/mail/`, `tasks/`, `career/` | The other desktop apps                                            |
+| `src/content/`                        | Content as validated data: company, people, careers, assignments  |
+| `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
+| `src/desktop/`                        | Onboarding and the simulated desktop (dock, top bar, navigation)  |
+| `src/app/`                            | Start-up, tab hand-over, shared services, the career hook         |
+
+### How a submission is graded
+
+```
+Player clicks Submit
+  → autosave flushed (submission refused if it cannot be saved)
+  → saved workbook loaded
+  → grader (src/game/grading.ts), pure functions:
+      model answer = starting workbook + solution formulas
+      every check compares the player's cells with the model answer
+      formula required? function required (SUM, VLOOKUP, …)?
+      data changed (assignment scenarios + "every number changed")
+        → both workbooks recalculated → still equal?   (catches typed-in results)
+  → career rules (src/game/career.ts): XP, skills, feedback email, unlock, promotion
+  → one transaction: "Submitted" copy in version history + updated profile
+```
 
 ## Technology
 
@@ -88,13 +119,13 @@ Next start → journal newer than saved document? → recovered and saved
 | Validation     | Zod                                      |
 | Styling        | Tailwind CSS                             |
 | Tests          | Vitest (unit), Playwright (browser)      |
-| 3D             | Three.js + React Three Fiber (Phase 1)   |
+| 3D             | Three.js + React Three Fiber (planned)   |
 | Spreadsheet    | Own engine and grid, built incrementally |
 
 ## Roadmap
 
-0. Foundations: saving, recovery, backups, tooling ← _current_
-1. Vertical slice: "Your First Day as an Intern"
+0. Foundations: saving, recovery, backups, tooling (done)
+1. Vertical slice: "Your First Day as an Intern" ← _current_ (3D office comes last)
 2. Productivity depth (Docs app, richer spreadsheet)
 3. People and workplace life
 4. Time and wellbeing

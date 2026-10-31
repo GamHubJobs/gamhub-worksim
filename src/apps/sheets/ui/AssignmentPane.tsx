@@ -5,13 +5,14 @@
 import { useState } from 'react'
 import { getPerson } from '../../../content/company'
 import type { Assignment } from '../../../content/schemas'
-import { bestScore } from '../../../game/career'
+import { bestScore, firstName } from '../../../game/career'
 import type { AssignmentProgress } from '../../../persistence/schemas'
 import { Icon } from '../../../ui/Icon'
 import { RichText } from '../../../ui/RichText'
 
 interface AssignmentPaneProps {
   assignment: Assignment
+  playerName: string
   progress: AssignmentProgress | undefined
   submitting: boolean
   onToggleStep: (stepId: string) => void
@@ -22,6 +23,7 @@ interface AssignmentPaneProps {
 
 export function AssignmentPane({
   assignment,
+  playerName,
   progress,
   submitting,
   onToggleStep,
@@ -179,7 +181,12 @@ export function AssignmentPane({
               </h3>
               <div className="mt-1 rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <p className="mb-2 font-medium">{assignment.briefing.subject}</p>
-                <RichText text={assignment.briefing.body.replaceAll('{name}', 'there')} />
+                <RichText
+                  text={assignment.briefing.body.replaceAll(
+                    '{name}',
+                    firstName(playerName),
+                  )}
+                />
               </div>
             </section>
           </div>

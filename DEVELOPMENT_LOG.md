@@ -16,8 +16,43 @@ owner.
 - [x] 1.2 Spreadsheet editor: formula bar, selection, copy/paste, undo/redo, formatting
 - [x] 1.3 Assignment system: workplace data, instructions, submission, automatic grading
 - [x] 1.4 Simulated desktop with Mail and Tasks; XP, skills, feedback and rewards
-- [ ] 1.5 More assignments, polish, browser tests for the full journey
-- Later (after the above work well): minimal 3D office with hotspot navigation
+- [x] 1.5 More assignments, polish, browser tests for the full journey
+- [ ] 1.6 Minimal 3D office with hotspot navigation (only now that the core works)
+
+---
+
+## 2026-10-31 · Milestone 1.5: a complete first week
+
+### Built
+
+- **Task 2, "Summarise the expense claims"**: 14 realistic claims and the company rule
+  "claims over $250 need approval". Teaches IF (one claim is exactly $250.00, so `>`
+  vs `>=` matters), SUM, COUNT, AVERAGE, MAX, MIN, COUNTIF, and that counts are not
+  money.
+- **Task 3, "Check a supplier invoice"**: an invoice and an agreed price list on two
+  sheets. Teaches VLOOKUP across sheets with an exact match (the price list is not
+  sorted, so forgetting FALSE silently returns wrong prices, which the grader
+  catches), IF comparisons and COUNTIF. Three invoice lines are overcharged.
+- Passing all three intern tasks with enough XP (300) **promotes the player to
+  Junior Finance Assistant**, with a promotion email and banner.
+- Every assignment workbook now has an **"Original, as received"** version kept in its
+  history, so the starting data can always be restored.
+- The task pane's brief greets the player by name; the backup reminder no longer
+  covers the top bar.
+
+### Tested
+
+- 387 unit tests (adds both new assignments through the content checks, the `>=`
+  trap, VLOOKUP without FALSE, a lookup range that moves when filled down, the full
+  week leading to promotion, locked tasks).
+- 30 browser tests (adds a full week played through the interface: three tasks,
+  every key function, cross-sheet VLOOKUP, promotion to Junior Finance Assistant).
+
+### Known limitations
+
+- There are three tasks so far; the next career level shows "more tasks will arrive".
+- No workday clock or energy yet (planned with the wellbeing systems).
+- No 3D office yet (next milestone).
 
 ---
 

@@ -100,6 +100,10 @@ describe('assignments', () => {
     const document = await getDocument(first.documentId, database)
     expect(document?.title).toBe('Supplies order')
     expect(first.profile.assignments['supplies-order'].documentId).toBe(document?.id)
+    // The workbook as received is kept in its version history.
+    const versions = await listVersions(first.documentId, database)
+    expect(versions).toHaveLength(1)
+    expect(versions[0]).toMatchObject({ reason: 'original', keep: true })
   })
 
   it('a submission keeps a copy of the workbook and updates the profile together', async () => {
@@ -118,8 +122,8 @@ describe('assignments', () => {
     )
     expect(saved.xp).toBe(50)
     const versions = await listVersions(documentId, database)
-    expect(versions).toHaveLength(1)
-    expect(versions[0]).toMatchObject({ reason: 'submitted', keep: true })
+    expect(versions.map((v) => v.reason)).toEqual(['submitted', 'original'])
+    expect(versions[0].keep).toBe(true)
   })
 
   it('a failing profile change also undoes the submitted copy', async () => {
@@ -133,7 +137,8 @@ describe('assignments', () => {
     await expect(
       saveSubmission(profile.id, document, (p) => ({ ...p, xp: -5 }), database),
     ).rejects.toThrow()
-    expect(await listVersions(documentId, database)).toHaveLength(0)
+    const versions = await listVersions(documentId, database)
+    expect(versions.map((v) => v.reason)).toEqual(['original'])
   })
 })
 

@@ -170,3 +170,50 @@ describe('grading helpers', () => {
     expect(changes['Order!A2']).toBeUndefined()
   })
 })
+
+describe('teaching moments in later assignments', () => {
+  it('expense claims: >= instead of > flags the $250.00 claim wrongly', () => {
+    const expenses = getAssignment('expense-summary')!
+    const solution = buildSolutionContent(expenses)
+    const flags = Object.fromEntries(
+      Array.from({ length: 14 }, (_, i) => [
+        `F${i + 2}`,
+        `=IF(E${i + 2}>=250, "Yes", "No")`,
+      ]),
+    )
+    const result = gradeAssignment(expenses, applyInputs(solution, { Claims: flags }))
+    const check = result.checks.find((c) => c.id === 'approval-flags')!
+    expect(check.problems).toEqual(['F15 shows "Yes", which is not the right result.'])
+    // The count of approvals is wrong too, because it depends on the flags.
+    expect(result.checks.find((c) => c.id === 'approval-count')!.status).toBe('failed')
+  })
+
+  it('invoice check: VLOOKUP without FALSE returns wrong prices from the unsorted list', () => {
+    const invoice = getAssignment('invoice-check')!
+    const solution = buildSolutionContent(invoice)
+    const lookups = Object.fromEntries(
+      Array.from({ length: 8 }, (_, i) => [
+        `E${i + 2}`,
+        `=VLOOKUP(A${i + 2}, Prices!A:C, 3)`,
+      ]),
+    )
+    const result = gradeAssignment(invoice, applyInputs(solution, { Invoice: lookups }))
+    const check = result.checks.find((c) => c.id === 'agreed-prices')!
+    expect(check.status).not.toBe('passed')
+    expect(check.problems.length).toBeGreaterThan(0)
+  })
+
+  it('invoice check: a lookup range that moves when filled down breaks lower rows', () => {
+    const invoice = getAssignment('invoice-check')!
+    const solution = buildSolutionContent(invoice)
+    const lookups = Object.fromEntries(
+      Array.from({ length: 8 }, (_, i) => [
+        `E${i + 2}`,
+        `=VLOOKUP(A${i + 2}, Prices!A${i + 2}:C${i + 13}, 3, FALSE)`,
+      ]),
+    )
+    const result = gradeAssignment(invoice, applyInputs(solution, { Invoice: lookups }))
+    const problems = result.checks.find((c) => c.id === 'agreed-prices')!.problems
+    expect(problems.some((p) => p.includes('#N/A'))).toBe(true)
+  })
+})

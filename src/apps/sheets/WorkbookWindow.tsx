@@ -243,6 +243,7 @@ export function WorkbookWindow({
         {panel === 'task' && assignment && (
           <AssignmentPane
             assignment={assignment}
+            playerName={profile?.name ?? ''}
             progress={progress}
             submitting={submitting}
             onToggleStep={(stepId) =>

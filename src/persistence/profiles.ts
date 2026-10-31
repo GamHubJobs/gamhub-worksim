@@ -137,8 +137,8 @@ export async function updateProfile(
 }
 
 /**
- * Starts an assignment: creates its workbook and records it in the profile,
- * all at once. If the assignment was already started, nothing changes.
+ * Starts an assignment: creates its workbook (with an "original" version in
+ * its history) and records it in the profile, all at once. If the assignment was already started, nothing changes.
  */
 export async function startAssignment(
   profileId: string,
@@ -152,7 +152,13 @@ export async function startAssignment(
 ): Promise<{ profile: Profile; documentId: string }> {
   return database.transaction(
     'rw',
-    [database.meta, database.profiles, database.documents, database.outbox],
+    [
+      database.meta,
+      database.profiles,
+      database.documents,
+      database.documentVersions,
+      database.outbox,
+    ],
     async () => {
       const current = await loadForUpdate(profileId, database)
       const existing = current.assignments[input.assignmentId]
@@ -162,6 +168,8 @@ export async function startAssignment(
         { kind: 'sheet', title: input.title, content: input.content },
         database,
       )
+      // Kept forever, so the workbook as received can always be restored.
+      await createVersion(document, 'original', { keep: true }, database)
       const profile = await saveProfile(
         current,
         {

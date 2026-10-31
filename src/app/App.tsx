@@ -114,7 +114,7 @@ export function App({ session, tabLock }: AppProps) {
   return (
     <AppServicesContext.Provider value={services}>
       {backupStatus?.reminderDue && career.state.status === 'ready' && (
-        <div className="fixed inset-x-0 top-0 z-40">
+        <div className="fixed inset-x-0 bottom-0 z-40 shadow-lg">
           <BackupReminder
             onOpenBackup={() => setStorageOpen(true)}
             onSnooze={() => void snoozeBackupReminder().then(refreshStorageInfo)}

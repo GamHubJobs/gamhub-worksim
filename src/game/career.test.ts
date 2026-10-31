@@ -179,3 +179,45 @@ describe('improving a passed result', () => {
     expect(better.profile.xp).toBe(95)
   })
 })
+
+describe('the first week', () => {
+  it('passing all three intern tasks well leads to promotion', () => {
+    let profile = newProfileData('Alex', 0)
+    const rewards = []
+    for (const id of ['supplies-order', 'expense-summary', 'invoice-check']) {
+      const task = getAssignment(id)!
+      expect(assignmentStatus(profile, task)).toBe('available')
+      profile = {
+        ...profile,
+        assignments: {
+          ...profile.assignments,
+          [id]: {
+            assignmentId: id,
+            assignmentVersion: 1,
+            documentId: createId(),
+            startedAt: 1,
+            completedSteps: [],
+            attempts: [],
+          },
+        },
+      }
+      const result = recordSubmission(profile, task, grade(100), 10)
+      profile = result.profile
+      rewards.push(result.reward)
+    }
+    expect(rewards.map((r) => r.unlocked?.id ?? null)).toEqual([
+      'expense-summary',
+      'invoice-check',
+      null,
+    ])
+    expect(rewards[2].promotedTo).toBe('Junior Finance Assistant')
+    expect(careerLevel(profile).current.title).toBe('Junior Finance Assistant')
+    expect(profile.inbox.at(-1)?.kind).toBe('promotion')
+  })
+
+  it('later tasks stay locked until the previous one is passed', () => {
+    const profile = newProfileData('Alex', 0)
+    expect(assignmentStatus(profile, getAssignment('expense-summary')!)).toBe('locked')
+    expect(assignmentStatus(profile, getAssignment('invoice-check')!)).toBe('locked')
+  })
+})
