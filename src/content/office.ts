@@ -34,8 +34,8 @@ export const SPOTS: Spot[] = [
   },
   {
     id: 'manager',
-    name: 'Priya’s office',
-    description: 'Priya Raman, your manager. Her door is always open.',
+    name: '{manager}’s office',
+    description: '{managerFull}, your manager. Her door is always open.',
     camera: { position: [7.0, 2.65, -1.55], target: [8.5, 0.95, -5.0] },
     marker: [7.4, 0.02, -2.3],
   },
@@ -89,8 +89,8 @@ export const INTERACTIONS: Interaction[] = [
   {
     id: 'senior',
     spot: 'desk',
-    label: 'Talk to Marcus',
-    name: 'Marcus Webb',
+    label: 'Talk to {senior}',
+    name: '{seniorFull}',
     minutes: 10,
   },
   {
@@ -102,8 +102,8 @@ export const INTERACTIONS: Interaction[] = [
   {
     id: 'manager',
     spot: 'manager',
-    label: 'Talk to Priya',
-    name: 'Priya Raman',
+    label: 'Talk to {manager}',
+    name: '{managerFull}',
     minutes: 10,
   },
   {
@@ -136,22 +136,3 @@ export function interactionsAt(spot: SpotId): Interaction[] {
 export function getInteraction(id: InteractionId): Interaction {
   return INTERACTIONS.find((interaction) => interaction.id === id)!
 }
-
-/** Practical tips Tom shares at the coffee machine. */
-export const OFFICE_TIPS = [
-  'Press F2 to edit a cell without retyping it. Saves me about an hour a week.',
-  'If a total looks odd, click it and read the formula bar. Nine times out of ten the range is one row short.',
-  'Ctrl+D fills a formula down. Select the first cell and everything below it, then press it.',
-  'Put a $ in front of a column or row (like $B$2) and it stays fixed when you copy the formula.',
-  'Before you send anything to Priya, change one number and check the totals update. If they don’t, something was typed in.',
-  'VLOOKUP without FALSE at the end is how I once paid for 200 staplers. Always FALSE.',
-  'Select a range and look at the bottom-right: the spreadsheet shows the sum and average for free.',
-  'Never edit the data someone sends you. Work next to it. Then nobody can say you changed their numbers.',
-]
-
-export const COMPANY_NEWS = [
-  'Quarterly all-hands on Friday at 4 pm in the large meeting room. Snacks provided.',
-  'Reminder: expense claims for this month are due by the 28th.',
-  'The kitchen fridge is cleared every Friday afternoon. Label your lunch!',
-  'New starters: IT induction sessions run every Tuesday morning.',
-]

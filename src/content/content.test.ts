@@ -12,7 +12,7 @@ import { CAREERS, SKILLS } from './careers'
 import { addChart } from '../apps/sheets/features'
 import { getDocTemplate } from '../apps/docs/templates'
 import { getSlidesTemplate } from '../apps/slides/model'
-import { PEOPLE } from './company'
+import { findPerson } from './departments'
 
 describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
   'assignment %s',
@@ -24,7 +24,7 @@ describe.each(ASSIGNMENTS.map((a) => [a.id, a] as const))(
     })
 
     it('refers to existing people, skills, career and level', () => {
-      expect(PEOPLE[assignment.from]).toBeDefined()
+      expect(findPerson(assignment.from)).toBeDefined()
       for (const skill of Object.keys(assignment.skills)) {
         expect(SKILLS.map((s) => s.id)).toContain(skill)
       }

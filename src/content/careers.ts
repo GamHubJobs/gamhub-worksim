@@ -50,6 +50,19 @@ export const CAREERS: Career[] = [
     id: 'office-admin-finance',
     name: 'Office Administration & Finance',
     department: 'Finance & Administration',
+    description:
+      'Keep the office running and the money in order: supplies orders, expense claims, invoices, budgets, payments and reports.',
+    toolsIntro:
+      'Your work is done in Sheets, our spreadsheet app, with reports in Docs and presentations in Slides.',
+    skills: [
+      'formulas',
+      'data-analysis',
+      'lookups',
+      'presentation',
+      'accuracy',
+      'finance-basics',
+    ],
+    apps: ['sheets', 'docs', 'slides'],
     levels: [
       { id: 'intern', title: 'Finance & Admin Intern', xpRequired: 0, minReputation: 0 },
       {

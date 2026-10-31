@@ -3,7 +3,7 @@
  * lead to. Every effect is shown to the player after they choose, so they
  * can learn how their behaviour lands with colleagues.
  */
-import { getPerson } from '../content/company'
+import { getPerson } from '../content/departments'
 import type { Wellbeing } from '../persistence/schemas'
 import type { ProfileData } from './career'
 import { now } from './deadlines'

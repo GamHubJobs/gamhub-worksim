@@ -178,7 +178,7 @@ export function stressReading(stress: number): Reading {
     label: 'Overwhelmed',
     tone: 'bad',
     advice:
-      'Talk to Priya about your workload, take a proper break and finish on time today.',
+      'Talk to your manager about your workload, take a proper break and finish on time today.',
   }
 }
 

@@ -14,6 +14,7 @@ import { getDocTemplate } from '../apps/docs/templates'
 import { getSlidesTemplate, slideText } from '../apps/slides/model'
 import type { WorkbookCalculator } from '../apps/sheets/engine/workbook'
 import { isError } from '../apps/sheets/engine/values'
+import { fill } from '../content/departments'
 import type { Deliverable, FileCheck } from '../content/schemas'
 import type { DocContent, SlidesContent } from '../persistence/schemas'
 import type { CheckResult, CheckStatus } from './grading'
@@ -247,7 +248,9 @@ export function gradeDeliverables(
     if (!content) {
       return deliverable.checks.map((check) =>
         result(check, 0, [
-          `No ${KIND_NAMES[deliverable.kind]} was attached. Attach it to your email to Priya.`,
+          fill(
+            `No ${KIND_NAMES[deliverable.kind]} was attached. Attach it to your email to {manager}.`,
+          ),
         ]),
       )
     }

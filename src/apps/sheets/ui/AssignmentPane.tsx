@@ -3,7 +3,7 @@
  * why it matters, and the Submit button.
  */
 import { useState } from 'react'
-import { getPerson } from '../../../content/company'
+import { getPerson } from '../../../content/departments'
 import type { Assignment } from '../../../content/schemas'
 import { bestScore, firstName } from '../../../game/career'
 import type { AssignmentProgress } from '../../../persistence/schemas'

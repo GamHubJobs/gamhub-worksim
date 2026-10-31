@@ -19,9 +19,12 @@ import { checkEvents } from '../game/events'
 import { checkReviews } from '../game/reviews'
 import { afterSubmission } from '../game/workday'
 import { getDocument } from '../persistence/documentsRepo'
+import { setActiveCareer } from '../content/departments'
 import {
   createProfile,
   getActiveProfile,
+  listProfiles,
+  setActiveProfile,
   saveSubmission,
   startAssignment as startAssignmentInStorage,
   updateProfile,
@@ -56,11 +59,22 @@ function errorMessage(error: unknown): string {
 export function useCareer() {
   const [state, setState] = useState<CareerState>({ status: 'loading' })
 
+  /**
+   * Shows a career save. Its department becomes the active one first, so
+   * every name, dialogue and email belongs to the right team.
+   */
+  const show = useCallback((profile: Profile) => {
+    setActiveCareer(profile.careerId)
+    setState({ status: 'ready', profile })
+  }, [])
+
   useEffect(() => {
     let active = true
     getActiveProfile()
       .then((profile) => {
-        if (active) setState(profile ? { status: 'ready', profile } : { status: 'new' })
+        if (!active) return
+        if (profile) show(profile)
+        else setState({ status: 'new' })
       })
       .catch((error: unknown) => {
         if (active) setState({ status: 'error', message: errorMessage(error) })
@@ -68,14 +82,34 @@ export function useCareer() {
     return () => {
       active = false
     }
-  }, [])
+  }, [show])
 
   const profileId = state.status === 'ready' ? state.profile.id : null
 
-  const createCareer = useCallback(async (name: string) => {
-    const profile = await createProfile(newProfileData(name, Date.now()))
-    setState({ status: 'ready', profile })
-  }, [])
+  const createCareer = useCallback(
+    async (name: string, careerId?: string) => {
+      const profile = await createProfile(newProfileData(name, Date.now(), careerId))
+      show(profile)
+    },
+    [show],
+  )
+
+  /**
+   * Switches to another career: its existing save if there is one, or a new
+   * first day in that department (with the same name).
+   */
+  const switchCareer = useCallback(
+    async (careerId: string) => {
+      if (state.status !== 'ready') return
+      const saves = await listProfiles()
+      const existing = saves.find((p) => p.careerId === careerId)
+      const profile = existing
+        ? await setActiveProfile(existing.id)
+        : await createProfile(newProfileData(state.profile.name, Date.now(), careerId))
+      show(profile)
+    },
+    [state, show],
+  )
 
   /** Starts an assignment (creating its workbook) and returns the workbook's ID. */
   const startAssignment = useCallback(
@@ -90,10 +124,10 @@ export function useCareer() {
         content: buildStartingContent(assignment),
         files: assignment.deliverables.map((d) => deliverableFile(d, playerName)),
       })
-      setState({ status: 'ready', profile })
+      show(profile)
       return documentId
     },
-    [profileId, state],
+    [profileId, state, show],
   )
 
   /**
@@ -167,10 +201,10 @@ export function useCareer() {
           ),
         }
       })
-      setState({ status: 'ready', profile })
+      show(profile)
       return { assignmentId, grade, reward: reward! }
     },
-    [profileId, state],
+    [profileId, state, show],
   )
 
   /**
@@ -219,10 +253,10 @@ export function useCareer() {
         ...latest,
         inbox: [...latest.inbox, sent],
       }))
-      setState({ status: 'ready', profile })
+      show(profile)
       return null
     },
-    [profileId, state, submitAssignment],
+    [profileId, state, submitAssignment, show],
   )
 
   const markRead = useCallback(
@@ -236,9 +270,9 @@ export function useCareer() {
             : mail,
         ),
       }))
-      setState({ status: 'ready', profile })
+      show(profile)
     },
-    [profileId],
+    [profileId, show],
   )
 
   const toggleStep = useCallback(
@@ -261,9 +295,9 @@ export function useCareer() {
           },
         }
       })
-      setState({ status: 'ready', profile })
+      show(profile)
     },
-    [profileId],
+    [profileId, show],
   )
 
   /**
@@ -281,10 +315,10 @@ export function useCareer() {
         const changed = advanceCareer(change(latest), now).profile
         return { ...latest, ...checkEvents(checkReviews(changed, now)) }
       })
-      setState({ status: 'ready', profile })
+      show(profile)
       return profile
     },
-    [profileId],
+    [profileId, show],
   )
 
   return {
@@ -293,6 +327,7 @@ export function useCareer() {
     startAssignment,
     submitAssignment,
     sendMail,
+    switchCareer,
     markRead,
     toggleStep,
     act,

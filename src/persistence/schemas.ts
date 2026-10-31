@@ -164,6 +164,11 @@ export const SheetContentSchema = z.object({
 
 const DocumentBaseSchema = SyncFieldsSchema.extend({
   title: z.string().min(1).max(200),
+  /**
+   * The career save the document belongs to. Files without an owner (made
+   * before careers existed, and the practice workbook) belong to everyone.
+   */
+  owner: IdSchema.optional(),
   /** Version of this document's content format, for future upgrades. */
   formatVersion: z.number().int().min(1),
 })

@@ -1,4 +1,4 @@
-import { getPerson } from '../content/company'
+import { getPerson } from '../content/departments'
 
 export function Avatar({
   personId,

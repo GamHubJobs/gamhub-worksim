@@ -235,11 +235,23 @@ export const CareerLevelSchema = z.object({
   minReview: z.enum(REVIEW_RATINGS).optional(),
 })
 
+/** Work apps a career can use (Mail, Tasks and Career are always there). */
+export const WORK_APPS = ['sheets', 'docs', 'slides', 'helpdesk', 'code'] as const
+
 export const CareerSchema = z.object({
   id: z.string(),
   name: z.string(),
   department: z.string(),
+  /** One or two sentences for the career choice screen. */
+  description: z.string(),
+  /** For the welcome email: which tools the work is done in. */
+  toolsIntro: z.string(),
+  /** The skills this career develops (IDs from the skills list). */
+  skills: z.array(z.string()).min(1),
+  /** The work apps on the dock, in order. */
+  apps: z.array(z.enum(WORK_APPS)).min(1),
   levels: z.array(CareerLevelSchema).min(1),
 })
+export type WorkApp = (typeof WORK_APPS)[number]
 export type Career = z.infer<typeof CareerSchema>
 export type CareerLevel = z.infer<typeof CareerLevelSchema>

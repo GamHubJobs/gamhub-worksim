@@ -8,6 +8,7 @@
  * is away, so the simulation is never unfair to someone who steps out.
  */
 import { getAssignment } from '../content/assignments'
+import { fill } from '../content/departments'
 import type { Assignment } from '../content/schemas'
 import {
   DURATIONS,
@@ -48,7 +49,10 @@ export function log(
     ...work,
     today: {
       ...work.today,
-      log: [...work.today.log, { minute: Math.floor(work.minute), text, tone }],
+      log: [
+        ...work.today.log,
+        { minute: Math.floor(work.minute), text: fill(text), tone },
+      ],
     },
   }
 }
@@ -320,7 +324,7 @@ export function requestExtension(
       [assignmentId]: { ...deadline, due: extendedDue(deadline.due), extended: true },
     },
   }
-  return withWork(profile, log(work, 'Agreed a new deadline with Priya', 'neutral'))
+  return withWork(profile, log(work, 'Agreed a new deadline with {manager}', 'neutral'))
 }
 
 // ---------------------------------------------------------------------------

@@ -10,11 +10,18 @@ import { SlidesEditor } from './SlidesEditor'
 interface SlidesWindowProps {
   documentId: string
   onBack: () => void
+  /** The career save, whose workbooks the chart picker offers. */
+  ownerId: string
   /** A panel on the right, e.g. the task this presentation is for. */
   sidePanel?: ReactNode
 }
 
-export function SlidesWindow({ documentId, onBack, sidePanel }: SlidesWindowProps) {
+export function SlidesWindow({
+  documentId,
+  onBack,
+  ownerId,
+  sidePanel,
+}: SlidesWindowProps) {
   const slides = useSavedDocument(documentId, 'slides', SlidesContentSchema)
   const { state } = slides
   const [presenting, setPresenting] = useState<number | null>(null)
@@ -55,6 +62,7 @@ export function SlidesWindow({ documentId, onBack, sidePanel }: SlidesWindowProp
       </DocumentFrame>
       {picker && (
         <SheetsPicker
+          ownerId={ownerId}
           mode="chart"
           chartsOnly
           onChart={(chart) => {

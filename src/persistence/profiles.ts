@@ -74,6 +74,35 @@ export async function getActiveProfile(
   return newest ? parseStoredProfile(newest, newest.id) : undefined
 }
 
+/** Every career save on this device (one per career), newest first. */
+export async function listProfiles(
+  database: WorkSimDatabase = defaultDb,
+): Promise<Profile[]> {
+  const all = await database.profiles.toArray()
+  const profiles: Profile[] = []
+  for (const raw of all) {
+    if (raw.deleted) continue
+    try {
+      profiles.push(parseStoredProfile(raw, raw.id))
+    } catch (error) {
+      console.error(error)
+    }
+  }
+  return profiles.sort((a, b) => b.updatedAt - a.updatedAt)
+}
+
+/** Makes another career save the one in use. */
+export async function setActiveProfile(
+  id: string,
+  database: WorkSimDatabase = defaultDb,
+): Promise<Profile> {
+  const raw = await database.profiles.get(id)
+  if (!raw || raw.deleted) throw new RecordNotFoundError('profiles', id)
+  const profile = parseStoredProfile(raw, id)
+  await setMetaValue(ACTIVE_PROFILE_KEY, id, database)
+  return profile
+}
+
 export async function createProfile(
   fields: ProfileFields,
   database: WorkSimDatabase = defaultDb,
@@ -182,14 +211,14 @@ export async function startAssignment(
       if (existing) return { profile: current, documentId: existing.documentId }
 
       const document = await createDocument(
-        { kind: 'sheet', title: input.title, content: input.content },
+        { kind: 'sheet', title: input.title, content: input.content, owner: profileId },
         database,
       )
       // Kept forever, so the workbook as received can always be restored.
       await createVersion(document, 'original', { keep: true }, database)
       const files: { doc?: string; slides?: string } = {}
       for (const file of input.files ?? []) {
-        const created = await createDocument(file, database)
+        const created = await createDocument({ ...file, owner: profileId }, database)
         await createVersion(created, 'original', { keep: true }, database)
         files[file.kind] = created.id
       }

@@ -4,10 +4,11 @@
  * realistic ways to respond, each with a workplace lesson.
  */
 import { getMeeting } from '../content/workday'
+import { activeDepartment } from '../content/departments'
 import { firstName, type ProfileData } from './career'
 import { formatMoment } from './clock'
 import type { Dialogue } from './office'
-import { currentTask } from './office'
+import { currentTask, fillDialogue } from './office'
 import type { Choice } from './scenes'
 
 /** Meeting scenes are remembered per day, e.g. "meeting:standup:3". */
@@ -20,8 +21,8 @@ function standupChoices(profile: ProfileData): { lines: string[]; choices: Choic
   const task = currentTask(profile)
   const intro = [
     'Morning, everyone. Quick round, two minutes each.',
-    'Marcus: “Supplier statements for the month-end. Should be done by lunch.”',
-    'Tom: “The new printers arrive at ten. If anything goes missing, it was not me.”',
+    `{senior}: “${activeDepartment().standup.senior}”`,
+    `Tom: “${activeDepartment().standup.facilities}”`,
   ]
   if (!task) {
     return {
@@ -31,8 +32,8 @@ function standupChoices(profile: ProfileData): { lines: string[]; choices: Choic
           id: 'offer-help',
           label: 'Offer to help someone with their work',
           reply: [
-            'Good offer. Marcus, could you use a second pair of eyes on the statements?',
-            '*Marcus nods, a little surprised.*',
+            'Good offer. {senior}, could you use a second pair of eyes on what you are doing?',
+            '*{senior} nods, a little surprised.*',
           ],
           effects: {
             trust: { manager: 2, senior: 2 },
@@ -78,7 +79,7 @@ function standupChoices(profile: ProfileData): { lines: string[]; choices: Choic
           id: 'dodge',
           label: 'Say it is “nearly done” and move on quickly',
           reply: [
-            '*Priya gives you a long look.*',
+            '*{manager} gives you a long look.*',
             'Nearly done is not done. Let’s talk later.',
           ],
           effects: { trust: { manager: -3 }, wellbeing: { stress: 4 } },
@@ -104,9 +105,9 @@ function standupChoices(profile: ProfileData): { lines: string[]; choices: Choic
         id: 'ask-help',
         label: 'Mention a part you are unsure about',
         reply: [
-          'Thanks for flagging it early. Marcus, could you give ' +
+          'Thanks for flagging it early. {senior}, could you give ' +
             `${name} five minutes after this?`,
-          'Marcus: “Sure. Grab me at my desk.”',
+          '{senior}: “Sure. Grab me at my desk.”',
         ],
         effects: {
           trust: { manager: 2, senior: 1 },
@@ -120,7 +121,7 @@ function standupChoices(profile: ProfileData): { lines: string[]; choices: Choic
         label: 'Just say “It’s going fine”',
         reply: [
           'Okay… anything blocking you?',
-          '*You shake your head, and Priya moves on.*',
+          '*You shake your head, and {manager} moves on.*',
         ],
         effects: {},
         lesson: '“Fine” gives your team nothing to plan with. Be specific, even briefly.',
@@ -132,18 +133,14 @@ function standupChoices(profile: ProfileData): { lines: string[]; choices: Choic
 function planningChoices(profile: ProfileData): { lines: string[]; choices: Choice[] } {
   const busy = currentTask(profile) !== null
   return {
-    lines: [
-      'Right, the rest of the week. Quarter-end is close, and the directors want the cost report early.',
-      'Marcus will lead the report. I need someone to pull the supplier figures together for him.',
-      'Any volunteers?',
-    ],
+    lines: activeDepartment().planning.lines,
     choices: [
       {
         id: 'volunteer',
         label: 'Volunteer to pull the figures together',
         reply: [
-          'Great. Marcus, you have a helper.',
-          'Marcus: “Fine by me. I will send you the list.”',
+          'Great. {senior}, you have a helper.',
+          `{senior}: “${activeDepartment().planning.volunteerReply}”`,
         ],
         effects: {
           trust: { manager: 3, senior: 2 },
@@ -161,7 +158,10 @@ function planningChoices(profile: ProfileData): { lines: string[]; choices: Choi
           : 'Stay quiet and let someone else take it',
         reply: busy
           ? ['That is fair. Finish what you have; I would rather have that done well.']
-          : ['*After a pause, Marcus sighs.*', 'Marcus: “I will do it myself, then.”'],
+          : [
+              '*After a pause, {senior} sighs.*',
+              `{senior}: “${activeDepartment().planning.nobodyReply}”`,
+            ],
         effects: busy
           ? { trust: { manager: 1 }, wellbeing: { stress: -2 } }
           : { trust: { senior: -2 }, wellbeing: { engagement: -2 } },
@@ -186,13 +186,15 @@ export function meetingScene(profile: ProfileData, meetingId: string): Dialogue 
     title: meeting.title,
     actions: [],
   }
-  if (meeting.id === 'standup') return { ...base, ...standupChoices(profile) }
-  if (meeting.id === 'planning') return { ...base, ...planningChoices(profile) }
-  return {
+  if (meeting.id === 'standup')
+    return fillDialogue({ ...base, ...standupChoices(profile) })
+  if (meeting.id === 'planning')
+    return fillDialogue({ ...base, ...planningChoices(profile) })
+  return fillDialogue({
     ...base,
     lines: [
       `Come in, ${firstName(profile.name)}. How has your week been?`,
       'We will go through your work properly in a moment. First: is there anything you need from me?',
     ],
-  }
+  })
 }

@@ -1,7 +1,7 @@
 /** Shown right after submitting: the score, rewards and feedback on every check. */
 import type { SubmissionResult } from '../../app/useCareer'
 import { getSkill } from '../../content/careers'
-import { getPerson } from '../../content/company'
+import { getPerson } from '../../content/departments'
 import type { Assignment } from '../../content/schemas'
 import { CheckResultsList } from './CheckResultsList'
 

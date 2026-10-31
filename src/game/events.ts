@@ -9,13 +9,13 @@
  */
 import { getAssignment } from '../content/assignments'
 import { HOURS } from '../content/workday'
-import { PEOPLE } from '../content/company'
+import { fill, findPerson } from '../content/departments'
 import { bestScore, firstName, isPassed, type ProfileData } from './career'
 import { weekNumber } from './clock'
 import { now } from './deadlines'
 import { isMentor } from './conversations'
 import type { Dialogue } from './office'
-import { currentTask } from './office'
+import { currentTask, fillDialogue } from './office'
 import { trustOf } from './relationships'
 import {
   applyEffects,
@@ -144,7 +144,7 @@ const ONE_OFF: WorkplaceEvent[] = [
       return {
         lines: [
           'The finance director wants the October expense total for her board pack before three o’clock.',
-          'Marcus pulled it together this morning, but I have not had time to check it. Could you go through it? Twenty minutes.',
+          '{senior} pulled it together this morning, but I have not had time to check it. Could you go through it? Twenty minutes.',
         ],
         choices: [
           {
@@ -156,7 +156,7 @@ const ONE_OFF: WorkplaceEvent[] = [
               trust: { manager: 3 },
               reputation: 1,
               wellbeing: { stress: 3, engagement: 3 },
-              log: { text: 'Checked the expense total for Priya', tone: 'good' },
+              log: { text: 'Checked the expense total for {manager}', tone: 'good' },
             },
             lesson:
               'Urgent requests from your manager are a chance to show you are dependable. Do them well, and say so if they affect your other work.',
@@ -174,7 +174,10 @@ const ONE_OFF: WorkplaceEvent[] = [
                     extend: task.assignment.id,
                     trust: { manager: 4 },
                     reputation: 1,
-                    log: { text: 'Agreed priorities with Priya', tone: 'good' as const },
+                    log: {
+                      text: 'Agreed priorities with {manager}',
+                      tone: 'good' as const,
+                    },
                   },
                   lesson:
                     'When a new request clashes with existing work, ask which comes first. It protects your deadlines and shows you think about priorities.',
@@ -197,23 +200,23 @@ const ONE_OFF: WorkplaceEvent[] = [
   {
     id: 'marcus-error',
     person: 'senior',
-    opener: 'You have found something in Marcus’s figures.',
+    opener: 'You have found something in {senior}’s figures.',
     trigger: (p) => {
       const choice = choiceMade(p, 'priya-urgent')
       return choice === 'yes' || choice === 'prioritise'
     },
     scene: () => ({
       lines: [
-        '*Going through the expense total, you find that one claim, £480 for training, was left out. Marcus’s total is too low.*',
-        '*Priya needs the figure by three. Marcus is at his desk.*',
+        '*Going through the expense total, you find that one claim, £480 for training, was left out. {senior}’s total is too low.*',
+        '*{manager} needs the figure by three. {senior} is at his desk.*',
       ],
       choices: [
         {
           id: 'tell-marcus',
-          label: 'Tell Marcus privately first, so he can correct it',
+          label: 'Tell {senior} privately first, so he can correct it',
           reply: [
-            '*Marcus checks, and winces.*',
-            'Marcus: “You are right. I filtered on the wrong date. Thanks for coming to me first. I will tell Priya myself.”',
+            '*{senior} checks, and winces.*',
+            '{senior}: “You are right. I filtered on the wrong date. Thanks for coming to me first. I will tell {manager} myself.”',
           ],
           effects: { trust: { senior: 8, manager: 2 }, reputation: 2 },
           lesson:
@@ -221,10 +224,10 @@ const ONE_OFF: WorkplaceEvent[] = [
         },
         {
           id: 'tell-priya',
-          label: 'Report it straight to Priya',
+          label: 'Report it straight to {manager}',
           reply: [
-            'Priya: “Good catch, thank you. I will sort it out with Marcus.”',
-            '*Later, Marcus is noticeably cooler towards you.*',
+            '{manager}: “Good catch, thank you. I will sort it out with {senior}.”',
+            '*Later, {senior} is noticeably cooler towards you.*',
           ],
           effects: { trust: { manager: 3, senior: -4 }, reputation: 1 },
           lesson:
@@ -234,7 +237,7 @@ const ONE_OFF: WorkplaceEvent[] = [
           id: 'quiet-fix',
           label: 'Quietly correct the number and say nothing',
           reply: [
-            '*The board pack goes out with the right figure. Nobody knows there was a problem, including Marcus, who will make the same mistake next month.*',
+            '*The board pack goes out with the right figure. Nobody knows there was a problem, including {senior}, who will make the same mistake next month.*',
           ],
           effects: { trust: { manager: -1 } },
           lesson:
@@ -254,7 +257,7 @@ const ONE_OFF: WorkplaceEvent[] = [
       const mentored = isMentor(p) || choiceMade(p, 'marcus-intro') === 'learn'
       return {
         lines: [
-          'The finance director saw your work this week and asked who did it. I told her it was our new intern.',
+          '{director} saw your work this week and asked who did it. I said it was our newest team member.',
           'First time, no corrections. That does not happen often. Well done.',
         ],
         choices: [
@@ -262,10 +265,10 @@ const ONE_OFF: WorkplaceEvent[] = [
             ? [
                 {
                   id: 'credit-team',
-                  label: 'Thank her, and mention that Marcus’s advice helped',
+                  label: 'Thank {manager}, and mention that {senior}’s advice helped',
                   reply: [
-                    'That is generous of you. I will make sure he hears it.',
-                    '*Marcus gives you a nod from across the room later.*',
+                    'That is generous of you. I will make sure {senior} hears it.',
+                    '*{senior} gives you a nod from across the room later.*',
                   ],
                   effects: {
                     trust: { manager: 2, senior: 6 },
@@ -279,7 +282,7 @@ const ONE_OFF: WorkplaceEvent[] = [
             : []),
           {
             id: 'thanks',
-            label: 'Thank her',
+            label: 'Thank {manager}',
             reply: ['You earned it. Keep it up.'],
             effects: {
               trust: { manager: 1 },
@@ -319,9 +322,9 @@ const ONE_OFF: WorkplaceEvent[] = [
       choices: [
         {
           id: 'acknowledge',
-          label: 'Acknowledge his experience, and ask for his input on your next task',
+          label: 'Acknowledge {senior}’s experience, and ask for input on your next task',
           reply: [
-            '*He is caught off guard.*',
+            '*{senior} is caught off guard.*',
             '…Fine. Bring it over when you start it. I will show you how I check the totals.',
           ],
           effects: { trust: { senior: 8 }, wellbeing: { stress: -2 } },
@@ -331,14 +334,14 @@ const ONE_OFF: WorkplaceEvent[] = [
         {
           id: 'professional',
           label: 'Ignore the remark and stay professional',
-          reply: ['*Marcus shrugs and turns back to his screen.*'],
+          reply: ['*{senior} shrugs and turns back to the screen.*'],
           effects: { wellbeing: { stress: 2 } },
           lesson:
             'Not reacting avoids escalation, but the tension remains. A direct, friendly conversation can resolve it.',
         },
         {
           id: 'snap',
-          label: 'Tell him that maybe he should work harder, then',
+          label: 'Say that maybe {senior} should work harder, then',
           reply: ['*The open-plan office goes very quiet.*'],
           effects: {
             trust: { senior: -8 },
@@ -350,9 +353,9 @@ const ONE_OFF: WorkplaceEvent[] = [
         },
         {
           id: 'complain',
-          label: 'Complain to Priya about his attitude',
+          label: 'Complain to {manager} about {senior}’s attitude',
           reply: [
-            'Priya: “I will keep an eye on it. But have you tried talking to him? He is not a bad person, just under pressure.”',
+            '{manager}: “I will keep an eye on it. But have you tried talking to {senior} directly? There is a good colleague under all that pressure.”',
           ],
           effects: { trust: { manager: -1, senior: -4 } },
           lesson:
@@ -372,10 +375,10 @@ const ONE_OFF: WorkplaceEvent[] = [
       duringWork(p),
     scene: (p) => ({
       lines: [
-        '*Priya stops by your desk on her way out of a meeting with the directors.*',
-        'Marcus just walked the directors through the expense summary: the claims over the approval limit, the averages. Great catch on his part.',
+        '*{manager} stops by your desk on her way out of a meeting with the directors.*',
+        '{senior} just walked the directors through the expense summary: the claims over the approval limit, the averages. Great catch on his part.',
         `Anyway, ${firstName(p.name)}, how is the invoice check going?`,
-        '*It was your summary. Marcus presented it as his own.*',
+        '*It was your summary. {senior} presented it as his own.*',
       ],
       choices: [
         {
@@ -383,7 +386,7 @@ const ONE_OFF: WorkplaceEvent[] = [
           label:
             'Calmly mention that you built that summary, and offer to walk her through it',
           reply: [
-            '*Priya pauses.*',
+            '*{manager} pauses.*',
             'Did you? I did not realise. Yes, show me later. I want to know who did what.',
           ],
           effects: { trust: { manager: 2, senior: -2 }, reputation: 2 },
@@ -392,15 +395,15 @@ const ONE_OFF: WorkplaceEvent[] = [
         },
         {
           id: 'talk-marcus',
-          label: 'Say it is going well, then talk to Marcus privately',
+          label: 'Say it is going well, then talk to {senior} privately',
           reply:
             trustOf(p.work, 'senior') >= 45
               ? [
-                  'Marcus: “You are right, I should have said it was yours. I got carried away in the meeting. I will tell Priya.”',
-                  '*The next day, Priya thanks you for the summary by name.*',
+                  '{senior}: “You are right, I should have said it was yours. I got carried away in the meeting. I will tell {manager}.”',
+                  '*The next day, {manager} thanks you for the summary by name.*',
                 ]
               : [
-                  'Marcus: “It is a team effort. That is how it works here.”',
+                  '{senior}: “It is a team effort. That is how it works here.”',
                   '*He does not correct it. You decide to keep copies of your work and name your files clearly from now on.*',
                 ],
           effects:
@@ -412,9 +415,9 @@ const ONE_OFF: WorkplaceEvent[] = [
         },
         {
           id: 'call-out',
-          label: 'Email the whole team that Marcus stole your work',
+          label: 'Email the whole team that {senior} stole your work',
           reply: [
-            '*The email causes a stir. Priya calls you both in. The facts come out, but so does the impression that you prefer public confrontation.*',
+            '*The email causes a stir. {manager} calls you both in. The facts come out, but so does the impression that you prefer public confrontation.*',
           ],
           effects: {
             trust: { senior: -10, manager: -2 },
@@ -427,7 +430,9 @@ const ONE_OFF: WorkplaceEvent[] = [
         {
           id: 'let-go',
           label: 'Let it go; it is not worth the trouble',
-          reply: ['*You say the invoices are going fine. The summary stays “Marcus’s”.*'],
+          reply: [
+            '*You say the invoices are going fine. The summary stays “{senior}’s”.*',
+          ],
           effects: { wellbeing: { stress: 4, engagement: -3 } },
           lesson:
             'Letting small things go can be wise, but if your contributions are regularly invisible it will affect your reviews and promotion. Speak up calmly.',
@@ -443,15 +448,15 @@ const ONE_OFF: WorkplaceEvent[] = [
       duringWork(p) && Object.values(p.work.deadlines).some((d) => d.status === 'late'),
     scene: () => ({
       lines: [
-        '*Priya looks tired and short-tempered.*',
+        '*{manager} looks tired and short-tempered.*',
         'I needed that work yesterday. I had to tell the director it was not ready. I do not have time to chase people.',
       ],
       choices: [
         {
           id: 'calm',
-          label: 'Stay calm, acknowledge it, and ask what she needs first',
+          label: 'Stay calm, acknowledge it, and ask what {manager} needs first',
           reply: [
-            '*Her shoulders drop a little.*',
+            '*{manager}’s shoulders drop a little.*',
             'Get me the task by the end of today, and next time tell me before the deadline if it is slipping. That is all I ask.',
           ],
           effects: { trust: { manager: 4 }, wellbeing: { stress: -2 } },
@@ -471,7 +476,9 @@ const ONE_OFF: WorkplaceEvent[] = [
         {
           id: 'overwork',
           label: 'Say nothing, and plan to work late tonight',
-          reply: ['*Priya nods and leaves. You feel the evening disappearing already.*'],
+          reply: [
+            '*{manager} nods and leaves. You feel the evening disappearing already.*',
+          ],
           effects: { wellbeing: { stress: 6, energy: -5 } },
           lesson:
             'Silently absorbing pressure leads to exhaustion. It is better to agree a realistic plan out loud.',
@@ -485,7 +492,7 @@ const ONE_OFF: WorkplaceEvent[] = [
 // Events that can happen more than once (with their own IDs)
 // ---------------------------------------------------------------------------
 
-/** Priya follows up on a submission that did not pass, once per task. */
+/** {manager} follows up on a submission that did not pass, once per task. */
 function mistakeEvent(profile: ProfileData): WorkplaceEvent | null {
   const latest = latestAttempts(profile)[0]
   if (!latest || latest.attempt.rating !== 'fail') return null
@@ -527,7 +534,7 @@ function mistakeEvent(profile: ProfileData): WorkplaceEvent | null {
           id: 'self-doubt',
           label: 'Apologise and say you might not be cut out for this',
           reply: [
-            '*Priya’s tone softens.*',
+            '*{manager}’s tone softens.*',
             'Stop that. You are a week in. Read the feedback, fix it, send it back. That is the job.',
           ],
           effects: { wellbeing: { stress: 4, engagement: -2 } },
@@ -539,7 +546,7 @@ function mistakeEvent(profile: ProfileData): WorkplaceEvent | null {
   }
 }
 
-/** When the player is overloaded, Priya checks in (at most once a week). */
+/** When the player is overloaded, {manager} checks in (at most once a week). */
 function wellbeingEvent(profile: ProfileData): WorkplaceEvent {
   const week = weekNumber(profile.work.day)
   const earliest = Object.entries(profile.work.deadlines)
@@ -623,7 +630,7 @@ export function checkEvents(profile: ProfileData): ProfileData {
   if (work.dayOver) return profile
   let next = profile
 
-  // Events whose cause has gone (e.g. the task was fixed before Priya came
+  // Events whose cause has gone (e.g. the task was fixed before {manager} came
   // over) are dropped; requests that waited too long lapse.
   const stale = work.events.pending.filter((p) => !findEvent(next, p.id))
   if (stale.length > 0) {
@@ -676,7 +683,9 @@ export interface PendingEvent {
 export function pendingEvents(profile: ProfileData): PendingEvent[] {
   return profile.work.events.pending.flatMap((pending) => {
     const event = findEvent(profile, pending.id)
-    return event ? [{ id: event.id, person: event.person, opener: event.opener }] : []
+    return event
+      ? [{ id: event.id, person: event.person, opener: fill(event.opener) }]
+      : []
   })
 }
 
@@ -684,11 +693,11 @@ export function pendingEvents(profile: ProfileData): PendingEvent[] {
 export function eventScene(profile: ProfileData, id: string): Dialogue | null {
   const event = findEvent(profile, id)
   if (!event) return null
-  return {
+  return fillDialogue({
     id: event.id,
     speaker: event.person,
-    title: PEOPLE[event.person]?.name ?? 'A colleague',
+    title: findPerson(event.person)?.name ?? 'A colleague',
     actions: [],
     ...event.scene(profile),
-  }
+  })
 }

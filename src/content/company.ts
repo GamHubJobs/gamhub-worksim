@@ -25,18 +25,12 @@ export interface Person {
   personality: string
 }
 
-export const PEOPLE: Record<string, Person> = {
-  manager: {
-    id: 'manager',
-    name: 'Priya Raman',
-    role: 'Finance & Administration Manager',
-    email: `priya.raman@${COMPANY.emailDomain}`,
-    initials: 'PR',
-    color: 'bg-teal-600',
-    startingTrust: 50,
-    personality:
-      'Direct and demanding, but fair. Values reliability and honesty above everything, and is under pressure from the directors at quarter-end.',
-  },
+/**
+ * People who are the same in every department: reception, facilities and HR.
+ * Each department adds its own manager and senior colleague (see
+ * `departments/`), and `getPerson` finds anyone by ID or role.
+ */
+export const SHARED_PEOPLE: Record<string, Person> = {
   facilities: {
     id: 'facilities',
     name: 'Tom Becker',
@@ -59,17 +53,6 @@ export const PEOPLE: Record<string, Person> = {
     personality:
       'Warm and very organised. Knows everyone, and hears about everything that happens in the office, sometimes a little wrongly.',
   },
-  senior: {
-    id: 'senior',
-    name: 'Marcus Webb',
-    role: 'Senior Finance Assistant',
-    email: `marcus.webb@${COMPANY.emailDomain}`,
-    initials: 'MW',
-    color: 'bg-sky-700',
-    startingTrust: 40,
-    personality:
-      'Ambitious and very capable, with five years in the team. Protective of his reputation and can be competitive with newcomers, but a great teacher once he trusts you.',
-  },
   hr: {
     id: 'hr',
     name: 'Grace Okafor',
@@ -80,8 +63,4 @@ export const PEOPLE: Record<string, Person> = {
     startingTrust: 50,
     personality: 'Looks after people: wellbeing, training and anything awkward.',
   },
-}
-
-export function getPerson(id: string): Person {
-  return PEOPLE[id] ?? PEOPLE.manager
 }

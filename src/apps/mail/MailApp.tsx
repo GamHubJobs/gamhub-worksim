@@ -6,7 +6,8 @@
 import { useEffect, useState } from 'react'
 import type { SubmissionResult } from '../../app/useCareer'
 import { getAssignment } from '../../content/assignments'
-import { COMPANY, getPerson } from '../../content/company'
+import { COMPANY } from '../../content/company'
+import { getPerson } from '../../content/departments'
 import { firstName } from '../../game/career'
 import { formatDateTime } from '../../lib/time'
 import { listDocuments } from '../../persistence/documentsRepo'
@@ -14,6 +15,7 @@ import type { AnyDocument, MailMessage, Profile } from '../../persistence/schema
 import { Avatar } from '../../ui/Avatar'
 import { Icon, type IconName } from '../../ui/Icon'
 import { RichText } from '../../ui/RichText'
+import { visibleTo } from '../shared/ownership'
 import { SubmissionResults } from '../tasks/SubmissionResults'
 
 export interface Attachment {
@@ -367,12 +369,12 @@ function Compose({
   useEffect(() => {
     let active = true
     void listDocuments().then((all) => {
-      if (active) setFiles(all)
+      if (active) setFiles(all.filter(visibleTo(profile.id)))
     })
     return () => {
       active = false
     }
-  }, [])
+  }, [profile.id])
 
   const attachments: Attachment[] = attached.flatMap((id) => {
     const file = files?.find((f) => f.id === id)

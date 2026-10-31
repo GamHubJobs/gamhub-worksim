@@ -2,13 +2,13 @@
  * Trust between the player and each colleague, and the player's professional
  * reputation in the office. Pure functions on the work state.
  */
-import { PEOPLE } from '../content/company'
+import { findPerson } from '../content/departments'
 import type { WorkState } from '../persistence/schemas'
 
 const clamp = (value: number) => Math.min(100, Math.max(0, Math.round(value)))
 
 export function trustOf(work: WorkState, personId: string): number {
-  return work.relationships[personId]?.trust ?? PEOPLE[personId]?.startingTrust ?? 50
+  return work.relationships[personId]?.trust ?? findPerson(personId)?.startingTrust ?? 50
 }
 
 export function changeTrust(work: WorkState, personId: string, delta: number): WorkState {

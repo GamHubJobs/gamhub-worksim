@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { listDocuments } from '../../persistence/documentsRepo'
 import type { ChartSpec, SheetDocument } from '../../persistence/schemas'
 import { ChartView } from '../../ui/ChartView'
+import { visibleTo } from './ownership'
 import { createCalculator } from '../sheets/engine/workbook'
 import { chartSpec, rangeAsText } from '../sheets/features'
 import { rangeToText, usedSize } from '../sheets/model'
@@ -18,6 +19,8 @@ interface SheetsPickerProps {
   mode: PickerMode
   /** Only offer charts (e.g. for slides). */
   chartsOnly?: boolean
+  /** The career save whose workbooks are offered. */
+  ownerId: string
   onChart: (chart: ChartSpec) => void
   onTable: (rows: string[][]) => void
   onClose: () => void
@@ -26,6 +29,7 @@ export function SheetsPicker({
   mode: initialMode,
   onChart,
   chartsOnly = false,
+  ownerId,
   onTable,
   onClose,
 }: SheetsPickerProps) {
@@ -39,7 +43,9 @@ export function SheetsPicker({
     let active = true
     void listDocuments().then((all) => {
       if (!active) return
-      const sheets = all.filter((d): d is SheetDocument => d.kind === 'sheet')
+      const sheets = all.filter(
+        (d): d is SheetDocument => d.kind === 'sheet' && visibleTo(ownerId)(d),
+      )
       setWorkbooks(sheets)
       const first = sheets[0]
       if (first) {
@@ -59,7 +65,7 @@ export function SheetsPicker({
     return () => {
       active = false
     }
-  }, [])
+  }, [ownerId])
 
   const charts = useMemo(() => {
     if (!workbooks) return []

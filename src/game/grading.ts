@@ -36,6 +36,7 @@ import {
   findSheet,
   splitSheetAddress,
 } from './workbooks'
+import { fill } from '../content/departments'
 import { gradeDeliverables, type SubmittedFiles } from './deliverables'
 
 export type CheckStatus = 'passed' | 'partial' | 'failed'
@@ -361,7 +362,9 @@ export function gradeAssignment(
           status: 'failed' as const,
           earned: 0,
           points: check.points,
-          problems: ['The workbook was not attached. Attach it to your email to Priya.'],
+          problems: [
+            fill('The workbook was not attached. Attach it to your email to {manager}.'),
+          ],
         },
   )
   const fileChecks = gradeDeliverables(assignment.deliverables, files, {

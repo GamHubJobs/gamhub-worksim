@@ -2,7 +2,8 @@
  * What people and things in the office say, based on the player's progress.
  * Pure functions, so the office always reflects the real state of the career.
  */
-import { COMPANY_NEWS, OFFICE_TIPS, type InteractionId } from '../content/office'
+import { activeDepartment, fill } from '../content/departments'
+import type { InteractionId } from '../content/office'
 import type { Assignment } from '../content/schemas'
 import type { Choice, EffectNote } from './scenes'
 import {
@@ -57,7 +58,7 @@ function managerDialogue(profile: ProfileData): Dialogue {
   const task = currentTask(profile)
   const promotion = promotionProgress(profile)
   const { current, career } = careerLevel(profile)
-  const base = { speaker: 'manager', title: 'Priya Raman' }
+  const base = { speaker: 'manager', title: '{managerFull}' }
 
   if (!task) {
     if (current.id !== 'intern') {
@@ -141,18 +142,16 @@ function receptionDialogue(profile: ProfileData): Dialogue {
         ]
       : [
           `Good morning, and welcome to Cobalt Ridge, ${name}! I’m Nina.`,
-          'Your desk is in the open-plan area, just through there: the one with your name on it. Priya’s office is at the back on the right, and the break room is on the left.',
-          'Priya has already sent you your first task. You’ll find it on your computer.',
+          'Your desk is in the open-plan area, just through there: the one with your name on it. {manager}’s office is at the back on the right, and the break room is on the left.',
+          '{manager} has already sent you your first task. You’ll find it on your computer.',
         ],
     actions: [],
   }
 }
 
 function colleagueDialogue(tipIndex: number): Dialogue {
-  const tip =
-    OFFICE_TIPS[
-      ((tipIndex % OFFICE_TIPS.length) + OFFICE_TIPS.length) % OFFICE_TIPS.length
-    ]
+  const tips = activeDepartment().tips
+  const tip = tips[((tipIndex % tips.length) + tips.length) % tips.length]
   return {
     speaker: 'facilities',
     title: 'Tom Becker',
@@ -196,8 +195,40 @@ function noticeboardDialogue(profile: ProfileData): Dialogue {
   return {
     speaker: null,
     title: 'Team notice board',
-    lines: [...COMPANY_NEWS, `Welcome to the team: ${profile.name}, ${current.title}.`],
+    lines: [
+      ...activeDepartment().news,
+      `Welcome to the team: ${profile.name}, ${current.title}.`,
+    ],
     actions: [],
+  }
+}
+
+/** A dialogue with role names filled in ({manager} → "Priya"). */
+export function fillDialogue(dialogue: Dialogue): Dialogue {
+  return {
+    ...dialogue,
+    title: fill(dialogue.title),
+    lines: dialogue.lines.map((line) => fill(line)),
+    actions: dialogue.actions.map((a) => ({ ...a, label: fill(a.label) })),
+    ...(dialogue.choices
+      ? {
+          choices: dialogue.choices.map((choice) => ({
+            ...choice,
+            label: fill(choice.label),
+            reply: choice.reply.map((line) => fill(line)),
+            ...(choice.lesson ? { lesson: fill(choice.lesson) } : {}),
+            ...(choice.effects.log
+              ? {
+                  effects: {
+                    ...choice.effects,
+                    log: { ...choice.effects.log, text: fill(choice.effects.log.text) },
+                  },
+                }
+              : {}),
+          })),
+        }
+      : {}),
+    ...(dialogue.lesson ? { lesson: fill(dialogue.lesson) } : {}),
   }
 }
 
@@ -208,6 +239,17 @@ export function dialogueFor(
   >,
   profile: ProfileData,
   tipIndex = 0,
+): Dialogue {
+  return fillDialogue(rawDialogue(interaction, profile, tipIndex))
+}
+
+function rawDialogue(
+  interaction: Exclude<
+    InteractionId,
+    'computer' | 'coffee' | 'lunch' | 'home' | 'senior'
+  >,
+  profile: ProfileData,
+  tipIndex: number,
 ): Dialogue {
   switch (interaction) {
     case 'manager':

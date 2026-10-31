@@ -17,7 +17,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { getPerson } from '../content/company'
+import { fill, getPerson } from '../content/departments'
 import {
   SPOTS,
   getSpot,
@@ -299,7 +299,7 @@ export function OfficeView({
         <p className="text-xs font-medium tracking-wide text-blue-700 uppercase">
           You are at
         </p>
-        <h1 className="text-lg font-semibold text-slate-900">{current.name}</h1>
+        <h1 className="text-lg font-semibold text-slate-900">{fill(current.name)}</h1>
         <p className="mt-1 text-sm text-slate-600">{current.description}</p>
 
         {meetingNow && (
@@ -308,11 +308,11 @@ export function OfficeView({
             data-testid="meeting-now"
           >
             <p>
-              <strong>{meetingNow.title}</strong>{' '}
+              <strong>{fill(meetingNow.title)}</strong>{' '}
               {work.minute < meetingNow.start
                 ? `starts at ${formatTime(meetingNow.start)}`
                 : 'has started'}{' '}
-              ({getSpot(meetingNow.spot).name.toLowerCase()}).
+              ({fill(getSpot(meetingNow.spot).name.toLowerCase())}).
             </p>
             <button
               type="button"
@@ -322,8 +322,8 @@ export function OfficeView({
               className="mt-1.5 w-full rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
             >
               {meetingHere
-                ? `Join the ${meetingNow.title.toLowerCase()}`
-                : `Go to ${getSpot(meetingNow.spot).name}`}
+                ? fill(`Join the ${meetingNow.title.toLowerCase()}`)
+                : fill(`Go to ${getSpot(meetingNow.spot).name}`)}
             </button>
           </div>
         )}
@@ -352,8 +352,8 @@ export function OfficeView({
         })}
         {!meetingNow && upcoming && (
           <p className="mt-2 text-xs text-slate-500">
-            Next: {upcoming.title} at {formatTime(upcoming.start)} (
-            {getSpot(upcoming.spot).name})
+            Next: {fill(upcoming.title)} at {formatTime(upcoming.start)} (
+            {fill(getSpot(upcoming.spot).name)})
           </p>
         )}
 
@@ -394,7 +394,7 @@ export function OfficeView({
                 : 'text-slate-700 hover:bg-slate-100'
             }`}
           >
-            {s.name}
+            {fill(s.name)}
           </button>
         ))}
       </nav>
@@ -441,7 +441,7 @@ function InteractionButton({
           : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
       }`}
     >
-      <span>{interaction.label}</span>
+      <span>{fill(interaction.label)}</span>
       {interaction.id === 'computer' && unread > 0 && (
         <span className="rounded-full bg-amber-400 px-2 text-xs text-slate-900">
           {unread} new
@@ -597,7 +597,7 @@ function FloorPlan({ spot, onGo }: { spot: SpotId; onGo: (spot: SpotId) => void 
                 here ? 'ring-blue-600' : 'ring-transparent hover:ring-slate-300'
               }`}
             >
-              <span className="font-semibold text-slate-800">{s.name}</span>
+              <span className="font-semibold text-slate-800">{fill(s.name)}</span>
               {here && <span className="mt-1 text-xs text-blue-700">You are here</span>}
             </button>
           )

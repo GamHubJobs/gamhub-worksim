@@ -5,7 +5,7 @@
  */
 import type { SpotId } from '../content/office'
 import { BREAK_DUE_AFTER, HOURS } from '../content/workday'
-import { PEOPLE } from '../content/company'
+import { fill, findPerson } from '../content/departments'
 import type { ProfileData } from './career'
 import { pendingEvents } from './events'
 import { formatTime } from './clock'
@@ -26,7 +26,7 @@ export function computerNotices(profile: ProfileData): Notice[] {
 
   // Someone came over to the player's desk.
   for (const event of pendingEvents(profile)) {
-    const name = PEOPLE[event.person]?.name.split(' ')[0] ?? 'A colleague'
+    const name = findPerson(event.person)?.name.split(' ')[0] ?? 'A colleague'
     notices.push({
       id: `event:${event.id}`,
       text: `${name} has come over to your desk: “${event.opener}”`,
@@ -41,8 +41,10 @@ export function computerNotices(profile: ProfileData): Notice[] {
       id: `meeting:${meeting.id}`,
       text:
         work.minute < meeting.start
-          ? `The ${meeting.title.toLowerCase()} starts at ${formatTime(meeting.start)}.`
-          : `The ${meeting.title.toLowerCase()} has started. You can still join.`,
+          ? fill(
+              `The ${meeting.title.toLowerCase()} starts at ${formatTime(meeting.start)}.`,
+            )
+          : fill(`The ${meeting.title.toLowerCase()} has started. You can still join.`),
       tone: work.minute < meeting.start ? 'info' : 'warning',
       action: { label: 'Go to the meeting', spot: meeting.spot },
     })

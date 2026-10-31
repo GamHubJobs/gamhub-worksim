@@ -3,7 +3,7 @@
  * is shown, so the rest of the app stays small and fast.
  *
  * Navigation is click-to-go: the camera glides between fixed viewpoints
- * (reception, your desk, Priya's office, the break room). Clicking a glowing
+ * (reception, your desk, the manager's office, the break room). Clicking a glowing
  * floor marker or an object moves there.
  */
 import { ContactShadows, Html, useCursor } from '@react-three/drei'
@@ -11,6 +11,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Vector3, type Group, type Mesh, type WebGLRenderer } from 'three'
 import { COMPANY } from '../../content/company'
+import { activeDepartment, fill } from '../../content/departments'
 import {
   SPOTS,
   getInteraction,
@@ -82,7 +83,7 @@ function OfficeScene(props: OfficeSceneProps) {
           key={s.id}
           hidden={s.id === props.spot}
           position={s.marker}
-          label={s.name}
+          label={fill(s.name)}
           onClick={() => props.onGo(s.id)}
         />
       ))}
@@ -239,7 +240,7 @@ function Interactive({
           style={{ pointerEvents: 'none' }}
         >
           <span className="rounded-md bg-slate-900/90 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white shadow-lg">
-            {interaction.label}
+            {fill(interaction.label)}
           </span>
         </Html>
       )}
@@ -308,7 +309,7 @@ function Building({ playerName }: { playerName: string }) {
         pointerEvents="none"
       >
         <span className="text-[10px] font-semibold tracking-[0.3em] text-slate-500 uppercase">
-          Finance &amp; Administration
+          {activeDepartment().name}
         </span>
       </Html>
       {/* Small personal touch at the player's desk */}
@@ -491,7 +492,7 @@ function Workspace({ computerAlert, onInteract }: Interact & { computerAlert: bo
             <OfficeChair position={[x, 0, 1.75]} />
             {shirt &&
               (i === 0 ? (
-                // Marcus sits next to the player.
+                // The senior colleague sits next to the player.
                 <Interactive
                   id="senior"
                   labelPosition={[x, 1.75, 1.65]}
@@ -631,7 +632,7 @@ function ManagerOffice({ onInteract }: Interact) {
       />
       <Box size={[0.1, 0.08, 7]} position={[5, 2.6, -4.5]} color={COLORS.metal} />
       <Box size={[7, 0.08, 0.1]} position={[8.5, 2.6, -1]} color={COLORS.metal} />
-      {/* Desk, chairs and Priya */}
+      {/* Desk, chairs and the manager */}
       <Box
         size={[2.0, 0.06, 0.95]}
         position={[8.4, 0.75, -4.3]}

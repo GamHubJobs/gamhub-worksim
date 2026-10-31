@@ -6,6 +6,7 @@
 import { createId } from '../lib/ids'
 import { ASSIGNMENTS } from '../content/assignments'
 import { getCareer, SKILL_LEVELS } from '../content/careers'
+import { departmentFor } from '../content/departments'
 import { COMPANY } from '../content/company'
 import { REVIEW_RATINGS, type Assignment } from '../content/schemas'
 import type {
@@ -47,7 +48,14 @@ function message(
 // Starting a career
 // ---------------------------------------------------------------------------
 
-export function welcomeMessage(name: string, now: number): MailMessage {
+export function welcomeMessage(
+  name: string,
+  now: number,
+  careerId = DEFAULT_CAREER_ID,
+): MailMessage {
+  const career = getCareer(careerId)
+  const department = departmentFor(careerId)
+  const level = career.levels[0].title
   return message({
     from: 'hr',
     kind: 'welcome',
@@ -55,11 +63,11 @@ export function welcomeMessage(name: string, now: number): MailMessage {
     subject: `Welcome to ${COMPANY.name}!`,
     body: `Hi ${firstName(name)},
 
-Welcome to ${COMPANY.name}! We are delighted to have you join the Finance & Administration team as an intern.
+Welcome to ${COMPANY.name}! We are delighted to have you join the ${department.name} team as ${/^[AEIOU]/.test(level) ? 'an' : 'a'} ${level}. ${department.intro}
 
 Here is how things work:
-• Your manager, Priya Raman, will send you tasks by email. You will also find them in the Tasks app.
-• Your work is done in Sheets, our spreadsheet app. It saves automatically.
+• Your manager, ${department.manager.name}, will send you tasks by email. You will also find them in the Tasks app.
+• ${career.toolsIntro} Everything saves automatically.
 • When you submit a task you get feedback straight away. You can improve your work and submit it again: we care more about getting it right than getting it right first time.
 • Every task earns experience (XP) and builds your skills. Do well and you will be considered for promotion.
 
@@ -88,19 +96,25 @@ export function briefingMessage(
 }
 
 /** A brand-new career: a welcome email, the first assignment and a Monday morning. */
-export function newProfileData(name: string, now: number): ProfileData {
-  const first = ASSIGNMENTS.find((a) => a.careerId === DEFAULT_CAREER_ID)
+export function newProfileData(
+  name: string,
+  now: number,
+  careerId = DEFAULT_CAREER_ID,
+): ProfileData {
+  const first = ASSIGNMENTS.filter((a) => a.careerId === careerId).sort(
+    (a, b) => a.order - b.order,
+  )[0]
   const work = startingWorkState()
   return {
     work: first ? addDeadline(work, first.id) : work,
     name: name.trim(),
-    careerId: DEFAULT_CAREER_ID,
-    levelId: getCareer(DEFAULT_CAREER_ID).levels[0].id,
+    careerId,
+    levelId: getCareer(careerId).levels[0].id,
     xp: 0,
     skills: {},
     assignments: {},
     inbox: [
-      welcomeMessage(name, now),
+      welcomeMessage(name, now, careerId),
       ...(first ? [briefingMessage(first, name, now + 1)] : []),
     ],
   }
@@ -271,7 +285,7 @@ function feedbackMessage(
   const body =
     notes.length > 0
       ? greeting.replace(
-          /\n\n(Priya|[^\n]+)$/,
+          /\n\n({manager}|[^\n]+)$/,
           `\n\nWhat to look at:\n${notes.join('\n')}\n\n$1`,
         )
       : greeting
@@ -286,7 +300,13 @@ function feedbackMessage(
   })
 }
 
-function promotionMessage(name: string, title: string, now: number): MailMessage {
+function promotionMessage(
+  name: string,
+  title: string,
+  now: number,
+  careerId: string,
+): MailMessage {
+  const signature = departmentFor(careerId).manager.name.split(' ')[0]
   return message({
     from: 'manager',
     kind: 'promotion',
@@ -300,7 +320,7 @@ Your work has been accurate and reliable, and you have shown that you understand
 
 New responsibilities will follow soon. Well done, and thank you!
 
-Priya`,
+${signature}`,
   })
 }
 
@@ -323,7 +343,7 @@ export function advanceCareer(
       levelId: promotion.next.id,
       inbox: [
         ...updated.inbox,
-        promotionMessage(profile.name, promotion.next.title, now + 3),
+        promotionMessage(profile.name, promotion.next.title, now + 3, profile.careerId),
       ],
     }
   }

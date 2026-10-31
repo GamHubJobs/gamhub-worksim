@@ -12,6 +12,7 @@ import {
 import type { AnyDocument, DocumentKind } from '../../persistence/schemas'
 import { describeContent } from '../../ui/documentSummary'
 import { Icon, type IconName } from '../../ui/Icon'
+import { visibleTo } from './ownership'
 
 export interface TemplateChoice {
   id: string
@@ -28,6 +29,8 @@ interface FileBrowserProps {
   templates: TemplateChoice[]
   /** Files that belong to a task, by document ID, with the task's title. */
   linked: Record<string, string>
+  /** The career save whose files are shown. */
+  ownerId: string
   onCreate: (templateId: string) => Promise<void>
   onOpen: (documentId: string) => void
 }
@@ -39,9 +42,11 @@ export function FileBrowser({
   iconColors,
   templates,
   linked,
+  ownerId,
   onCreate,
   onOpen,
 }: FileBrowserProps) {
+  const mine = visibleTo(ownerId)
   const [files, setFiles] = useState<AnyDocument[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null)
@@ -50,14 +55,15 @@ export function FileBrowser({
 
   const reload = useCallback(async () => {
     const all = await listDocuments()
-    setFiles(all.filter((file) => file.kind === kind))
-  }, [kind])
+    setFiles(all.filter((file) => file.kind === kind && mine(file)))
+  }, [kind, mine])
 
   useEffect(() => {
     let active = true
     listDocuments()
       .then((all) => {
-        if (active) setFiles(all.filter((file) => file.kind === kind))
+        if (active)
+          setFiles(all.filter((file) => file.kind === kind && visibleTo(ownerId)(file)))
       })
       .catch((e: unknown) => {
         if (active) setError(e instanceof Error ? e.message : String(e))
@@ -65,7 +71,7 @@ export function FileBrowser({
     return () => {
       active = false
     }
-  }, [kind])
+  }, [kind, ownerId])
 
   async function run(action: () => Promise<void>) {
     setError(null)

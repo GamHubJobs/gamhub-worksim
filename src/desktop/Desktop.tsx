@@ -71,7 +71,8 @@ export function Desktop({
     writeLastView(next)
   }, [])
 
-  const { current, next } = careerLevel(profile)
+  const { current, next, career: careerInfo } = careerLevel(profile)
+  const careerApps = careerInfo.apps
   const unread = unreadCount(profile)
   const openTasks = careerAssignments(profile.careerId).filter((a) => {
     const status = assignmentStatus(profile, a)
@@ -214,7 +215,13 @@ export function Desktop({
             className="flex w-20 shrink-0 flex-col items-center gap-1 border-r border-slate-200 bg-white py-3"
             aria-label="Apps"
           >
-            {APPS.map((app) => {
+            {APPS.filter(
+              (app) =>
+                app.id === 'mail' ||
+                app.id === 'tasks' ||
+                app.id === 'career' ||
+                (careerApps as string[]).includes(app.id),
+            ).map((app) => {
               const active = view.app === app.id
               const badge = badges[app.id] ?? 0
               return (
@@ -307,12 +314,14 @@ export function Desktop({
                   <DocWindow
                     key={view.document}
                     documentId={view.document}
+                    ownerId={profile.id}
                     onBack={() => setView({ app: 'docs' })}
                   />
                 ) : (
                   <DocsApp
                     playerName={profile.name}
                     linked={taskFiles}
+                    ownerId={profile.id}
                     onOpen={(document) => setView({ app: 'docs', document })}
                   />
                 ))}
@@ -321,16 +330,34 @@ export function Desktop({
                   <SlidesWindow
                     key={view.document}
                     documentId={view.document}
+                    ownerId={profile.id}
                     onBack={() => setView({ app: 'slides' })}
                   />
                 ) : (
                   <SlidesApp
                     playerName={profile.name}
                     linked={taskFiles}
+                    ownerId={profile.id}
                     onOpen={(document) => setView({ app: 'slides', document })}
                   />
                 ))}
-              {view.app === 'career' && <CareerApp profile={profile} />}
+              {view.app === 'career' && (
+                <CareerApp
+                  profile={profile}
+                  onSwitchCareer={async (careerId) => {
+                    // The other career starts at its own reception.
+                    writeLastView(DEFAULT_VIEW)
+                    await career.switchCareer(careerId)
+                  }}
+                  onOpenFile={(kind, document) =>
+                    setView({
+                      app:
+                        kind === 'sheet' ? 'sheets' : kind === 'doc' ? 'docs' : 'slides',
+                      document,
+                    })
+                  }
+                />
+              )}
             </div>
           </main>
         </div>

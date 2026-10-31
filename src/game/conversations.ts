@@ -7,11 +7,11 @@
  * Chatting builds trust, but only a little per day: the third chat with the
  * same person in a day gets a polite "I need to get back to work".
  */
-import { PEOPLE } from '../content/company'
+import { activeDepartment, getPerson } from '../content/departments'
 import { DURATIONS } from '../content/workday'
 import { firstName, type ProfileData } from './career'
 import { now } from './deadlines'
-import { dialogueFor, currentTask, type Dialogue } from './office'
+import { currentTask, dialogueFor, fillDialogue, type Dialogue } from './office'
 import { trustOf, changeTrust } from './relationships'
 import { choiceMade, recordScene, sceneDone, type Choice } from './scenes'
 import { haveLunch, restFor } from './workday'
@@ -19,7 +19,7 @@ import { haveLunch, restFor } from './workday'
 /** People the player can walk up to in the office. */
 export type ColleagueId = 'manager' | 'reception' | 'facilities' | 'senior'
 
-/** Trust at which Marcus becomes the player's mentor. */
+/** Trust at which {senior} becomes the player's mentor. */
 export const MENTOR_TRUST = 65
 
 /** Chats per person per day that still build trust (+2, then +1). */
@@ -50,18 +50,18 @@ const TOPICS: Topic[] = [
     when: () => true,
     scene: (profile) => ({
       lines: [
-        '*Marcus finishes typing before he looks up.*',
-        `So you are the new intern. ${name(profile)}, right? Priya has been talking you up.`,
+        '*{senior} finishes typing before looking up.*',
+        `So you are the new starter. ${name(profile)}, right? {manager} has been talking you up.`,
         'I have been on this team five years. What can I do for you?',
       ],
       choices: [
         {
           id: 'learn',
-          label: 'Ask what he works on, and whether you could learn from him',
+          label: 'Ask about {senior}’s work, and whether you could learn from it',
           reply: [
-            '*He relaxes a little.*',
-            'Month-end close, supplier accounts, the cost reports for the directors. The interesting stuff.',
-            'Sure. Watch how I check my numbers; that is the bit nobody teaches you.',
+            '*{senior} relaxes a little.*',
+            activeDepartment().seniorWork,
+            `Sure. ${activeDepartment().seniorTeaches}`,
           ],
           effects: { trust: { senior: 5 } },
           lesson:
@@ -70,16 +70,14 @@ const TOPICS: Topic[] = [
         {
           id: 'neutral',
           label: 'Say you are just here to do a good job',
-          reply: [
-            'Good. Keep your head down and your numbers right, and you will be fine.',
-          ],
+          reply: ['Good. Keep your head down and your work right, and you will be fine.'],
           effects: {},
         },
         {
           id: 'joke',
-          label: 'Joke that you are after his job',
+          label: 'Joke that you are after {senior}’s job',
           reply: [
-            '*He doesn’t laugh.*',
+            '*{senior} doesn’t laugh.*',
             'Plenty of people have said that. Most of them are not here any more.',
           ],
           effects: { trust: { senior: -5 }, wellbeing: { stress: 2 } },
@@ -95,7 +93,7 @@ const TOPICS: Topic[] = [
     when: (profile) => talks(profile, 'reception') >= 1,
     scene: () => ({
       lines: [
-        'Oh, before I forget: a few of us eat together in the break room around half twelve. Tom, me, sometimes Marcus.',
+        'Oh, before I forget: a few of us eat together in the break room around half twelve. Tom, me, sometimes {senior}.',
         'You should join us! It is the best way to find out how things really work around here.',
       ],
       choices: [
@@ -197,21 +195,21 @@ const TOPICS: Topic[] = [
 ]
 
 // ---------------------------------------------------------------------------
-// Advice from a mentor, and asking Priya for more time
+// Advice from a mentor, and asking {manager} for more time
 // ---------------------------------------------------------------------------
 
-/** Marcus's advice for the current task: the first step's hint, in his words. */
+/** {senior}'s advice for the current task: the first step's hint, in his words. */
 function marcusAdvice(profile: ProfileData): Dialogue | null {
   const task = currentTask(profile)
   if (!task) return null
   const step = task.assignment.steps.find((s) => s.hint) ?? task.assignment.steps[0]
   return {
     speaker: 'senior',
-    title: 'Marcus Webb',
+    title: '{seniorFull}',
     lines: [
       `“${task.assignment.title}”? I have done that one a hundred times. Here is what I would do.`,
       step.hint ?? step.instructions.split('\n\n')[0],
-      'And check every total twice before Priya sees it. She always spots it.',
+      'And check everything twice before {manager} sees it. {manager} always spots it.',
     ],
     actions: [
       {
@@ -245,7 +243,7 @@ function extensionChoice(profile: ProfileData): Choice | null {
           'Thanks for telling me before the deadline rather than after. Take until the same time tomorrow, but no later.',
         ]
       : [
-          '*Priya sighs.*',
+          '*{manager} sighs.*',
           'Fine, one more day. But I need to be able to rely on your estimates.',
         ],
     effects: {
@@ -290,14 +288,10 @@ function smallTalk(
         const advice = marcusAdvice(profile)
         if (advice) return advice
       }
-      const lines = [
-        'Month-end never really ends, you know. It just becomes next month’s month-end.',
-        'If you want to get noticed here, do not just finish things. Finish them so Priya never has to check.',
-        'Coffee from the machine is fine. Do not touch the oat milk; that is Nina’s.',
-      ]
+      const lines = activeDepartment().seniorSmallTalk
       return {
         speaker: 'senior',
-        title: 'Marcus Webb',
+        title: '{seniorFull}',
         lines: [lines[talks(profile, 'senior') % lines.length]],
         actions: [],
       }
@@ -319,10 +313,15 @@ export function conversationWith(
   tipIndex = 0,
 ): Conversation {
   const chatsToday = profile.work.today.talks[person] ?? 0
-  const { name: title } = PEOPLE[person]
+  const { name: title } = getPerson(person)
   if (chatsToday >= CHATS_BEFORE_BUSY) {
     return {
-      dialogue: { speaker: person, title, lines: [BUSY_LINES[person]], actions: [] },
+      dialogue: fillDialogue({
+        speaker: person,
+        title,
+        lines: [BUSY_LINES[person]],
+        actions: [],
+      }),
       topicId: null,
       minutes: BUSY_MINUTES,
     }
@@ -332,19 +331,19 @@ export function conversationWith(
   )
   if (topic) {
     return {
-      dialogue: {
+      dialogue: fillDialogue({
         id: topic.id,
         speaker: person,
         title,
         actions: [],
         ...topic.scene(profile),
-      },
+      }),
       topicId: topic.id,
       minutes: DURATIONS.chat,
     }
   }
   return {
-    dialogue: smallTalk(profile, person, tipIndex),
+    dialogue: fillDialogue(smallTalk(profile, person, tipIndex)),
     topicId: null,
     minutes: DURATIONS.chat,
   }

@@ -1,5 +1,5 @@
 /**
- * Weekly performance reviews. Priya reviews the player's week at Friday's
+ * Weekly performance reviews. The manager reviews the player's week at Friday's
  * one-to-one (or by email, if the meeting does not happen) on four areas:
  * quality of work, reliability, teamwork and professionalism. Wellbeing is
  * discussed but never scored. A good enough review is needed for promotion
@@ -16,7 +16,8 @@ import {
   type ReviewRating,
 } from './career'
 import { splitTime, weekdayIndex, weekNumber } from './clock'
-import type { Dialogue } from './office'
+import { fillDialogue, type Dialogue } from './office'
+import { fill } from '../content/departments'
 import { reputationReading, trustOf } from './relationships'
 import type { Choice } from './scenes'
 import { log } from './workday'
@@ -181,7 +182,7 @@ function reviewMail(
     receivedAt: now,
     readAt: null,
     subject: `Your week ${review.week} review: ${RATING_NAMES[review.rating]}`,
-    body: `Hi ${name},
+    body: fill(`Hi ${name},
 
 ${inPerson ? 'Thanks for our one-to-one today. As promised, here is your review in writing.' : 'We didn’t manage to have our one-to-one this week, so here is your review in writing. Let’s make sure we meet next Friday.'}
 
@@ -194,7 +195,7 @@ ${review.strengths.map((s) => `• ${s}`).join('\n')}
 ${review.improvements.length ? `\nWhat to work on:\n${review.improvements.map((s) => `• ${s}`).join('\n')}\n` : ''}
 ${promotion.next ? `For promotion to ${promotion.next.title} I will be looking at your XP, your tasks, your reputation${promotion.next.minReview ? ` and a review of at least “${RATING_NAMES[promotion.next.minReview]}”` : ''}. The Career app shows where you stand.` : ''}
 
-Priya`,
+{manager}`),
   }
 }
 
@@ -233,8 +234,12 @@ export function checkReviews(profile: ProfileData, now: number): ProfileData {
   return holdReview(profile, false, now)
 }
 
-/** The one-to-one conversation: Priya goes through the review. */
+/** The one-to-one conversation: the manager goes through the review. */
 export function reviewScene(profile: ProfileData, review: Review): Dialogue {
+  return fillDialogue(rawReviewScene(profile, review))
+}
+
+function rawReviewScene(profile: ProfileData, review: Review): Dialogue {
   const name = firstName(profile.name)
   const scores = REVIEW_AREAS.map(
     (area) => `${area.name}: ${review.scores[area.id]}/5`,
@@ -245,7 +250,7 @@ export function reviewScene(profile: ProfileData, review: Review): Dialogue {
   const choices: Choice[] = [
     {
       id: 'ask-improve',
-      label: 'Thank her, and ask what would make the biggest difference',
+      label: 'Thank {manager}, and ask what would make the biggest difference',
       reply: [
         `${weakest.name}. ${review.improvements[0] ?? 'Keep doing what you are doing, and take on a little more responsibility each week.'}`,
         'I appreciate you asking. That is exactly the attitude I want to see.',
@@ -256,7 +261,7 @@ export function reviewScene(profile: ProfileData, review: Review): Dialogue {
     },
     {
       id: 'evidence',
-      label: 'Calmly mention something she may have missed, with an example',
+      label: 'Calmly mention something {manager} may have missed, with an example',
       reply: [
         'Fair point. I had not seen that. I will keep it in mind; keep bringing me examples like that.',
       ],
@@ -268,7 +273,7 @@ export function reviewScene(profile: ProfileData, review: Review): Dialogue {
       id: 'defensive',
       label: 'Argue with the lower scores',
       reply: [
-        '*Priya waits for you to finish.*',
+        '*{manager} waits for you to finish.*',
         'I hear you. But I can only go on what I see. Show me next week.',
       ],
       effects: { trust: { manager: -3 }, wellbeing: { stress: 3 } },
@@ -279,7 +284,7 @@ export function reviewScene(profile: ProfileData, review: Review): Dialogue {
   return {
     id: `review:${review.week}`,
     speaker: 'manager',
-    title: 'One-to-one with Priya',
+    title: 'One-to-one with {manager}',
     lines: [
       `Thanks for coming in, ${name}. Let’s look at your week.`,
       `Overall I would call it ${RATING_NAMES[review.rating].toLowerCase()}. ${scores}.`,

@@ -10,6 +10,8 @@ import { DocEditor, type SheetsInsert } from './DocEditor'
 interface DocWindowProps {
   documentId: string
   onBack: () => void
+  /** The career save, whose workbooks the chart picker offers. */
+  ownerId: string
   /** A panel on the right, e.g. the task this document is for. */
   sidePanel?: ReactNode
 }
@@ -24,7 +26,7 @@ function print() {
   window.print()
 }
 
-export function DocWindow({ documentId, onBack, sidePanel }: DocWindowProps) {
+export function DocWindow({ documentId, onBack, ownerId, sidePanel }: DocWindowProps) {
   const doc = useSavedDocument(documentId, 'doc', DocContentSchema)
   const { state } = doc
   const [picker, setPicker] = useState<{ mode: PickerMode; insert: SheetsInsert } | null>(
@@ -72,6 +74,7 @@ export function DocWindow({ documentId, onBack, sidePanel }: DocWindowProps) {
       </DocumentFrame>
       {picker && (
         <SheetsPicker
+          ownerId={ownerId}
           mode={picker.mode}
           onChart={(chart) => {
             picker.insert.chart(chart)

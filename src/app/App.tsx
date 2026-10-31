@@ -127,14 +127,16 @@ export function App({ session, tabLock }: AppProps) {
       )}
       {career.state.status === 'new' && (
         <Onboarding
-          onStart={async (name) => {
-            await career.createCareer(name)
+          onStart={async (name, careerId) => {
+            await career.createCareer(name, careerId)
             onSaved()
           }}
         />
       )}
       {career.state.status === 'ready' && (
         <Desktop
+          // A different career save is a different desk: start fresh.
+          key={career.state.profile.id}
           profile={career.state.profile}
           career={career}
           storageWarning={storageWarning}

@@ -1,6 +1,9 @@
 /** Career: level, XP, promotion progress and skills. */
-import { SKILLS } from '../../content/careers'
-import { COMPANY, PEOPLE } from '../../content/company'
+import { getSkill } from '../../content/careers'
+import { CareersSection } from './CareersSection'
+import { PortfolioSection, type PortfolioFileKind } from './PortfolioSection'
+import { COMPANY } from '../../content/company'
+import { getPerson } from '../../content/departments'
 import { isMentor } from '../../game/conversations'
 import { RATING_NAMES, REVIEW_AREAS } from '../../game/reviews'
 import { weekdayName } from '../../game/clock'
@@ -41,7 +44,15 @@ function ProgressBar({
   )
 }
 
-export function CareerApp({ profile }: { profile: Profile }) {
+export function CareerApp({
+  profile,
+  onSwitchCareer,
+  onOpenFile,
+}: {
+  profile: Profile
+  onSwitchCareer: (careerId: string) => Promise<void>
+  onOpenFile: (kind: PortfolioFileKind, documentId: string) => void
+}) {
   const { career, current, next } = careerLevel(profile)
   const promotion = promotionProgress(profile)
   const assignments = careerAssignments(profile.careerId)
@@ -112,28 +123,32 @@ export function CareerApp({ profile }: { profile: Profile }) {
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="font-semibold text-slate-900">Skills</h2>
           <ul className="mt-3 grid gap-4 sm:grid-cols-2">
-            {SKILLS.map((skill) => {
-              const xp = profile.skills[skill.id] ?? 0
-              const level = skillLevel(xp)
-              return (
-                <li key={skill.id} data-testid={`skill-${skill.id}`}>
-                  <div className="flex items-baseline justify-between">
-                    <span className="font-medium text-slate-800">{skill.name}</span>
-                    <span className="text-xs text-slate-500">
-                      Level {level.level} · {level.name}
-                    </span>
-                  </div>
-                  <p className="mb-1 text-xs text-slate-500">{skill.description}</p>
-                  <ProgressBar
-                    value={xp - level.xpRequired}
-                    max={(level.next?.xpRequired ?? xp) - level.xpRequired}
-                    label={skill.name}
-                  />
-                </li>
-              )
-            })}
+            {career.skills
+              .flatMap((id) => getSkill(id) ?? [])
+              .map((skill) => {
+                const xp = profile.skills[skill.id] ?? 0
+                const level = skillLevel(xp)
+                return (
+                  <li key={skill.id} data-testid={`skill-${skill.id}`}>
+                    <div className="flex items-baseline justify-between">
+                      <span className="font-medium text-slate-800">{skill.name}</span>
+                      <span className="text-xs text-slate-500">
+                        Level {level.level} · {level.name}
+                      </span>
+                    </div>
+                    <p className="mb-1 text-xs text-slate-500">{skill.description}</p>
+                    <ProgressBar
+                      value={xp - level.xpRequired}
+                      max={(level.next?.xpRequired ?? xp) - level.xpRequired}
+                      label={skill.name}
+                    />
+                  </li>
+                )
+              })}
           </ul>
         </section>
+
+        <PortfolioSection profile={profile} onOpenFile={onOpenFile} />
 
         <TeamSection profile={profile} />
 
@@ -167,6 +182,8 @@ export function CareerApp({ profile }: { profile: Profile }) {
             })}
           </ul>
         </section>
+
+        <CareersSection profile={profile} onSwitchCareer={onSwitchCareer} />
       </div>
     </div>
   )
@@ -209,7 +226,7 @@ function TeamSection({ profile }: { profile: Profile }) {
       </div>
       <ul className="mt-4 grid gap-4 sm:grid-cols-2">
         {TEAM.map((id) => {
-          const person = PEOPLE[id]
+          const person = getPerson(id)
           const trust = trustOf(work, id)
           const reading = trustReading(trust)
           return (

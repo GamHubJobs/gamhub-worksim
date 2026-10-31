@@ -1,7 +1,7 @@
 /** Tasks: the assignments of the player's career, their status and results. */
 import { useState } from 'react'
 import { getSkill } from '../../content/careers'
-import { getPerson } from '../../content/company'
+import { getPerson } from '../../content/departments'
 import type { Assignment } from '../../content/schemas'
 import {
   assignmentStatus,

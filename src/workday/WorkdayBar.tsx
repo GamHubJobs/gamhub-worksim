@@ -4,6 +4,7 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { getAssignment } from '../content/assignments'
+import { fill } from '../content/departments'
 import { HOURS, LUNCH } from '../content/workday'
 import { formatMoment, formatTime, weekdayName, weekNumber } from '../game/clock'
 import { now } from '../game/deadlines'
@@ -185,7 +186,7 @@ function DayPanel({ profile, statusText }: { profile: Profile; statusText: strin
             <ScheduleRow
               key={meeting.id}
               time={formatTime(meeting.start)}
-              text={meeting.title}
+              text={fill(meeting.title)}
               state={
                 state === 'attended'
                   ? { text: 'Attended', tone: 'good' }

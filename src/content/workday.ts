@@ -86,11 +86,11 @@ export const MEETINGS: Meeting[] = [
     minutes: 30,
     spot: 'manager',
     host: 'manager',
-    about: 'The team agrees priorities for the rest of the week in Priya’s office.',
+    about: 'The team agrees priorities for the rest of the week in {manager}’s office.',
   },
   {
     id: 'one-to-one',
-    title: 'One-to-one with Priya',
+    title: 'One-to-one with {manager}',
     days: [4],
     start: 15 * 60 + 30,
     minutes: 30,

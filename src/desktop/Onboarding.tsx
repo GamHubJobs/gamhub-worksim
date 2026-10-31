@@ -1,9 +1,15 @@
 /** The first screen for a new player: what WorkSim is, and their name. */
 import { useState, type FormEvent } from 'react'
+import { CAREERS } from '../content/careers'
 import { COMPANY } from '../content/company'
 
-export function Onboarding({ onStart }: { onStart: (name: string) => Promise<void> }) {
+export function Onboarding({
+  onStart,
+}: {
+  onStart: (name: string, careerId: string) => Promise<void>
+}) {
   const [name, setName] = useState('')
+  const [careerId, setCareerId] = useState(CAREERS[0].id)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -13,7 +19,7 @@ export function Onboarding({ onStart }: { onStart: (name: string) => Promise<voi
     setStarting(true)
     setError(null)
     try {
-      await onStart(name.trim())
+      await onStart(name.trim(), careerId)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
       setStarting(false)
@@ -33,11 +39,44 @@ export function Onboarding({ onStart }: { onStart: (name: string) => Promise<voi
           Your first day at {COMPANY.name}
         </h1>
         <p className="mt-3 text-slate-700">
-          You are joining the Finance &amp; Administration team as an intern. Your manager
-          will send you real-world tasks: pricing orders, summarising expenses, checking
-          invoices. You do them in a working spreadsheet, get instant feedback, and build
-          skills you can use in a real job.
+          Choose the team you are joining. Your manager will send you real-world tasks
+          that you do in working office apps; you get instant feedback, and build skills
+          you can use in a real job. You can try other careers later from the Career app.
         </p>
+
+        <fieldset className="mt-5">
+          <legend className="font-medium text-slate-800">Your career</legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {CAREERS.map((career) => (
+              <label
+                key={career.id}
+                className={`flex cursor-pointer gap-3 rounded-lg border p-3 text-sm ${
+                  careerId === career.id
+                    ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="career"
+                  value={career.id}
+                  checked={careerId === career.id}
+                  onChange={() => setCareerId(career.id)}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="block font-semibold text-slate-900">
+                    {career.name}
+                  </span>
+                  <span className="block text-slate-600">{career.description}</span>
+                  <span className="mt-1 block text-xs text-slate-500">
+                    Starts as {career.levels[0].title}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <ul className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
           {[
