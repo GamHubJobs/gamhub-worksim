@@ -32,6 +32,11 @@ import {
 import { getCellInput, setCellInput } from './model'
 
 const DEFAULT_VERSION_INTERVAL_MS = 5 * 60 * 1000
+const MAX_UNDO_STEPS = 200
+
+function contentEquals(a: SheetContent, b: SheetContent): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
 
 /**
  * How often automatic versions are taken. During development it can be
@@ -81,6 +86,13 @@ export function useSheetDocument(documentId: string | null) {
     savedContent: null,
     versionedContent: null,
   })
+
+  // Undo history lives in memory only: it is cleared when the workbook is closed.
+  const historyRef = useRef<{ undo: SheetContent[]; redo: SheetContent[] }>({
+    undo: [],
+    redo: [],
+  })
+  const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false })
 
   const versionsChanged = useCallback(() => setVersionsRevision((n) => n + 1), [])
 
@@ -177,15 +189,10 @@ export function useSheetDocument(documentId: string | null) {
     }
   }, [documentId, versionsChanged])
 
-  /** Changes one cell. Saved to the journal at once and to the database shortly after. */
-  const setCell = useCallback(
-    (sheetId: string, address: string, input: string) => {
-      const current = latestContentRef.current
-      const sheet = current?.sheets.find((s) => s.id === sheetId)
-      if (!documentId || !current || !sheet || getCellInput(sheet, address) === input)
-        return
-
-      const next = setCellInput(current, sheetId, address, input)
+  /** Shows new content and saves it: to the journal at once, to the database shortly after. */
+  const applyContent = useCallback(
+    (next: SheetContent) => {
+      if (!documentId) return
       latestContentRef.current = next
       setState((previous) =>
         previous.status === 'ready' ? { ...previous, content: next } : previous,
@@ -195,6 +202,59 @@ export function useSheetDocument(documentId: string | null) {
     },
     [documentId],
   )
+
+  /**
+   * Changes the content. `change` receives the latest content and returns the
+   * new content (or the same object if nothing changed). Each change can be
+   * undone.
+   */
+  const update = useCallback(
+    (change: (content: SheetContent) => SheetContent) => {
+      const current = latestContentRef.current
+      if (!current) return
+      const next = change(current)
+      if (next === current || contentEquals(next, current)) return
+      const history = historyRef.current
+      history.undo.push(current)
+      if (history.undo.length > MAX_UNDO_STEPS) history.undo.shift()
+      history.redo = []
+      setHistoryState({ canUndo: true, canRedo: false })
+      applyContent(next)
+    },
+    [applyContent],
+  )
+
+  /** Changes one cell's value. */
+  const setCell = useCallback(
+    (sheetId: string, address: string, input: string) => {
+      update((content) => {
+        const sheet = content.sheets.find((s) => s.id === sheetId)
+        if (!sheet || getCellInput(sheet, address) === input) return content
+        return setCellInput(content, sheetId, address, input)
+      })
+    },
+    [update],
+  )
+
+  const undo = useCallback(() => {
+    const history = historyRef.current
+    const current = latestContentRef.current
+    const previous = history.undo.pop()
+    if (!previous || !current) return
+    history.redo.push(current)
+    setHistoryState({ canUndo: history.undo.length > 0, canRedo: true })
+    applyContent(previous)
+  }, [applyContent])
+
+  const redo = useCallback(() => {
+    const history = historyRef.current
+    const current = latestContentRef.current
+    const next = history.redo.pop()
+    if (!next || !current) return
+    history.undo.push(current)
+    setHistoryState({ canUndo: true, canRedo: history.redo.length > 0 })
+    applyContent(next)
+  }, [applyContent])
 
   /** Saves everything first; throws if that is not possible. */
   async function saveNow() {
@@ -219,6 +279,10 @@ export function useSheetDocument(documentId: string | null) {
       tracker.versionedContent = restored.content
       tracker.lastVersionAt = Date.now()
       clearJournal(documentId)
+      // Undo does not reach back past a restore; the restore itself can be
+      // undone from version history ("Before a restore").
+      historyRef.current = { undo: [], redo: [] }
+      setHistoryState({ canUndo: false, canRedo: false })
       setState({ status: 'ready', document: restored, content: restored.content })
       versionsChanged()
     },
@@ -254,6 +318,11 @@ export function useSheetDocument(documentId: string | null) {
     recoveredUnsavedChanges,
     versionsRevision,
     setCell,
+    update,
+    undo,
+    redo,
+    canUndo: historyState.canUndo,
+    canRedo: historyState.canRedo,
     restore,
     keepCurrentVersion,
     setKept,

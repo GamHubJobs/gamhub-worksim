@@ -19,8 +19,11 @@ export type DocumentMigrations = Record<string, Record<number, DocumentUpgradeSt
 
 export const DOCUMENT_MIGRATIONS: DocumentMigrations = {
   sheet: {
-    // Example for the future:
-    // 1: (doc) => ({ ...doc, content: convertSheetContentV1ToV2(doc.content) }),
+    // Format 2 added optional cell formatting and column widths. Format 1
+    // content is already valid format 2 content. The version was raised so
+    // that an older app refuses workbooks with formatting instead of
+    // silently dropping it.
+    1: (doc) => doc,
   },
 }
 

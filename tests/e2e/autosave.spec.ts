@@ -5,13 +5,13 @@ test('typed values are saved automatically and survive a reload', async ({ page 
   await openWorkbook(page)
   await enterValue(page, 'A1', 'Item')
   await enterValue(page, 'B1', 'Cost')
-  await enterValue(page, 'B2', '120.50')
+  await enterValue(page, 'B2', '120.50', '120.5') // shown like a real spreadsheet
   await waitUntilSaved(page)
 
   await page.reload()
   await expect(cell(page, 'A1')).toHaveText('Item')
   await expect(cell(page, 'B1')).toHaveText('Cost')
-  await expect(cell(page, 'B2')).toHaveText('120.50')
+  await expect(cell(page, 'B2')).toHaveText('120.5')
 })
 
 test('clearing a cell is saved too', async ({ page }) => {
@@ -39,7 +39,7 @@ test('keyboard editing: Escape cancels, Tab moves right', async ({ page }) => {
 
   await page.keyboard.type('next')
   await page.keyboard.press('Tab')
-  await expect(page.getByTestId('selected-address')).toHaveText('B1')
+  await expect(page.getByTestId('selected-address')).toHaveValue('B1')
 })
 
 test('clicking another cell while editing saves the edited cell', async ({ page }) => {
@@ -50,5 +50,5 @@ test('clicking another cell while editing saves the edited cell', async ({ page 
 
   await expect(cell(page, 'A1')).toHaveText('typed in A1')
   await expect(cell(page, 'D4')).toHaveText('')
-  await expect(page.getByTestId('selected-address')).toHaveText('D4')
+  await expect(page.getByTestId('selected-address')).toHaveValue('D4')
 })

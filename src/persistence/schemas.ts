@@ -43,20 +43,39 @@ export const CellAddressSchema = z
   .string()
   .regex(/^[A-Z]{1,3}[1-9][0-9]{0,6}$/, { message: 'Invalid cell address' })
 
+/** Background colours a cell can have (named, so themes can adjust them). */
+export const FILL_COLORS = ['yellow', 'green', 'blue', 'red', 'gray'] as const
+
+/** How a cell looks. Every field is optional; missing means "default". */
+export const CellFormatSchema = z.object({
+  bold: z.boolean().optional(),
+  italic: z.boolean().optional(),
+  align: z.enum(['left', 'center', 'right']).optional(),
+  /** How numbers are shown: 1,234.50 / $1,234.50 / 12%. */
+  numberFormat: z.enum(['number', 'currency', 'percent']).optional(),
+  /** Decimal places for numberFormat. */
+  decimals: z.number().int().min(0).max(6).optional(),
+  fill: z.enum(FILL_COLORS).optional(),
+})
+
 /**
  * One cell. We store exactly what the player typed (`input`), e.g. "42" or
  * "=SUM(A1:A3)". Calculated results are never saved; they are recalculated.
- * Formatting fields will be added here in later steps.
  */
 export const CellSchema = z.object({
   input: z.string(),
+  format: CellFormatSchema.optional(),
 })
 
 export const SheetSchema = z.object({
   id: IdSchema,
   name: z.string().min(1).max(100),
-  /** Only cells that contain something are stored, keyed by address. */
+  /** Only cells that contain something (a value or formatting) are stored. */
   cells: z.record(CellAddressSchema, CellSchema),
+  /** Column widths in pixels, keyed by column letters; missing means default. */
+  columnWidths: z
+    .record(z.string().regex(/^[A-Z]{1,3}$/), z.number().int().min(20).max(800))
+    .optional(),
 })
 
 export const SheetContentSchema = z.object({
@@ -90,7 +109,7 @@ export const DocumentSchema = z.discriminatedUnion('kind', [SheetDocumentSchema]
  * `documentMigrations.ts`.
  */
 export const DOCUMENT_FORMAT_VERSIONS = {
-  sheet: 1,
+  sheet: 2,
 } as const satisfies Record<z.infer<typeof DocumentSchema>['kind'], number>
 
 /** Why a version snapshot was taken. */
@@ -144,6 +163,8 @@ export const OutboxEntrySchema = z.object({
 
 export type SyncFields = z.infer<typeof SyncFieldsSchema>
 export type Cell = z.infer<typeof CellSchema>
+export type CellFormat = z.infer<typeof CellFormatSchema>
+export type FillColor = (typeof FILL_COLORS)[number]
 export type Sheet = z.infer<typeof SheetSchema>
 export type SheetContent = z.infer<typeof SheetContentSchema>
 export type SheetDocument = z.infer<typeof SheetDocumentSchema>

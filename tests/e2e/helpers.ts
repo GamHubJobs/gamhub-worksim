@@ -10,12 +10,17 @@ export async function openWorkbook(page: Page, path = '/') {
   await expect(page.getByTestId('sheet-grid')).toBeVisible()
 }
 
-/** Selects a cell, types a value and confirms it with Enter. */
-export async function enterValue(page: Page, address: string, value: string) {
+/** Selects a cell, types a value and confirms it with Enter. `shown` is what the cell displays. */
+export async function enterValue(
+  page: Page,
+  address: string,
+  value: string,
+  shown = value,
+) {
   await cell(page, address).click()
   await page.keyboard.type(value)
   await page.keyboard.press('Enter')
-  await expect(cell(page, address)).toHaveText(value)
+  await expect(cell(page, address)).toHaveText(shown)
 }
 
 /**

@@ -9,6 +9,7 @@ import { CURRENT_DATABASE_VERSION, DATABASE_VERSIONS, WorkSimDatabase } from './
 import { upgradeDocument, type DocumentMigrations } from './documentMigrations'
 import { getDocument } from './documentsRepo'
 import { NewerFormatError } from './errors'
+import { DOCUMENT_FORMAT_VERSIONS, DocumentSchema } from './schemas'
 import { listVersions } from './versions'
 
 const databasesToDelete: string[] = []
@@ -76,8 +77,11 @@ describe('database upgrade from version 1 to version 2', () => {
     await database.open()
     expect(database.verno).toBe(2)
 
-    // 3. Everything is still there and readable.
-    expect(await getDocument(documentId, database)).toEqual(document)
+    // 3. Everything is still there and readable (upgraded to the current format).
+    expect(await getDocument(documentId, database)).toEqual({
+      ...document,
+      formatVersion: DOCUMENT_FORMAT_VERSIONS.sheet,
+    })
     const versions = await listVersions(documentId, database)
     expect(versions).toHaveLength(1)
     expect(versions[0].snapshot.title).toBe('Saved with version 1')
@@ -94,7 +98,15 @@ describe('upgradeDocument', () => {
   }
 
   it('leaves a current document unchanged', () => {
-    expect(upgradeDocument(document)).toEqual(document)
+    const current = { ...document, formatVersion: DOCUMENT_FORMAT_VERSIONS.sheet }
+    expect(upgradeDocument(current)).toEqual(current)
+  })
+
+  it('upgrades a format 1 workbook (before formatting existed) without changes', () => {
+    const saved = sheetDocument(createId(), createId())
+    const upgraded = upgradeDocument(saved)
+    expect(upgraded).toEqual({ ...saved, formatVersion: 2 })
+    expect(DocumentSchema.parse(upgraded)).toEqual({ ...saved, formatVersion: 2 })
   })
 
   it('applies upgrade steps one format at a time', () => {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSheetDocument } from '../apps/sheets/useSheetDocument'
-import { Grid } from '../apps/sheets/ui/Grid'
+import { SheetEditor } from '../apps/sheets/ui/SheetEditor'
 import { VersionHistoryPanel } from '../apps/sheets/ui/VersionHistoryPanel'
 import { formatDateTime } from '../lib/time'
 import {
@@ -231,14 +231,16 @@ export function App({ session, tabLock }: AppProps) {
             <p className="text-slate-500">Opening your workbook…</p>
           )}
           {!loadError && state.status === 'ready' && (
-            <Grid
+            <SheetEditor
               // Remount when switching between preview and live content, to reset editing.
               key={preview ? `preview-${preview.id}` : 'live'}
-              sheet={(preview?.snapshot ?? state).content.sheets[0]}
+              content={(preview?.snapshot ?? state).content}
               readOnly={preview !== null}
-              onCellChange={(address, input) =>
-                sheet.setCell(state.content.sheets[0].id, address, input)
-              }
+              onUpdate={sheet.update}
+              onUndo={sheet.undo}
+              onRedo={sheet.redo}
+              canUndo={sheet.canUndo}
+              canRedo={sheet.canRedo}
             />
           )}
         </main>

@@ -10,6 +10,7 @@ import {
   type NewDocument,
 } from './documentsRepo'
 import { InvalidRecordError, NewerFormatError, RecordNotFoundError } from './errors'
+import { DOCUMENT_FORMAT_VERSIONS } from './schemas'
 
 let database: WorkSimDatabase
 
@@ -36,7 +37,7 @@ describe('createDocument', () => {
     const document = await createDocument(newSheet(), database)
     expect(document.rev).toBe(1)
     expect(document.deleted).toBe(false)
-    expect(document.formatVersion).toBe(1)
+    expect(document.formatVersion).toBe(DOCUMENT_FORMAT_VERSIONS.sheet)
     expect(document.deviceId).toBe(await getDeviceId(database))
     expect(document.createdAt).toBe(document.updatedAt)
   })
