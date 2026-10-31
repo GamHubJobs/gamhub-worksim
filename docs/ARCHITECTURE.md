@@ -239,9 +239,9 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 1. Vertical slice: "Your First Day as an Intern" (done, including the 3D office)
 2. The Living Workplace: workday, wellbeing, colleagues, events, career growth (done)
 3. Productivity depth: Docs, advanced Sheets, Slides, multi-app assignments (done)
-4. More careers and departments (done: Accounting, IT Help Desk, Digital Marketing,
-   Data Analysis, Software Development)
-5. Achievements and customisation ← _next_
+4. More careers and departments (done), and profession-specific software ← _now_
+   (see [PROFESSIONAL_TOOLS.md](PROFESSIONAL_TOOLS.md))
+5. Achievements and customisation
 6. Polish
 7. Cloud accounts and sync
 8. Future: optional cosmetics, GamHub Jobs connection

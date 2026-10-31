@@ -52,6 +52,18 @@ owner.
 - [x] 4.5 Data Analysis
 - [x] 4.6 Software Development (with a Code editor and tests)
 
+**Phase 4 addition: profession-specific software simulations.** Every career gets
+working simulations of the professional software used in its field (see
+[docs/PROFESSIONAL_TOOLS.md](docs/PROFESSIONAL_TOOLS.md) for the research and design).
+
+- [ ] 4.7 Professional-tools framework (registry, saving, tool tasks, grading,
+      progressive unlocks, guides, practice data)
+- [ ] 4.8 Accounting: Books (ledger, sales, purchases, banking, payroll, reports)
+- [ ] 4.9 IT Help Desk: Service Desk, Directory and assets, Network Tools
+- [ ] 4.10 Digital Marketing: Campaigns, Social Planner, Site Analytics, SEO Audit
+- [ ] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
+- [ ] 4.12 Software Development: terminal, Git, debug console, API Client
+
 ---
 
 ## 2026-10-31 · Milestone 4.6: the Software Development career and the Code app
