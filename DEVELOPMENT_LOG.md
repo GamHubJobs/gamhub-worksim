@@ -48,9 +48,40 @@ owner.
 - [x] 4.1 A reusable career and department framework
 - [x] 4.2 Accounting
 - [x] 4.3 IT Help Desk (with a Help Desk ticketing app)
-- [ ] 4.4 Digital Marketing
+- [x] 4.4 Digital Marketing
 - [ ] 4.5 Data Analysis
 - [ ] 4.6 Software Development (with a Code editor and tests)
+
+---
+
+## 2026-10-31 · Milestone 4.4: the Digital Marketing career
+
+### Built
+
+- **Marketing department**: manager Sofia Alvarez (creative and ruthlessly data-driven)
+  and Senior Digital Marketer Leo Brennan (guards the media budget). Levels: Marketing
+  Assistant → Digital Marketing Executive → Specialist → Manager. New skills: campaign
+  analytics, copywriting and content strategy. Tools: Sheets, Docs and Slides (no new
+  tool was needed: marketers do this work in exactly these apps).
+- **Four tasks**, beginner to advanced:
+  1. **Campaign performance by channel**: CTR, CPC, conversion rate, CPA and ROAS for
+     five channels and the whole campaign (from totals, not averages), flag the
+     channel that loses money, and find the best one with INDEX and MATCH.
+  2. **Content calendar and launch email**: check every draft post against its
+     channel’s house-style limit (LEN and VLOOKUP), count posts per channel, and write
+     the launch email in Docs with the offer, the code, the link and one call to action.
+  3. **Which subject line won?**: an email A/B test: totals per version with SUMIF,
+     open, click and click-to-open rates, uplift, the winner, and a recommendation
+     memo backed by the figures.
+  4. **Quarterly campaign report**: three months by channel with SUMIF, ROAS and cost
+     per lead, the best channel, a chart, a report in Docs and a deck in Slides.
+
+### Tested
+
+- Content tests: every model answer scores 100%; figures checked (best channel Email,
+  B wins with 43% more clicks, Q1 revenue 144,100 on 24,350 spend).
+- Browser test: a Marketing career from onboarding, with the first task done end to end
+  (100%).
 
 ---
 

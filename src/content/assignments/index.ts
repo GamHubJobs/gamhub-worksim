@@ -6,6 +6,10 @@ import { depreciation } from './accounting/depreciation'
 import { journalEntries } from './accounting/journalEntries'
 import { monthEnd } from './accounting/monthEnd'
 import { majorIncident } from './it/majorIncident'
+import { abTest } from './marketing/abTest'
+import { campaignMetrics } from './marketing/campaignMetrics'
+import { contentCalendar } from './marketing/contentCalendar'
+import { quarterlyReport } from './marketing/quarterlyReport'
 import { recurringProblem } from './it/recurringProblem'
 import { triageQueue } from './it/triageQueue'
 import { userReplies } from './it/userReplies'
@@ -37,6 +41,11 @@ const SOURCES = [
   userReplies,
   recurringProblem,
   majorIncident,
+  // Digital Marketing
+  campaignMetrics,
+  contentCalendar,
+  abTest,
+  quarterlyReport,
 ]
 
 /** Every text in a value with role names filled in for a department. */

@@ -204,3 +204,63 @@ test('an IT Help Desk career: triage a ticket queue in the Help Desk app', async
     '100%',
   )
 })
+
+test('a Digital Marketing career: campaign metrics done end to end', async ({ page }) => {
+  test.setTimeout(180_000)
+  await startCareer(page, 'Alex Morgan', 'Digital Marketing')
+  await openApp(page, 'Tasks')
+  await expect(page.getByTestId('task-detail')).toContainText(
+    'Campaign performance by channel',
+  )
+  await page
+    .getByTestId('task-detail')
+    .getByRole('button', { name: 'Start task' })
+    .click()
+  await expect(page.getByTestId('sheet-grid')).toBeVisible()
+
+  const formulas: Array<[string, string]> = [
+    ['G2', '=C2/B2'],
+    ['H2', '=D2/C2'],
+    ['I2', '=E2/C2'],
+    ['J2', '=D2/E2'],
+    ['K2', '=F2/D2'],
+    ['L2', '=IF(K2<1, "Losing money", "Profitable")'],
+  ]
+  for (const [address, formula] of formulas) {
+    await cell(page, address).click()
+    await page.keyboard.type(formula)
+    await page.keyboard.press('Enter')
+  }
+  await cell(page, 'G2').click()
+  await cell(page, 'L6').click({ modifiers: ['Shift'] })
+  await page.keyboard.press('Control+d')
+  await expect(cell(page, 'L5')).toHaveText('Losing money')
+
+  for (const column of ['B', 'C', 'D', 'E', 'F']) {
+    await cell(page, `${column}8`).click()
+    await page.keyboard.type(`=SUM(${column}2:${column}6)`)
+    await page.keyboard.press('Enter')
+  }
+  await cell(page, 'G6').click()
+  await cell(page, 'K6').click({ modifiers: ['Shift'] })
+  await page.keyboard.press('Control+c')
+  await cell(page, 'G8').click()
+  await page.keyboard.press('Control+v')
+  await enterValue(page, 'B10', '=INDEX(A2:A6, MATCH(MAX(K2:K6), K2:K6, 0))', 'Email')
+
+  // Rates as percentages.
+  for (const range of [
+    ['G2', 'G6'],
+    ['I2', 'I6'],
+  ]) {
+    await cell(page, range[0]).click()
+    await cell(page, range[1]).click({ modifiers: ['Shift'] })
+    await page.getByRole('button', { name: 'Percent format' }).click()
+  }
+
+  await page.getByRole('button', { name: /Submit to Sofia/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click()
+  await expect(page.getByTestId('submission-results').getByTestId('score')).toHaveText(
+    '100%',
+  )
+})

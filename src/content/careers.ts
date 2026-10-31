@@ -80,6 +80,25 @@ SKILLS.push(
   },
 )
 
+SKILLS.push(
+  {
+    id: 'campaign-analytics',
+    name: 'Campaign analytics',
+    description:
+      'Measuring campaigns with CTR, conversion, CPA and ROAS, and acting on them.',
+  },
+  {
+    id: 'copywriting',
+    name: 'Copywriting',
+    description: 'Writing short, persuasive copy with one clear call to action.',
+  },
+  {
+    id: 'content-strategy',
+    name: 'Content strategy',
+    description: 'Planning content across channels, and turning results into decisions.',
+  },
+)
+
 export const SKILL_LEVELS = [
   { level: 1, name: 'Novice', xpRequired: 0 },
   { level: 2, name: 'Learner', xpRequired: 40 },
@@ -217,6 +236,52 @@ CAREERS.push({
     {
       id: 'service-desk-lead',
       title: 'Service Desk Team Lead',
+      xpRequired: 550,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
+
+CAREERS.push({
+  id: 'digital-marketing',
+  name: 'Digital Marketing',
+  department: 'Marketing',
+  description:
+    'Bring in new clients: measure campaigns, plan and write content, test what works and report the results.',
+  toolsIntro:
+    'Your work is done in Sheets for the numbers, Docs for copy and reports, and Slides for presentations.',
+  skills: [
+    'campaign-analytics',
+    'copywriting',
+    'content-strategy',
+    'data-analysis',
+    'presentation',
+  ],
+  apps: ['sheets', 'docs', 'slides'],
+  levels: [
+    {
+      id: 'marketing-assistant',
+      title: 'Marketing Assistant',
+      xpRequired: 0,
+      minReputation: 0,
+    },
+    {
+      id: 'digital-marketing-executive',
+      title: 'Digital Marketing Executive',
+      xpRequired: 200,
+      minReputation: 35,
+    },
+    {
+      id: 'digital-marketing-specialist',
+      title: 'Digital Marketing Specialist',
+      xpRequired: 350,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'digital-marketing-manager',
+      title: 'Digital Marketing Manager',
       xpRequired: 550,
       minReputation: 60,
       minReview: 'strong',
