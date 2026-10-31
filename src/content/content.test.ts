@@ -110,7 +110,12 @@ describe('careers', () => {
     }
   })
 
-  it('assignments are numbered 1, 2, 3… without gaps', () => {
-    expect(ASSIGNMENTS.map((a) => a.order)).toEqual(ASSIGNMENTS.map((_, i) => i + 1))
+  it('each career’s assignments are numbered 1, 2, 3… without gaps', () => {
+    for (const career of CAREERS) {
+      const orders = ASSIGNMENTS.filter((a) => a.careerId === career.id)
+        .map((a) => a.order)
+        .sort((a, b) => a - b)
+      expect(orders, career.id).toEqual(orders.map((_, i) => i + 1))
+    }
   })
 })

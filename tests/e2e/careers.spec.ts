@@ -1,0 +1,155 @@
+import { expect, test, type Page } from '@playwright/test'
+import {
+  cell,
+  enterValue,
+  openApp,
+  sitAtComputer,
+  startCareerIfNeeded,
+} from './helpers.ts'
+
+const apps = (page: Page) => page.getByRole('navigation', { name: 'Apps' })
+
+async function startCareer(page: Page, name: string, career: string) {
+  await page.goto('/')
+  await expect(page.getByTestId('onboarding')).toBeVisible()
+  await page.getByRole('radio', { name: new RegExp(career) }).check()
+  await page.getByLabel('Your first name').fill(name)
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await expect(page.getByTestId('desktop')).toBeVisible()
+}
+
+test('an Accounting career: its own manager, tools and a first task done end to end', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await startCareer(page, 'Alex Morgan', 'Accounting')
+
+  // The department's manager talks to the new starter in the office.
+  await page
+    .getByRole('navigation', { name: 'Places' })
+    .getByRole('button', { name: 'Daniel’s office' })
+    .click()
+  await page
+    .getByTestId('office-panel')
+    .getByRole('button', { name: /Talk to Daniel/ })
+    .click()
+  await expect(page.getByTestId('office-dialogue')).toContainText('Daniel Okoro')
+  await expect(page.getByTestId('office-dialogue')).toContainText(
+    'Record the week’s transactions',
+  )
+  await page
+    .getByTestId('office-dialogue')
+    .getByRole('button', { name: 'Thanks!' })
+    .click()
+
+  // The dock has the tools this career uses.
+  await sitAtComputer(page)
+  await expect(apps(page).getByRole('button', { name: /^Docs/ })).toBeVisible()
+  await expect(apps(page).getByRole('button', { name: /^Slides/ })).toHaveCount(0)
+
+  // The welcome email describes this department.
+  await openApp(page, 'Mail')
+  await page.getByRole('button', { name: /Welcome to Cobalt Ridge/ }).click()
+  await expect(page.getByTestId('mail-message')).toContainText(
+    'join the Accounting team as an Accounts Trainee',
+  )
+
+  // The first task: double-entry bookkeeping.
+  await page.getByRole('button', { name: /Your first task: the October journal/ }).click()
+  await page
+    .getByTestId('mail-message')
+    .getByRole('button', { name: 'Open task' })
+    .click()
+  await page
+    .getByTestId('task-detail')
+    .getByRole('button', { name: 'Start task' })
+    .click()
+  await expect(page.getByTestId('sheet-grid')).toBeVisible()
+
+  // Accounts come from a dropdown list.
+  await cell(page, 'D2').click()
+  await page.getByRole('button', { name: 'Choose a value' }).click()
+  await page
+    .getByRole('listbox', { name: 'Allowed values' })
+    .getByRole('option', { name: 'Office supplies', exact: true })
+    .click()
+  await expect(cell(page, 'D2')).toHaveText('Office supplies')
+  const entries: Array<[string, string]> = [
+    ['Office supplies', 'Bank'],
+    ['Accounts receivable', 'Consulting revenue'],
+    ['Rent expense', 'Bank'],
+    ['Bank', 'Accounts receivable'],
+    ['IT expense', 'Accounts payable'],
+    ['Accounts payable', 'Bank'],
+    ['Accounts receivable', 'Consulting revenue'],
+    ['Travel expense', 'Bank'],
+  ]
+  for (const [i, [debit, credit]] of entries.entries()) {
+    if (i > 0) await enterValue(page, `D${i + 2}`, debit)
+    await enterValue(page, `E${i + 2}`, credit)
+  }
+
+  await page.getByRole('tab', { name: 'Ledger' }).click()
+  await enterValue(page, 'B2', '=SUMIF(Journal!$D$2:$D$9, A2, Journal!$C$2:$C$9)', '4800')
+  await enterValue(page, 'C2', '=SUMIF(Journal!$E$2:$E$9, A2, Journal!$C$2:$C$9)', '3770')
+  await enterValue(page, 'D2', '=B2-C2', '1030')
+  await cell(page, 'B2').click()
+  await cell(page, 'D9').click({ modifiers: ['Shift'] })
+  await page.keyboard.press('Control+d')
+  await enterValue(page, 'B11', '=SUM(B2:B9)', '17220')
+  await enterValue(page, 'C11', '=SUM(C2:C9)', '17220')
+  await enterValue(page, 'D11', '=SUM(D2:D9)', '0')
+
+  await page.getByRole('button', { name: /Submit to Daniel/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click()
+  const results = page.getByTestId('submission-results')
+  await expect(results.getByTestId('score')).toHaveText('100%')
+})
+
+test('switching careers keeps each one’s progress, colleagues and files', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  await page.goto('/')
+  await startCareerIfNeeded(page, 'Sam')
+  await openApp(page, 'Docs')
+  await page.getByRole('button', { name: /Business letter/ }).click()
+  await expect(page.getByTestId('document-title')).toHaveText('Letter')
+  await openApp(page, 'Career')
+  await expect(page.getByTestId('career-title')).toHaveText('Finance & Admin Intern')
+
+  // Start Accounting: a new first day, in a different team.
+  await page
+    .getByTestId('career-accounting')
+    .getByRole('button', { name: 'Start this career' })
+    .click()
+  await expect(page.getByTestId('office-panel').getByRole('heading')).toHaveText(
+    'Reception',
+  )
+  await sitAtComputer(page)
+  await openApp(page, 'Career')
+  await expect(page.getByTestId('career-title')).toHaveText('Accounts Trainee')
+  await expect(page.getByTestId('colleague-manager')).toContainText('Daniel Okoro')
+  // Finance's files are not in this career's Docs.
+  await openApp(page, 'Docs')
+  await expect(page.getByTestId('doc-files')).not.toContainText('Letter')
+
+  // Back to Finance: everything is where it was.
+  await openApp(page, 'Career')
+  await page
+    .getByTestId('career-office-admin-finance')
+    .getByRole('button', { name: 'Switch to this career' })
+    .click()
+  await sitAtComputer(page)
+  await openApp(page, 'Career')
+  await expect(page.getByTestId('career-title')).toHaveText('Finance & Admin Intern')
+  await expect(page.getByTestId('colleague-manager')).toContainText('Priya Raman')
+  await openApp(page, 'Docs')
+  await expect(page.getByTestId('doc-files')).toContainText('Letter')
+
+  // After a reload, the last career played is still the one in use.
+  await page.reload()
+  await sitAtComputer(page)
+  await openApp(page, 'Career')
+  await expect(page.getByTestId('career-title')).toHaveText('Finance & Admin Intern')
+})

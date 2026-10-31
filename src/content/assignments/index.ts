@@ -1,5 +1,9 @@
 /** All assignments, checked against the content blueprint when the app starts. */
 import { AssignmentSchema, type Assignment } from '../schemas'
+import { bankReconciliation } from './accounting/bankReconciliation'
+import { depreciation } from './accounting/depreciation'
+import { journalEntries } from './accounting/journalEntries'
+import { monthEnd } from './accounting/monthEnd'
 import { budgetReport } from './budgetReport'
 import { expenseSummary } from './expenseSummary'
 import { invoiceCheck } from './invoiceCheck'
@@ -18,6 +22,11 @@ const SOURCES = [
   pettyCash,
   performanceReport,
   savingsProposal,
+  // Accounting
+  journalEntries,
+  bankReconciliation,
+  depreciation,
+  monthEnd,
 ]
 
 export const ASSIGNMENTS: Assignment[] = SOURCES.map((source) =>

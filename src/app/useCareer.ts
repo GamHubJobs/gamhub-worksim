@@ -4,7 +4,7 @@
  * mail, tick off steps). Game rules live in `src/game`, storage in
  * `src/persistence`; this hook only connects them.
  */
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAssignment } from '../content/assignments'
 import {
   advanceCareer,
@@ -63,7 +63,12 @@ export function useCareer() {
    * Shows a career save. Its department becomes the active one first, so
    * every name, dialogue and email belongs to the right team.
    */
-  const show = useCallback((profile: Profile) => {
+  const shownId = useRef<string | null>(null)
+  const show = useCallback((profile: Profile, opening = false) => {
+    // A late save from a career that is no longer on screen (e.g. the clock
+    // saving as the old desk closes after a switch) is kept, but not shown.
+    if (!opening && shownId.current !== null && profile.id !== shownId.current) return
+    shownId.current = profile.id
     setActiveCareer(profile.careerId)
     setState({ status: 'ready', profile })
   }, [])
@@ -73,7 +78,7 @@ export function useCareer() {
     getActiveProfile()
       .then((profile) => {
         if (!active) return
-        if (profile) show(profile)
+        if (profile) show(profile, true)
         else setState({ status: 'new' })
       })
       .catch((error: unknown) => {
@@ -89,7 +94,7 @@ export function useCareer() {
   const createCareer = useCallback(
     async (name: string, careerId?: string) => {
       const profile = await createProfile(newProfileData(name, Date.now(), careerId))
-      show(profile)
+      show(profile, true)
     },
     [show],
   )
@@ -106,7 +111,7 @@ export function useCareer() {
       const profile = existing
         ? await setActiveProfile(existing.id)
         : await createProfile(newProfileData(state.profile.name, Date.now(), careerId))
-      show(profile)
+      show(profile, true)
     },
     [state, show],
   )

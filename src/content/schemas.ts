@@ -133,6 +133,15 @@ export const StartingSheetSchema = z.object({
   name: z.string().min(1).max(100),
   cells: z.record(z.string().regex(/^[A-Z]{1,3}[1-9]\d*$/), StartingCellSchema),
   columnWidths: z.record(z.string().regex(/^[A-Z]{1,3}$/), z.number().int()).optional(),
+  /** Dropdown lists the workbook starts with, e.g. a chart of accounts. */
+  validations: z
+    .array(
+      z.object({
+        range: z.string().regex(/^[A-Z]{1,3}[1-9]\d*(:[A-Z]{1,3}[1-9]\d*)?$/),
+        items: z.array(z.string().min(1)).min(1),
+      }),
+    )
+    .optional(),
 })
 
 export const StepSchema = z.object({

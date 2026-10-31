@@ -37,6 +37,26 @@ export const SKILLS: Skill[] = [
   },
 ]
 
+/** Skills of the later careers. */
+SKILLS.push(
+  {
+    id: 'bookkeeping',
+    name: 'Bookkeeping',
+    description: 'Recording transactions with debits and credits so the books balance.',
+  },
+  {
+    id: 'reconciliation',
+    name: 'Reconciliation',
+    description: 'Proving that two records agree, and explaining every difference.',
+  },
+  {
+    id: 'financial-reporting',
+    name: 'Financial reporting',
+    description:
+      'Preparing schedules and statements, and explaining them to non-accountants.',
+  },
+)
+
 export const SKILL_LEVELS = [
   { level: 1, name: 'Novice', xpRequired: 0 },
   { level: 2, name: 'Learner', xpRequired: 40 },
@@ -88,6 +108,52 @@ export const CAREERS: Career[] = [
     ],
   },
 ]
+
+CAREERS.push({
+  id: 'accounting',
+  name: 'Accounting',
+  department: 'Accounting',
+  description:
+    'Keep the company’s books: record transactions, reconcile the bank, run the fixed-asset register and close the month.',
+  toolsIntro:
+    'Your work is done in Sheets, our spreadsheet app, with memos and reports in Docs.',
+  skills: [
+    'bookkeeping',
+    'reconciliation',
+    'financial-reporting',
+    'formulas',
+    'accuracy',
+  ],
+  apps: ['sheets', 'docs'],
+  levels: [
+    {
+      id: 'accounts-trainee',
+      title: 'Accounts Trainee',
+      xpRequired: 0,
+      minReputation: 0,
+    },
+    {
+      id: 'assistant-accountant',
+      title: 'Assistant Accountant',
+      xpRequired: 200,
+      minReputation: 35,
+    },
+    {
+      id: 'accountant',
+      title: 'Accountant',
+      xpRequired: 350,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'senior-accountant',
+      title: 'Senior Accountant',
+      xpRequired: 550,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
 
 export function getCareer(id: string): Career {
   return CAREERS.find((career) => career.id === id) ?? CAREERS[0]

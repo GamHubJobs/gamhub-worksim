@@ -63,4 +63,15 @@ describe('departments', () => {
     expect(senior.lines.join(' ')).not.toContain('{')
     expect(senior.choices?.map((c) => c.label).join(' ')).toContain('Marcus')
   })
+
+  it('changes people and words with the career', () => {
+    setActiveCareer('accounting')
+    expect(getPerson('manager').name).toBe('Daniel Okoro')
+    expect(fill('Ask {senior} in {department}.')).toBe('Ask Helen in Accounting.')
+    const profile = newProfileData('Alex', 0, 'accounting')
+    expect(profile.levelId).toBe('accounts-trainee')
+    expect(profile.inbox[1].assignmentId).toBe('journal-entries')
+    expect(profile.inbox[0].body).toContain('Accounting team as an Accounts Trainee')
+    expect(dialogueFor('manager', profile).title).toBe('Daniel Okoro')
+  })
 })

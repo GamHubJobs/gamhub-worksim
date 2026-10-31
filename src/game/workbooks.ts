@@ -16,6 +16,15 @@ export function buildStartingContent(assignment: Assignment): SheetContent {
       name: sheet.name,
       cells: {},
       ...(sheet.columnWidths ? { columnWidths: sheet.columnWidths } : {}),
+      ...(sheet.validations
+        ? {
+            validations: sheet.validations.map((v) => ({
+              id: createId(),
+              range: v.range,
+              rule: { type: 'list' as const, items: v.items },
+            })),
+          }
+        : {}),
     })),
   }
   assignment.workbook.sheets.forEach((sheet, i) => {

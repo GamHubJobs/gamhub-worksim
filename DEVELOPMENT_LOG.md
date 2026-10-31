@@ -43,6 +43,94 @@ owner.
 
 **Phase 3 is complete.**
 
+**Phase 4: "Multiple Careers and Departments"** (in progress). Milestones:
+
+- [x] 4.1 A reusable career and department framework
+- [x] 4.2 Accounting
+- [ ] 4.3 IT Help Desk (with a Help Desk ticketing app)
+- [ ] 4.4 Digital Marketing
+- [ ] 4.5 Data Analysis
+- [ ] 4.6 Software Development (with a Code editor and tests)
+
+---
+
+## 2026-10-31 · Milestone 4.2: the Accounting career
+
+### Built
+
+- **The Accounting department**: manager Daniel Okoro (methodical; teaches by asking
+  questions) and Senior Accountant Helen Park (brilliant, impatient with sloppiness),
+  with its own stand-up, planning (the month-end close and the auditors), tips and
+  notice board.
+- **Levels**: Accounts Trainee → Assistant Accountant → Accountant → Senior Accountant,
+  with the same XP, reputation and review rules as Finance.
+- **New skills**: bookkeeping, reconciliation and financial reporting.
+- **Four tasks**, from beginner to advanced:
+  1. **Record the week’s transactions** (Trainee): choose the debit and credit account
+     for eight transactions (dropdown lists of the chart of accounts), then build the
+     ledger with SUMIF and prove that debits equal credits.
+  2. **Reconcile the bank account** (Trainee): match the cash book and the statement
+     with COUNTIF, find unpresented cheques, outstanding deposits and an unrecorded
+     bank fee, and show that the adjusted balances agree.
+  3. **Depreciation schedule and memo** (Assistant Accountant): straight-line
+     depreciation, MIN to stop at the residual value, IF for fully depreciated assets,
+     and a memo in Docs for the CFO with this year’s charge and net book value.
+  4. **Month-end: trial balance and results** (Accountant): debit and credit columns
+     with IF, a balanced trial balance, an income statement with SUMIF by account type
+     and margin, and a management report in Docs.
+- Task workbooks can now ship with dropdown lists (data validation).
+
+### Tested
+
+- Content tests: every Accounting model answer scores 100%; key figures checked by
+  hand (debits = credits = 17,220; reconciled at 14,050; net profit 6,465).
+- Browser test: an Accounting career from onboarding: the manager in the office, the
+  dock, the welcome email, and the first task done end to end with the dropdowns
+  (100%).
+
+---
+
+## 2026-10-31 · Milestone 4.1: a reusable career and department framework
+
+### Built
+
+- **Departments as data** (`src/content/departments/`): each department defines its
+  manager and senior colleague, who the manager reports to, what the team does, what
+  people say at the stand-up and weekly planning, the senior colleague's introduction
+  and small talk, practical tips and notice-board news. Reception, facilities and HR
+  (Nina, Tom, Grace) are shared by every department.
+- **Roles instead of names**: game rules refer to "the manager" and "the senior
+  colleague"; text uses `{manager}`, `{senior}`, `{department}` and `{director}`,
+  filled in for the active department. Events, meetings, reviews, conversations,
+  reminders, the day log, emails and the 3D office (the wall sign, "Daniel's office",
+  "Talk to Helen") all follow automatically. Stories tied to Finance tasks stay in
+  Finance.
+- **Careers as data** (`src/content/careers.ts`): description, levels, the skills it
+  develops, the tools on the dock, and a sentence for the welcome email.
+- **One save per career**: the existing Finance save is untouched. New players choose a
+  career at onboarding; the Career app lists every career with progress and can start
+  or switch careers. Each career keeps its own progress, colleagues, office clock,
+  reviews and files.
+- **Files belong to a career**: documents record their owner; Docs, Slides, the
+  "insert from Sheets" picker and Mail attachments show only the current career's
+  files (plus older files made before careers existed).
+- **Portfolio** (Career app): every task passed in the career, with score, level, date,
+  skills and buttons to open the files.
+
+### Fixed
+
+- After switching careers, a last save from the closing desk could put the old career
+  back on screen. Late saves from a career that is no longer shown are now kept but
+  not shown.
+
+### Decisions
+
+- The framework is the reuse: a new career is a career entry, a department file and
+  its tasks. Mail, Tasks, Sheets, Docs, Slides, grading, reviews, events and the office
+  are shared.
+- Separate saves per career (rather than one save holding every career) keep each job
+  independent and kept the existing save format unchanged.
+
 ---
 
 ## 2026-10-31 · Milestones 3.4–3.5: connected apps and multi-application assignments
