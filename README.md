@@ -24,19 +24,23 @@ Stop the app with `Ctrl+C` in the terminal.
 
 ## Commands
 
-| Command                | What it does                                     |
-| ---------------------- | ------------------------------------------------ |
-| `npm run dev`          | Run the app locally with instant reload          |
-| `npm run build`        | Check types and build the production version     |
-| `npm run preview`      | Preview the production build locally             |
-| `npm run check`        | Run all checks below (do this before committing) |
-| `npm run lint`         | Check the code for common mistakes (Oxlint)      |
-| `npm run typecheck`    | Check that data types are used correctly         |
-| `npm test`             | Run the automated tests once                     |
-| `npm run test:watch`   | Re-run tests automatically whenever you save     |
-| `npm run format`       | Automatically tidy the formatting of all files   |
-| `npm run format:check` | Report files that are not tidily formatted       |
+| Command                | What it does                                      |
+| ---------------------- | ------------------------------------------------- |
+| `npm run dev`          | Run the app locally with instant reload           |
+| `npm run build`        | Check types and build the production version      |
+| `npm run preview`      | Preview the production build locally              |
+| `npm run check`        | Run all checks below (do this before committing)  |
+| `npm run lint`         | Check the code for common mistakes (Oxlint)       |
+| `npm run typecheck`    | Check that data types are used correctly          |
+| `npm test`             | Run the automated tests once                      |
+| `npm run test:watch`   | Re-run tests automatically whenever you save      |
+| `npm run test:e2e`     | Run the browser tests (a robot uses the real app) |
+| `npm run format`       | Automatically tidy the formatting of all files    |
+| `npm run format:check` | Report files that are not tidily formatted        |
+
+First-time setup for browser tests: `npx playwright install chromium`.
 
 ## Documentation
 
 - [Architecture overview](docs/ARCHITECTURE.md)
+- [Development log](DEVELOPMENT_LOG.md): completed work, decisions and next tasks

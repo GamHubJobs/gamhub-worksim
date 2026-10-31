@@ -18,6 +18,30 @@ import {
 
 export const DATABASE_NAME = 'gamhub-worksim'
 
+/**
+ * Database structure, one entry per save-format version.
+ *
+ * Each line lists a table's main key first, then the fields we want to search
+ * by quickly ("indexes"). `[a+b]` is a combined index on two fields.
+ *
+ * RULES: never edit or remove an existing version. To change the structure,
+ * add a new version at the end (with an `upgrade` function if existing data
+ * must be transformed) and add a test in `migrations.test.ts`.
+ */
+export const DATABASE_VERSIONS = {
+  1: {
+    meta: 'key',
+    documents: 'id, kind, updatedAt',
+    documentVersions: 'id, documentId, createdAt',
+    outbox: '++seq, recordId',
+  },
+  // Version 2: lets version history be listed in time order per document
+  // directly by the database, instead of sorting in JavaScript.
+  2: {
+    documentVersions: 'id, documentId, createdAt, [documentId+createdAt]',
+  },
+} as const
+
 export class WorkSimDatabase extends Dexie {
   meta!: EntityTable<MetaEntry, 'key'>
   documents!: EntityTable<AnyDocument, 'id'>
@@ -26,16 +50,8 @@ export class WorkSimDatabase extends Dexie {
 
   constructor(name: string = DATABASE_NAME) {
     super(name)
-
-    // Save-format version 1. Each line lists a table's main key first, then
-    // the fields we want to search by quickly ("indexes").
-    // Never edit an existing version: add a new `this.version(2)` instead.
-    this.version(1).stores({
-      meta: 'key',
-      documents: 'id, kind, updatedAt',
-      documentVersions: 'id, documentId, createdAt',
-      outbox: '++seq, recordId',
-    })
+    this.version(1).stores(DATABASE_VERSIONS[1])
+    this.version(2).stores(DATABASE_VERSIONS[2])
   }
 }
 
@@ -61,5 +77,20 @@ export async function getDeviceId(database: WorkSimDatabase = db): Promise<strin
     const deviceId = createId()
     await database.meta.put({ key: DEVICE_ID_KEY, value: deviceId })
     return deviceId
+  })
+}
+
+/** Records a saved change in the outbox, for future cloud sync. */
+export async function recordChange(
+  database: WorkSimDatabase,
+  table: string,
+  record: { id: string; rev: number; updatedAt: number },
+): Promise<void> {
+  // Always add a fresh object: Dexie writes the new `seq` number onto it.
+  await database.outbox.add({
+    table,
+    recordId: record.id,
+    rev: record.rev,
+    changedAt: record.updatedAt,
   })
 }

@@ -84,6 +84,15 @@ export const SheetDocumentSchema = DocumentBaseSchema.extend({
  */
 export const DocumentSchema = z.discriminatedUnion('kind', [SheetDocumentSchema])
 
+/**
+ * The current content-format version of each document kind. When a kind's
+ * content format changes, raise its number here and add an upgrade step in
+ * `documentMigrations.ts`.
+ */
+export const DOCUMENT_FORMAT_VERSIONS = {
+  sheet: 1,
+} as const satisfies Record<z.infer<typeof DocumentSchema>['kind'], number>
+
 /** Why a version snapshot was taken. */
 export const VersionReasonSchema = z.enum([
   'auto', // periodic snapshot while editing

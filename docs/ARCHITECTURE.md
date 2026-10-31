@@ -44,6 +44,35 @@ Persistence (IndexedDB, autosave, versions, backups, future sync)
   under storage pressure, in private windows, or lost if the site address changes.
   Backups (and later, cloud sync) are the real safety net.
 
+### How a change is saved
+
+```
+Player types in a cell
+  → app state updated                         (instant)
+  → emergency journal in LocalStorage         (instant, synchronous)
+  → autosave to IndexedDB via documentsRepo   (~1 s after typing stops, max 5 s)
+      → document rev+1, outbox entry          (one transaction)
+      → journal entry cleared
+      → automatic version if 5 min passed     (documentVersions)
+Tab hidden / closed → autosave flushed immediately, "close" version (best effort)
+Next start → journal newer than saved document? → recovered and saved
+```
+
+### Persistence modules (`src/persistence/`)
+
+| Module                  | Responsibility                                                |
+| ----------------------- | ------------------------------------------------------------- |
+| `schemas.ts`            | Zod blueprints and TypeScript types for all saved data        |
+| `db.ts`                 | Dexie database, versioned structure, device ID, outbox writes |
+| `documentsRepo.ts`      | Create / read / update / delete documents (validated)         |
+| `documentMigrations.ts` | Upgrade old document formats on load                          |
+| `versions.ts`           | Version history: snapshots, clean-up, restore                 |
+| `autosave.ts`           | Debounced, retrying, never-overlapping autosave               |
+| `emergencyJournal.ts`   | Last-second safety copy in LocalStorage                       |
+| `session.ts`            | Detects whether the previous session closed normally          |
+| `meta.ts`               | Small named values (e.g. which workbook to open)              |
+| `workbench.ts`          | Phase 0 practice workbook                                     |
+
 ## Technology
 
 | Purpose        | Choice                                   |
@@ -52,10 +81,10 @@ Persistence (IndexedDB, autosave, versions, backups, future sync)
 | Build tool     | Vite                                     |
 | UI             | React                                    |
 | Code checks    | Oxlint                                   |
-| Local database | IndexedDB via Dexie (Phase 0)            |
-| Validation     | Zod (Phase 0)                            |
+| Local database | IndexedDB via Dexie                      |
+| Validation     | Zod                                      |
 | Styling        | Tailwind CSS                             |
-| Tests          | Vitest, Playwright (Phase 0)             |
+| Tests          | Vitest (unit), Playwright (browser)      |
 | 3D             | Three.js + React Three Fiber (Phase 1)   |
 | Spreadsheet    | Own engine and grid, built incrementally |
 
