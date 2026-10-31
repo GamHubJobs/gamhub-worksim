@@ -5,6 +5,10 @@ import { bankReconciliation } from './accounting/bankReconciliation'
 import { depreciation } from './accounting/depreciation'
 import { journalEntries } from './accounting/journalEntries'
 import { monthEnd } from './accounting/monthEnd'
+import { cleanCustomers } from './data/cleanCustomers'
+import { portfolioReview } from './data/portfolioReview'
+import { salesSummary } from './data/salesSummary'
+import { surveyAnalysis } from './data/surveyAnalysis'
 import { majorIncident } from './it/majorIncident'
 import { abTest } from './marketing/abTest'
 import { campaignMetrics } from './marketing/campaignMetrics'
@@ -46,6 +50,11 @@ const SOURCES = [
   contentCalendar,
   abTest,
   quarterlyReport,
+  // Data Analysis
+  cleanCustomers,
+  salesSummary,
+  surveyAnalysis,
+  portfolioReview,
 ]
 
 /** Every text in a value with role names filled in for a department. */

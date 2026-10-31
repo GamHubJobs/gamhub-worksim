@@ -28,13 +28,24 @@ describe('finding the function being typed', () => {
 
 describe('suggesting function names', () => {
   it('suggests names that start with the typed letters', () => {
-    expect(suggestFunctions('=AVER')?.names).toEqual(['AVERAGE', 'AVERAGEIF'])
+    expect(suggestFunctions('=AVER')?.names).toEqual([
+      'AVERAGE',
+      'AVERAGEIF',
+      'AVERAGEIFS',
+    ])
     expect(suggestFunctions('=A1+vl')?.names).toEqual(['VLOOKUP'])
+    expect(suggestFunctions('=SU')?.names).toEqual([
+      'SUM',
+      'SUBSTITUTE',
+      'SUMIF',
+      'SUMIFS',
+    ])
     expect(suggestFunctions('=IF(cou')?.names).toEqual([
       'COUNT',
       'COUNTA',
       'COUNTBLANK',
       'COUNTIF',
+      'COUNTIFS',
     ])
   })
 

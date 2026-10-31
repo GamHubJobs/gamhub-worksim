@@ -187,6 +187,50 @@ function matchingValues(args: Argument[], name: string): number[] | ErrorValue {
   return numbers
 }
 
+/**
+ * The values to use for SUMIFS and AVERAGEIFS, or the matching cells for
+ * COUNTIFS: a cell counts only when every range meets its own condition.
+ * All the ranges must be the same size.
+ */
+function multiMatch(
+  args: Argument[],
+  name: string,
+  valuesFirst: boolean,
+): Array<CellValue> | ErrorValue {
+  const pairs = valuesFirst ? args.slice(1) : args
+  if (pairs.length % 2 !== 0) {
+    return makeError('#VALUE!', `${name} needs a range and a condition for each test.`)
+  }
+  const values = valuesFirst ? asRange(args[0]) : null
+  const tests: Array<{ range: RangeValue; matches: Matcher }> = []
+  for (let i = 0; i < pairs.length; i += 2) {
+    const criterion = scalar(pairs[i + 1], name)
+    if (isError(criterion)) return criterion
+    tests.push({ range: asRange(pairs[i]), matches: makeMatcher(criterion) })
+  }
+  const shape = values ?? tests[0].range
+  const height = shape.rows.length
+  const width = shape.rows[0]?.length ?? 0
+  const sameShape = (range: RangeValue) =>
+    range.rows.length === height && (range.rows[0]?.length ?? 0) === width
+  if (!tests.every((test) => sameShape(test.range))) {
+    return makeError('#VALUE!', `All the ranges in ${name} must be the same size.`)
+  }
+  const result: CellValue[] = []
+  for (let r = 0; r < height; r++) {
+    for (let c = 0; c < width; c++) {
+      if (tests.every((test) => test.matches(test.range.rows[r][c] ?? null))) {
+        result.push(shape.rows[r][c] ?? null)
+      }
+    }
+  }
+  return result
+}
+
+function numbersOnly(values: CellValue[]): number[] {
+  return values.filter((value): value is number => typeof value === 'number')
+}
+
 // --- Lookups ---------------------------------------------------------------
 
 function sameKind(a: CellValue, b: CellValue): boolean {
@@ -592,6 +636,54 @@ const DEFINITIONS: FunctionDefinition[] = [
       return numbers.reduce((a, b) => a + b, 0) / numbers.length
     },
   },
+  {
+    name: 'COUNTIFS',
+    category: 'Statistics',
+    syntax: 'COUNTIFS(range1, condition1, [range2, condition2, ...])',
+    description:
+      'Counts the rows that meet every condition, each tested in its own range.',
+    example: '=COUNTIFS(B2:B10, "North", D2:D10, ">100")',
+    minArgs: 2,
+    maxArgs: MANY,
+    evaluate: (args) => {
+      const matches = multiMatch(args, 'COUNTIFS', false)
+      return isError(matches) ? matches : matches.length
+    },
+  },
+  {
+    name: 'SUMIFS',
+    category: 'Math',
+    syntax: 'SUMIFS(sum_range, range1, condition1, [range2, condition2, ...])',
+    description:
+      'Adds the values in sum_range for the rows that meet every condition. Note that the values to add come first.',
+    example: '=SUMIFS(D2:D10, B2:B10, "North", C2:C10, "Laptops")',
+    minArgs: 3,
+    maxArgs: MANY,
+    evaluate: (args) => {
+      const matches = multiMatch(args, 'SUMIFS', true)
+      if (isError(matches)) return matches
+      return numbersOnly(matches).reduce((a, b) => a + b, 0)
+    },
+  },
+  {
+    name: 'AVERAGEIFS',
+    category: 'Statistics',
+    syntax: 'AVERAGEIFS(average_range, range1, condition1, [range2, condition2, ...])',
+    description:
+      'The average of the values in average_range for the rows that meet every condition.',
+    example: '=AVERAGEIFS(D2:D10, B2:B10, "North", C2:C10, "Laptops")',
+    minArgs: 3,
+    maxArgs: MANY,
+    evaluate: (args) => {
+      const matches = multiMatch(args, 'AVERAGEIFS', true)
+      if (isError(matches)) return matches
+      const numbers = numbersOnly(matches)
+      if (numbers.length === 0) {
+        return makeError('#DIV/0!', 'AVERAGEIFS found no matching numbers to average.')
+      }
+      return numbers.reduce((a, b) => a + b, 0) / numbers.length
+    },
+  },
 
   // --- Logic ---
   {
@@ -836,6 +928,43 @@ const DEFINITIONS: FunctionDefinition[] = [
     minArgs: 1,
     maxArgs: 1,
     evaluate: textFunction('TRIM', (text) => text.trim().replace(/ {2,}/g, ' ')),
+  },
+  {
+    name: 'SUBSTITUTE',
+    category: 'Text',
+    syntax: 'SUBSTITUTE(text, old_text, new_text)',
+    description:
+      'Replaces every copy of old_text with new_text. Useful for cleaning data, such as removing currency signs.',
+    example: '=SUBSTITUTE(A2, "£", "")',
+    minArgs: 3,
+    maxArgs: 3,
+    evaluate: (args) => {
+      const text = textArg(args[0], 'SUBSTITUTE')
+      if (isError(text)) return text
+      const find = textArg(args[1], 'SUBSTITUTE')
+      if (isError(find)) return find
+      const replacement = textArg(args[2], 'SUBSTITUTE')
+      if (isError(replacement)) return replacement
+      return find === '' ? text : text.split(find).join(replacement)
+    },
+  },
+  {
+    name: 'VALUE',
+    category: 'Text',
+    syntax: 'VALUE(text)',
+    description:
+      'Turns text that looks like a number, such as "1,200", into a real number.',
+    example: '=VALUE(TRIM(A2))',
+    minArgs: 1,
+    maxArgs: 1,
+    evaluate: (args) => {
+      const value = scalar(args[0], 'VALUE')
+      if (isError(value)) return value
+      if (typeof value === 'string' && value.trim() === '') {
+        return makeError('#VALUE!', 'VALUE needs some text that looks like a number.')
+      }
+      return toNumber(value)
+    },
   },
   {
     name: 'LEFT',

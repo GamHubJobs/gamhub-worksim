@@ -49,8 +49,49 @@ owner.
 - [x] 4.2 Accounting
 - [x] 4.3 IT Help Desk (with a Help Desk ticketing app)
 - [x] 4.4 Digital Marketing
-- [ ] 4.5 Data Analysis
+- [x] 4.5 Data Analysis
 - [ ] 4.6 Software Development (with a Code editor and tests)
+
+---
+
+## 2026-10-31 · Milestone 4.5: the Data Analysis career
+
+### Built
+
+- **Data & Insights department**: Head of Data & Insights Amara Nwosu (calm, precise,
+  always asks “how do you know?” and “so what?”) and Senior Data Analyst Kenji Sato
+  (methodical, checks everything twice). Levels: Junior Data Analyst → Data Analyst →
+  Senior Data Analyst → Lead Data Analyst. New skills: data cleaning, data
+  visualisation and insight communication. Tools: Sheets, Docs and Slides.
+- **New spreadsheet functions** that analysts rely on: SUMIFS, COUNTIFS and AVERAGEIFS
+  (several conditions at once; ranges must be the same size), SUBSTITUTE and VALUE (for
+  cleaning text into numbers). They work in every career, with help text and
+  autocomplete. Autocomplete now lists the most common functions first, so `=SU` still
+  offers SUM before SUBSTITUTE (the full browser run caught this).
+- **Four tasks**, beginner to advanced:
+  1. **Clean the customer export**: a messy CRM export (stray spaces, mixed capitals,
+     amounts as text with “GBP”, duplicate customers). Clean it in new columns with
+     TRIM, PROPER, LOWER, SUBSTITUTE and VALUE, flag duplicates with COUNTIF, and
+     summarise; the raw data must stay untouched.
+  2. **Sales by region and product**: a pivot-style table with one SUMIFS filled across
+     and down (mixed references), totals both ways, orders, average order and large
+     orders with COUNTIFS and AVERAGEIFS, the best region and a chart.
+  3. **What the client survey says**: satisfaction by team (averages, satisfied share,
+     days to resolve, would recommend), the lowest team and the median, a chart, and an
+     insight memo with the finding, the evidence, a recommendation and an honest caveat.
+  4. **Annual client portfolio review**: growth and revenue per hour for each client,
+     a sector summary with SUMIF and COUNTIFS, the fastest-growing client and sector, a
+     chart, a review in Docs and board slides.
+
+### Tested
+
+- Engine tests for the new functions (several conditions, mismatched ranges, missing
+  conditions, empty averages, cleaning text into numbers).
+- Content tests: every model answer scores 100%; figures checked by hand (total spend
+  19,151.50 with 4 duplicate rows; West best at 13,600; Audit lowest with 25% satisfied
+  and 6.4 days to resolve; portfolio 806,000, up 4.5%, healthcare up 22%).
+- Browser test: a Data Analysis career from onboarding, with the first task done end to
+  end (100%).
 
 ---
 

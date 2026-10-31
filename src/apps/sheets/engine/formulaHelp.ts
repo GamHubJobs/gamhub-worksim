@@ -42,6 +42,17 @@ export function findActiveFunction(text: string): ActiveFunction | null {
 }
 
 /**
+ * The functions people use most are suggested first, so that "=SU" offers SUM
+ * before SUBSTITUTE. Everything else follows in alphabetical order.
+ */
+const COMMON = ['SUM', 'AVERAGE', 'COUNT', 'IF', 'VLOOKUP', 'ROUND', 'MIN', 'MAX']
+
+function rank(name: string): number {
+  const index = COMMON.indexOf(name)
+  return index === -1 ? COMMON.length : index
+}
+
+/**
  * The function names that start with the word being typed at the end of a
  * formula, e.g. "=SUM(A1:A3)+AV" → AVERAGE, AVERAGEIF.
  */
@@ -54,7 +65,7 @@ export function suggestFunctions(
   const prefix = match[2].toUpperCase()
   const names = FUNCTION_NAMES.filter(
     (name) => name.startsWith(prefix) && name !== prefix,
-  )
+  ).sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
   return names.length > 0 ? { prefix: match[2], names: names.slice(0, 6) } : null
 }
 

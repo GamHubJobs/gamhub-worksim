@@ -264,3 +264,59 @@ test('a Digital Marketing career: campaign metrics done end to end', async ({ pa
     '100%',
   )
 })
+
+test('a Data Analysis career: the customer export cleaned end to end', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await startCareer(page, 'Alex Morgan', 'Data Analysis')
+  await openApp(page, 'Tasks')
+  await expect(page.getByTestId('task-detail')).toContainText('Clean the customer export')
+  await page
+    .getByTestId('task-detail')
+    .getByRole('button', { name: 'Start task' })
+    .click()
+  await expect(page.getByTestId('sheet-grid')).toBeVisible()
+
+  const formulas: Array<[string, string]> = [
+    ['G2', '=PROPER(TRIM(B2))'],
+    ['H2', '=LOWER(TRIM(C2))'],
+    ['I2', '=PROPER(TRIM(D2))'],
+    ['J2', '=VALUE(SUBSTITUTE(E2, " GBP", ""))'],
+    ['K2', '=IF(COUNTIF($H$2:$H$13, H2)>1, "Duplicate", "Unique")'],
+  ]
+  for (const [address, formula] of formulas) {
+    await cell(page, address).click()
+    await page.keyboard.type(formula)
+    await page.keyboard.press('Enter')
+  }
+  await cell(page, 'G2').click()
+  await cell(page, 'K13').click({ modifiers: ['Shift'] })
+  await page.keyboard.press('Control+d')
+  await expect(cell(page, 'G9')).toHaveText('David Clarke')
+  await expect(cell(page, 'K11')).toHaveText('Duplicate')
+
+  await page.getByRole('tab', { name: 'Summary' }).click()
+  await enterValue(page, 'B1', '=COUNTA(Customers!A2:A13)', '12')
+  await enterValue(page, 'B2', '=COUNTIF(Customers!K2:K13, "Duplicate")', '4')
+  await cell(page, 'B3').click()
+  await page.keyboard.type('=SUM(Customers!J2:J13)')
+  await page.keyboard.press('Enter')
+  for (const row of [6, 7, 8]) {
+    await cell(page, `B${row}`).click()
+    await page.keyboard.type(`=COUNTIF(Customers!$I$2:$I$13, A${row})`)
+    await page.keyboard.press('Enter')
+    await cell(page, `C${row}`).click()
+    await page.keyboard.type(
+      `=SUMIFS(Customers!$J$2:$J$13, Customers!$I$2:$I$13, A${row})`,
+    )
+    await page.keyboard.press('Enter')
+  }
+  await expect(cell(page, 'B6')).toHaveText('4')
+
+  await page.getByRole('button', { name: /Submit to Amara/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click()
+  await expect(page.getByTestId('submission-results').getByTestId('score')).toHaveText(
+    '100%',
+  )
+})

@@ -99,6 +99,26 @@ SKILLS.push(
   },
 )
 
+SKILLS.push(
+  {
+    id: 'data-cleaning',
+    name: 'Data cleaning',
+    description:
+      'Making messy data consistent and trustworthy, without touching the raw data.',
+  },
+  {
+    id: 'data-visualisation',
+    name: 'Data visualisation',
+    description: 'Choosing and building charts that answer a question at a glance.',
+  },
+  {
+    id: 'insight-communication',
+    name: 'Insight communication',
+    description:
+      'Turning analysis into findings, evidence, recommendations and honest caveats.',
+  },
+)
+
 export const SKILL_LEVELS = [
   { level: 1, name: 'Novice', xpRequired: 0 },
   { level: 2, name: 'Learner', xpRequired: 40 },
@@ -282,6 +302,47 @@ CAREERS.push({
     {
       id: 'digital-marketing-manager',
       title: 'Digital Marketing Manager',
+      xpRequired: 550,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
+
+CAREERS.push({
+  id: 'data-analytics',
+  name: 'Data Analysis',
+  department: 'Data & Insights',
+  description:
+    'Turn data into decisions: clean messy exports, summarise and analyse, and explain what the numbers mean.',
+  toolsIntro:
+    'Your work is done in Sheets for cleaning and analysis, Docs for insight memos and reports, and Slides for presenting findings.',
+  skills: [
+    'data-cleaning',
+    'data-analysis',
+    'data-visualisation',
+    'insight-communication',
+    'formulas',
+  ],
+  apps: ['sheets', 'docs', 'slides'],
+  levels: [
+    {
+      id: 'junior-data-analyst',
+      title: 'Junior Data Analyst',
+      xpRequired: 0,
+      minReputation: 0,
+    },
+    { id: 'data-analyst', title: 'Data Analyst', xpRequired: 200, minReputation: 35 },
+    {
+      id: 'senior-data-analyst',
+      title: 'Senior Data Analyst',
+      xpRequired: 350,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'lead-data-analyst',
+      title: 'Lead Data Analyst',
       xpRequired: 550,
       minReputation: 60,
       minReview: 'strong',

@@ -460,6 +460,45 @@ describe('SUMIF, COUNTIF, AVERAGEIF', () => {
   })
 })
 
+describe('SUMIFS, COUNTIFS, AVERAGEIFS', () => {
+  const sales = {
+    A1: 'North',
+    B1: 'Laptops',
+    C1: '1200',
+    A2: 'South',
+    B2: 'Laptops',
+    C2: '900',
+    A3: 'north',
+    B3: 'Phones',
+    C3: '400',
+    A4: 'North',
+    B4: 'Laptops',
+    C4: '600',
+  }
+
+  it('need every condition to match', () => {
+    expect(calc('=SUMIFS(C1:C4, A1:A4, "North", B1:B4, "Laptops")', sales)).toBe(1800)
+    expect(calc('=COUNTIFS(A1:A4, "North", C1:C4, ">500")', sales)).toBe(2)
+    expect(calc('=AVERAGEIFS(C1:C4, A1:A4, "North")', sales)).toBeCloseTo(733.333, 2)
+    expect(calc('=COUNTIFS(A1:A4, "North")', sales)).toBe(3)
+  })
+
+  it('report mismatched ranges, missing conditions and empty averages', () => {
+    expect(errorCode(calc('=SUMIFS(C1:C4, A1:A3, "North")', sales))).toBe('#VALUE!')
+    expect(errorCode(calc('=COUNTIFS(A1:A4, "North", B1:B4)', sales))).toBe('#VALUE!')
+    expect(errorCode(calc('=AVERAGEIFS(C1:C4, A1:A4, "East")', sales))).toBe('#DIV/0!')
+  })
+})
+
+describe('SUBSTITUTE and VALUE', () => {
+  it('clean text into numbers', () => {
+    expect(calc('=SUBSTITUTE(A1, " GBP", "")', { A1: '1,200 GBP' })).toBe('1,200')
+    expect(calc('=VALUE(SUBSTITUTE(A1, " GBP", ""))', { A1: '1,200 GBP' })).toBe(1200)
+    expect(calc('=VALUE(" 42 ")', {})).toBe(42)
+    expect(errorCode(calc('=VALUE("n/a")', {}))).toBe('#VALUE!')
+  })
+})
+
 describe('rounding and maths', () => {
   it.each([
     ['=ROUND(2.345, 2)', 2.35],
