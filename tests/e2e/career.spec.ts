@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { cell, openApp } from './helpers.ts'
+import { cell, openApp, sitAtComputer } from './helpers.ts'
 
 /** Types a value into a cell and confirms it with Enter. */
 async function type(page: Page, address: string, value: string) {
@@ -25,6 +25,7 @@ test('first day: read the task, do the work, get feedback, XP and the next task'
   // Onboarding
   await page.getByLabel('Your first name').fill('Alex Morgan')
   await page.getByRole('button', { name: 'Start my first day' }).click()
+  await sitAtComputer(page) // new starters arrive at reception
 
   // The newest email is the first task from the manager.
   const message = page.getByTestId('mail-message')

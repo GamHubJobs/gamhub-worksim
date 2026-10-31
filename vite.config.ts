@@ -10,6 +10,16 @@ const { version } = JSON.parse(readFileSync('./package.json', 'utf8')) as {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // The 3D office is loaded only when needed. Pre-bundle its libraries when the
+  // dev server starts, so the first visit does not trigger a page reload.
+  optimizeDeps: {
+    include: ['three', '@react-three/fiber', '@react-three/drei'],
+  },
+  build: {
+    // three.js makes the 3D office file large (about 250 kB compressed), but it
+    // is only downloaded when the player enters the office.
+    chunkSizeWarningLimit: 1000,
+  },
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },

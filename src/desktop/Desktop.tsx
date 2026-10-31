@@ -1,6 +1,7 @@
 /**
- * The simulated work computer: a dock with the apps (Mail, Tasks, Sheets,
- * Career) and a top bar with the player's level and XP.
+ * The player's working day: the 3D office, and the work computer at their
+ * desk with a dock of apps (Mail, Tasks, Sheets, Career). The top bar with
+ * the player's level and XP is shared by both.
  */
 import { useCallback, useEffect, useState } from 'react'
 import type { Career } from '../app/useCareer'
@@ -24,6 +25,7 @@ import {
 } from '../persistence/lastView'
 import type { Profile } from '../persistence/schemas'
 import { openWorkbenchDocument } from '../persistence/workbench'
+import { OfficeView } from '../office/OfficeView'
 import { Icon, type IconName } from '../ui/Icon'
 
 interface DesktopProps {
@@ -33,12 +35,13 @@ interface DesktopProps {
   onOpenStorage: () => void
 }
 
-const APPS: Array<{ id: View['app']; label: string; icon: IconName }> = [
-  { id: 'mail', label: 'Mail', icon: 'mail' },
-  { id: 'tasks', label: 'Tasks', icon: 'tasks' },
-  { id: 'sheets', label: 'Sheets', icon: 'sheets' },
-  { id: 'career', label: 'Career', icon: 'career' },
-]
+const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: IconName }> =
+  [
+    { id: 'mail', label: 'Mail', icon: 'mail' },
+    { id: 'tasks', label: 'Tasks', icon: 'tasks' },
+    { id: 'sheets', label: 'Sheets', icon: 'sheets' },
+    { id: 'career', label: 'Career', icon: 'career' },
+  ]
 
 export function Desktop({
   profile,
@@ -91,7 +94,10 @@ export function Desktop({
           <span className="text-lg font-bold tracking-tight text-blue-900">
             GamHub WorkSim
           </span>
-          <span className="text-sm text-slate-500">{COMPANY.name}</span>
+          <span className="text-sm text-slate-500">
+            {COMPANY.name}
+            {view.app !== 'office' && ' · Your computer'}
+          </span>
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -134,76 +140,96 @@ export function Desktop({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <nav
-          className="flex w-20 shrink-0 flex-col items-center gap-1 border-r border-slate-200 bg-white py-3"
-          aria-label="Apps"
-        >
-          {APPS.map((app) => {
-            const active = view.app === app.id
-            const badge = badges[app.id] ?? 0
-            return (
-              <button
-                key={app.id}
-                type="button"
-                onClick={() => setView({ app: app.id })}
-                aria-current={active ? 'page' : undefined}
-                className={`relative flex w-16 flex-col items-center gap-1 rounded-lg py-2 text-xs ${
-                  active ? 'bg-blue-50 text-blue-800' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <Icon name={app.icon} className="h-6 w-6" />
-                {app.label}
-                {badge > 0 && (
-                  <span
-                    className="absolute top-1 right-2 min-w-4 rounded-full bg-red-600 px-1 text-[10px] leading-4 font-semibold text-white"
-                    aria-label={`${badge} new`}
-                  >
-                    {badge}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </nav>
+      {view.app === 'office' ? (
+        <OfficeView
+          profile={profile}
+          spot={view.spot ?? 'reception'}
+          onGo={(spot) => setView({ app: 'office', spot })}
+          onUseComputer={(open) => setView(open ?? { app: 'mail' })}
+        />
+      ) : (
+        <div className="flex min-h-0 flex-1">
+          <nav
+            className="flex w-20 shrink-0 flex-col items-center gap-1 border-r border-slate-200 bg-white py-3"
+            aria-label="Apps"
+          >
+            {APPS.map((app) => {
+              const active = view.app === app.id
+              const badge = badges[app.id] ?? 0
+              return (
+                <button
+                  key={app.id}
+                  type="button"
+                  onClick={() => setView({ app: app.id })}
+                  aria-current={active ? 'page' : undefined}
+                  className={`relative flex w-16 flex-col items-center gap-1 rounded-lg py-2 text-xs ${
+                    active
+                      ? 'bg-blue-50 text-blue-800'
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon name={app.icon} className="h-6 w-6" />
+                  {app.label}
+                  {badge > 0 && (
+                    <span
+                      className="absolute top-1 right-2 min-w-4 rounded-full bg-red-600 px-1 text-[10px] leading-4 font-semibold text-white"
+                      aria-label={`${badge} new`}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+            <button
+              type="button"
+              onClick={() => setView({ app: 'office', spot: 'desk' })}
+              className="mt-auto flex w-16 flex-col items-center gap-1 rounded-lg py-2 text-xs text-slate-600 hover:bg-slate-50"
+              title="Get up from your desk and walk around the office"
+            >
+              <Icon name="back" className="h-6 w-6" />
+              Leave desk
+            </button>
+          </nav>
 
-        <main className="min-w-0 flex-1">
-          {view.app === 'mail' && (
-            <MailApp
-              profile={profile}
-              selectedId={view.mailId}
-              onSelect={(mailId) => setView({ app: 'mail', mailId })}
-              onMarkRead={onMarkRead}
-              onOpenTask={openTask}
-              onOpenCareer={() => setView({ app: 'career' })}
-            />
-          )}
-          {view.app === 'tasks' && (
-            <TasksApp
-              profile={profile}
-              selectedId={view.assignmentId}
-              onSelect={openTask}
-              onOpenWorkbook={openAssignmentWorkbook}
-            />
-          )}
-          {view.app === 'sheets' &&
-            (view.document ? (
-              <OpenWorkbook
-                document={view.document}
+          <main className="min-w-0 flex-1">
+            {view.app === 'mail' && (
+              <MailApp
                 profile={profile}
-                career={career}
-                onBack={() => setView({ app: 'sheets' })}
+                selectedId={view.mailId}
+                onSelect={(mailId) => setView({ app: 'mail', mailId })}
+                onMarkRead={onMarkRead}
                 onOpenTask={openTask}
+                onOpenCareer={() => setView({ app: 'career' })}
               />
-            ) : (
-              <SheetsApp
+            )}
+            {view.app === 'tasks' && (
+              <TasksApp
                 profile={profile}
-                onOpen={(document) => setView({ app: 'sheets', document })}
+                selectedId={view.assignmentId}
+                onSelect={openTask}
+                onOpenWorkbook={openAssignmentWorkbook}
               />
-            ))}
-          {view.app === 'career' && <CareerApp profile={profile} />}
-        </main>
-      </div>
+            )}
+            {view.app === 'sheets' &&
+              (view.document ? (
+                <OpenWorkbook
+                  document={view.document}
+                  profile={profile}
+                  career={career}
+                  onBack={() => setView({ app: 'sheets' })}
+                  onOpenTask={openTask}
+                />
+              ) : (
+                <SheetsApp
+                  profile={profile}
+                  onOpen={(document) => setView({ app: 'sheets', document })}
+                />
+              ))}
+            {view.app === 'career' && <CareerApp profile={profile} />}
+          </main>
+        </div>
+      )}
     </div>
   )
 }

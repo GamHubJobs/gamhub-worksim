@@ -16,8 +16,27 @@ export async function startCareerIfNeeded(page: Page, name = 'Alex') {
   }
 }
 
+/** If the player is walking around the office, goes to their desk and uses the computer. */
+export async function sitAtComputer(page: Page) {
+  if (await page.getByTestId('office').isVisible()) {
+    await page
+      .getByRole('navigation', { name: 'Places' })
+      .getByRole('button', { name: 'Your desk' })
+      .click()
+    await page
+      .getByTestId('office-panel')
+      .getByRole('button', { name: /Use your computer/ })
+      .click()
+  }
+  // Drawing the 3D office can be slow when several test browsers run at once.
+  await expect(page.getByRole('navigation', { name: 'Apps' })).toBeVisible({
+    timeout: 15_000,
+  })
+}
+
 /** Opens a dock app such as "Mail" or "Sheets". */
 export async function openApp(page: Page, name: 'Mail' | 'Tasks' | 'Sheets' | 'Career') {
+  await sitAtComputer(page)
   await page
     .getByRole('navigation', { name: 'Apps' })
     .getByRole('button', { name: new RegExp(`^${name}`) })

@@ -89,6 +89,7 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/content/`                        | Content as validated data: company, people, careers, assignments  |
 | `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
 | `src/desktop/`                        | Onboarding and the simulated desktop (dock, top bar, navigation)  |
+| `src/office/`                         | The 3D office (loaded on demand) and its 2D fallback floor plan   |
 | `src/app/`                            | Start-up, tab hand-over, shared services, the career hook         |
 
 ### How a submission is graded
@@ -119,14 +120,14 @@ Player clicks Submit
 | Validation     | Zod                                      |
 | Styling        | Tailwind CSS                             |
 | Tests          | Vitest (unit), Playwright (browser)      |
-| 3D             | Three.js + React Three Fiber (planned)   |
+| 3D             | three.js + React Three Fiber + drei      |
 | Spreadsheet    | Own engine and grid, built incrementally |
 
 ## Roadmap
 
 0. Foundations: saving, recovery, backups, tooling (done)
-1. Vertical slice: "Your First Day as an Intern" ← _current_ (3D office comes last)
-2. Productivity depth (Docs app, richer spreadsheet)
+1. Vertical slice: "Your First Day as an Intern" (done, including the 3D office)
+2. Productivity depth (Docs app, richer spreadsheet) ← _next_
 3. People and workplace life
 4. Time and wellbeing
 5. Career breadth

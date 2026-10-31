@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { cell } from './helpers.ts'
+import { cell, sitAtComputer } from './helpers.ts'
 
 async function type(page: Page, address: string, value: string) {
   await cell(page, address).click()
@@ -30,6 +30,7 @@ test('a full first week: three tasks, every key function, and a promotion', asyn
   await page.goto('/')
   await page.getByLabel('Your first name').fill('Jordan')
   await page.getByRole('button', { name: 'Start my first day' }).click()
+  await sitAtComputer(page)
   await page
     .getByTestId('mail-message')
     .getByRole('button', { name: 'Open task' })

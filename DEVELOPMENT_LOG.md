@@ -17,7 +17,74 @@ owner.
 - [x] 1.3 Assignment system: workplace data, instructions, submission, automatic grading
 - [x] 1.4 Simulated desktop with Mail and Tasks; XP, skills, feedback and rewards
 - [x] 1.5 More assignments, polish, browser tests for the full journey
-- [ ] 1.6 Minimal 3D office with hotspot navigation (only now that the core works)
+- [x] 1.6 Minimal 3D office with hotspot navigation
+
+**Phase 1 is complete.**
+
+---
+
+## 2026-10-31 · Milestone 1.6: the 3D office
+
+### Built
+
+- **A 3D office floor** for Cobalt Ridge Consulting (React Three Fiber + three.js +
+  drei, all MIT-licensed, free). Everything is built from simple shapes in code: no
+  downloaded models, textures or fonts, no external requests.
+  - **Reception**: company feature wall, reception desk with Nina (new character:
+    receptionist), waiting area with sofa, rug, plants, glass entrance.
+  - **Open-plan workspace**: two rows of desks with monitors, keyboards, mugs and
+    papers; five colleagues (typing, looking around); the player's own desk with a
+    blue chair, a name plate and a floating envelope when there is unread mail; a team
+    whiteboard; a wall clock showing the real time; windows with a city skyline.
+  - **Priya's office**: glass walls, desk, Priya, guest chairs, bookshelf.
+  - **Break room**: kitchen counter, coffee machine, fridge, water cooler, table with
+    a colleague on a break, Tom by the coffee machine, notice board.
+- **Click-to-go navigation**: glowing rings on the floor, clicking people/objects, or
+  the "Places" bar. The camera glides between four fixed viewpoints.
+- **Interactions that reflect real progress** (`src/game/office.ts`, pure, tested):
+  - Priya talks about the current task (new, in progress, needs revision with the
+    score, all done, promoted) and opens it on the computer.
+  - Nina welcomes new starters and later mentions unread email.
+  - Tom shares a different practical spreadsheet tip each time.
+  - The team whiteboard shows this week's tasks and their status; the notice board
+    shows company news; the coffee machine suggests short breaks.
+- **The computer is at your desk**: "Use your computer" opens the existing desktop
+  (Mail, Tasks, Sheets, Career), unchanged. "Leave desk" in the dock returns to the
+  office. New players arrive at reception; reloads return to where the player was.
+- **Lightweight by design**:
+  - The 3D code is a separate file (~250 kB compressed), downloaded only when the
+    office is shown; the rest of the app is unaffected.
+  - It draws frames on demand (30 per second for gentle movement, smoothly while the
+    camera moves), not as fast as possible.
+  - On computers without a graphics card (software 3D), it automatically uses a light
+    mode: lower resolution, 3 frames per second when idle, no soft shadows. In testing
+    this took the page from 5 to 28 responsive frames per second.
+  - Without WebGL at all (or if the 3D view fails), a simple 2D floor plan with the
+    same places and interactions is shown instead. Every action also exists as a normal
+    button, so the office works with a keyboard and screen readers.
+
+### Decisions
+
+- Built from primitives instead of downloaded models: zero licensing risk, tiny
+  download, consistent friendly style, easy to change in code.
+- Fixed viewpoints instead of free movement: no motion sickness, no getting lost,
+  works with a mouse alone, and keeps the focus on the work.
+- The office is a layer on top of the existing desktop: no gameplay, saving or
+  grading code changed.
+
+### Tested
+
+- 395 unit tests (adds office dialogue for every career state, layout consistency).
+- Browser tests (adds 3): arriving at reception, talking to Nina, Priya, Tom, coffee,
+  whiteboard and notice board, Priya opening the task on the computer, leaving the
+  desk, the office remembering where the player was; progress at the computer changing
+  what Priya says; the 2D floor plan when WebGL is unavailable. All earlier tests now
+  walk from reception to the desk first.
+
+### Known limitations
+
+- People don't walk around yet, and there is no day/night or workday clock.
+- The light mode on computers without a graphics card is less smooth by design.
 
 ---
 

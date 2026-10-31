@@ -9,7 +9,10 @@ import { z } from 'zod'
 const KEY = 'gamhub-worksim:view'
 
 export const ViewSchema = z.object({
-  app: z.enum(['mail', 'tasks', 'sheets', 'career']),
+  /** 'office' is the 3D office; the others are apps on the work computer. */
+  app: z.enum(['office', 'mail', 'tasks', 'sheets', 'career']),
+  /** In the office: where the player is standing. */
+  spot: z.enum(['reception', 'desk', 'manager', 'breakroom']).optional(),
   /** In Sheets: an open workbook ID, or "practice" for the practice workbook. */
   document: z.string().optional(),
   /** In Tasks: the selected assignment. */
@@ -20,7 +23,8 @@ export const ViewSchema = z.object({
 
 export type View = z.infer<typeof ViewSchema>
 
-export const DEFAULT_VIEW: View = { app: 'mail' }
+/** New players arrive at reception. */
+export const DEFAULT_VIEW: View = { app: 'office', spot: 'reception' }
 
 function storage(): Storage | null {
   try {

@@ -38,6 +38,14 @@ export const PEOPLE: Record<string, Person> = {
     initials: 'TB',
     color: 'bg-amber-600',
   },
+  reception: {
+    id: 'reception',
+    name: 'Nina Patel',
+    role: 'Receptionist & Office Coordinator',
+    email: `nina.patel@${COMPANY.emailDomain}`,
+    initials: 'NP',
+    color: 'bg-rose-600',
+  },
   hr: {
     id: 'hr',
     name: 'Grace Okafor',
