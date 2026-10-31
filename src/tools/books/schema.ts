@@ -86,7 +86,7 @@ export const PaymentSchema = z.object({
 export const TradeDocumentSchema = z.object({
   id: Id,
   /** Invoice number, or the supplier's reference for a bill. */
-  number: z.string().min(1).max(40),
+  number: z.string().max(40),
   contact: Id,
   date: DateSchema,
   dueDate: DateSchema,

@@ -3,7 +3,11 @@ import { departmentFor, fill, type Department } from '../departments'
 import { getTool } from '../../tools/registry'
 import { AssignmentSchema, type Assignment } from '../schemas'
 import { bankReconciliation } from './accounting/bankReconciliation'
+import { booksBankRec } from './accounting/booksBankRec'
 import { booksJournals } from './accounting/booksJournals'
+import { booksMonthEndClose } from './accounting/booksMonthEndClose'
+import { booksPayroll } from './accounting/booksPayroll'
+import { booksSalesPurchases } from './accounting/booksSalesPurchases'
 import { depreciation } from './accounting/depreciation'
 import { journalEntries } from './accounting/journalEntries'
 import { monthEnd } from './accounting/monthEnd'
@@ -44,6 +48,10 @@ const SOURCES = [
   // Accounting
   journalEntries,
   booksJournals,
+  booksSalesPurchases,
+  booksBankRec,
+  booksPayroll,
+  booksMonthEndClose,
   bankReconciliation,
   depreciation,
   monthEnd,

@@ -34,7 +34,7 @@ export const monthEnd: AssignmentInput = {
   version: 1,
   careerId: 'accounting',
   levelId: 'accountant',
-  order: 5,
+  order: 8,
   title: 'Month-end: trial balance and results',
   summary:
     'Prepare the trial balance and income statement, and report October’s results.',

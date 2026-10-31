@@ -58,7 +58,7 @@ working simulations of the professional software used in its field (see
 
 - [x] 4.7 Professional-tools framework (registry, saving, tool tasks, grading,
       progressive unlocks, guides, practice data)
-- [ ] 4.8 Accounting: Books (ledger, sales, purchases, banking, payroll, reports)
+- [x] 4.8 Accounting: Books (ledger, sales, purchases, banking, payroll, reports)
 - [ ] 4.9 IT Help Desk: Service Desk, Directory and assets, Network Tools
 - [ ] 4.10 Digital Marketing: Campaigns, Social Planner, Site Analytics, SEO Audit
 - [ ] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
@@ -66,7 +66,56 @@ working simulations of the professional software used in its field (see
 
 ---
 
-## 2026-10-31 · Milestone 4.7: the professional-tools framework, and Books
+## 2026-10-31 · Milestone 4.8: Books, complete accounting software
+
+### Built
+
+- **Sales and Purchases**: customers and suppliers (added on the fly), invoices and bills
+  with lines, quantities, prices, income or expense accounts and VAT per line, live
+  totals, and plain-English problems before approval (missing details, wrong kind of
+  account, a supplier reference already entered: “is it a duplicate?”). Approving posts
+  the journal (receivables, income and VAT; or expenses, reclaimable VAT and payables).
+  Payments in and out post to the bank, can be partial, and can be removed if keyed in
+  wrongly. Payment status (awaiting, part paid, paid, overdue) and **aged receivables
+  and payables** by how late they are.
+- **Banking**: an imported bank statement; each line is matched to the entry in Books
+  with the same amount, or recorded to an account if the books are missing it (bank
+  charges, direct debits). A live reconciliation shows the statement and book balances,
+  items in Books that are not on the statement yet (unpresented), the difference and
+  the status.
+- **Payroll** (simplified UK rules, explained on screen): employees, monthly pay runs
+  with gross pay, income tax, National Insurance, pension and net pay per payslip;
+  recalculation after changes; posting the payroll journal (wages; amounts owed to the
+  tax office and pension provider; net pay from the bank).
+- **Progressive unlocking**: Sales, Purchases and Banking open at Assistant Accountant;
+  Payroll at Accountant. Locked sections show a padlock and when they unlock.
+- **Four new Accounting tasks** (the path is now nine tasks, mixing Books with
+  Sheets, Docs and Slides; promotion thresholds rebalanced to 300, 700 and 1,050 XP):
+  - _Invoices, bills and payments in Books_ (Assistant Accountant): two invoices, a
+    customer payment, two bills, an overdue bill paid, and a supplier reminder for a bill
+    that is already in the books.
+  - _Reconcile the bank in Books_ (Assistant Accountant): match the statement, record a
+    direct debit and bank charges, and find a receipt keyed in as 1,250 instead of 1,520
+    (correct the books, never the statement); an end-of-month payment stays unpresented.
+  - _Run March’s payroll_ (Accountant): a new starter and a pay rise, then the pay run.
+  - _Close March and report to the board_ (Senior Accountant): depreciation, a prepayment
+    and two accruals in Books, then the management accounts in Docs, with income, net
+    profit and cash checked against the closed books.
+- Report figures in Docs and Slides can now be checked against fixed values, so tasks
+  done in a tool (rather than a workbook) can have written deliverables.
+
+### Tested
+
+- Unit tests for invoices and bills (posting, VAT, part payments, overpayment refused,
+  duplicates, ageing), reconciliation (matching, recording, unpresented items) and
+  payroll (a payslip checked by hand: £3,000 gross → £2,303.34 net; posting); a test
+  that every Books action leaves a valid file (a bug found by the browser tests: a new
+  bill with no reference yet was silently refused by the save layer); and the model
+  answer of every new task scores 100% while the starting file fails.
+- Browser tests: the invoicing, bank reconciliation and payroll tasks done end to end in
+  the real interface (100% each), and sections locked by level.
+
+the professional-tools framework, and Books
 
 ### Built
 

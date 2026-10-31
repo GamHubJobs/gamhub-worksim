@@ -2,11 +2,16 @@
  * Books: the accounting software's screens. Sections on the left; everything
  * is calculated live from the posted journals.
  */
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { formatMoney } from '../checks'
 import type { ToolWorkspaceProps } from '../ui'
 import { Icon } from '../../ui/Icon'
+import { BankingSection } from './BankingSection'
 import { books } from './definition'
+import { AccountSelect, Heading, NumberInput, TextInput } from './inputs'
+import { cell, numeric, TYPE_NAMES } from './styles'
+import { PayrollSection } from './PayrollSection'
+import { TradeSection } from './TradeSection'
 import {
   accountBalance,
   accountLedger,
@@ -23,23 +28,9 @@ import {
   trialBalance,
   updateJournal,
 } from './ledger'
-import {
-  ACCOUNT_TYPES,
-  type Account,
-  type AccountType,
-  type BooksState,
-  type Journal,
-} from './schema'
+import { ACCOUNT_TYPES, type AccountType, type BooksState, type Journal } from './schema'
 
 type Props = ToolWorkspaceProps<BooksState>
-
-const TYPE_NAMES: Record<AccountType, string> = {
-  asset: 'Assets',
-  liability: 'Liabilities',
-  equity: 'Equity',
-  income: 'Income',
-  expense: 'Expenses',
-}
 
 const SOURCE_NAMES: Record<Journal['source'], string> = {
   manual: 'Manual journal',
@@ -53,8 +44,6 @@ const SOURCE_NAMES: Record<Journal['source'], string> = {
 }
 
 const money = (n: number) => formatMoney(n)
-const cell = 'px-3 py-1.5'
-const numeric = `${cell} text-right tabular-nums`
 
 export default function BooksWorkspace({
   state,
@@ -135,6 +124,21 @@ export default function BooksWorkspace({
             update={update}
           />
         )}
+        {(section === 'sales' || section === 'purchases') && (
+          <TradeSection
+            key={section}
+            state={state}
+            side={section}
+            editable={editable}
+            update={update}
+          />
+        )}
+        {section === 'banking' && (
+          <BankingSection state={state} editable={editable} update={update} />
+        )}
+        {section === 'payroll' && (
+          <PayrollSection state={state} editable={editable} update={update} />
+        )}
         {section === 'reports' && <Reports state={state} />}
       </div>
     </div>
@@ -142,15 +146,6 @@ export default function BooksWorkspace({
 }
 
 // ---------------------------------------------------------------------------
-
-function Heading({ title, children }: { title: string; children?: ReactNode }) {
-  return (
-    <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-      <div className="flex gap-2">{children}</div>
-    </div>
-  )
-}
 
 function Card({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -341,115 +336,6 @@ function Journals({
   )
 }
 
-/** A number box that commits when the player leaves it (one undo step per edit). */
-function MoneyInput({
-  value,
-  onCommit,
-  label,
-  disabled,
-}: {
-  value: number
-  onCommit: (value: number) => void
-  label: string
-  disabled: boolean
-}) {
-  const [text, setText] = useState(value === 0 ? '' : value.toFixed(2))
-  const commit = () => {
-    const parsed = Number(text.replace(/[£,\s]/g, '') || '0')
-    if (Number.isFinite(parsed) && parsed >= 0) {
-      if (parsed !== value) onCommit(Math.round(parsed * 100) / 100)
-    } else {
-      setText(value === 0 ? '' : value.toFixed(2))
-    }
-  }
-  return (
-    <input
-      aria-label={label}
-      inputMode="decimal"
-      value={text}
-      disabled={disabled}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') e.currentTarget.blur()
-      }}
-      className="w-24 rounded border border-slate-300 px-2 py-1 text-right tabular-nums disabled:border-transparent disabled:bg-transparent"
-    />
-  )
-}
-
-function TextInput({
-  value,
-  onCommit,
-  label,
-  disabled,
-  className = '',
-  type = 'text',
-}: {
-  value: string
-  onCommit: (value: string) => void
-  label: string
-  disabled: boolean
-  className?: string
-  type?: 'text' | 'date'
-}) {
-  const [text, setText] = useState(value)
-  return (
-    <input
-      aria-label={label}
-      type={type}
-      value={text}
-      disabled={disabled}
-      onChange={(e) => {
-        setText(e.target.value)
-        if (type === 'date') onCommit(e.target.value)
-      }}
-      onBlur={() => text !== value && onCommit(text)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') e.currentTarget.blur()
-      }}
-      className={`rounded border border-slate-300 px-2 py-1 disabled:border-transparent disabled:bg-transparent ${className}`}
-    />
-  )
-}
-
-export function AccountSelect({
-  accounts,
-  value,
-  onChange,
-  label,
-  disabled,
-}: {
-  accounts: Account[]
-  value: string
-  onChange: (code: string) => void
-  label: string
-  disabled: boolean
-}) {
-  return (
-    <select
-      aria-label={label}
-      value={value}
-      disabled={disabled}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-56 rounded border border-slate-300 px-2 py-1 disabled:border-transparent disabled:bg-transparent disabled:text-slate-900 disabled:opacity-100"
-    >
-      <option value="">Choose an account…</option>
-      {ACCOUNT_TYPES.map((type) => (
-        <optgroup key={type} label={TYPE_NAMES[type]}>
-          {accounts
-            .filter((a) => a.type === type)
-            .map((a) => (
-              <option key={a.code} value={a.code}>
-                {a.code} {a.name}
-              </option>
-            ))}
-        </optgroup>
-      ))}
-    </select>
-  )
-}
-
 function JournalEditor({
   state,
   journal,
@@ -555,7 +441,7 @@ function JournalEditor({
                 />
               </td>
               <td className={`${cell} text-right`}>
-                <MoneyInput
+                <NumberInput
                   key={`d${line.debit}`}
                   label={`Line ${i + 1} debit`}
                   value={line.debit}
@@ -564,7 +450,7 @@ function JournalEditor({
                 />
               </td>
               <td className={`${cell} text-right`}>
-                <MoneyInput
+                <NumberInput
                   key={`c${line.credit}`}
                   label={`Line ${i + 1} credit`}
                   value={line.credit}

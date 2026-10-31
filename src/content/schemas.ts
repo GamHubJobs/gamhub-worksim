@@ -86,7 +86,9 @@ export const FileCheckSchema = z.discriminatedUnion('type', [
         z.object({
           label: z.string().min(1),
           /** "Sheet!B9": a cell of the model answer. */
-          cell: SheetRangeSchema,
+          cell: SheetRangeSchema.optional(),
+          /** Or the figure itself (for tasks done in a professional tool). */
+          value: z.number().optional(),
           percent: z.boolean().default(false),
         }),
       )

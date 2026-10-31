@@ -13,7 +13,7 @@ import { findNodes, outline, plainText, countWords } from '../apps/docs/text'
 import { getDocTemplate } from '../apps/docs/templates'
 import { getSlidesTemplate, slideText } from '../apps/slides/model'
 import type { WorkbookCalculator } from '../apps/sheets/engine/workbook'
-import { isError } from '../apps/sheets/engine/values'
+import { isError, type CellValue } from '../apps/sheets/engine/values'
 import { fill } from '../content/departments'
 import type { Deliverable, FileCheck } from '../content/schemas'
 import type { DocContent, SlidesContent } from '../persistence/schemas'
@@ -188,9 +188,12 @@ function gradeFileCheck(
       const problems: string[] = []
       let found = 0
       for (const figure of check.figures) {
-        const [sheetName, address] = figure.cell.split('!')
-        const sheetId = solution.sheetIdOf(sheetName)
-        const value = sheetId ? solution.calculator.getValue(sheetId, address) : null
+        let value: CellValue = figure.value ?? null
+        if (figure.cell) {
+          const [sheetName, address] = figure.cell.split('!')
+          const sheetId = solution.sheetIdOf(sheetName)
+          value = sheetId ? solution.calculator.getValue(sheetId, address) : null
+        }
         if (typeof value !== 'number' || isError(value)) continue
         if (mentionsNumber(file.text, value, figure.percent)) found++
         else

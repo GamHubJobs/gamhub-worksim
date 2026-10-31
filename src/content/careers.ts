@@ -213,7 +213,18 @@ CAREERS.push({
     'accuracy',
   ],
   apps: ['sheets', 'docs'],
-  tools: [{ tool: 'books', fromLevel: 'accounts-trainee' }],
+  tools: [
+    {
+      tool: 'books',
+      fromLevel: 'accounts-trainee',
+      sections: {
+        sales: 'assistant-accountant',
+        purchases: 'assistant-accountant',
+        banking: 'assistant-accountant',
+        payroll: 'accountant',
+      },
+    },
+  ],
   levels: [
     {
       id: 'accounts-trainee',
@@ -224,20 +235,20 @@ CAREERS.push({
     {
       id: 'assistant-accountant',
       title: 'Assistant Accountant',
-      xpRequired: 200,
+      xpRequired: 300,
       minReputation: 35,
     },
     {
       id: 'accountant',
       title: 'Accountant',
-      xpRequired: 350,
+      xpRequired: 700,
       minReputation: 50,
       minReview: 'solid',
     },
     {
       id: 'senior-accountant',
       title: 'Senior Accountant',
-      xpRequired: 550,
+      xpRequired: 1050,
       minReputation: 60,
       minReview: 'strong',
     },
