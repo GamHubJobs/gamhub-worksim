@@ -7,19 +7,91 @@ was tested, and known limitations.
 
 ## Current status
 
-**Phase 0: Foundations is complete**, except the optional online deployment, which
-needs the owner's approval.
+**Phase 0: Foundations is complete.** Online deployment (0.22) is postponed by the
+owner.
 
-- [ ] 0.22 (Needs owner approval) Online test deployment on Cloudflare Pages (free)
+**Phase 1: "Your First Day as an Intern"** (in progress). Milestones:
 
-**Next up: Phase 1, vertical slice "Your First Day as an Intern".** Planned order:
+- [x] 1.1 Formula engine (pure TypeScript, heavily tested)
+- [x] 1.2 Spreadsheet editor: formula bar, selection, copy/paste, undo/redo, formatting
+- [ ] 1.3 Assignment system: workplace data, instructions, submission, automatic grading
+- [ ] 1.4 Simulated desktop with Mail and Tasks; XP, skills, feedback and rewards
+- [ ] 1.5 More assignments, polish, browser tests for the full journey
+- Later (after the above work well): minimal 3D office with hotspot navigation
 
-1. Formula engine (pure TypeScript, heavily tested) and formula bar
-2. Reliable grid upgrades: virtualised rows, copy/paste, undo/redo, basic formatting
-3. Assignment system: data-driven assignments with automatic grading and feedback
-4. Workstation shell: simulated desktop with Mail, Tasks and Sheets windows
-5. Game core: XP, skills, energy, workday clock, promotion check
-6. Minimal 3D office with hotspot navigation (React Three Fiber)
+---
+
+## 2026-10-31 · Milestone 1.1–1.2: a real spreadsheet
+
+### Built
+
+- **Formula engine** (`src/apps/sheets/engine/`, pure TypeScript, no React):
+  - Parser for numbers, "text", TRUE/FALSE, references (`A1`, `$A$1`, `Prices!A1`,
+    `'Price list'!A1`), ranges (`A1:C5`, `A:A`), operators `+ - * / ^ & = <> < > <= >=`
+    and `%`, with the same precedence as Excel.
+  - 38 functions: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, COUNTBLANK, MEDIAN, PRODUCT,
+    IF, IFERROR, AND, OR, NOT, VLOOKUP, HLOOKUP, MATCH, INDEX, SUMIF, COUNTIF, AVERAGEIF,
+    ROUND, ROUNDUP, ROUNDDOWN, ABS, INT, MOD, SQRT, CONCATENATE, CONCAT, LEN, UPPER,
+    LOWER, PROPER, TRIM, LEFT, RIGHT, MID. Each has help text (syntax, description,
+    example).
+  - Real spreadsheet errors (#DIV/0!, #VALUE!, #REF!, #NAME?, #N/A, #NUM!, #ERROR!),
+    each with a **plain-language explanation of this particular problem**, e.g.
+    "There is no function called SUMM. Did you mean SUM?" or "VLOOKUP could not find
+    "P-999"… Tip: add FALSE as the last value to look for an exact match."
+  - Circular references are detected (also very long loops). Very long formula
+    chains (thousands of rows) are calculated in steps instead of crashing.
+  - Copying a formula moves its references (`=B2*C2` → `=B3*C3`; `$` keeps them fixed;
+    references falling off the sheet become #REF!). Renaming a sheet updates formulas.
+- **Display formats**: number (1,234.50), currency ($1,234.50), percent (12.5%), with
+  adjustable decimals. Typed values keep their style ("15%", "$99", "4,500.00").
+- **Spreadsheet editor** (`ui/SheetEditor.tsx`, replaces the Phase 0 grid):
+  - Formula bar (edit there or in the cell), name box (type B12 to jump there).
+  - Function name suggestions while typing (Tab to insert) and a help card for the
+    function being typed, highlighting the current value.
+  - Clicking cells (or using arrow keys) while typing a formula inserts references;
+    references are colour-highlighted on the grid. Missing closing brackets are added.
+  - Range selection (drag, Shift+click, Shift+arrows, Ctrl+A), Ctrl+arrows to jump.
+  - Copy/cut/paste (formulas and formatting inside WorkSim; plain text to and from
+    Excel, Google Sheets, email…), Ctrl+D / Ctrl+R fill.
+  - Undo/redo (200 steps, toolbar and Ctrl+Z / Ctrl+Y). Undone changes are saved too.
+  - Toolbar: bold, italic, alignment, currency, percent, thousands, decimals, fill
+    colour, clear formatting. Resizable columns (double-click to fit).
+  - Several sheets per workbook: add, rename (double-click), switch.
+  - Status bar with Sum, Average and Count of the selection.
+  - The grid grows as needed (100 rows / 26 columns minimum).
+- **Save format 2** for workbooks: optional cell formatting and column widths. Format 1
+  workbooks and backups are upgraded automatically (tested).
+
+### Decisions
+
+- Own engine instead of a library: the open-source engines are either GPL-licensed
+  (not allowed for this commercial product) or far larger than needed. Ours is small,
+  fully tested and explains errors for learners, which is the point of the product.
+- Behaviour follows Excel/Google Sheets wherever possible (operator precedence,
+  number/text comparison rules, VLOOKUP's approximate default, empty cells as 0), so
+  skills transfer to real jobs.
+- Results are recalculated on demand and remembered until the next change; there is
+  no stored dependency graph yet. Fast enough for workbooks of several thousand cells.
+- No row virtualisation yet: rows are only redrawn when their content changes, which
+  keeps the grid responsive at the sizes assignments use.
+
+### Tested
+
+- 327 unit tests (adds ~190): parser, every function, error messages, circular and
+  very long chains, reference moving, number formats, clipboard, fill, sheets,
+  formula help, save-format upgrade.
+- 27 browser tests (adds 9): formulas calculate and update, errors explained, function
+  suggestions and click-to-reference, formula bar editing, copy/paste and fill down,
+  undo/redo, formatting saved, sheets and cross-sheet formulas, pasting text from
+  other programs.
+
+### Known limitations
+
+- No dates/times yet (typed dates stay text), no wildcards in MATCH, no charts.
+- Formulas pasted from other programs arrive as text values, not formulas.
+- Deleting sheets and inserting/deleting rows and columns are not available yet.
+- The production bundle is just over 500 kB (≈150 kB compressed); it will be split
+  when the 3D office is added.
 
 ---
 
