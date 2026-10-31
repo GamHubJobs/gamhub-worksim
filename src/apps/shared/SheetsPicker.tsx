@@ -16,14 +16,16 @@ export type PickerMode = 'chart' | 'table'
 
 interface SheetsPickerProps {
   mode: PickerMode
+  /** Only offer charts (e.g. for slides). */
+  chartsOnly?: boolean
   onChart: (chart: ChartSpec) => void
   onTable: (rows: string[][]) => void
   onClose: () => void
 }
-
 export function SheetsPicker({
   mode: initialMode,
   onChart,
+  chartsOnly = false,
   onTable,
   onClose,
 }: SheetsPickerProps) {
@@ -87,22 +89,24 @@ export function SheetsPicker({
       <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
           <div className="flex gap-1" role="tablist">
-            {(['chart', 'table'] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                role="tab"
-                aria-selected={mode === tab}
-                onClick={() => setMode(tab)}
-                className={`rounded px-3 py-1 text-sm ${
-                  mode === tab
-                    ? 'bg-blue-50 font-medium text-blue-900'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                {tab === 'chart' ? 'A chart' : 'A table of cells'}
-              </button>
-            ))}
+            {(chartsOnly ? (['chart'] as const) : (['chart', 'table'] as const)).map(
+              (tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === tab}
+                  onClick={() => setMode(tab)}
+                  className={`rounded px-3 py-1 text-sm ${
+                    mode === tab
+                      ? 'bg-blue-50 font-medium text-blue-900'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {tab === 'chart' ? 'A chart' : 'A table of cells'}
+                </button>
+              ),
+            )}
           </div>
           <button
             type="button"

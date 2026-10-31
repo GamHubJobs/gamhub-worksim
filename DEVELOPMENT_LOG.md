@@ -37,9 +37,53 @@ owner.
 
 - [x] 3.1 Docs: a real document editor with templates, autosave and version history
 - [x] 3.2 Advanced Sheets: charts, sorting, filtering, conditional formatting, validation
-- [ ] 3.3 Slides: a real presentation editor with themes, layouts and presentation mode
+- [x] 3.3 Slides: a real presentation editor with themes, layouts and presentation mode
 - [ ] 3.4 Integration: charts across apps, attachments, submitting work by email
 - [ ] 3.5 Multi-application assignments
+
+---
+
+## 2026-10-31 · Milestone 3.3: Slides
+
+### Built
+
+- **A presentation editor** (built in-house, no new dependencies): slide thumbnails,
+  the slide canvas scaled to fit, and speaker notes.
+  - **Slides**: add (choosing a layout), duplicate, delete (never the last one), move
+    up and down.
+  - **Layouts**: title slide, title and content, two columns, section header, title
+    only, blank. Changing a slide's layout keeps its text.
+  - **Themes**: corporate blue, midnight, fresh green, warm (backgrounds, text and
+    accent colours; title and section slides use the theme's strong colour).
+  - **Elements**: text boxes (size, bold, italic, bullets, alignment, colour), shapes
+    (rectangle, rounded rectangle, ellipse, arrow, line; fill colour; text inside),
+    pictures from the computer (shrunk to at most 1280 px so files stay small), and
+    charts from Sheets. Click to select, drag to move, drag the handles to resize,
+    double-click to type, arrow keys to nudge, Delete to remove, bring to front or send
+    to back. Undo and redo.
+- **Presentation mode**: full screen; next with →, Space, Page Down or a click; back
+  with ←; Home/End; Escape ends it.
+- **Templates**: monthly business review, project update and proposal, each with a
+  sensible structure and [placeholders], plus a blank presentation.
+- **Saving like every other file**: autosave, crash recovery, version history,
+  backups and restore, rename, the file list.
+
+### Fixed
+
+- **A safety net in the shared save code**: a change that would make a file invalid is
+  now refused (and reported in the console) instead of being saved. Found by the new
+  browser test: a tiny picture was placed at an invalid size, autosave kept retrying
+  the invalid file, and nothing after it could be saved. New elements are now always
+  given a valid size, and tiny pictures are enlarged to be visible.
+
+### Tested
+
+- Unit tests: every template is a valid presentation; adding, duplicating, moving and
+  deleting slides; never deleting the last slide; changing a layout keeps the text;
+  adding, changing, reordering and removing elements; keeping elements on the slide.
+- Browser test: a template, a new slide with typed text, a shape moved by dragging, a
+  picture, a theme, duplicating and deleting slides, presenting with the keyboard, and
+  everything still there after a reload.
 
 ---
 

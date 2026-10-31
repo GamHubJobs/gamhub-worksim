@@ -215,6 +215,16 @@ export function useSavedDocument<Content>(
   const applyContent = useCallback(
     (next: Content) => {
       if (!documentId) return
+      // A change that would make the file invalid is refused, so that it can
+      // never block saving everything that comes after it.
+      const check = contentSchema.safeParse(next)
+      if (!check.success) {
+        console.error(
+          'A change was refused because it would damage the file.',
+          check.error,
+        )
+        return
+      }
       latestContentRef.current = next
       setState((previous) =>
         previous.status === 'ready' ? { ...previous, content: next } : previous,
@@ -222,7 +232,7 @@ export function useSavedDocument<Content>(
       writeJournal(documentId, next)
       autosaverRef.current?.schedule(next)
     },
-    [documentId],
+    [documentId, contentSchema],
   )
 
   /**
@@ -236,6 +246,10 @@ export function useSavedDocument<Content>(
       if (!current) return
       const next = change(current)
       if (next === current || contentEquals(next, current)) return
+      if (!contentSchema.safeParse(next).success) {
+        console.error('A change was refused because it would damage the file.')
+        return
+      }
       const history = historyRef.current
       history.undo.push(current)
       if (history.undo.length > MAX_UNDO_STEPS) history.undo.shift()
@@ -243,7 +257,7 @@ export function useSavedDocument<Content>(
       setHistoryState({ canUndo: true, canRedo: false })
       applyContent(next)
     },
-    [applyContent],
+    [applyContent, contentSchema],
   )
 
   /**

@@ -8,6 +8,8 @@ import type { Career } from '../app/useCareer'
 import { CareerApp } from '../apps/career/CareerApp'
 import { DocsApp } from '../apps/docs/DocsApp'
 import { DocWindow } from '../apps/docs/DocWindow'
+import { SlidesApp } from '../apps/slides/SlidesApp'
+import { SlidesWindow } from '../apps/slides/SlidesWindow'
 import { MailApp } from '../apps/mail/MailApp'
 import { SheetsApp } from '../apps/sheets/SheetsApp'
 import { WorkbookWindow } from '../apps/sheets/WorkbookWindow'
@@ -50,6 +52,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'tasks', label: 'Tasks', icon: 'tasks' },
     { id: 'sheets', label: 'Sheets', icon: 'sheets' },
     { id: 'docs', label: 'Docs', icon: 'docs' },
+    { id: 'slides', label: 'Slides', icon: 'slides' },
     { id: 'career', label: 'Career', icon: 'career' },
   ]
 
@@ -288,6 +291,20 @@ export function Desktop({
                     playerName={profile.name}
                     linked={{}}
                     onOpen={(document) => setView({ app: 'docs', document })}
+                  />
+                ))}
+              {view.app === 'slides' &&
+                (view.document ? (
+                  <SlidesWindow
+                    key={view.document}
+                    documentId={view.document}
+                    onBack={() => setView({ app: 'slides' })}
+                  />
+                ) : (
+                  <SlidesApp
+                    playerName={profile.name}
+                    linked={{}}
+                    onOpen={(document) => setView({ app: 'slides', document })}
                   />
                 ))}
               {view.app === 'career' && <CareerApp profile={profile} />}
