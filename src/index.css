@@ -1,27 +1,8 @@
-/* Temporary base styles. Replaced by Tailwind CSS in Step 0.6. */
+@import 'tailwindcss';
 
-:root {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  color: #1f2937;
-  background: #f8fafc;
-}
-
-body {
-  margin: 0;
-}
-
-.dev-page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 24px;
-}
-
-.dev-page h1 {
-  margin: 0 0 8px;
-  font-size: 40px;
-}
-
-.subtitle {
-  margin: 0;
-  color: #64748b;
+/* Base styles shared by the whole app. Prefer Tailwind classes in components. */
+@layer base {
+  body {
+    @apply bg-slate-50 font-sans text-slate-800 antialiased;
+  }
 }

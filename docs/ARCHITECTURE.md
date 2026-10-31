@@ -54,7 +54,7 @@ Persistence (IndexedDB, autosave, versions, backups, future sync)
 | Code checks    | Oxlint                                   |
 | Local database | IndexedDB via Dexie (Phase 0)            |
 | Validation     | Zod (Phase 0)                            |
-| Styling        | Tailwind CSS (Phase 0)                   |
+| Styling        | Tailwind CSS                             |
 | Tests          | Vitest, Playwright (Phase 0)             |
 | 3D             | Three.js + React Three Fiber (Phase 1)   |
 | Spreadsheet    | Own engine and grid, built incrementally |
