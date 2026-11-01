@@ -275,3 +275,78 @@ describe('approvals: policy, authority and budgets', () => {
     expect(caseContext(done).remaining('finance')).toBe(18000 * 0.2 - 180)
   })
 })
+
+describe('workflows: hand-offs between departments', () => {
+  const def = getCase('wf-fa-purchase-order')!
+  const followUp = 'wf-fa-purchase-order-fix'
+  const junior = passed(profileFor(def.careerId, { levelId: 'junior' }), 'payment-run')
+
+  function submitWith(answers: Record<string, unknown>) {
+    const arrived = arriveCase(junior, def, 1)
+    const withAnswers = {
+      ...arrived,
+      work: {
+        ...arrived.work,
+        cases: {
+          ...arrived.work.cases,
+          [def.id]: { ...arrived.work.cases[def.id], answers },
+        },
+      },
+    }
+    return recordCaseResult(withAnswers, def, gradeCase(def, answers), 10)
+  }
+
+  it('checks each field and explains what is wrong', () => {
+    const wrong = {
+      handoff: { ...(modelAnswers(def).handoff as object), code: 'OPS-SUPP' },
+    }
+    const step = gradeCase(def, wrong).steps[0]
+    expect(step.earned).toBeLessThan(step.points)
+    expect(step.notes).toEqual([expect.stringContaining('Filing cabinets are furniture')])
+    // Text answers ignore case and spacing; numbers accept £ and commas.
+    expect(
+      gradeCase(def, {
+        handoff: { ...(modelAnswers(def).handoff as object), net: '£720.00' },
+      }).steps[0].notes,
+    ).toEqual([])
+  })
+
+  it('a correct hand-off just works: no follow-up', () => {
+    const done = submitWith(modelAnswers(def))
+    expect(dueCases(done).map((c) => c.id)).not.toContain(followUp)
+  })
+
+  it('a wrong hand-off brings the receiving department back with the problem', () => {
+    const done = submitWith({
+      handoff: { ...(modelAnswers(def).handoff as object), gross: '720' },
+    })
+    expect(dueCases(done).map((c) => c.id)).toContain(followUp)
+  })
+
+  it('a lapsed hand-off counts as wrong', () => {
+    const arrived = arriveCase(junior, def, 1)
+    const late = checkCases({
+      ...arrived,
+      work: { ...arrived.work, minute: arrived.work.minute + def.deadlineHours * 60 + 1 },
+    })
+    expect(late.work.cases[def.id].status).toBe('lapsed')
+    // It arrives straight away, or as soon as the office is open.
+    const followed =
+      !!late.work.cases[followUp] || dueCases(late).some((c) => c.id === followUp)
+    expect(followed).toBe(true)
+  })
+
+  it('every workflow has a follow-up for a wrong hand-off, and every career has a workflow', () => {
+    const workflows = CASES.filter((c) => c.kind === 'workflow' && !c.trigger.onlyIf)
+    for (const workflow of workflows) {
+      expect(
+        CASES.some(
+          (c) =>
+            c.trigger.afterCase === workflow.id && c.trigger.onlyIf?.outcome === 'wrong',
+        ),
+        workflow.id,
+      ).toBe(true)
+    }
+    expect(new Set(workflows.map((w) => w.careerId)).size).toBe(CAREERS.length)
+  })
+})

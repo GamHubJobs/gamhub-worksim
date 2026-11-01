@@ -245,3 +245,46 @@ for (const [career, levelTask, caseId, subject] of OPERATIONS) {
     await expect(detail.getByTestId('case-score')).toHaveText('100%')
   })
 }
+
+test('workflows: a wrong hand-off comes back from the next department', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  await page.goto('/')
+  await startCareerIfNeeded(page, 'Alex Morgan')
+  await openApp(page, 'Mail')
+  await page.evaluate("window.__worksim.skipTo('petty-cash')")
+  await page.evaluate("window.__worksim.arriveCase('wf-fa-purchase-order')")
+  await page.getByRole('button', { name: /Approved: new filing cabinets/ }).click()
+  await page
+    .getByTestId('mail-message')
+    .getByRole('button', { name: 'Open case' })
+    .click()
+  const detail = page.getByTestId('case-detail')
+  await expect(detail.getByTestId('step-handoff')).toContainText(
+    'To: Meadow Office Supplies and Accounting',
+  )
+
+  // The purchase order, with the total wrongly entered without VAT.
+  await detail
+    .getByRole('combobox', { name: 'Supplier' })
+    .selectOption('Meadow Office Supplies')
+  for (const [label, value] of [
+    ['Net total (£)', '720'],
+    ['VAT at 20% (£)', '144'],
+    ['Total including VAT (£)', '720'],
+  ]) {
+    const box = detail.getByRole('textbox', { name: label })
+    await box.fill(value)
+    await box.blur()
+  }
+  await detail.getByRole('combobox', { name: 'Budget code' }).selectOption('OPS-FURN')
+  await detail.getByRole('button', { name: /^Submit to / }).click()
+  await detail.getByRole('button', { name: 'Send my answer' }).click()
+  await expect(detail.getByTestId('case-result')).toContainText('£720 + £144 = £864')
+
+  // Accounting comes back: the supplier's invoice doesn't match the order.
+  await openApp(page, 'Mail')
+  await page.getByRole('button', { name: /Invoice on hold: PO mismatch/ }).click()
+  await expect(page.getByTestId('mail-message')).toContainText('Daniel Okoro')
+})

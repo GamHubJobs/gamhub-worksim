@@ -122,6 +122,43 @@ export const CaseStepSchema = z.discriminatedUnion('kind', [
     /** An example of a good reply, shown after submitting (and used by the tests). */
     model: Text,
   }),
+  /** Pass information on to another department, in the form it needs. */
+  StepBase.extend({
+    kind: z.literal('handoff'),
+    /** Who receives it, e.g. "Facilities (hardware)". */
+    to: Text,
+    fields: z
+      .array(
+        z.discriminatedUnion('kind', [
+          z.object({
+            id: Id,
+            label: Text,
+            kind: z.literal('text'),
+            /** Accepted answers (compared ignoring case and spacing). */
+            accept: z.array(z.string().min(1)).min(1),
+            why: Text,
+          }),
+          z.object({
+            id: Id,
+            label: Text,
+            kind: z.literal('number'),
+            answer: z.number(),
+            tolerance: z.number().min(0).default(0),
+            unit: z.string().default(''),
+            why: Text,
+          }),
+          z.object({
+            id: Id,
+            label: Text,
+            kind: z.literal('choice'),
+            options: z.array(z.string().min(1)).min(2),
+            answer: z.string().min(1),
+            why: Text,
+          }),
+        ]),
+      )
+      .min(1),
+  }),
   /** Produce a document or presentation with the existing apps. */
   StepBase.extend({
     kind: z.literal('document'),
@@ -182,6 +219,8 @@ export const CaseSchema = z.object({
   trigger: z.object({
     afterAssignment: z.string().optional(),
     afterCase: z.string().optional(),
+    /** Only if a step of `afterCase` was answered right (or wrong): e.g. a hand-off. */
+    onlyIf: z.object({ step: Id, outcome: z.enum(['right', 'wrong']) }).optional(),
     fromDay: z.number().int().min(1).optional(),
   }),
   /** Office hours from arrival to the deadline. */

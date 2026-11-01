@@ -3,7 +3,7 @@ import { useState } from 'react'
 import type { CaseStep } from '../../content/cases/schema'
 import { answerFor } from '../../game/cases'
 
-const field = 'rounded-md border border-slate-300 bg-white px-2 py-1 text-sm'
+const field_ = 'rounded-md border border-slate-300 bg-white px-2 py-1 text-sm'
 
 export function StepForm({
   step,
@@ -107,7 +107,7 @@ export function StepForm({
                 <td className="py-1.5">
                   <select
                     aria-label={`Decision: ${r.summary}`}
-                    className={field}
+                    className={field_}
                     disabled={disabled}
                     value={decisions[r.id] ?? ''}
                     onChange={(e) => onSave({ ...decisions, [r.id]: e.target.value })}
@@ -158,7 +158,7 @@ export function StepForm({
               <span>{item.label}</span>
               <select
                 aria-label={`${step.kind === 'assign' ? 'Assign' : 'Owner of'}: ${item.label}`}
-                className={field}
+                className={field_}
                 disabled={disabled}
                 value={chosen[item.id] ?? ''}
                 onChange={(e) => onSave({ ...chosen, [item.id]: e.target.value })}
@@ -174,6 +174,48 @@ export function StepForm({
               </select>
             </label>
           ))}
+        </div>
+      )
+    }
+    case 'handoff': {
+      const given = answerFor('handoff', answer) ?? {}
+      return (
+        <div className="space-y-2 text-sm">
+          <p className="text-slate-600">To: {step.to}</p>
+          {step.fields.map((field) =>
+            field.kind === 'choice' ? (
+              <label
+                key={field.id}
+                className="flex flex-wrap items-center justify-between gap-2"
+              >
+                <span>{field.label}</span>
+                <select
+                  aria-label={field.label}
+                  className={field_}
+                  disabled={disabled}
+                  value={given[field.id] ?? ''}
+                  onChange={(e) => onSave({ ...given, [field.id]: e.target.value })}
+                >
+                  <option value="" disabled>
+                    Choose…
+                  </option>
+                  {field.options.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <HandoffText
+                key={field.id}
+                label={field.label}
+                initial={given[field.id] ?? ''}
+                disabled={disabled}
+                onSave={(value) => onSave({ ...given, [field.id]: value })}
+              />
+            ),
+          )}
         </div>
       )
     }
@@ -227,7 +269,7 @@ function TextAnswer({
       <span className="sr-only">{label}</span>
       {prefix}
       <input
-        className={`${field} w-40`}
+        className={`${field_} w-40`}
         value={value}
         disabled={disabled}
         inputMode="decimal"
@@ -235,6 +277,33 @@ function TextAnswer({
         onBlur={() => value !== initial && onSave(value)}
       />
       {suffix}
+    </label>
+  )
+}
+
+function HandoffText({
+  label,
+  initial,
+  disabled,
+  onSave,
+}: {
+  label: string
+  initial: string
+  disabled: boolean
+  onSave: (value: string) => void
+}) {
+  const [value, setValue] = useState(initial)
+  return (
+    <label className="flex flex-wrap items-center justify-between gap-2">
+      <span>{label}</span>
+      <input
+        className={`${field_} w-48`}
+        aria-label={label}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={() => value !== initial && onSave(value)}
+      />
     </label>
   )
 }
@@ -258,7 +327,7 @@ function ReplyAnswer({
     <label className="block text-sm">
       <span className="text-slate-600">To: {to}</span>
       <textarea
-        className={`${field} mt-1 block w-full`}
+        className={`${field_} mt-1 block w-full`}
         rows={7}
         value={value}
         disabled={disabled}

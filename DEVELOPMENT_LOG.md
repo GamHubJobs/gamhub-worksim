@@ -90,12 +90,45 @@ working simulations of the professional software used in its field (see
 - [x] 6.1 Organisation model, case engine, Cases app, save migration
 - [x] 6.2 Clients and customers
 - [x] 6.3 Business operations: budgets, purchases, approvals
-- [ ] 6.4 Interdepartmental workflows
+- [x] 6.4 Interdepartmental workflows
 - [ ] 6.5 Meetings: preparation, meeting, minutes, actions
 - [ ] 6.6 Complex workplace incidents
 - [ ] 6.7 Management and leadership
 - [ ] 6.8 Cross-functional programme: the company expansion
 - [ ] 6.9 Office integration, balance, hardening, documentation
+
+---
+
+## 2026-11-01 · Milestone 6.4: Interdepartmental workflows
+
+### Built
+
+- **Hand-off steps:** the player passes information on to another department in the form
+  it needs (text, figures and choices), checked field by field against the evidence,
+  with the reason for every wrong field. Text ignores case and spacing; numbers accept
+  £ signs and commas.
+- **Hand-offs have consequences downstream.** A follow-up case arrives from the
+  receiving department only if the hand-off was wrong (or never made): the problem it
+  caused, to own and put right. A correct hand-off simply works. Follow-ups come first
+  and are not held back by the limit on open cases.
+- **A workflow for every career**, each with its follow-up:
+
+| Career            | Workflow                                                                    | If the hand-off was wrong                      |
+| ----------------- | --------------------------------------------------------------------------- | ---------------------------------------------- |
+| IT Help Desk      | People & Culture’s new starter → set-up record for Facilities and Directory | The new starter can’t work on her first day    |
+| Finance & Admin   | Operations’ approved request → the purchase order                           | Accounting holds the supplier’s invoice        |
+| Accounting        | Sales’ signed contract → the billing schedule                               | The new client questions their first invoice   |
+| Digital Marketing | The campaign plan → Finance’s budget request                                | Finance sends the request back                 |
+| Data Analysis     | Operations’ request → the dashboard specification                           | The board would see the wrong delivery figures |
+| Software Dev.     | Support’s escalation → the engineering ticket                               | A serious bug waits too long in the backlog    |
+
+### Tested
+
+- Unit tests: field-by-field checking and reasons, no follow-up after a correct
+  hand-off, a follow-up after a wrong or lapsed one, and every career having a
+  workflow with a follow-up.
+- Browser test: the purchase order filled in through the real form with a wrong total,
+  the explained result, and Accounting’s follow-up arriving in Mail.
 
 ---
 

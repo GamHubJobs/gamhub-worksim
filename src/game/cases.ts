@@ -77,6 +77,13 @@ function triggered(profile: ProfileData, def: Case): boolean {
   if (afterCase) {
     const before = profile.work.cases[afterCase]
     if (!before || before.status === 'open') return false
+    const onlyIf = def.trigger.onlyIf
+    if (onlyIf) {
+      // A lapsed case counts as wrong: nothing was handed over.
+      const step = before.result?.steps.find((s) => s.id === onlyIf.step)
+      const right = !!step && step.earned >= step.points
+      if ((onlyIf.outcome === 'right') !== right) return false
+    }
   }
   if (fromDay && profile.work.day < fromDay) return false
   return true
@@ -162,8 +169,13 @@ export function checkCases(profile: ProfileData, receivedAt = Date.now()): Profi
   }
   const work = next.work
   if (work.dayOver || work.minute < HOURS.start || work.minute >= HOURS.end) return next
+  const due = dueCases(next)
+  // The consequences of the player's own work (follow-ups) come first, and
+  // are not held back by the limit on open cases.
+  const followUp = due.find((c) => c.trigger.onlyIf)
+  if (followUp) return arriveCase(next, followUp, receivedAt)
   if (openCases(next).length >= MAX_OPEN_CASES) return next
-  const [arriving] = dueCases(next)
+  const [arriving] = due
   return arriving ? arriveCase(next, arriving, receivedAt) : next
 }
 
@@ -206,6 +218,7 @@ const answerSchemas = {
   assign: z.record(z.string(), z.string()),
   actions: z.record(z.string(), z.string()),
   reply: z.string(),
+  handoff: z.record(z.string(), z.string()),
 } as const
 
 /** A step's saved answer, if it has the right shape for the step. */
@@ -370,6 +383,30 @@ function gradeStep(
             `“${i.label}” belongs to ${name(i.owner)}${owners[i.id] ? `, not ${name(owners[i.id])}` : ''}. ${i.why}`,
         ),
       }
+    }
+    case 'handoff': {
+      const given = answerFor('handoff', raw) ?? {}
+      const tidy = (v: string) => v.toLowerCase().replace(/\s+/g, ' ').trim()
+      const notes: string[] = []
+      let right = 0
+      for (const field of step.fields) {
+        const value = given[field.id] ?? ''
+        const ok =
+          field.kind === 'text'
+            ? field.accept.some((a) => tidy(a) === tidy(value))
+            : field.kind === 'number'
+              ? (() => {
+                  const n = readNumber(value)
+                  return n !== null && Math.abs(n - field.answer) <= field.tolerance
+                })()
+              : value === field.answer
+        if (ok) right++
+        else
+          notes.push(
+            `${field.label}: ${value ? `“${value}” is not right` : 'missing'}. ${field.why}`,
+          )
+      }
+      return { fraction: right / step.fields.length, notes }
     }
     case 'reply': {
       const text = answerFor('reply', raw) ?? ''

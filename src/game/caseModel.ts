@@ -44,6 +44,18 @@ export function modelAnswers(
       case 'reply':
         answers[step.id] = step.model
         break
+      case 'handoff':
+        answers[step.id] = Object.fromEntries(
+          step.fields.map((f) => [
+            f.id,
+            f.kind === 'text'
+              ? f.accept[0]
+              : f.kind === 'number'
+                ? String(f.answer)
+                : f.answer,
+          ]),
+        )
+        break
       case 'document':
         break
     }

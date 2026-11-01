@@ -49,6 +49,10 @@ export function describeAnswer(step: CaseStep, raw: unknown): string[] {
     }
     case 'reply':
       return [answerFor('reply', raw) || '(no reply written)']
+    case 'handoff': {
+      const given = answerFor('handoff', raw) ?? {}
+      return step.fields.map((f) => `${f.label}: ${given[f.id] || '(blank)'}`)
+    }
     case 'document':
       return [`${step.deliverable.title} (attached to this record)`]
   }
