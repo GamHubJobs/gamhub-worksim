@@ -89,13 +89,51 @@ working simulations of the professional software used in its field (see
 
 - [x] 6.1 Organisation model, case engine, Cases app, save migration
 - [x] 6.2 Clients and customers
-- [ ] 6.3 Business operations: budgets, purchases, approvals
+- [x] 6.3 Business operations: budgets, purchases, approvals
 - [ ] 6.4 Interdepartmental workflows
 - [ ] 6.5 Meetings: preparation, meeting, minutes, actions
 - [ ] 6.6 Complex workplace incidents
 - [ ] 6.7 Management and leadership
 - [ ] 6.8 Cross-functional programme: the company expansion
 - [ ] 6.9 Office integration, balance, hardening, documentation
+
+---
+
+## 2026-11-01 · Milestone 6.3: Business operations (budgets, purchases, approvals)
+
+### Built
+
+- **Approvals follow the rules, not a fixed answer.** For every request the right
+  decision is worked out: **reject** if it breaks policy (with the policy’s reason);
+  **escalate** if it is above the player’s approval limit (by level: £0, £500, £2,500,
+  £10,000) or above what the department has left this quarter; otherwise **approve**.
+  The same request can rightly be escalated by a junior and approved by someone more
+  senior. Every wrong decision is explained with the rule that applies.
+- **Budgets:** each department has a quarterly budget, most of it already committed;
+  approved requests commit the rest. Approving against policy raises operational risk
+  and hurts budget discipline; approving above your authority hurts discipline too.
+- **“Your authority and budgets”** panel on cases with approvals: your limit and what
+  each department involved has left.
+- **An operations case for every career** (from the second level):
+  - Finance & Admin: the week’s purchase requests, and a kind refusal to Ben.
+  - Accounting: the payment run, with a duplicate invoice and a bank-details fraud
+    attempt (confirm by phone, never by replying to the email).
+  - IT Help Desk: equipment requests and a failing UPS battery (urgent, escalated with
+    a recommendation).
+  - Digital Marketing: an agency billing 15 hours more than agreed (£900), an influencer
+    without a contract, and a video within budget.
+  - Data Analysis: tool and data purchases, including personal data without a data
+    protection agreement.
+  - Software Development: a cloud bill over budget from forgotten load-test servers
+    (shut them down, add an alert), and tool requests including a duplicate service.
+
+### Tested
+
+- Unit tests: the three rules and their reasons, limits by level (interns approve
+  nothing), each operations case needing all three kinds of decision at its first
+  level, and approvals committing spending (approving against policy raises risk).
+- Browser tests: the Finance & Admin approvals made in the real form (limit and budgets
+  shown, 100%, discipline up), and the operations case of each other career at level 2.
 
 ---
 

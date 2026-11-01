@@ -1,8 +1,12 @@
 /** Model answers for cases: what full marks look like (used by tests and checks). */
 import type { Case } from '../content/cases/schema'
+import { expectedDecision, NO_AUTHORITY, type CaseContext } from './cases'
 
 /** The answers that should get full marks (document steps are tested on their own). */
-export function modelAnswers(def: Case): Record<string, unknown> {
+export function modelAnswers(
+  def: Case,
+  context: CaseContext = NO_AUTHORITY,
+): Record<string, unknown> {
   const answers: Record<string, unknown> = {}
   for (const step of def.steps) {
     switch (step.kind) {
@@ -17,7 +21,7 @@ export function modelAnswers(def: Case): Record<string, unknown> {
         break
       case 'approve':
         answers[step.id] = Object.fromEntries(
-          step.requests.map((r) => [r.id, r.expected]),
+          step.requests.map((r) => [r.id, expectedDecision(r, context).decision]),
         )
         break
       case 'assign': {

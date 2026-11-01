@@ -151,3 +151,97 @@ for (const [career, caseId, subject, title] of CLIENT_CASES) {
     ).toBeVisible()
   })
 }
+
+test('operations: approvals follow policy, authority and budgets', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.goto('/')
+  await startCareerIfNeeded(page, 'Alex Morgan')
+  await openApp(page, 'Mail')
+  // A Junior: approval limit £500.
+  await page.evaluate("window.__worksim.skipTo('budget-report')")
+  await page.evaluate("window.__worksim.arriveCase('ops-fa-purchases')")
+  await page.getByRole('button', { name: /Purchase requests for you to decide/ }).click()
+  await page
+    .getByTestId('mail-message')
+    .getByRole('button', { name: 'Open case' })
+    .click()
+  const detail = page.getByTestId('case-detail')
+  const authority = detail.getByTestId('authority')
+  await expect(authority).toContainText('You can approve up to £500')
+  await expect(authority).toContainText(
+    'Finance & Administration: £3,600 left this quarter',
+  )
+
+  const decide = (request: RegExp, decision: string) =>
+    detail.getByRole('combobox', { name: request }).selectOption(decision)
+  await decide(/Stationery restock/, 'approve')
+  await decide(/Ergonomic chair/, 'approve')
+  await decide(/Team celebration/, 'reject')
+  await decide(/Replacement printer/, 'escalate')
+  await decide(/Tablet for a manager/, 'reject')
+  const reply = detail.getByRole('textbox', { name: /Reply to Ben/ })
+  await reply.fill(
+    'Hi Ben, thanks for organising a celebration for the team. I can’t approve this request as it is, because the purchasing policy doesn’t allow company money to be spent on alcohol. If you resubmit it for the meal without the wine, I will approve it straight away. Sorry I can’t do more!',
+  )
+  await reply.blur()
+  await detail.getByRole('button', { name: 'Submit to Priya Raman' }).click()
+  await detail.getByRole('button', { name: 'Send my answer' }).click()
+  await expect(detail.getByTestId('case-score')).toHaveText('100%')
+  await expect(page.getByTestId('indicator-discipline')).toHaveText('73')
+})
+
+const OPERATIONS: Array<
+  [career: RegExp, levelTask: string, caseId: string, subject: RegExp]
+> = [
+  [
+    /Accounting/,
+    'depreciation-schedule',
+    'ops-acc-payment-run',
+    /Payment run: your approval/,
+  ],
+  [
+    /IT Help Desk/,
+    'directory-leaver',
+    'ops-it-equipment',
+    /Equipment requests for your approval/,
+  ],
+  [
+    /Digital Marketing/,
+    'seo-fixes',
+    'ops-mkt-agency',
+    /Marketing spend for your approval/,
+  ],
+  [/Data Analysis/, 'studio-sql', 'ops-data-purchases', /Purchases for your approval/],
+  [
+    /Software Development/,
+    'working-days-tests',
+    'ops-dev-cloud',
+    /Cloud bill and tool requests/,
+  ],
+]
+
+for (const [career, levelTask, caseId, subject] of OPERATIONS) {
+  test(`every career has operations work: ${caseId}`, async ({ page }) => {
+    test.setTimeout(120_000)
+    await page.goto('/')
+    await page.getByRole('radio', { name: career }).check()
+    await page.getByLabel('Your first name').fill('Alex')
+    await page.getByRole('button', { name: 'Start my first day' }).click()
+    await openApp(page, 'Mail')
+    await page.evaluate(`window.__worksim.skipTo('${levelTask}')`)
+    await page.evaluate(`window.__worksim.arriveCase('${caseId}')`)
+    await page.getByRole('button', { name: subject }).click()
+    await page
+      .getByTestId('mail-message')
+      .getByRole('button', { name: 'Open case' })
+      .click()
+    const detail = page.getByTestId('case-detail')
+    await expect(detail.getByTestId('authority')).toContainText(
+      'You can approve up to £500',
+    )
+    await page.evaluate(`window.__worksim.answerCase('${caseId}')`)
+    await detail.getByRole('button', { name: /^Submit to / }).click()
+    await detail.getByRole('button', { name: 'Send my answer' }).click()
+    await expect(detail.getByTestId('case-score')).toHaveText('100%')
+  })
+}

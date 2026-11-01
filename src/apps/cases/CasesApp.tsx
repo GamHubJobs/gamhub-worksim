@@ -7,8 +7,8 @@
 import { useState } from 'react'
 import { getCase } from '../../content/cases'
 import { CASE_KIND_NAMES, type Case } from '../../content/cases/schema'
-import { INDICATORS } from '../../content/organisation'
-import { minutesLeft } from '../../game/cases'
+import { getOrgDepartment, INDICATORS } from '../../content/organisation'
+import { caseContext, minutesLeft } from '../../game/cases'
 import type { CaseProgress, Profile } from '../../persistence/schemas'
 import { Icon } from '../../ui/Icon'
 import { RichText } from '../../ui/RichText'
@@ -254,6 +254,8 @@ function CaseDetail({
         <p className="mt-1 text-sm text-slate-700">{def.whyItMatters}</p>
       </section>
 
+      {open && <AuthorityPanel def={def} profile={profile} />}
+
       {def.evidence.length > 0 && (
         <section className="space-y-3" aria-label="Evidence">
           <h3 className="font-semibold text-slate-900">Evidence</h3>
@@ -359,5 +361,41 @@ function CaseDetail({
         </p>
       )}
     </article>
+  )
+}
+
+/** For cases with approvals: the player's limit and what each department has left. */
+function AuthorityPanel({ def, profile }: { def: Case; profile: Profile }) {
+  const departments = [
+    ...new Set(
+      def.steps.flatMap((s) =>
+        s.kind === 'approve' ? s.requests.map((r) => r.department) : [],
+      ),
+    ),
+  ]
+  if (departments.length === 0) return null
+  const context = caseContext(profile)
+  const money = (n: number) => `£${Math.max(0, n).toLocaleString('en-GB')}`
+  return (
+    <section
+      className="rounded-xl border border-blue-200 bg-blue-50 p-5 text-sm"
+      aria-label="Your authority and budgets"
+      data-testid="authority"
+    >
+      <h3 className="font-semibold text-slate-900">Your authority and budgets</h3>
+      <p className="mt-1 text-slate-700">
+        You can approve up to <strong>{money(context.limit)}</strong> on your own.
+        {context.limit === 0 &&
+          ' At your level, every request goes to the budget holder.'}
+      </p>
+      <ul className="mt-2 space-y-0.5 text-slate-700">
+        {departments.map((id) => (
+          <li key={id}>
+            {getOrgDepartment(id)?.name ?? id}: {money(context.remaining(id))} left this
+            quarter
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

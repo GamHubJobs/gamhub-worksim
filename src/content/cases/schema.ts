@@ -69,7 +69,12 @@ export const CaseStepSchema = z.discriminatedUnion('kind', [
       )
       .min(2),
   }),
-  /** Approve, reject or escalate requests against budget, policy and authority. */
+  /**
+   * Approve, reject or escalate requests. The right decision is worked out
+   * from the rules: a policy breach is rejected; a request above the player's
+   * approval limit or the department's remaining budget is escalated;
+   * anything else is approved.
+   */
   StepBase.extend({
     kind: z.literal('approve'),
     requests: z
@@ -79,8 +84,10 @@ export const CaseStepSchema = z.discriminatedUnion('kind', [
           summary: Text,
           department: z.string(),
           amount: z.number().nonnegative(),
-          expected: z.enum(['approve', 'reject', 'escalate']),
-          why: Text,
+          /** Why the request breaks policy (and must be rejected), if it does. */
+          policyBreach: z.string().optional(),
+          /** Why it is fine, when it is within policy. */
+          why: z.string().default(''),
         }),
       )
       .min(1),

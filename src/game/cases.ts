@@ -14,6 +14,7 @@ import { HOURS } from '../content/workday'
 import { getAssignment } from '../content/assignments'
 import { CASES, getCase } from '../content/cases'
 import type { Case, CaseEffects, CaseStep } from '../content/cases/schema'
+import { approvalLimit, getOrgDepartment, remainingBudget } from '../content/organisation'
 import { createCalculator } from '../apps/sheets/engine/workbook'
 import { createId } from '../lib/ids'
 import type {
@@ -236,10 +237,55 @@ const DECISION_NAMES = {
 /** Documents made for the case's document steps, by step ID. */
 export type CaseDocuments = Record<string, DocContent | SlidesContent | undefined>
 
+/** What approvals are judged against: the player's limit and the budgets left. */
+export interface CaseContext {
+  limit: number
+  remaining: (departmentId: string) => number
+}
+
+export function caseContext(profile: ProfileData): CaseContext {
+  return {
+    limit: approvalLimit(levelNumber(profile)),
+    remaining: (id) => remainingBudget(profile.work.org.spend, id),
+  }
+}
+
+type ApproveStep = Extract<CaseStep, { kind: 'approve' }>
+type Decision = 'approve' | 'reject' | 'escalate'
+
+/** The right decision for a request, and why, under the rules. */
+export function expectedDecision(
+  request: ApproveStep['requests'][number],
+  context: CaseContext,
+): { decision: Decision; why: string } {
+  if (request.policyBreach) return { decision: 'reject', why: request.policyBreach }
+  const money = (n: number) => `£${n.toLocaleString('en-GB')}`
+  if (request.amount > context.limit) {
+    return {
+      decision: 'escalate',
+      why: `${money(request.amount)} is above your approval limit of ${money(context.limit)}, so it goes to the budget holder.`,
+    }
+  }
+  const left = context.remaining(request.department)
+  if (request.amount > left) {
+    const name = getOrgDepartment(request.department)?.name ?? request.department
+    return {
+      decision: 'escalate',
+      why: `${name} has only ${money(Math.max(0, left))} left this quarter, so it needs the budget holder.`,
+    }
+  }
+  return {
+    decision: 'approve',
+    why:
+      request.why || 'It is within policy, your approval limit and the remaining budget.',
+  }
+}
+
 function gradeStep(
   step: CaseStep,
   raw: unknown,
   documents: CaseDocuments,
+  context: CaseContext,
 ): { fraction: number; notes: string[] } {
   switch (step.kind) {
     case 'review': {
@@ -277,14 +323,17 @@ function gradeStep(
     }
     case 'approve': {
       const decisions = answerFor('approve', raw) ?? {}
-      const wrong = step.requests.filter((r) => decisions[r.id] !== r.expected)
-      return {
-        fraction: 1 - wrong.length / step.requests.length,
-        notes: wrong.map(
-          (r) =>
-            `${r.summary}: should be ${DECISION_NAMES[r.expected]}${decisions[r.id] ? `, not ${DECISION_NAMES[decisions[r.id]]}` : ''}. ${r.why}`,
-        ),
+      const notes: string[] = []
+      let right = 0
+      for (const r of step.requests) {
+        const expected = expectedDecision(r, context)
+        if (decisions[r.id] === expected.decision) right++
+        else
+          notes.push(
+            `${r.summary}: ${DECISION_NAMES[expected.decision]}${decisions[r.id] ? `, not ${DECISION_NAMES[decisions[r.id]]}` : ''}. ${expected.why}`,
+          )
       }
+      return { fraction: right / step.requests.length, notes }
     }
     case 'assign': {
       const chosen = answerFor('assign', raw) ?? {}
@@ -365,13 +414,17 @@ export function ratingFor(score: number, passScore: number): CaseRating {
 }
 
 /** Grades every step, with the reasons for anything that is not right. */
+/** Context for players with no authority (and for tests): nothing can be approved. */
+export const NO_AUTHORITY: CaseContext = { limit: 0, remaining: () => 0 }
+
 export function gradeCase(
   def: Case,
   answers: Record<string, unknown>,
   documents: CaseDocuments = {},
+  context: CaseContext = NO_AUTHORITY,
 ): CaseResult {
   const steps = def.steps.map((step) => {
-    const { fraction, notes } = gradeStep(step, answers[step.id], documents)
+    const { fraction, notes } = gradeStep(step, answers[step.id], documents, context)
     const earned = Math.round(step.points * Math.max(0, Math.min(1, fraction)) * 10) / 10
     return { id: step.id, title: step.title, earned, points: step.points, notes }
   })
@@ -394,6 +447,39 @@ function decisionEffects(def: Case, answers: Record<string, unknown>): CaseEffec
     )
     return chosen ? [chosen.effects] : []
   })
+}
+
+/**
+ * What the player's approvals do: approved requests commit the department's
+ * money; approving something against policy raises risk and hurts budget
+ * discipline; approving above one's authority hurts discipline too.
+ */
+function approvalEffects(
+  def: Case,
+  answers: Record<string, unknown>,
+  context: CaseContext,
+): CaseEffects {
+  const effects: CaseEffects = { trust: {}, reputation: 0, indicators: {}, spend: {} }
+  let risk = 0
+  let discipline = 0
+  for (const step of def.steps) {
+    if (step.kind !== 'approve') continue
+    const decisions = answerFor('approve', answers[step.id]) ?? {}
+    for (const request of step.requests) {
+      if (decisions[request.id] !== 'approve') continue
+      effects.spend[request.department] =
+        (effects.spend[request.department] ?? 0) + request.amount
+      const expected = expectedDecision(request, context).decision
+      if (expected === 'reject') {
+        risk += 3
+        discipline -= 3
+      } else if (expected === 'escalate') {
+        discipline -= 2
+      }
+    }
+  }
+  effects.indicators = { risk, discipline }
+  return effects
 }
 
 /**
@@ -426,6 +512,10 @@ export function recordCaseResult(
   }
   for (const effects of decisionEffects(def, progress.answers))
     work = applyCaseEffects(work, effects)
+  work = applyCaseEffects(
+    work,
+    approvalEffects(def, progress.answers, caseContext(profile)),
+  )
   work = applyCaseEffects(work, result.passed ? def.outcomes.pass : def.outcomes.fail)
   work = log(
     work,

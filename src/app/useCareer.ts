@@ -12,6 +12,7 @@ import {
   portfolioKey,
 } from '../game/portfolio'
 import {
+  caseContext,
   checkCases,
   gradeCase,
   levelNumber,
@@ -513,7 +514,7 @@ export function useCareer() {
         handedIn,
         (latest) => {
           const answers = latest.work.cases[caseId]?.answers ?? {}
-          result = gradeCase(def, answers, contents)
+          result = gradeCase(def, answers, contents, caseContext(latest))
           const { current } = careerLevel(latest)
           level = {
             id: current.id,

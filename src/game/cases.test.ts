@@ -8,6 +8,9 @@ import { HOURS } from '../content/workday'
 import { newProfileData, type ProfileData } from './career'
 import {
   answerFor,
+  caseContext,
+  expectedDecision,
+  type CaseContext,
   arriveCase,
   checkCases,
   dueCases,
@@ -189,5 +192,86 @@ describe('case content', () => {
         career.id,
       ).toBeGreaterThanOrEqual(2)
     }
+  })
+})
+
+describe('approvals: policy, authority and budgets', () => {
+  const def = getCase('ops-fa-purchases')!
+  const step = def.steps.find((s) => s.kind === 'approve')!
+  if (step.kind !== 'approve') throw new Error('no approve step')
+  const request = (id: string) => step.requests.find((r) => r.id === id)!
+  const at = (limit: number, remaining = 100_000): CaseContext => ({
+    limit,
+    remaining: () => remaining,
+  })
+
+  it('rejects policy breaches, escalates above the limit or budget, approves the rest', () => {
+    expect(expectedDecision(request('wine'), at(10_000)).decision).toBe('reject')
+    expect(expectedDecision(request('printer'), at(500)).decision).toBe('escalate')
+    expect(expectedDecision(request('printer'), at(2500)).decision).toBe('approve')
+    expect(expectedDecision(request('printer'), at(2500, 1000))).toMatchObject({
+      decision: 'escalate',
+      why: expect.stringContaining('left this quarter'),
+    })
+    expect(expectedDecision(request('stationery'), at(500)).decision).toBe('approve')
+  })
+
+  it('the player’s level sets their limit: interns approve nothing', () => {
+    const base = profileFor(def.careerId)
+    expect(caseContext(base).limit).toBe(0)
+    expect(caseContext({ ...base, levelId: 'junior' }).limit).toBe(500)
+    expect(caseContext({ ...base, levelId: 'assistant' }).limit).toBe(2500)
+  })
+
+  it('every operations case needs all three kinds of decision at its first level', () => {
+    for (const ops of CASES.filter((c) => c.kind === 'operations')) {
+      const career = CAREERS.find((c) => c.id === ops.careerId)!
+      const profile = profileFor(ops.careerId, {
+        levelId: career.levels[ops.minLevel - 1].id,
+      })
+      const kinds = new Set(
+        ops.steps.flatMap((s) =>
+          s.kind === 'approve'
+            ? s.requests.map((r) => expectedDecision(r, caseContext(profile)).decision)
+            : [],
+        ),
+      )
+      expect([...kinds].sort(), ops.id).toEqual(['approve', 'escalate', 'reject'])
+    }
+  })
+
+  it('approvals commit spending; approving against policy raises risk', () => {
+    const junior = profileFor(def.careerId, { levelId: 'junior' })
+    const arrived = arriveCase(junior, def, 1)
+    const answers = {
+      ...modelAnswers(def, caseContext(junior)),
+      decisions: {
+        ...(modelAnswers(def, caseContext(junior)).decisions as object),
+        wine: 'approve',
+      },
+    }
+    const withAnswers = {
+      ...arrived,
+      work: {
+        ...arrived.work,
+        cases: {
+          ...arrived.work.cases,
+          [def.id]: { ...arrived.work.cases[def.id], answers },
+        },
+      },
+    }
+    const result = gradeCase(def, answers, {}, caseContext(withAnswers))
+    expect(result.steps[0].notes[0]).toContain('alcohol')
+    const done = recordCaseResult(withAnswers, def, result, 10)
+    expect(done.work.org.spend).toMatchObject({
+      finance: 180,
+      people: 420,
+      operations: 350,
+    })
+    expect(done.work.org.indicators.risk).toBeGreaterThan(
+      arrived.work.org.indicators.risk,
+    )
+    // The finance budget left is what was not committed, minus what was approved.
+    expect(caseContext(done).remaining('finance')).toBe(18000 * 0.2 - 180)
   })
 })

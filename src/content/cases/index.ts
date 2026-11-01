@@ -7,6 +7,7 @@ import { DEV_CASES } from './dev'
 import { FINANCE_CASES } from './finance'
 import { IT_CASES } from './it'
 import { MARKETING_CASES } from './marketing'
+import { OPERATIONS_CASES } from './operations'
 
 const SOURCES: CaseInput[] = [
   ...FINANCE_CASES,
@@ -15,6 +16,7 @@ const SOURCES: CaseInput[] = [
   ...MARKETING_CASES,
   ...DATA_CASES,
   ...DEV_CASES,
+  ...OPERATIONS_CASES,
 ]
 
 /** Every text with role names filled in for the case's department. */

@@ -43,7 +43,7 @@ import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
 import { workPace } from '../game/wellbeing'
 import { skipToAssignment } from '../game/devTools'
-import { arriveCase, saveCaseAnswer } from '../game/cases'
+import { arriveCase, caseContext, saveCaseAnswer } from '../game/cases'
 import { modelAnswers } from '../game/caseModel'
 import { getCase } from '../content/cases'
 import { CasesApp } from '../apps/cases/CasesApp'
@@ -176,7 +176,7 @@ export function Desktop({
         act((p) => {
           const def = getCase(caseId)
           if (!def) return p
-          return Object.entries(modelAnswers(def)).reduce(
+          return Object.entries(modelAnswers(def, caseContext(p))).reduce(
             (next, [stepId, answer]) => saveCaseAnswer(next, caseId, stepId, answer),
             p,
           )
