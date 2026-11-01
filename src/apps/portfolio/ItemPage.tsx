@@ -14,7 +14,7 @@ import {
 import type { PortfolioFile, PortfolioItem } from '../../persistence/schemas'
 import { Icon } from '../../ui/Icon'
 import { EvidenceViewer } from './EvidenceViewer'
-import { downloadItemPdf } from './exports'
+import { downloadItemFiles, downloadItemPdf } from './exports'
 
 const RATINGS = { excellent: 'Excellent', good: 'Good', pass: 'Pass' } as const
 
@@ -68,13 +68,16 @@ export function ItemPage({
   }, [item.id, fileIds])
 
   const [exporting, setExporting] = useState(false)
-  async function exportPdf() {
+  async function exportItem(kind: 'pdf' | 'zip') {
     setExporting(true)
     setError(null)
     try {
-      await downloadItemPdf(item, saveName)
+      if (kind === 'pdf') await downloadItemPdf(item, saveName)
+      else await downloadItemFiles(item, saveName)
     } catch (e) {
-      setError(`The PDF could not be made: ${e instanceof Error ? e.message : String(e)}`)
+      setError(
+        `The download could not be made: ${e instanceof Error ? e.message : String(e)}`,
+      )
     } finally {
       setExporting(false)
     }
@@ -248,14 +251,24 @@ export function ItemPage({
         <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="font-semibold text-slate-900">How it is shown</h2>
-            <button
-              type="button"
-              onClick={() => void exportPdf()}
-              disabled={exporting}
-              className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50 disabled:opacity-60"
-            >
-              {exporting ? 'Preparing the PDF…' : 'Download as PDF'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void exportItem('pdf')}
+                disabled={exporting}
+                className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50 disabled:opacity-60"
+              >
+                Download as PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => void exportItem('zip')}
+                disabled={exporting}
+                className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50 disabled:opacity-60"
+              >
+                Download original files
+              </button>
+            </div>
           </div>
           <p className="text-sm text-slate-600">
             These choices change only how this work is presented, never the results.

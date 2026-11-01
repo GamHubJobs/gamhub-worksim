@@ -75,11 +75,46 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [x] 5.4 Competency and experience record
 - [x] 5.5 Career progress report and recommendations
 - [x] 5.6 PDF engine and report exports
-- [ ] 5.7 Original file exports and the portfolio package
+- [x] 5.7 Original file exports and the portfolio package
 - [ ] 5.8 Employability profile
 - [ ] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.7: Original files and the portfolio package
+
+### Built
+
+- **Download everything (ZIP)** in the Export section: one folder with a README, the
+  portfolio PDF, the competency report, and a folder per included piece of work with
+  its own PDF and its original files.
+- **Download original files** on each item’s page: that item’s PDF and files as a ZIP.
+- Original files are in open formats that work outside WorkSim:
+  - Spreadsheets: one CSV per sheet (the values shown) and `Formulas.csv`.
+  - Reports and slides: a web page (HTML) and plain text (Markdown); slides keep
+    their speaker notes, charts become data tables.
+  - Help Desk queues: CSV.
+  - Code: the source files exactly as handed in, and `git-log.txt`.
+  - Professional tools: one CSV per table of data, and the file’s full data as JSON.
+- CSV files start with a byte-order mark so spreadsheet apps show £ and accented
+  letters correctly. HTML pages are self-contained, with no scripts.
+- The README explains every format and how to open it, and repeats the honesty
+  statement.
+
+### Dependencies added
+
+- **fflate** 0.8.3 (MIT): ZIP files, loaded only when exporting.
+
+### Tested
+
+- 63 new unit tests: CSV round trips (commas, quotes, line breaks, £), Markdown and
+  HTML output, workbook CSVs matching the values shown, code files byte for byte,
+  every tool’s data reading back from its JSON, every task’s files exporting with safe
+  names, and the package’s contents.
+- The export browser test downloads both ZIPs, unpacks them and checks the README,
+  both PDFs and the submitted code.
 
 ---
 

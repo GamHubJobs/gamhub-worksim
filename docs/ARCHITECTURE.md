@@ -94,7 +94,7 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/apps/shared/`                    | Save hook, document window, file browser, "insert from Sheets"    |
 | `src/apps/mail/`, `tasks/`, `career/` | The other desktop apps                                            |
 | `src/apps/portfolio/`                 | Portfolio app: work, skills, progress report, export              |
-| `src/export/`                         | Exports: files as blocks (`blocks.ts`); PDFs (`pdf/`)             |
+| `src/export/`                         | Exports: blocks, PDFs (`pdf/`), open formats, ZIP package         |
 | `src/content/`                        | Content as validated data: company, careers, assignments          |
 | `src/content/departments/`            | One file per department: its people, meetings, tips and news      |
 | `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
@@ -267,6 +267,7 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 | SQL (Data Studio) | sql.js (SQLite in the browser), MIT      |
 | PDF exports       | jsPDF + jspdf-autotable, MIT (on demand) |
 | PDF tests         | pdfjs-dist, Apache-2.0 (tests only)      |
+| ZIP files         | fflate, MIT (on demand)                  |
 
 ## Roadmap
 

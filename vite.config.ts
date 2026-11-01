@@ -27,6 +27,7 @@ export default defineConfig({
       '@tiptap/extensions',
       'jspdf',
       'jspdf-autotable',
+      'fflate',
     ],
   },
   build: {

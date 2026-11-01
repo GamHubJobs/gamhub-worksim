@@ -4,7 +4,7 @@
  */
 import { useState } from 'react'
 import type { PortfolioItem, Profile } from '../../persistence/schemas'
-import { downloadCompetencyPdf, downloadPortfolioPdf } from './exports'
+import { downloadCompetencyPdf, downloadPackage, downloadPortfolioPdf } from './exports'
 
 export function ExportView({
   items,
@@ -62,6 +62,28 @@ export function ExportView({
           record of employment or a qualification. Files are made on this device; nothing
           is uploaded.
         </p>
+      </section>
+
+      <section className={card}>
+        <h2 className="font-semibold text-slate-900">Everything (ZIP)</h2>
+        <p className="text-sm text-slate-600">
+          One folder with both PDFs below, a README, and every included piece of work with
+          its own report and its original files in open formats: spreadsheets as CSV,
+          reports and slides as web pages and text, code as source files, and
+          professional-tool files as CSV and data.
+        </p>
+        <button
+          type="button"
+          className={button}
+          disabled={busy !== null || included === 0}
+          onClick={() =>
+            run('Portfolio package', () =>
+              downloadPackage(shownName, profiles, items, saveName),
+            )
+          }
+        >
+          Download everything (ZIP)
+        </button>
       </section>
 
       <section className={card}>

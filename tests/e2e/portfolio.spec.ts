@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises'
+import { strFromU8, unzipSync } from 'fflate'
 import { expect, test, type Download, type Page } from '@playwright/test'
 import { openApp } from './helpers.ts'
 
@@ -103,6 +104,16 @@ test('passing a task captures exactly what was handed in, once', async ({ page }
   // A note and the include choice are kept; the score cannot be changed here.
   await itemPage.getByLabel('Your note').fill('Found three bugs with the tests.')
   await itemPage.getByLabel('Include in my portfolio exports').uncheck()
+  // Saved in the background within moments; wait for it before reloading.
+  await expect
+    .poll(async () => {
+      const [saved] = (await readTable(page, 'portfolioItems')) as Array<{
+        included: boolean
+        note: string
+      }>
+      return [saved.included, saved.note]
+    })
+    .toEqual([false, 'Found three bugs with the tests.'])
   await page.reload()
   await expect(page.getByTestId('portfolio-item-page')).toBeVisible()
   await expect(page.getByLabel('Your note')).toHaveValue(
@@ -221,7 +232,7 @@ async function downloadedPdfText(download: Download): Promise<string> {
   return text.replace(/[ \t]+/g, ' ')
 }
 
-test('the portfolio, the competency report and an item download as PDFs', async ({
+test('the portfolio, the competency report and an item download as PDFs and ZIPs', async ({
   page,
 }) => {
   test.setTimeout(180_000)
@@ -269,6 +280,23 @@ test('the portfolio, the competency report and an item download as PDFs', async 
   expect(text).toContain('How levels are decided')
   expect(text).toContain('Demonstrated')
 
+  // Everything: both PDFs, a README and the code exactly as handed in.
+  download = page.waitForEvent('download')
+  await view.getByRole('button', { name: 'Download everything (ZIP)' }).click()
+  file = await download
+  expect(file.suggestedFilename()).toBe('Robin Ellis - portfolio.zip')
+  let zip = unzipSync(new Uint8Array(await readFile(await file.path())))
+  const root = 'Robin Ellis - portfolio/'
+  expect(Object.keys(zip)).toEqual(
+    expect.arrayContaining([
+      `${root}README.txt`,
+      `${root}Portfolio.pdf`,
+      `${root}Competency report.pdf`,
+    ]),
+  )
+  const invoice = Object.keys(zip).find((n) => n.endsWith('/invoice.js'))!
+  expect(strFromU8(zip[invoice])).toContain('// exported version')
+
   // One item on its own.
   await page
     .getByRole('navigation', { name: 'Portfolio sections' })
@@ -280,4 +308,12 @@ test('the portfolio, the competency report and an item download as PDFs', async 
   file = await download
   expect(file.suggestedFilename()).toBe('Fix the invoice totals.pdf')
   expect(await downloadedPdfText(file)).toContain('How it was checked')
+
+  download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download original files' }).click()
+  file = await download
+  expect(file.suggestedFilename()).toBe('Fix the invoice totals.zip')
+  zip = unzipSync(new Uint8Array(await readFile(await file.path())))
+  expect(Object.keys(zip)).toContain('Fix the invoice totals/Fix the invoice totals.pdf')
+  expect(Object.keys(zip).some((n) => n.endsWith('/git-log.txt'))).toBe(true)
 })

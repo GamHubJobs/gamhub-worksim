@@ -8,6 +8,16 @@ import { loadPortfolioFiles } from '../../persistence/portfolio'
 import type { PortfolioItem, Profile } from '../../persistence/schemas'
 
 const PDF = 'application/pdf'
+const ZIP = 'application/zip'
+
+/** Included items, featured first, then newest first. */
+function included(items: PortfolioItem[]): PortfolioItem[] {
+  return items
+    .filter((i) => i.included)
+    .sort(
+      (a, b) => Number(b.featured) - Number(a.featured) || b.completedAt - a.completedAt,
+    )
+}
 
 async function withFiles(
   items: PortfolioItem[],
@@ -35,13 +45,33 @@ export async function downloadPortfolioPdf(
   saveName: (item: PortfolioItem) => string,
 ) {
   const { portfolioPdf } = await import('../../export/pdf/reports')
-  const chosen = items
-    .filter((i) => i.included)
-    .sort(
-      (a, b) => Number(b.featured) - Number(a.featured) || b.completedAt - a.completedAt,
-    )
+  const chosen = included(items)
   const pdf = portfolioPdf(name, await withFiles(chosen, saveName))
   downloadFile(`${safeFileName(name)} - portfolio.pdf`, pdf, PDF)
+}
+
+/** One item's report and original files, as a ZIP. */
+export async function downloadItemFiles(item: PortfolioItem, saveName: string) {
+  const { itemPackage } = await import('../../export/package')
+  const [entry] = await withFiles([item], () => saveName)
+  downloadFile(`${safeFileName(item.title)}.zip`, itemPackage(entry), ZIP)
+}
+
+/** Everything in one ZIP: both PDFs and every included item's files. */
+export async function downloadPackage(
+  name: string,
+  profiles: Profile[],
+  items: PortfolioItem[],
+  saveName: (item: PortfolioItem) => string,
+) {
+  const { portfolioPackage } = await import('../../export/package')
+  const entries = await withFiles(included(items), saveName)
+  const reports = profiles.map((p) => progressReport(p, items))
+  downloadFile(
+    `${safeFileName(name)} - portfolio.zip`,
+    portfolioPackage(name, entries, reports),
+    ZIP,
+  )
 }
 
 export async function downloadCompetencyPdf(
