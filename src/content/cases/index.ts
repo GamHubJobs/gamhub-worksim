@@ -1,9 +1,21 @@
 /** All cases, checked against the case blueprint when the app starts. */
 import { fill, departmentFor } from '../departments'
 import { CaseSchema, type Case, type CaseInput } from './schema'
+import { ACCOUNTING_CASES } from './accounting'
+import { DATA_CASES } from './data'
+import { DEV_CASES } from './dev'
 import { FINANCE_CASES } from './finance'
+import { IT_CASES } from './it'
+import { MARKETING_CASES } from './marketing'
 
-const SOURCES: CaseInput[] = [...FINANCE_CASES]
+const SOURCES: CaseInput[] = [
+  ...FINANCE_CASES,
+  ...ACCOUNTING_CASES,
+  ...IT_CASES,
+  ...MARKETING_CASES,
+  ...DATA_CASES,
+  ...DEV_CASES,
+]
 
 /** Every text with role names filled in for the case's department. */
 function fillAll<T>(value: T, careerId: string): T {

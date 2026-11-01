@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getAssignment } from '../content/assignments'
+import { CAREERS, getSkill } from '../content/careers'
 import { CASES, getCase } from '../content/cases'
 import type { Case } from '../content/cases/schema'
 import { modelAnswers } from './caseModel'
@@ -161,5 +162,32 @@ describe('grading and consequences', () => {
     expect(reply.subject).toBe(`Re: ${def.email.subject}`)
     expect(reply.body).toContain('Dear Alex')
     expect(() => recordCaseResult(done, def, result, 6000)).toThrow('not open')
+  })
+})
+
+describe('case content', () => {
+  it('ids are unique, triggers and skills exist, and every career has cases', () => {
+    const ids = CASES.map((c) => c.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const def of CASES) {
+      const career = CAREERS.find((c) => c.id === def.careerId)
+      expect(career, def.id).toBeDefined()
+      expect(def.minLevel).toBeLessThanOrEqual(career!.levels.length)
+      if (def.trigger.afterAssignment) {
+        expect(getAssignment(def.trigger.afterAssignment)?.careerId, def.id).toBe(
+          def.careerId,
+        )
+      }
+      if (def.trigger.afterCase)
+        expect(getCase(def.trigger.afterCase), def.id).toBeDefined()
+      for (const skill of Object.keys(def.skills))
+        expect(getSkill(skill), skill).toBeDefined()
+    }
+    for (const career of CAREERS) {
+      expect(
+        CASES.filter((c) => c.careerId === career.id).length,
+        career.id,
+      ).toBeGreaterThanOrEqual(2)
+    }
   })
 })

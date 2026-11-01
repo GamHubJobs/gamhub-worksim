@@ -82,3 +82,72 @@ test('a client case: evidence, decisions, a reply, consequences and portfolio ev
   await item.getByRole('button', { name: /^Main file: Case record/ }).click()
   await expect(item.getByTestId('evidence-viewer')).toContainText('Pay £552 today')
 })
+
+const CLIENT_CASES: Array<
+  [career: RegExp, caseId: string, subject: RegExp, title: string]
+> = [
+  [
+    /Accounting/,
+    'acc-statement-dispute',
+    /Your statement is wrong/,
+    'A client disputes their statement',
+  ],
+  [
+    /IT Help Desk/,
+    'it-ticket-chaser',
+    /Still waiting: INC-1984/,
+    'A colleague chases an unresolved ticket',
+  ],
+  [
+    /Digital Marketing/,
+    'mkt-brief-change',
+    /Small change to our campaign/,
+    'A client changes the brief mid-campaign',
+  ],
+  [
+    /Data Analysis/,
+    'data-numbers-mismatch',
+    /Your report is £30k short/,
+    'Sales says your figures don’t match Finance’s',
+  ],
+  [
+    /Software Development/,
+    'dev-vague-bug',
+    /Timesheet app broken AGAIN/,
+    'A vague bug report',
+  ],
+  [
+    /Office Administration/,
+    'fa-expense-query',
+    /Why was my taxi claim rejected/,
+    'An employee queries a rejected expense claim',
+  ],
+]
+
+for (const [career, caseId, subject, title] of CLIENT_CASES) {
+  test(`every career has client cases: ${caseId}`, async ({ page }) => {
+    test.setTimeout(120_000)
+    await page.goto('/')
+    await page.getByRole('radio', { name: career }).check()
+    await page.getByLabel('Your first name').fill('Alex')
+    await page.getByRole('button', { name: 'Start my first day' }).click()
+    await openApp(page, 'Mail')
+    await page.evaluate(`window.__worksim.arriveCase('${caseId}')`)
+    await page.getByRole('button', { name: subject }).click()
+    await page
+      .getByTestId('mail-message')
+      .getByRole('button', { name: 'Open case' })
+      .click()
+    const detail = page.getByTestId('case-detail')
+    await expect(detail.getByRole('heading', { name: title })).toBeVisible()
+    // The model answers (each step form is exercised in the test above).
+    await page.evaluate(`window.__worksim.answerCase('${caseId}')`)
+    await detail.getByRole('button', { name: /^Submit to / }).click()
+    await detail.getByRole('button', { name: 'Send my answer' }).click()
+    await expect(detail.getByTestId('case-score')).toHaveText('100%')
+    await openApp(page, 'Portfolio')
+    await expect(
+      page.getByTestId('portfolio-card').filter({ hasText: title }),
+    ).toBeVisible()
+  })
+}

@@ -88,7 +88,7 @@ working simulations of the professional software used in its field (see
 [docs/PHASE6_PLAN.md](docs/PHASE6_PLAN.md).
 
 - [x] 6.1 Organisation model, case engine, Cases app, save migration
-- [ ] 6.2 Clients and customers
+- [x] 6.2 Clients and customers
 - [ ] 6.3 Business operations: budgets, purchases, approvals
 - [ ] 6.4 Interdepartmental workflows
 - [ ] 6.5 Meetings: preparation, meeting, minutes, actions
@@ -96,6 +96,40 @@ working simulations of the professional software used in its field (see
 - [ ] 6.7 Management and leadership
 - [ ] 6.8 Cross-functional programme: the company expansion
 - [ ] 6.9 Office integration, balance, hardening, documentation
+
+---
+
+## 2026-11-01 · Milestone 6.2: Clients and customers
+
+### Built
+
+Every career now has two client or customer cases, arriving after its early tasks:
+
+| Career            | Cases                                                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Finance & Admin   | A supplier chases an invoice for a short delivery; an employee queries a rejected expense claim                  |
+| Accounting        | A client disputes their statement (a misallocated payment); a client asks for VAT figures (and another client’s) |
+| IT Help Desk      | A colleague chases a ticket left without updates; a director asks for admin rights for her team                  |
+| Digital Marketing | A client changes the brief without budget; a client is unhappy about click-through rate                          |
+| Data Analysis     | Sales says the figures don’t match Finance’s (VAT); a director wants everything analysed by tomorrow             |
+| Software Dev.     | A vague bug report close to payroll; a feature request with an impossible deadline                               |
+
+Each has realistic evidence, a deadline, a judgement with explained options (for
+example confidentiality, security policy, honest trade-offs, scope), a written reply
+checked for what it must say and must not say, and consequences for the client
+relationship and the organisation’s indicators. Review steps now say “tick every
+statement that applies”, so a step can ask what is wrong or what is true.
+
+### Tested
+
+- Content tests: every case’s model answers get full marks, nothing passes without
+  work, every decision has one best option, IDs are unique, triggers and skills exist,
+  and every career has at least two cases.
+- Browser tests: a client case in each of the six careers, from the email to the result
+  and the portfolio (with a development-only shortcut that fills in the model answers;
+  the step forms themselves are tested by the Finance & Admin case).
+- The Finance & Admin browser test waits for answers to be saved before reloading, and
+  cases are now graded inside the save, from the answers as stored at that moment.
 
 ---
 

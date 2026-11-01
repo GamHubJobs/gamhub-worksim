@@ -43,7 +43,8 @@ import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
 import { workPace } from '../game/wellbeing'
 import { skipToAssignment } from '../game/devTools'
-import { arriveCase } from '../game/cases'
+import { arriveCase, saveCaseAnswer } from '../game/cases'
+import { modelAnswers } from '../game/caseModel'
 import { getCase } from '../content/cases'
 import { CasesApp } from '../apps/cases/CasesApp'
 import { passTime, startNextDay } from '../game/workday'
@@ -169,6 +170,16 @@ export function Desktop({
         act((p) => {
           const def = getCase(caseId)
           return def && !p.work.cases[caseId] ? arriveCase(p, def, Date.now()) : p
+        }),
+      /** Fills in a case's model answers (documents excepted). */
+      answerCase: (caseId: string) =>
+        act((p) => {
+          const def = getCase(caseId)
+          if (!def) return p
+          return Object.entries(modelAnswers(def)).reduce(
+            (next, [stepId, answer]) => saveCaseAnswer(next, caseId, stepId, answer),
+            p,
+          )
         }),
     }
     Object.assign(window, { __worksim: hooks })
