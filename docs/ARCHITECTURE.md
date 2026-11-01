@@ -161,14 +161,14 @@ emails, notices, grading feedback and assignments. Each career is a separate
 save (profile), and documents carry their `owner`, so every career has its
 own files, colleagues and progress. Finance needed no changes to its saves.
 
-| Career               | Department      | Main tool               | New tool        |
-| -------------------- | --------------- | ----------------------- | --------------- |
-| Finance & Admin      | Finance         | Sheets, Docs, Slides    | —               |
-| Accounting           | Accounting      | Sheets, Docs, Slides    | —               |
-| IT Help Desk         | IT Services     | Help Desk, Docs, Slides | Help Desk       |
-| Digital Marketing    | Marketing       | Sheets, Docs, Slides    | —               |
-| Data Analysis        | Data & Insights | Sheets, Docs, Slides    | (new functions) |
-| Software Development | Engineering     | Code, Docs              | Code            |
+| Career               | Department      | Main tool               | Professional tools                  |
+| -------------------- | --------------- | ----------------------- | ----------------------------------- |
+| Finance & Admin      | Finance         | Sheets, Docs, Slides    | —                                   |
+| Accounting           | Accounting      | Sheets, Docs, Slides    | Books                               |
+| IT Help Desk         | IT Services     | Help Desk, Docs, Slides | Help Desk, Directory, Network Tools |
+| Digital Marketing    | Marketing       | Sheets, Docs, Slides    | —                                   |
+| Data Analysis        | Data & Insights | Sheets, Docs, Slides    | (new functions)                     |
+| Software Development | Engineering     | Code, Docs              | Code                                |
 
 ### Professional tools
 

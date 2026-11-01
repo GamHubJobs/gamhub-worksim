@@ -91,18 +91,18 @@ working simulations of the professional software used in its field (see
 - **Help Desk**: a priority guide (impact × urgency matrix, matching the knowledge base)
   on every ticket; clicking a cell sets the priority.
 - **Four new IT tasks** (the path is now eight; promotions at 300, 700 and 1,050 XP):
-  - *A new starter and a lost phone* (Trainee, Directory): an account with exactly the
+  - _A new starter and a lost phone_ (Trainee, Directory): an account with exactly the
     requested access, MFA, equipment from stock; a lost phone reported, MFA reset and
     the phone replaced.
-  - *A leaver, two lockouts and a request* (Analyst, Directory): full offboarding; a
+  - _A leaver, two lockouts and a request_ (Analyst, Directory): full offboarding; a
     verified user unlocked; an account under attack (214 failures from abroad, owner on
     holiday) kept locked with its password reset; a request for admin rights refused.
-  - *Nobody can print, and Maya can’t get online* (Analyst, Network Tools): a stopped
+  - _Nobody can print, and Maya can’t get online_ (Analyst, Network Tools): a stopped
     print spooler (ping works, the port doesn’t) and a hand-typed wrong gateway.
-  - *Monday after the change* (Senior, Network Tools): a DNS record missed in a server
+  - _Monday after the change_ (Senior, Network Tools): a DNS record missed in a server
     move, a laptop using a public DNS server, and an access point needing a site visit.
-  Graded on the actual state (accounts, groups, devices, what resolves and answers from
-  where), the findings and the evidence gathered in the console.
+    Graded on the actual state (accounts, groups, devices, what resolves and answers from
+    where), the findings and the evidence gathered in the console.
 - Network Tools unlocks at Service Desk Analyst; Directory is available from the start.
 
 ### Not built (yet)
@@ -120,7 +120,7 @@ working simulations of the professional software used in its field (see
 - Browser tests: the new-starter task and the Monday incident done end to end in the
   real interface (100% each), and Network Tools locked for a trainee.
 
- Books, complete accounting software
+Books, complete accounting software
 
 ### Built
 
