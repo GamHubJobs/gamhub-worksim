@@ -104,6 +104,16 @@ export async function pruneVersions(
   }
 }
 
+/** Returns one version, or undefined if it no longer exists or is damaged. */
+export async function getVersion(
+  versionId: string,
+  database: WorkSimDatabase = defaultDb,
+): Promise<DocumentVersion | undefined> {
+  const raw = await database.documentVersions.get(versionId)
+  if (!raw || raw.deleted) return undefined
+  return parseStoredVersion(raw) ?? undefined
+}
+
 /** Marks a version as kept (never removed automatically) or not. */
 export async function setVersionKept(
   versionId: string,
@@ -117,6 +127,10 @@ export async function setVersionKept(
     async () => {
       const version = await database.documentVersions.get(versionId)
       if (!version) throw new RecordNotFoundError('documentVersions', versionId)
+      // Submitted and original copies are evidence of the player's work.
+      if (!keep && (version.reason === 'submitted' || version.reason === 'original')) {
+        throw new Error('Submitted and original versions are always kept.')
+      }
       const next = {
         ...version,
         keep,

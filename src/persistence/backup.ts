@@ -24,6 +24,8 @@ import {
   DocumentSchema,
   DocumentVersionSchema,
   MetaEntrySchema,
+  PortfolioFileSchema,
+  PortfolioItemSchema,
   ProfileSchema,
   TimestampSchema,
 } from './schemas'
@@ -58,6 +60,11 @@ export const TABLE_VALIDATORS: Record<string, (raw: unknown) => unknown> = {
     })
   },
   profiles: (raw) => ProfileSchema.parse(upgradeProfile(raw)),
+  portfolioItems: (raw) => PortfolioItemSchema.parse(raw),
+  portfolioFiles: (raw) => {
+    const row = z.object({ snapshot: z.unknown() }).loose().parse(raw)
+    return PortfolioFileSchema.parse({ ...row, snapshot: upgradeDocument(row.snapshot) })
+  },
 }
 
 const BackupFileSchema = z.object({

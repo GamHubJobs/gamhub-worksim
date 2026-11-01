@@ -22,6 +22,8 @@ describe('WorkSimDatabase', () => {
       'documents',
       'meta',
       'outbox',
+      'portfolioFiles',
+      'portfolioItems',
       'profiles',
     ])
   })

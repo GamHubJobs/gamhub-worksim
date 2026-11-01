@@ -1,0 +1,86 @@
+import { expect, test, type Page } from '@playwright/test'
+import { openApp } from './helpers.ts'
+
+/** Reads every row of a table straight from the browser's database. */
+function readTable(page: Page, table: string): Promise<unknown[]> {
+  // Runs in the page, where indexedDB exists (the tests have no browser types).
+  return page.evaluate(`new Promise((resolve, reject) => {
+    const open = indexedDB.open('gamhub-worksim')
+    open.onerror = () => reject(open.error)
+    open.onsuccess = () => {
+      const db = open.result
+      const request = db.transaction('${table}').objectStore('${table}').getAll()
+      request.onsuccess = () => {
+        resolve(request.result)
+        db.close()
+      }
+      request.onerror = () => reject(request.error)
+    }
+  })`)
+}
+
+async function submitCode(page: Page, code: string) {
+  await page.getByTestId('code-editor').fill(code)
+  await page.getByRole('button', { name: /Submit (again )?to Samuel/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click()
+  const score = page.getByTestId('submission-results').getByTestId('score')
+  await expect(score).toBeVisible()
+  const text = await score.textContent()
+  await page.getByRole('button', { name: 'Back to the code' }).click()
+  return text
+}
+
+test('passing a task captures exactly what was handed in, once', async ({ page }) => {
+  test.setTimeout(240_000)
+  await page.goto('/')
+  await page.getByRole('radio', { name: /Software Development/ }).check()
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await openApp(page, 'Tasks')
+  await page
+    .getByTestId('task-detail')
+    .getByRole('button', { name: 'Start task' })
+    .click()
+  await expect(page.getByTestId('code-app')).toBeVisible()
+  const original = await page.getByTestId('code-editor').inputValue()
+  const fixed = original
+    .replace('let i = 1', 'let i = 0')
+    .replace('quantity + lines', 'quantity * lines')
+    .replace('subtotal * discountPercent', 'subtotal * (discountPercent / 100)')
+
+  // A failing attempt is not evidence.
+  expect(await submitCode(page, original)).not.toBe('100%')
+  expect(await readTable(page, 'portfolioItems')).toEqual([])
+
+  // A pass is captured, with the code exactly as submitted.
+  expect(await submitCode(page, `${fixed}\n// passed version`)).toBe('100%')
+  let items = (await readTable(page, 'portfolioItems')) as Array<{
+    title: string
+    score: number
+    attempts: unknown[]
+    files: Array<{ fileId: string; kind: string }>
+  }>
+  expect(items).toHaveLength(1)
+  expect(items[0]).toMatchObject({ title: 'Fix the invoice totals', score: 100 })
+  expect(items[0].attempts).toHaveLength(2)
+  const files = (await readTable(page, 'portfolioFiles')) as Array<{
+    id: string
+    snapshot: { kind: string; content: { files: Array<{ name: string; text: string }> } }
+  }>
+  expect(files).toHaveLength(1)
+  const invoice = files[0].snapshot.content.files.find((f) => f.name === 'invoice.js')
+  expect(invoice?.text).toContain('// passed version')
+
+  // Editing and submitting again doesn't duplicate, and a lower score keeps the evidence.
+  expect(await submitCode(page, original)).not.toBe('100%')
+  items = (await readTable(page, 'portfolioItems')) as typeof items
+  expect(items).toHaveLength(1)
+  expect(items[0].score).toBe(100)
+  expect(items[0].attempts).toHaveLength(3)
+  expect(await readTable(page, 'portfolioFiles')).toHaveLength(1)
+
+  // Everything survives a reload.
+  await page.reload()
+  await expect(page.getByTestId('desktop')).toBeVisible()
+  expect(await readTable(page, 'portfolioItems')).toHaveLength(1)
+})

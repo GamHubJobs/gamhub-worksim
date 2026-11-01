@@ -112,6 +112,29 @@ describe('database upgrade from version 2 to version 3', () => {
   })
 })
 
+describe('database upgrade from version 3 to version 4', () => {
+  it('keeps documents and profiles, and adds the empty portfolio tables', async () => {
+    const name = `test-${createId()}`
+    databasesToDelete.push(name)
+    const documentId = createId()
+    const deviceId = createId()
+    const oldDatabase = new Dexie(name)
+    oldDatabase.version(1).stores(DATABASE_VERSIONS[1])
+    oldDatabase.version(2).stores(DATABASE_VERSIONS[2])
+    oldDatabase.version(3).stores(DATABASE_VERSIONS[3])
+    await oldDatabase.table('meta').put({ key: 'deviceId', value: deviceId })
+    await oldDatabase.table('documents').put(sheetDocument(documentId, deviceId))
+    oldDatabase.close()
+
+    const database = new WorkSimDatabase(name)
+    await database.open()
+    expect(await getDocument(documentId, database)).toMatchObject({ id: documentId })
+    expect(await database.portfolioItems.count()).toBe(0)
+    expect(await database.portfolioFiles.count()).toBe(0)
+    database.close()
+  })
+})
+
 describe('upgradeDocument', () => {
   const document = {
     kind: 'sheet',

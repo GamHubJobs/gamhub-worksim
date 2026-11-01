@@ -4,6 +4,9 @@ import type { DocumentVersion, VersionReason } from '../persistence/schemas'
 import { listVersions } from '../persistence/versions'
 import { describeContent } from './documentSummary'
 
+/** Versions that are evidence of submitted work: they can never be removed. */
+const PROTECTED = new Set(['submitted', 'original'])
+
 const REASON_LABELS: Record<VersionReason, string> = {
   auto: 'Automatic',
   close: 'When you left',
@@ -105,19 +108,31 @@ export function VersionHistoryPanel({
                   {REASON_LABELS[version.reason]} · {describeContent(version.snapshot)}
                 </div>
               </button>
-              <button
-                type="button"
-                onClick={() => onToggleKeep(version)}
-                aria-label={
-                  version.keep ? 'Stop keeping this version' : 'Keep this version'
-                }
-                title={version.keep ? 'Kept forever (click to unstar)' : 'Keep forever'}
-                className={`rounded px-1.5 text-lg leading-none ${
-                  version.keep ? 'text-amber-500' : 'text-slate-300 hover:text-amber-400'
-                }`}
-              >
-                ★
-              </button>
+              {PROTECTED.has(version.reason) ? (
+                <span
+                  className="rounded px-1.5 text-lg leading-none text-amber-500"
+                  title="Always kept: this is evidence of your work"
+                  aria-label="Always kept"
+                >
+                  ★
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onToggleKeep(version)}
+                  aria-label={
+                    version.keep ? 'Stop keeping this version' : 'Keep this version'
+                  }
+                  title={version.keep ? 'Kept forever (click to unstar)' : 'Keep forever'}
+                  className={`rounded px-1.5 text-lg leading-none ${
+                    version.keep
+                      ? 'text-amber-500'
+                      : 'text-slate-300 hover:text-amber-400'
+                  }`}
+                >
+                  ★
+                </button>
+              )}
             </li>
           )
         })}

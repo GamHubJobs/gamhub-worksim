@@ -5,6 +5,7 @@
  * `src/persistence`; this hook only connects them.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { decideCapture, portfolioKey } from '../game/portfolio'
 import { getAssignment } from '../content/assignments'
 import {
   advanceCareer,
@@ -38,6 +39,8 @@ import type {
   AnyDocument,
   DocContent,
   MailMessage,
+  PortfolioFileRole,
+  PortfolioItem,
   Profile,
   SlidesContent,
 } from '../persistence/schemas'
@@ -231,23 +234,53 @@ export function useCareer() {
         ...toolChecks,
       ])
       let reward: Reward | null = null
-      const profile = await saveSubmission(profileId, handedIn, (latest, versionId) => {
-        const withSent = sent ? { ...latest, inbox: [...latest.inbox, sent] } : latest
-        const result = recordSubmission(
-          withSent,
-          assignment,
-          grade,
-          Date.now(),
-          main ? versionId : undefined,
-        )
-        reward = result.reward
-        return {
-          ...latest,
-          ...checkEvents(
-            afterSubmission(result.profile, assignment, grade, result.reward),
-          ),
-        }
-      })
+      // Each handed-in file's role in the portfolio, and its submitted version.
+      const roleOf = (document: AnyDocument): PortfolioFileRole =>
+        document === main
+          ? 'main'
+          : document.kind === 'slides'
+            ? 'presentation'
+            : 'report'
+      const submittedAt = Date.now()
+      const capture = {
+        key: portfolioKey(profileId, assignment.id),
+        decide: (saved: Profile, existing: PortfolioItem | undefined) =>
+          decideCapture({
+            profileId,
+            assignment,
+            grade,
+            attempts: saved.assignments[assignment.id]?.attempts ?? [],
+            submittedAt,
+            files: handedIn.map((document) => ({ role: roleOf(document), document })),
+            existing,
+          }),
+      }
+      const profile = await saveSubmission(
+        profileId,
+        handedIn,
+        (latest, versionId, versions) => {
+          const withSent = sent ? { ...latest, inbox: [...latest.inbox, sent] } : latest
+          const versionOf = (kind: 'doc' | 'slides') =>
+            versions[handedIn.findIndex((d) => d !== main && d.kind === kind)]?.id
+          const result = recordSubmission(
+            withSent,
+            assignment,
+            grade,
+            submittedAt,
+            main ? versionId : undefined,
+            { doc: versionOf('doc'), slides: versionOf('slides') },
+          )
+          reward = result.reward
+          return {
+            ...latest,
+            ...checkEvents(
+              afterSubmission(result.profile, assignment, grade, result.reward),
+            ),
+          }
+        },
+        undefined,
+        capture,
+      )
       show(profile)
       return { assignmentId, grade, reward: reward! }
     },

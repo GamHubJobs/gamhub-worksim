@@ -536,6 +536,8 @@ export const AttemptSchema = z.object({
   skillXpEarned: z.record(z.string(), z.number().int().nonnegative()),
   /** The version-history copy of the workbook as submitted. */
   versionId: IdSchema.optional(),
+  /** The version-history copies of the report and presentation handed in with it. */
+  files: z.object({ doc: IdSchema.optional(), slides: IdSchema.optional() }).optional(),
 })
 
 export const AssignmentProgressSchema = z.object({
@@ -720,6 +722,80 @@ export const ProfileSchema = SyncFieldsSchema.extend({
 })
 
 // ---------------------------------------------------------------------------
+// Portfolio: frozen evidence of passed work (Phase 5)
+// ---------------------------------------------------------------------------
+
+export const PORTFOLIO_FILE_ROLES = ['main', 'report', 'presentation'] as const
+
+/**
+ * One piece of passed work: what was asked, how it was assessed, and links to
+ * frozen copies of the files handed in. Evidence fields are written only when a
+ * task is passed (or by the backfill); the player can change only the
+ * presentation fields (included, featured, note, order).
+ */
+export const PortfolioItemSchema = SyncFieldsSchema.extend({
+  /** Unique per career save and task: "profileId|assignmentId" (or "|project:…"). */
+  key: z.string().min(1).max(200),
+  profileId: IdSchema,
+  careerId: z.string(),
+  type: z.enum(['task', 'project']),
+  assignmentId: z.string().optional(),
+  projectId: z.string().optional(),
+  /** The task's content version when it was passed. */
+  contentVersion: z.number().int().positive(),
+  // What was asked, frozen when passed.
+  title: z.string(),
+  summary: z.string(),
+  levelId: z.string(),
+  levelTitle: z.string(),
+  /** 1 for the career's first level, 2 for the next… */
+  levelIndex: z.number().int().positive(),
+  objectives: z.array(z.string()),
+  skills: z.record(z.string(), z.number().int().nonnegative()),
+  tools: z.array(z.string()),
+  // The assessment of the attempt kept as evidence.
+  completedAt: TimestampSchema,
+  score: z.number().int().min(0).max(100),
+  rating: z.enum(['excellent', 'good', 'pass']),
+  passScore: z.number().int().min(0).max(100),
+  checks: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      why: z.string(),
+      status: z.enum(['passed', 'partial', 'failed']),
+      earned: z.number().int().nonnegative(),
+      points: z.number().int().nonnegative(),
+    }),
+  ),
+  /** Every attempt at the task, for its history. */
+  attempts: z.array(z.object({ submittedAt: TimestampSchema, score: z.number().int() })),
+  files: z.array(
+    z.object({
+      fileId: IdSchema,
+      role: z.enum(PORTFOLIO_FILE_ROLES),
+      kind: z.string(),
+      toolId: z.string().optional(),
+      title: z.string(),
+      bytes: z.number().int().nonnegative(),
+      /** False when the backfill could not find the file as submitted. */
+      available: z.boolean(),
+    }),
+  ),
+  // The player's presentation choices.
+  included: z.boolean(),
+  featured: z.boolean(),
+  note: z.string().max(600),
+  order: z.number().int(),
+})
+
+/** A frozen copy of one file exactly as it was handed in. */
+export const PortfolioFileSchema = SyncFieldsSchema.extend({
+  itemId: IdSchema,
+  snapshot: DocumentSchema,
+})
+
+// ---------------------------------------------------------------------------
 // Database housekeeping
 // ---------------------------------------------------------------------------
 
@@ -783,6 +859,9 @@ export type CodeContent = z.infer<typeof CodeContentSchema>
 export type CodeDocument = z.infer<typeof CodeDocumentSchema>
 export type ToolContent = z.infer<typeof ToolContentSchema>
 export type ToolDocument = z.infer<typeof ToolDocumentSchema>
+export type PortfolioItem = z.infer<typeof PortfolioItemSchema>
+export type PortfolioFile = z.infer<typeof PortfolioFileSchema>
+export type PortfolioFileRole = (typeof PORTFOLIO_FILE_ROLES)[number]
 export type AnyDocument = z.infer<typeof DocumentSchema>
 export type DocumentKind = AnyDocument['kind']
 export type VersionReason = z.infer<typeof VersionReasonSchema>

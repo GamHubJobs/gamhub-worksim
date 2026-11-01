@@ -14,6 +14,8 @@ import {
   type DocumentVersion,
   type MetaEntry,
   type OutboxEntry,
+  type PortfolioFile,
+  type PortfolioItem,
   type Profile,
 } from './schemas'
 
@@ -45,10 +47,16 @@ export const DATABASE_VERSIONS = {
   3: {
     profiles: 'id',
   },
+  // Version 4: the portfolio. One item per career save and task (the unique
+  // key makes duplicates impossible), and frozen copies of submitted files.
+  4: {
+    portfolioItems: 'id, &key, profileId, careerId, completedAt',
+    portfolioFiles: 'id, itemId',
+  },
 } as const
 
 /** The newest database structure version this app understands. */
-export const CURRENT_DATABASE_VERSION = 3
+export const CURRENT_DATABASE_VERSION = 4
 
 export class WorkSimDatabase extends Dexie {
   meta!: EntityTable<MetaEntry, 'key'>
@@ -56,12 +64,15 @@ export class WorkSimDatabase extends Dexie {
   documentVersions!: EntityTable<DocumentVersion, 'id'>
   outbox!: EntityTable<OutboxEntry, 'seq'>
   profiles!: EntityTable<Profile, 'id'>
+  portfolioItems!: EntityTable<PortfolioItem, 'id'>
+  portfolioFiles!: EntityTable<PortfolioFile, 'id'>
 
   constructor(name: string = DATABASE_NAME) {
     super(name)
     this.version(1).stores(DATABASE_VERSIONS[1])
     this.version(2).stores(DATABASE_VERSIONS[2])
     this.version(3).stores(DATABASE_VERSIONS[3])
+    this.version(4).stores(DATABASE_VERSIONS[4])
   }
 }
 

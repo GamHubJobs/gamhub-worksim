@@ -5,6 +5,8 @@
  * one transaction.
  */
 import { z } from 'zod'
+import type { CaptureDecision } from '../game/portfolio'
+import { applyCapture, findPortfolioItem } from './portfolio'
 import { createId } from '../lib/ids'
 import { db as defaultDb, getDeviceId, recordChange, type WorkSimDatabase } from './db'
 import { createDocument, type NewDocument } from './documentsRepo'
@@ -15,6 +17,8 @@ import {
   PROFILE_FORMAT_VERSION,
   ProfileSchema,
   type AnyDocument,
+  type DocumentVersion,
+  type PortfolioItem,
   type DocContent,
   type Profile,
   type SlidesContent,
@@ -280,22 +284,50 @@ export async function startAssignment(
 export async function saveSubmission(
   profileId: string,
   documents: AnyDocument | AnyDocument[],
-  change: (profile: Profile, versionId: string | undefined) => ProfileFields,
+  change: (
+    profile: Profile,
+    versionId: string | undefined,
+    versions: DocumentVersion[],
+  ) => ProfileFields,
   database: WorkSimDatabase = defaultDb,
+  /**
+   * Updates the task's portfolio item in the same transaction, so a grade is
+   * never saved without its evidence (or the other way round).
+   */
+  capture?: {
+    key: string
+    decide: (saved: Profile, existing: PortfolioItem | undefined) => CaptureDecision
+  },
 ): Promise<Profile> {
   const list = Array.isArray(documents) ? documents : [documents]
   return database.transaction(
     'rw',
-    [database.meta, database.profiles, database.documentVersions, database.outbox],
+    [
+      database.meta,
+      database.profiles,
+      database.documentVersions,
+      database.outbox,
+      database.portfolioItems,
+      database.portfolioFiles,
+    ],
     async () => {
       const current = await loadForUpdate(profileId, database)
-      const versions = []
+      const versions: DocumentVersion[] = []
       for (const document of list) {
         versions.push(
           await createVersion(document, 'submitted', { keep: true }, database),
         )
       }
-      return saveProfile(current, change(current, versions[0]?.id), database)
+      const saved = await saveProfile(
+        current,
+        change(current, versions[0]?.id, versions),
+        database,
+      )
+      if (capture) {
+        const existing = await findPortfolioItem(capture.key, database)
+        await applyCapture(capture.decide(saved, existing), existing, database)
+      }
+      return saved
     },
   )
 }

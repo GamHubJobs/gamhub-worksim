@@ -149,6 +149,18 @@ test('a report task: analyse in Sheets, write in Docs, present in Slides, hand i
   await expect(page.getByTestId('check-results')).toContainText(
     'Key figures in the report',
   )
+
+  // The portfolio keeps all three files, each in its role.
+  const roles = await page.evaluate(`new Promise((resolve) => {
+    const open = indexedDB.open('gamhub-worksim')
+    open.onsuccess = () => {
+      const store = open.result.transaction('portfolioItems').objectStore('portfolioItems')
+      const request = store.getAll()
+      request.onsuccess = () =>
+        resolve(request.result.flatMap((i) => i.files.map((f) => f.role + ':' + f.kind)))
+    }
+  })`)
+  expect(roles).toEqual(['main:sheet', 'report:doc', 'presentation:slides'])
 })
 
 test('handing in without the report explains what is missing', async ({ page }) => {

@@ -375,6 +375,8 @@ export function recordSubmission(
   grade: GradeResult,
   now: number,
   versionId?: string,
+  /** The version-history copies of the report and presentation handed in. */
+  fileVersions?: { doc?: string; slides?: string },
 ): { profile: ProfileData; reward: Reward; attempt: Attempt } {
   const progress = profile.assignments[assignment.id]
   if (!progress) throw new Error('This assignment has not been started.')
@@ -403,6 +405,9 @@ export function recordSubmission(
     xpEarned: xp,
     skillXpEarned: earned.skills,
     ...(versionId ? { versionId } : {}),
+    ...(fileVersions && (fileVersions.doc || fileVersions.slides)
+      ? { files: fileVersions }
+      : {}),
   }
 
   const skills = { ...profile.skills }

@@ -69,7 +69,7 @@ working simulations of the professional software used in its field (see
 **Phase 5: "Employability & Career Portfolio"** (planned, not started; waiting for the
 owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 
-- [ ] 5.1 Evidence capture and storage
+- [x] 5.1 Evidence capture and storage
 - [ ] 5.2 Backfill for existing saves, backup and safety
 - [ ] 5.3 Portfolio app: browse, filter, inspect
 - [ ] 5.4 Competency and experience record
@@ -80,6 +80,42 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [ ] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.1: Evidence capture and storage
+
+### Built
+
+- Two new database tables (save format version 4): `portfolioItems` (one light record per
+  passed task, with a unique key so a task can never appear twice) and `portfolioFiles`
+  (frozen copies of the files exactly as they were handed in).
+- Passing a task now saves its portfolio record **in the same transaction** as the grade:
+  if either fails, neither is saved. Each record keeps the task description, level,
+  objectives, skills, tools, score, every check’s result and the history of attempts.
+- A failed attempt is never evidence. A weaker resubmission only adds to the attempt
+  history; a better one replaces the evidence, keeping the player’s note and choices.
+- Every attempt now links the submitted versions of the report and slides too.
+- “Submitted” and “Original” versions can no longer be removed from Version history
+  (shown with a fixed ★ “Always kept: this is evidence of your work”).
+- Backups include the portfolio, and restoring brings it back exactly.
+
+### Decisions taken (owner’s questions left open, recommended defaults used)
+
+- One portfolio per device, covering every career save.
+- Free MIT libraries (jsPDF, jspdf-autotable, fflate) will be added at milestones 5.6–5.7.
+- Exports will be PDF plus open formats, not native Office files.
+- Finance & Admin work is included.
+
+### Tested
+
+- 56 new unit tests: capture rules, all-or-nothing saving, duplicate refusal, protected
+  evidence fields, protected versions, backup round-trip, the upgrade from version 3, and
+  a record for every one of the 48 tasks.
+- New browser test: a Software Development task (fail, pass, weaker resubmission, reload)
+  keeps exactly one record with the passed code. The report-task browser test checks
+  that the workbook, report and slides are all kept in their roles.
+- Full check passes (format, lint, types, 1032 unit tests).
 
 ---
 
