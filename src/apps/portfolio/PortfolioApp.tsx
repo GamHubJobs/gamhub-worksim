@@ -21,6 +21,7 @@ import {
 } from './filters'
 import { ItemPage } from './ItemPage'
 import { ExportView } from './ExportView'
+import { ProfileView } from './ProfileView'
 import { ProgressReportView } from './ProgressReportView'
 import { SkillsView } from './SkillsView'
 import type { Recommendation } from '../../game/progressReport'
@@ -246,7 +247,29 @@ export function PortfolioApp({
           )}
         </section>
 
-        {tab === 'export' ? (
+        {tab === 'profile' ? (
+          <ProfileView
+            profiles={
+              filters.profileId === 'all'
+                ? loaded.profiles
+                : loaded.profiles.filter((p) => p.id === filters.profileId)
+            }
+            items={items}
+            defaultName={profile.name}
+            onItemChanged={(changed) =>
+              setLoaded((current) =>
+                current.status === 'ready'
+                  ? {
+                      ...current,
+                      items: current.items.map((i) =>
+                        i.id === changed.id ? changed : i,
+                      ),
+                    }
+                  : current,
+              )
+            }
+          />
+        ) : tab === 'export' ? (
           <ExportView
             items={inSaves}
             profiles={

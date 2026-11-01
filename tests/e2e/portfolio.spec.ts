@@ -232,7 +232,7 @@ async function downloadedPdfText(download: Download): Promise<string> {
   return text.replace(/[ \t]+/g, ' ')
 }
 
-test('the portfolio, the competency report and an item download as PDFs and ZIPs', async ({
+test('the portfolio, reports, profile and items download as PDFs, ZIPs and a web page', async ({
   page,
 }) => {
   test.setTimeout(180_000)
@@ -316,4 +316,48 @@ test('the portfolio, the competency report and an item download as PDFs and ZIPs
   zip = unzipSync(new Uint8Array(await readFile(await file.path())))
   expect(Object.keys(zip)).toContain('Fix the invoice totals/Fix the invoice totals.pdf')
   expect(Object.keys(zip).some((n) => n.endsWith('/git-log.txt'))).toBe(true)
+
+  // The profile: the player's words, generated sections, featured work.
+  await page.getByLabel('Feature this work (shown first)').check()
+  await page.getByRole('button', { name: 'All work' }).click()
+  await page
+    .getByRole('navigation', { name: 'Portfolio sections' })
+    .getByRole('button', { name: 'Profile' })
+    .click()
+  const editor = page.getByTestId('profile-view')
+  const preview = page.getByTestId('profile-preview')
+  await expect(editor.getByLabel('Display name')).toHaveValue('Robin')
+  await editor.getByLabel('Display name').fill('Robin Ellis')
+  // Describing the simulation as a qualification brings a reminder.
+  await editor.getByLabel('Headline').fill('Certified developer')
+  await expect(editor.getByTestId('profile-warning')).toContainText('Certified')
+  await editor.getByLabel('Headline').fill('Junior developer who likes finding bugs')
+  await expect(editor.getByTestId('profile-warning')).toHaveCount(0)
+  await expect(preview).toContainText('Robin Ellis')
+  await expect(preview).toContainText('in the simulated Software Development career')
+  await expect(preview).toContainText('Fix the invoice totals (100%)')
+  await expect(preview).toContainText('It is not a record of employment')
+  // Hiding a section removes it from the preview.
+  await editor.getByLabel('Tools used').uncheck()
+  await expect(preview).not.toContainText('Tools used in passed work')
+
+  download = page.waitForEvent('download')
+  await editor.getByRole('button', { name: 'Download profile (PDF)' }).click()
+  file = await download
+  expect(file.suggestedFilename()).toBe('Robin Ellis - profile.pdf')
+  text = await downloadedPdfText(file)
+  expect(text).toContain('Junior developer who likes finding bugs')
+  expect(text).toContain('It is not a record of employment')
+
+  download = page.waitForEvent('download')
+  await editor.getByRole('button', { name: 'Download as a web page' }).click()
+  file = await download
+  expect(file.suggestedFilename()).toBe('Robin Ellis - profile.html')
+  expect(await readFile(await file.path(), 'utf8')).toContain('<h1>Robin Ellis</h1>')
+
+  // The player's words are kept.
+  await page.reload()
+  await expect(page.getByTestId('profile-view').getByLabel('Headline')).toHaveValue(
+    'Junior developer who likes finding bugs',
+  )
 })

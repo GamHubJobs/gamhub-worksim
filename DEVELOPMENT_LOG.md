@@ -76,10 +76,46 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [x] 5.5 Career progress report and recommendations
 - [x] 5.6 PDF engine and report exports
 - [x] 5.7 Original file exports and the portfolio package
-- [ ] 5.8 Employability profile
+- [x] 5.8 Employability profile
 - [ ] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.8: Employability profile
+
+### Built
+
+- A **Profile** section in the Portfolio app, with an editor and a live preview of
+  exactly what will be exported.
+- **In the player’s own words:** display name, headline and summary (saved
+  automatically in the `meta` table, so they are in backups).
+- **Generated from the records, never edited:** simulated career progress (“Reached
+  Junior Developer (level 1 of 4) in the simulated Software Development career”),
+  competencies by level, featured work, tools used in passed work, and experience in
+  numbers. The player can only show or hide these sections.
+- **Featured work** uses the items the player featured (on each item’s page), in an
+  order they choose with up and down buttons.
+- **Honesty:** the statement is always shown and cannot be hidden. There are no fields
+  for employers, job dates, references or qualifications. If the headline or summary
+  uses words such as “certified”, “degree” or “worked at”, a reminder explains that
+  the profile shows work done in a simulation.
+- **Downloads:** the profile as a PDF and as a self-contained web page (the player’s
+  text is escaped).
+
+### Tested
+
+- 8 new unit tests: the profile is built from records only, featured work follows the
+  player’s order and never includes excluded work, other saves’ work is not counted,
+  stored settings keep only the allowed fields, the reminder catches misleading
+  words, hiding every section keeps the statement, PDF text, and HTML escaping.
+- The export browser test edits the profile, sees the reminder, hides a section,
+  downloads the PDF and web page, and checks the text is kept after a reload.
+- Known timing-sensitive test: “changes made just before a tab crash are recovered”
+  needs the crash within one second of typing, and sometimes misses that window when
+  several test browsers run at once. It passes when run on its own; autosave and the
+  editor were not changed in Phase 5.
 
 ---
 

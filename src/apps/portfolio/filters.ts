@@ -58,6 +58,7 @@ export const PORTFOLIO_TABS = [
   { id: 'work', label: 'Work' },
   { id: 'skills', label: 'Skills' },
   { id: 'report', label: 'Progress report' },
+  { id: 'profile', label: 'Profile' },
   { id: 'export', label: 'Export' },
 ] as const
 

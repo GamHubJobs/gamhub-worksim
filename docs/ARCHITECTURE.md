@@ -79,6 +79,7 @@ Next start → journal newer than saved document? → recovered and saved
 | `lastView.ts`           | Which app/workbook was open, to return there after a reload    |
 | `portfolio.ts`          | Portfolio items and frozen file copies; presentation changes   |
 | `portfolioBackfill.ts`  | Adds earlier passed work to the portfolio (safe to re-run)     |
+| `employability.ts`      | The player’s own words for the employability profile           |
 
 ## Source folders
 
