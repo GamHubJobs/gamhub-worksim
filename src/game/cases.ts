@@ -10,6 +10,7 @@
  * working hours.
  */
 import { z } from 'zod'
+import { caseFor, caseInVariant, ORIGINAL, pickVariant } from './caseVariants'
 import { HOURS } from '../content/workday'
 import { getAssignment } from '../content/assignments'
 import { CASES, getCase } from '../content/cases'
@@ -163,10 +164,12 @@ export function openCases(profile: ProfileData): CaseProgress[] {
 }
 
 /** The email that brings a case. */
-function caseMail(def: Case, receivedAt: number): MailMessage {
+function caseMail(def: Case, receivedAt: number, variant: string): MailMessage {
   return {
     id: createId(),
-    from: def.from.personId ?? `case:${def.id}`,
+    from:
+      def.from.personId ??
+      (variant === ORIGINAL ? `case:${def.id}` : `case:${def.id}~${variant}`),
     subject: def.email.subject,
     body: def.email.body,
     receivedAt,
@@ -183,6 +186,9 @@ export function arriveCase(
   receivedAt: number,
 ): ProfileData {
   const at = now(profile.work)
+  // The save's own variant of the case (people, figures, circumstances).
+  const variant = pickVariant(profile.work.record.seed, def.id)
+  if (variant !== ORIGINAL) def = caseInVariant(def.id, variant) ?? def
   const progress: CaseProgress = {
     caseId: def.id,
     version: def.version,
@@ -191,12 +197,17 @@ export function arriveCase(
     due: at + def.deadlineHours * 60,
     answers: {},
     files: {},
+    ...(variant !== ORIGINAL ? { variant } : {}),
   }
   const work = log(
     { ...profile.work, cases: { ...profile.work.cases, [def.id]: progress } },
     `New ${def.kind === 'client' ? 'client request' : 'case'}: ${def.title}`,
   )
-  return { ...profile, work, inbox: [...profile.inbox, caseMail(def, receivedAt)] }
+  return {
+    ...profile,
+    work,
+    inbox: [...profile.inbox, caseMail(def, receivedAt, variant)],
+  }
 }
 
 /**
@@ -208,7 +219,7 @@ export function checkCases(profile: ProfileData, receivedAt = Date.now()): Profi
   const time = now(profile.work)
   for (const progress of openCases(profile)) {
     if (time <= progress.due) continue
-    const def = getCase(progress.caseId)
+    const def = caseFor(next, progress.caseId)
     next = {
       ...next,
       work: {
@@ -637,7 +648,9 @@ export function recordCaseResult(
   }
   const reply: MailMessage = {
     id: createId(),
-    from: def.from.personId ?? `case:${def.id}`,
+    from:
+      def.from.personId ??
+      (progress.variant ? `case:${def.id}~${progress.variant}` : `case:${def.id}`),
     subject: `Re: ${def.email.subject}`,
     body: def.replies[result.rating].replaceAll('{name}', firstName(profile.name)),
     receivedAt: submittedAt + 1,

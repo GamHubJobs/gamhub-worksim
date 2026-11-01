@@ -5,12 +5,12 @@
  * Once earned, it is kept in the save's record with the day it was earned.
  */
 import { CASES } from '../content/cases'
+import { caseFor } from './caseVariants'
 import type { Case, CaseKind } from '../content/cases/schema'
 import type { CaseProgress, WorkState } from '../persistence/schemas'
 import { careerAssignments, isPassed, type ProfileData } from './career'
 import { projectsCompleted } from './careerRecord'
 import { levelNumber } from './cases'
-import { getCase } from '../content/cases'
 import { toolsOf, toolName } from './portfolio'
 
 export const ACHIEVEMENT_CATEGORIES = {
@@ -48,7 +48,7 @@ interface Submitted {
 
 function submittedCases(profile: ProfileData, ...kinds: CaseKind[]): Submitted[] {
   return Object.values(profile.work.cases).flatMap((progress) => {
-    const def = getCase(progress.caseId)
+    const def = caseFor(profile, progress.caseId)
     if (!def || progress.status !== 'submitted' || !progress.result) return []
     if (kinds.length > 0 && !kinds.includes(def.kind)) return []
     return [{ def, progress }]

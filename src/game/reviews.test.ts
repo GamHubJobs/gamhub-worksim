@@ -119,7 +119,28 @@ describe('performance reviews', () => {
       ...profile,
       levelId: 'junior',
       xp: 950,
-      work: { ...profile.work, reputation: 60 },
+      work: {
+        ...profile.work,
+        reputation: 60,
+        // The level's readiness assessment, passed.
+        record: {
+          ...profile.work.record,
+          assessments: [
+            {
+              caseId: 'ready-fa-practitioner',
+              version: 1,
+              variant: 'a',
+              attempt: 1,
+              status: 'submitted',
+              arrivedAt: 0,
+              due: 180,
+              answers: {},
+              files: {},
+              result: { submittedAt: 1, score: 85, rating: 'good', steps: [] },
+            },
+          ],
+        },
+      },
     }
     for (const id of [
       'budget-report',

@@ -690,6 +690,8 @@ export const CaseProgressSchema = z.object({
   answers: z.record(z.string(), z.unknown()),
   /** Files made for the case's document steps, by step ID. */
   files: z.record(z.string(), IdSchema).default({}),
+  /** The variant the case arrived in (see `game/caseVariants.ts`); missing = the original. */
+  variant: z.string().optional(),
   /** For meeting cases: when the player joined the meeting (absolute office time). */
   joinedAt: z.number().nonnegative().optional(),
   result: z
@@ -722,6 +724,11 @@ export const OrgStateSchema = z.object({
   spend: z.record(z.string(), z.number()),
 })
 
+/** One attempt at a readiness assessment: like a case, numbered. */
+export const AssessmentAttemptSchema = CaseProgressSchema.extend({
+  attempt: z.number().int().positive(),
+})
+
 /**
  * What a career save remembers about the player's development that cannot be
  * worked out again later (added in profile format 4). Everything else in the
@@ -743,6 +750,11 @@ export const CareerRecordSchema = z.object({
   achievements: z
     .record(z.string(), z.object({ day: z.number().int().min(1), at: TimestampSchema }))
     .default({}),
+  /**
+   * Every readiness assessment attempt, oldest first (kept for good, passed or not).
+   * `caseId` is the assessment ID and `variant` the version taken.
+   */
+  assessments: z.array(AssessmentAttemptSchema).default([]),
   /** Chosen desk items by slot (e.g. { plant: 'fern' }). */
   desk: z.record(z.string(), z.string()).default({}),
   /** Chooses this save's variant of each case (0 = the original wording). */
@@ -964,6 +976,7 @@ export type Attempt = z.infer<typeof AttemptSchema>
 export type AssignmentProgress = z.infer<typeof AssignmentProgressSchema>
 export type MailMessage = z.infer<typeof MailMessageSchema>
 export type CaseProgress = z.infer<typeof CaseProgressSchema>
+export type AssessmentAttempt = z.infer<typeof AssessmentAttemptSchema>
 export type OrgState = z.infer<typeof OrgStateSchema>
 export type Wellbeing = z.infer<typeof WellbeingSchema>
 export type Relationship = z.infer<typeof RelationshipSchema>

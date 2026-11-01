@@ -4,7 +4,7 @@
  * button that walks the player to the right place in the office, or opens the
  * case.
  */
-import { getCase } from '../content/cases'
+import { caseFor } from './caseVariants'
 import type { SpotId } from '../content/office'
 import { BREAK_DUE_AFTER, HOURS } from '../content/workday'
 import { fill, findPerson } from '../content/departments'
@@ -32,7 +32,7 @@ export const CASE_DUE_NOTICE = 60
 export function caseNotices(profile: ProfileData): Notice[] {
   const notices: Notice[] = []
   for (const progress of openCases(profile)) {
-    const def = getCase(progress.caseId)
+    const def = caseFor(profile, progress.caseId)
     if (!def) continue
     const open = { label: 'Open the case', caseId: def.id }
     const status = meetingStatus(profile.work, def, progress)

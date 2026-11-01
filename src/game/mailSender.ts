@@ -1,12 +1,14 @@
 /** Who a message is from: a colleague, or an outside contact of a case. */
-import { getCase } from '../content/cases'
+import { caseInVariant } from './caseVariants'
 import type { Person } from '../content/company'
 import { getPerson } from '../content/departments'
 import type { MailMessage } from '../persistence/schemas'
 
 /** An outside contact (client, supplier) shown like a colleague in Mail. */
 export function caseContact(caseId: string): Person | null {
-  const def = getCase(caseId)
+  // "case:<id>~<variant>" for a case in one of its variants.
+  const [id, variant] = caseId.split('~')
+  const def = caseInVariant(id, variant)
   if (!def) return null
   const { name, role, organisation } = def.from
   const domain = organisation

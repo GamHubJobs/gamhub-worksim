@@ -20,7 +20,7 @@ import {
   saveCaseAnswer,
 } from '../game/cases'
 import { caseRecordContent } from '../game/caseRecord'
-import { getCase } from '../content/cases'
+import { caseFor } from '../game/caseVariants'
 import { careerLevel } from '../game/career'
 import { getDeviceId } from '../persistence/db'
 import { DOCUMENT_FORMAT_VERSIONS } from '../persistence/schemas'
@@ -41,6 +41,12 @@ import { gradeToolTask } from '../tools/grading'
 import { buildStartingContent } from '../game/workbooks'
 import { checkEvents } from '../game/events'
 import { checkAchievements } from '../game/achievements'
+import {
+  attemptDef,
+  checkAssessments,
+  openAttempt,
+  recordAssessmentResult,
+} from '../game/assessments'
 import { checkReviews } from '../game/reviews'
 import { afterSubmission } from '../game/workday'
 import { getDocument } from '../persistence/documentsRepo'
@@ -52,6 +58,7 @@ import {
   listProfiles,
   setActiveProfile,
   saveSubmission,
+  startAssessmentFile,
   startCaseFile,
   startAssignment as startAssignmentInStorage,
   updateProfile,
@@ -82,6 +89,9 @@ export interface SubmissionResult {
 
 /** A random seed for a new save's case variants (never 0, which is the original wording). */
 function newSeed(): number {
+  // The browser tests fix the seed (0 = every case in its original wording).
+  const fixed = import.meta.env.VITE_CASE_SEED as string | undefined
+  if (fixed !== undefined) return Number(fixed)
   return 1 + Math.floor(Math.random() * 0x7ffffffe)
 }
 
@@ -437,7 +447,7 @@ export function useCareer() {
         return {
           ...latest,
           ...checkAchievements(
-            checkCases(checkEvents(checkReviews(changed, now)), now),
+            checkAssessments(checkCases(checkEvents(checkReviews(changed, now)), now)),
             now,
           ),
         }
@@ -460,7 +470,7 @@ export function useCareer() {
     async (caseId: string, stepId: string): Promise<string> => {
       if (!profileId || state.status !== 'ready')
         throw new Error('Your career is not loaded yet.')
-      const def = getCase(caseId)
+      const def = caseFor(state.profile, caseId)
       const step = def?.steps.find((s) => s.id === stepId)
       if (!def || step?.kind !== 'document')
         throw new Error('This case has no such document.')
@@ -484,7 +494,7 @@ export function useCareer() {
     async (caseId: string): Promise<CaseResult> => {
       if (!profileId || state.status !== 'ready')
         throw new Error('Your career is not loaded yet.')
-      const def = getCase(caseId)
+      const def = caseFor(state.profile, caseId)
       const progress = state.profile.work.cases[caseId]
       if (!def || !progress || progress.status !== 'open') {
         throw new Error('This case is no longer open.')
@@ -577,6 +587,124 @@ export function useCareer() {
     [profileId, state, show],
   )
 
+  /** Creates (or finds) the report file of the open assessment attempt. */
+  const openAssessmentFile = useCallback(
+    async (assessmentId: string, stepId: string): Promise<string> => {
+      if (!profileId || state.status !== 'ready')
+        throw new Error('Your career is not loaded yet.')
+      const open = openAttempt(state.profile, assessmentId)
+      const def = open ? attemptDef(open) : undefined
+      const step = def?.steps.find((s) => s.id === stepId)
+      if (!def || step?.kind !== 'document')
+        throw new Error('This assessment has no such document.')
+      const { profile, documentId } = await startAssessmentFile(
+        profileId,
+        assessmentId,
+        stepId,
+        deliverableFile(step.deliverable, state.profile.name),
+      )
+      show(profile)
+      return documentId
+    },
+    [profileId, state, show],
+  )
+
+  /**
+   * Submits the open attempt at an assessment: grades the answers and the
+   * report as they are saved, records the result (and a promotion it allows),
+   * and keeps a passed attempt in the portfolio, all in one save.
+   */
+  const submitAssessment = useCallback(
+    async (assessmentId: string): Promise<CaseResult> => {
+      if (!profileId || state.status !== 'ready')
+        throw new Error('Your career is not loaded yet.')
+      const open = openAttempt(state.profile, assessmentId)
+      const def = open ? attemptDef(open) : undefined
+      if (!open || !def) throw new Error('This assessment is not in progress.')
+      const handedIn: AnyDocument[] = []
+      const contents: Record<string, DocContent | SlidesContent | undefined> = {}
+      for (const step of def.steps) {
+        const fileId = open.files[step.id]
+        const document = fileId ? await getDocument(fileId) : undefined
+        if (document && (document.kind === 'doc' || document.kind === 'slides')) {
+          handedIn.push(document)
+          contents[step.id] = document.content
+        }
+      }
+      const submittedAt = Date.now()
+      const deviceId = await getDeviceId()
+      let result: CaseResult | null = null
+      let record: AnyDocument | null = null
+      let level = { id: '', title: '', index: 1 }
+      const capture = {
+        key: caseKey(profileId, assessmentId),
+        decide: () =>
+          decideCaseCapture({
+            profileId,
+            def,
+            result: result!,
+            level,
+            submittedAt,
+            files: [
+              { role: 'main' as const, document: record! },
+              ...handedIn.map((document) => ({
+                role:
+                  document.kind === 'slides'
+                    ? ('presentation' as const)
+                    : ('report' as const),
+                document,
+              })),
+            ],
+          }),
+      }
+      const profile = await saveSubmission(
+        profileId,
+        handedIn,
+        (latest) => {
+          const answers = openAttempt(latest, assessmentId)?.answers ?? {}
+          result = gradeCase(def, answers, contents)
+          const { current } = careerLevel(latest)
+          level = {
+            id: current.id,
+            title: current.title,
+            index: Math.max(1, levelNumber(latest)),
+          }
+          record = {
+            id: createId(),
+            createdAt: submittedAt,
+            updatedAt: submittedAt,
+            rev: 1,
+            deviceId,
+            deleted: false,
+            title: `Assessment record: ${def.title.replace(/^Readiness assessment: /, '')}`,
+            owner: profileId,
+            formatVersion: DOCUMENT_FORMAT_VERSIONS.doc,
+            kind: 'doc',
+            content: caseRecordContent(def, answers, result, latest.name),
+          }
+          const recorded = recordAssessmentResult(
+            latest,
+            assessmentId,
+            result,
+            submittedAt,
+          )
+          return {
+            ...latest,
+            ...checkAchievements(
+              advanceCareer(recorded, submittedAt).profile,
+              submittedAt,
+            ),
+          }
+        },
+        undefined,
+        capture,
+      )
+      show(profile)
+      return result!
+    },
+    [profileId, state, show],
+  )
+
   return {
     state,
     createCareer,
@@ -590,6 +718,8 @@ export function useCareer() {
     saveCaseStep,
     openCaseFile,
     submitCase,
+    openAssessmentFile,
+    submitAssessment,
   }
 }
 

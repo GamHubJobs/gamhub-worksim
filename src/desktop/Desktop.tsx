@@ -29,6 +29,7 @@ import {
   assignmentStatus,
   careerAssignments,
   careerLevel,
+  promotionProgress,
   unreadCount,
 } from '../game/career'
 import {
@@ -41,10 +42,24 @@ import type { Profile, Wellbeing } from '../persistence/schemas'
 import type { SpotId } from '../content/office'
 import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
+import { caseFor } from '../game/caseVariants'
 import { chooseDeskItem } from '../game/desk'
+import { ReadinessApp } from '../apps/readiness/ReadinessApp'
+import {
+  attemptDef,
+  openAttempt,
+  saveAssessmentAnswer,
+  startAssessment,
+} from '../game/assessments'
 import { workPace } from '../game/wellbeing'
 import { skipToAssignment } from '../game/devTools'
-import { arriveCase, caseContext, joinMeeting, saveCaseAnswer } from '../game/cases'
+import {
+  arriveCase,
+  caseContext,
+  joinMeeting,
+  levelNumber,
+  saveCaseAnswer,
+} from '../game/cases'
 import { modelAnswers } from '../game/caseModel'
 import { getCase } from '../content/cases'
 import { CasesApp } from '../apps/cases/CasesApp'
@@ -73,6 +88,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'helpdesk', label: 'Help Desk', icon: 'helpdesk' },
     { id: 'code', label: 'Code', icon: 'code' },
     { id: 'career', label: 'Career', icon: 'career' },
+    { id: 'readiness', label: 'Readiness', icon: 'check' },
     { id: 'portfolio', label: 'Portfolio', icon: 'portfolio' },
   ]
 
@@ -101,6 +117,11 @@ export function Desktop({
     mail: unread,
     tasks: openTasks,
     cases: Object.values(profile.work.cases).filter((c) => c.status === 'open').length,
+    // The assessment the next promotion needs, until it is passed.
+    readiness:
+      promotionProgress(profile).assessment && !promotionProgress(profile).assessmentMet
+        ? 1
+        : 0,
   }
   const xpStart = current.xpRequired
   const xpPercent = next
@@ -167,15 +188,32 @@ export function Desktop({
         act((p) => ({ ...p, work: { ...p.work, day, minute } })),
       /** Marks every task before this one as done (e.g. 'performance-report'). */
       skipTo: (assignmentId: string) => act((p) => skipToAssignment(p, assignmentId)),
+      /** Chooses which case variants this save gets (0 = the original wording). */
+      setSeed: (seed: number) =>
+        act((p) => ({
+          ...p,
+          work: { ...p.work, record: { ...p.work.record, seed } },
+        })),
       arriveCase: (caseId: string) =>
         act((p) => {
           const def = getCase(caseId)
           return def && !p.work.cases[caseId] ? arriveCase(p, def, Date.now()) : p
         }),
+      /** Fills in the open assessment attempt's model answers (the report excepted). */
+      answerAssessment: (id: string) =>
+        act((p) => {
+          const open = openAttempt(p, id)
+          const def = open ? attemptDef(open) : undefined
+          if (!def) return p
+          return Object.entries(modelAnswers(def)).reduce(
+            (next, [stepId, answer]) => saveAssessmentAnswer(next, id, stepId, answer),
+            p,
+          )
+        }),
       /** Fills in a case's model answers (documents excepted). */
       answerCase: (caseId: string) =>
         act((p) => {
-          const def = getCase(caseId)
+          const def = caseFor(p, caseId)
           if (!def) return p
           return Object.entries(modelAnswers(def, caseContext(p))).reduce(
             (next, [stepId, answer]) => saveCaseAnswer(next, caseId, stepId, answer),
@@ -284,13 +322,14 @@ export function Desktop({
                 view: { app: 'tool', tool: tool.id } as View,
                 locked: unlocksAt,
               })),
-              ...APPS.filter((app) => app.id === 'career' || app.id === 'portfolio').map(
-                (app) => ({
-                  ...app,
-                  key: app.id as string,
-                  view: { app: app.id } as View,
-                }),
-              ),
+              ...APPS.filter(
+                (app) =>
+                  app.id === 'career' || app.id === 'readiness' || app.id === 'portfolio',
+              ).map((app) => ({
+                ...app,
+                key: app.id as string,
+                view: { app: app.id } as View,
+              })),
             ].map((app) => {
               const locked = 'locked' in app ? app.locked : null
               const active =
@@ -525,6 +564,26 @@ export function Desktop({
                   onWait={(minutes) => void act((p) => passTime(p, minutes, 'work'))}
                 />
               )}
+              {view.app === 'readiness' && (
+                <ReadinessApp
+                  profile={profile}
+                  selected={view.item}
+                  onSelect={(item) => setView({ app: 'readiness', item })}
+                  onStart={async (id) => {
+                    await act((p) => startAssessment(p, id, levelNumber(p)))
+                  }}
+                  onSave={(id, stepId, answer) =>
+                    void act((p) => saveAssessmentAnswer(p, id, stepId, answer))
+                  }
+                  onOpenFile={async (id, stepId) => {
+                    const documentId = await career.openAssessmentFile(id, stepId)
+                    setView({ app: 'docs', document: documentId })
+                  }}
+                  onSubmit={async (id) => {
+                    await career.submitAssessment(id)
+                  }}
+                />
+              )}
               {view.app === 'portfolio' && (
                 <PortfolioApp
                   profile={profile}
@@ -547,6 +606,7 @@ export function Desktop({
                 <CareerApp
                   profile={profile}
                   focus={view.item}
+                  onOpenReadiness={(item) => setView({ app: 'readiness', item })}
                   onChooseDesk={(slot, itemId) =>
                     void act((p) => chooseDeskItem(p, slot, itemId))
                   }

@@ -6,7 +6,8 @@
  * says where it comes from.
  */
 import { getCareer } from '../content/careers'
-import { CASES, getCase } from '../content/cases'
+import { caseFor } from './caseVariants'
+import { CASES } from '../content/cases'
 import type { Case, CaseKind } from '../content/cases/schema'
 import {
   approvalLimit,
@@ -92,7 +93,7 @@ interface Handled {
 function handledCases(profile: ProfileData): Handled[] {
   return Object.values(profile.work.cases)
     .flatMap((progress) => {
-      const def = getCase(progress.caseId)
+      const def = caseFor(profile, progress.caseId)
       return def ? [{ def, progress }] : []
     })
     .sort((a, b) => a.progress.arrivedAt - b.progress.arrivedAt)

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { getAssignment } from '../content/assignments'
 import { CAREERS, getSkill } from '../content/careers'
 import { CASES, getCase } from '../content/cases'
-import type { Case } from '../content/cases/schema'
+import { DIFFICULTIES, difficultyOf, type Case } from '../content/cases/schema'
 import { modelAnswers } from './caseModel'
 import { programmeBoard } from './programme'
 import { HOURS } from '../content/workday'
@@ -539,5 +539,18 @@ describe('balance between the careers', () => {
     const totals = byCareer.map((cases) => cases.reduce((sum, c) => sum + c.xp, 0))
     const mean = totals.reduce((a, b) => a + b, 0) / totals.length
     for (const total of totals) expect(Math.abs(total - mean) / mean).toBeLessThan(0.15)
+  })
+})
+
+describe('difficulty', () => {
+  it('every career has the same number of foundation, intermediate and advanced cases', () => {
+    const counts = CAREERS.map((career) =>
+      DIFFICULTIES.map(
+        (d) =>
+          CASES.filter((c) => c.careerId === career.id && difficultyOf(c) === d).length,
+      ),
+    )
+    for (const row of counts) expect(row).toEqual(counts[0])
+    expect(counts[0].every((n) => n > 0)).toBe(true)
   })
 })

@@ -231,6 +231,59 @@ export async function updateProfile(
  * its template, with an "original" version) and records it in the case. If it
  * already exists, its ID is returned.
  */
+/**
+ * Creates the file for a document step of the open attempt at a readiness
+ * assessment (or returns the one already made), in one transaction.
+ */
+export async function startAssessmentFile(
+  profileId: string,
+  assessmentId: string,
+  stepId: string,
+  file:
+    | { kind: 'doc'; title: string; content: DocContent }
+    | { kind: 'slides'; title: string; content: SlidesContent },
+  database: WorkSimDatabase = defaultDb,
+): Promise<{ profile: Profile; documentId: string }> {
+  return database.transaction(
+    'rw',
+    [
+      database.meta,
+      database.profiles,
+      database.documents,
+      database.documentVersions,
+      database.outbox,
+    ],
+    async () => {
+      const current = await loadForUpdate(profileId, database)
+      const open = current.work.record.assessments.find(
+        (a) => a.caseId === assessmentId && a.status === 'open',
+      )
+      if (!open) throw new Error('This assessment is not in progress.')
+      const existing = open.files[stepId]
+      if (existing) return { profile: current, documentId: existing }
+      const created = await createDocument({ ...file, owner: profileId }, database)
+      await createVersion(created, 'original', { keep: true }, database)
+      const profile = await saveProfile(
+        current,
+        {
+          ...current,
+          work: {
+            ...current.work,
+            record: {
+              ...current.work.record,
+              assessments: current.work.record.assessments.map((a) =>
+                a === open ? { ...a, files: { ...a.files, [stepId]: created.id } } : a,
+              ),
+            },
+          },
+        },
+        database,
+      )
+      return { profile, documentId: created.id }
+    },
+  )
+}
+
 export async function startCaseFile(
   profileId: string,
   caseId: string,

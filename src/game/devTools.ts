@@ -3,6 +3,8 @@
  * `window.__worksim` in development builds; not part of the built app).
  */
 import { getAssignment } from '../content/assignments'
+import { careerAssessments, hasPassed } from './assessments'
+import { getCareer } from '../content/careers'
 import { createId } from '../lib/ids'
 import { advanceCareer, careerAssignments, type ProfileData } from './career'
 
@@ -40,8 +42,37 @@ export function skipToAssignment(
       ],
     }
   }
+  // The readiness assessments of the levels skipped count as passed.
+  const level =
+    getCareer(profile.careerId).levels.findIndex((l) => l.id === target.levelId) + 1
+  const skipped = careerAssessments(profile.careerId).filter(
+    (a) => a.minLevel < level && !hasPassed(profile, a.id),
+  )
   const work = {
     ...profile.work,
+    record: {
+      ...profile.work.record,
+      assessments: [
+        ...profile.work.record.assessments,
+        ...skipped.map((a) => ({
+          caseId: a.id,
+          version: a.version,
+          variant: 'a',
+          attempt: 1,
+          status: 'submitted' as const,
+          arrivedAt: 0,
+          due: 0,
+          answers: {},
+          files: {},
+          result: {
+            submittedAt: Date.now(),
+            score: 100,
+            rating: 'excellent' as const,
+            steps: [],
+          },
+        })),
+      ],
+    },
     reputation: Math.max(profile.work.reputation, 70),
     deadlines: Object.fromEntries(
       Object.entries(profile.work.deadlines).filter(([id]) => !assignments[id]),

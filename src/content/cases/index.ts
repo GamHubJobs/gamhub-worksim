@@ -2,6 +2,7 @@
 import { fill, departmentFor } from '../departments'
 import { CaseSchema, type Case, type CaseInput } from './schema'
 import { ACCOUNTING_CASES } from './accounting'
+import { ADVANCED_CASES } from './advanced'
 import { DATA_CASES } from './data'
 import { DEV_CASES } from './dev'
 import { FINANCE_CASES } from './finance'
@@ -27,6 +28,7 @@ const SOURCES: CaseInput[] = [
   ...INCIDENT_CASES,
   ...LEADERSHIP_CASES,
   ...PROGRAMME_CASES,
+  ...ADVANCED_CASES,
 ]
 
 /** Every text with role names filled in for the case's department. */

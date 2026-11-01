@@ -25,5 +25,7 @@ export default defineConfig({
     command: `npm run dev -- --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
+    // New saves get the original wording of every case, so tests can rely on it.
+    env: { VITE_CASE_SEED: '0' },
   },
 })

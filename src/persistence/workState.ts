@@ -43,7 +43,7 @@ export function startingWorkState(seed = 0): WorkState {
     reviews: [],
     cases: {},
     org: startingOrgState(),
-    record: { promotions: [], achievements: {}, desk: {}, seed },
+    record: { promotions: [], achievements: {}, assessments: [], desk: {}, seed },
   }
 }
 

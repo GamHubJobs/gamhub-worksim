@@ -104,13 +104,106 @@ working simulations of the professional software used in its field (see
 
 - [x] 7.1 Career-wide performance record (save format 4)
 - [x] 7.2 Achievements and desk customisation
-- [ ] 7.3 Varied cases and new cases
-- [ ] 7.4 Career readiness assessments
+- [x] 7.3 Varied cases and new cases
+- [x] 7.4 Career readiness assessments
 - [ ] 7.5 Performance: code splitting and startup
 - [ ] 7.6 Accessibility
 - [ ] 7.7 Portfolio integration, hardening and documentation
 
 ---
+
+## 2026-11-01 · Milestone 7.4: Career readiness assessments
+
+### Built
+
+- **12 practical assessments**, two per career: one at level 2 and one at level 3.
+  Each is 3 office hours of real work, graded like a case:
+  - an investigation;
+  - a calculation;
+  - a decision with reasoned options;
+  - a **report written in Docs**, checked by the existing deliverable grader for
+    sections, correct figures, key points and length;
+  - a written message.
+- **The tasks by career:**
+  - Finance & Admin: expense claims against policy; a quarterly budget forecast.
+  - Accounting: a bank reconciliation with a keying error; management accounts with a
+    one-off cost.
+  - IT Help Desk: an outage after a DNS change; repeat tickets and their fixes.
+  - Digital Marketing: a campaign's ad groups and budget; next quarter's budget plan.
+  - Data Analysis: a SQL join counting duplicates; an A/B test read too early.
+  - Software Development: a discount defect, its fix and tests; reviewing a caching
+    change before release.
+- **Versions.** Every assessment has two versions with different figures and details,
+  built from parameters so every figure, explanation and check agrees. A retake uses
+  the other version, so a first attempt's feedback cannot simply be copied.
+- **Feedback** shows the strengths (parts at 80% or more) and the areas to work on
+  (under 60%, with the reason), plus practice advice. A failed or timed-out attempt
+  can be taken again, and every attempt is kept in the save's record.
+- **Promotion.** From level 2, the next promotion also needs the current level's
+  assessment. Levels already held are never affected. The Career app lists it as a
+  requirement with a link, and the new **Readiness** app on the dock shows it.
+- **Portfolio.** A passed assessment goes into the portfolio with a frozen assessment
+  record and the report handed in. It earns XP and skills once, on the first pass.
+- **Honesty.** Assessments are described as simulated workplace assessments, never as
+  qualifications; a test checks the content for qualification claims.
+- Also fixed: a varied case's reply email now comes from the varied sender.
+
+### Tested
+
+- Unit: two assessments per career at levels 2 and 3. All 24 versions:
+  - are practical, timed and score 100% with model answers and a good report;
+  - cannot score 100% without the report;
+  - the second version rejects the first version's answers.
+- Unit: starting (level, career, one at a time); weak attempts give feedback and no
+  XP; retakes switch version and keep the history; first pass gives XP once; time
+  running out; versions by seed; promotion waits for the assessment in every career;
+  the first and top levels need none.
+- Browser (Finance & Admin, end to end):
+  - the requirement and its link in the Career app;
+  - a rushed first attempt through the real form, with its feedback;
+  - a retake in version B, with the report typed in Docs, scoring 100%;
+  - the requirement met, and the assessment in the portfolio.
+
+## 2026-11-01 · Milestone 7.3: Varied cases and new cases
+
+### Built
+
+- **Case variants** (`content/cases/variants.ts`, `game/caseVariants.ts`). A variant
+  changes people, organisations, references, circumstances or figures, together with
+  the answers that follow from them. Replacements are applied in one pass, longest
+  first, so they never interfere with each other.
+- **13 cases vary** across all six careers. Five of them change the figures, so the
+  answer changes: the supplier invoice, client VAT, the sales VAT check, the developer
+  estimates and the timesheet deadline circumstances.
+- **How a variant is chosen.** Each save has a seed. A case's variant comes from the
+  seed and the case ID when the case arrives, and is stored with the case, so it never
+  changes later. Saves and cases from before this milestone keep the original wording.
+- **The variant everywhere.** Mail, the sender, the Cases app, grading, reminders, the
+  office and the frozen portfolio record all use the case's variant.
+- **6 advanced cases**, one per career from the third level:
+  - a contractor's unnotified price rise;
+  - a client wanting a January sale in December to meet a bank covenant;
+  - pressure from the CEO's office during an outage;
+  - a client cutting a channel that last-click reports under-credit;
+  - a biased in-app survey for the board;
+  - a slow report caused by thousands of service calls.
+- **Difficulty** (foundation, intermediate, advanced) is shown on every case.
+- **Browser tests** create saves with seed 0, so they see the original wording; a
+  dev hook chooses a seed for the variant test.
+
+### Tested
+
+- Unit: for every variant:
+  - its replacements exist in the case;
+  - it is still a valid case with the same steps, marks, verdicts and pass mark;
+  - its own model answers score 100%;
+  - where figures change, the original's answers do not.
+- Unit: the seed picks variants reproducibly and covers them all; an arrived case keeps
+  its variant even if the seed changes; old cases are the original.
+- Unit: every career has at least two varied cases, and the same number of cases at
+  each difficulty.
+- Browser: a varied case from mail to the portfolio, with the new supplier and figures
+  graded and frozen; an advanced case shown and graded.
 
 ## 2026-11-01 · Milestone 7.2: Achievements and desk customisation
 

@@ -31,7 +31,7 @@ import {
 } from '../../game/achievements'
 import { DESK_SLOTS, type DeskSlot } from '../../content/desk'
 import { deskLayout, isUnlocked, itemsFor, unlockText } from '../../game/desk'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 function ProgressBar({
   value,
@@ -362,6 +362,7 @@ export function CareerApp({
   onOpenFile,
   onOpenPortfolio,
   onChooseDesk,
+  onOpenReadiness,
   focus,
 }: {
   profile: Profile
@@ -370,6 +371,8 @@ export function CareerApp({
   onOpenPortfolio: () => void
   /** Puts an earned item on the desk, or clears the slot. */
   onChooseDesk: (slot: DeskSlot, itemId: string | null) => void
+  /** Opens a readiness assessment. */
+  onOpenReadiness: (assessmentId: string) => void
   /** A section to show straight away ("desk"). */
   focus?: string
 }) {
@@ -429,6 +432,22 @@ export function CareerApp({
                   met={promotion.reputationMet}
                   text={`A professional reputation of at least ${next.minReputation} (now ${promotion.reputation})`}
                 />
+              )}
+              {promotion.assessment && (
+                <Requirement
+                  met={promotion.assessmentMet}
+                  text={`Pass the readiness assessment: ${promotion.assessment.title.replace(/^Readiness assessment: /, '')}`}
+                >
+                  {!promotion.assessmentMet && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenReadiness(promotion.assessment!.id)}
+                      className="rounded-md bg-white px-2.5 py-1 text-xs font-medium shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
+                    >
+                      Go to the assessment
+                    </button>
+                  )}
+                </Requirement>
               )}
               {next.minReview && (
                 <Requirement
@@ -635,7 +654,15 @@ function ReviewsSection({ profile }: { profile: Profile }) {
   )
 }
 
-function Requirement({ met, text }: { met: boolean; text: string }) {
+function Requirement({
+  met,
+  text,
+  children,
+}: {
+  met: boolean
+  text: string
+  children?: ReactNode
+}) {
   return (
     <li className="flex items-center gap-2">
       <span
@@ -646,6 +673,7 @@ function Requirement({ met, text }: { met: boolean; text: string }) {
         {met && <Icon name="check" className="h-3.5 w-3.5" />}
       </span>
       <span className={met ? 'text-slate-500' : 'text-slate-800'}>{text}</span>
+      {children}
     </li>
   )
 }

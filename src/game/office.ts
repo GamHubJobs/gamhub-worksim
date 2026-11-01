@@ -2,7 +2,7 @@
  * What people and things in the office say, based on the player's progress.
  * Pure functions, so the office always reflects the real state of the career.
  */
-import { getCase } from '../content/cases'
+import { caseFor } from './caseVariants'
 import { activeDepartment, fill } from '../content/departments'
 import { PROGRAMME } from '../content/programme'
 import { minutesLeft, openCases } from './cases'
@@ -193,7 +193,7 @@ function whiteboardDialogue(profile: ProfileData): Dialogue {
       return `${assignment.title}: ${mark}`
     })
   const cases = openCases(profile).flatMap((progress) => {
-    const def = getCase(progress.caseId)
+    const def = caseFor(profile, progress.caseId)
     if (!def) return []
     const left = minutesLeft(profile.work, progress)
     return [

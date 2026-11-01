@@ -5,8 +5,13 @@
  * Answered cases show every step's result with the reasons.
  */
 import { Fragment, useState } from 'react'
-import { getCase } from '../../content/cases'
-import { CASE_KIND_NAMES, type Case } from '../../content/cases/schema'
+import { caseFor } from '../../game/caseVariants'
+import {
+  CASE_KIND_NAMES,
+  DIFFICULTY_NAMES,
+  difficultyOf,
+  type Case,
+} from '../../content/cases/schema'
 import { getOrgDepartment, INDICATORS } from '../../content/organisation'
 import {
   caseContext,
@@ -59,7 +64,7 @@ export function CasesApp({
   onWait: (minutes: number) => void
 }) {
   const all = Object.values(profile.work.cases)
-    .map((progress) => ({ progress, def: getCase(progress.caseId) }))
+    .map((progress) => ({ progress, def: caseFor(profile, progress.caseId) }))
     .filter((c): c is { progress: CaseProgress; def: Case } => !!c.def)
     .sort(
       (a, b) =>
@@ -153,10 +158,11 @@ export function CasesApp({
   )
 }
 
-function CaseDetail({
+export function CaseDetail({
   def,
   progress,
   profile,
+  assessment = false,
   onSave,
   onOpenFile,
   onSubmit,
@@ -166,6 +172,8 @@ function CaseDetail({
   def: Case
   progress: CaseProgress
   profile: Profile
+  /** Shown as an attempt at a readiness assessment rather than a case. */
+  assessment?: boolean
   onSave: (stepId: string, answer: unknown) => void
   onOpenFile: (stepId: string) => Promise<void>
   onSubmit: () => Promise<void>
@@ -198,8 +206,17 @@ function CaseDetail({
     <article className="mx-auto max-w-3xl space-y-5 p-6" data-testid="case-detail">
       <header className="space-y-1">
         <p className="text-sm text-slate-500">
-          {CASE_KIND_NAMES[def.kind]} · from {def.from.name}, {def.from.role},{' '}
-          {def.from.organisation}
+          {assessment ? (
+            <>Career readiness assessment · a simulated workplace assessment</>
+          ) : (
+            <>
+              {CASE_KIND_NAMES[def.kind]} · from {def.from.name}, {def.from.role},{' '}
+              {def.from.organisation}
+            </>
+          )}
+        </p>
+        <p className="text-xs font-medium text-slate-600" data-testid="case-difficulty">
+          Difficulty: {DIFFICULTY_NAMES[difficultyOf(def)]}
         </p>
         <h2 className="text-2xl font-bold text-slate-900">{def.title}</h2>
         <p className="text-slate-700">{def.summary}</p>
@@ -216,7 +233,9 @@ function CaseDetail({
 
       {progress.status === 'lapsed' && (
         <p role="status" className="rounded-lg bg-red-50 p-4 text-sm text-red-800">
-          This case passed its deadline before it was answered. {def.lapseLog}
+          {assessment
+            ? 'Time ran out before this attempt was submitted. You can take the assessment again.'
+            : `This case passed its deadline before it was answered. ${def.lapseLog}`}
         </p>
       )}
 
@@ -267,9 +286,11 @@ function CaseDetail({
               )
             })}
           </ul>
-          <p className="text-xs text-slate-500">
-            {def.from.name}’s reply is in your Mail.
-          </p>
+          {!assessment && (
+            <p className="text-xs text-slate-500">
+              {def.from.name}’s reply is in your Mail.
+            </p>
+          )}
         </section>
       )}
 
@@ -368,8 +389,9 @@ function CaseDetail({
           {confirming ? (
             <>
               <p className="text-sm text-slate-700">
-                Send your answer to {def.from.name}? A case is answered once, like a real
-                email: you can’t change it afterwards.
+                {assessment
+                  ? 'Submit the assessment? Your answers and your report are marked as they are now; you can’t change them afterwards.'
+                  : `Send your answer to ${def.from.name}? A case is answered once, like a real email: you can’t change it afterwards.`}
               </p>
               <div className="flex gap-2">
                 <button
@@ -378,7 +400,11 @@ function CaseDetail({
                   onClick={() => void run(onSubmit)}
                   className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60"
                 >
-                  {busy ? 'Sending…' : 'Send my answer'}
+                  {busy
+                    ? 'Sending…'
+                    : assessment
+                      ? 'Submit for marking'
+                      : 'Send my answer'}
                 </button>
                 <button
                   type="button"
@@ -395,7 +421,7 @@ function CaseDetail({
               onClick={() => setConfirming(true)}
               className="rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
             >
-              Submit to {def.from.name}
+              {assessment ? 'Submit the assessment' : `Submit to ${def.from.name}`}
             </button>
           )}
         </div>

@@ -38,7 +38,15 @@ export async function sitAtComputer(page: Page) {
 export async function openApp(
   page: Page,
   name:
-    'Mail' | 'Tasks' | 'Sheets' | 'Docs' | 'Slides' | 'Career' | 'Portfolio' | 'Cases',
+    | 'Mail'
+    | 'Tasks'
+    | 'Sheets'
+    | 'Docs'
+    | 'Slides'
+    | 'Career'
+    | 'Readiness'
+    | 'Portfolio'
+    | 'Cases',
 ) {
   await sitAtComputer(page)
   await page

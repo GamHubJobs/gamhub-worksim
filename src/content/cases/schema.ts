@@ -191,6 +191,7 @@ export const CASE_KINDS = [
   'incident',
   'leadership',
   'programme',
+  'assessment',
 ] as const
 
 export const CASE_KIND_NAMES: Record<(typeof CASE_KINDS)[number], string> = {
@@ -202,6 +203,15 @@ export const CASE_KIND_NAMES: Record<(typeof CASE_KINDS)[number], string> = {
   incident: 'Incident',
   leadership: 'Leadership',
   programme: 'Programme',
+  assessment: 'Readiness assessment',
+}
+
+export const DIFFICULTIES = ['foundation', 'intermediate', 'advanced'] as const
+export type Difficulty = (typeof DIFFICULTIES)[number]
+export const DIFFICULTY_NAMES: Record<Difficulty, string> = {
+  foundation: 'Foundation',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
 }
 
 export const CaseSchema = z.object({
@@ -210,6 +220,8 @@ export const CaseSchema = z.object({
   version: z.number().int().positive(),
   careerId: z.string(),
   kind: z.enum(CASE_KINDS),
+  /** How demanding the case is; when missing, it follows the case's level (see `difficultyOf`). */
+  difficulty: z.enum(DIFFICULTIES).optional(),
   /** For programme cases: the project the case is a stage of. */
   projectId: z.string().optional(),
   /** The career level (1 = first) from which the case can arrive. */
@@ -264,6 +276,14 @@ export const CaseSchema = z.object({
 })
 
 export type Case = z.infer<typeof CaseSchema>
+
+/** How demanding a case is: given, or from the level it arrives at. */
+export function difficultyOf(def: Pick<Case, 'difficulty' | 'minLevel'>): Difficulty {
+  return (
+    def.difficulty ??
+    (def.minLevel >= 4 ? 'advanced' : def.minLevel >= 2 ? 'intermediate' : 'foundation')
+  )
+}
 export type CaseInput = z.input<typeof CaseSchema>
 export type CaseStep = z.infer<typeof CaseStepSchema>
 export type CaseEffects = z.infer<typeof CaseEffectsSchema>

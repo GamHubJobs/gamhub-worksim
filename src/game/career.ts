@@ -4,6 +4,7 @@
  * take a profile and return a new one.
  */
 import { createId } from '../lib/ids'
+import { assessmentAtLevel, hasPassed } from './assessments'
 import { ASSIGNMENTS } from '../content/assignments'
 import { getCareer, SKILL_LEVELS } from '../content/careers'
 import { departmentFor } from '../content/departments'
@@ -205,10 +206,14 @@ export function ratingAtLeast(rating: ReviewRating, minimum: ReviewRating): bool
 /**
  * What is still needed for the next promotion: enough XP, every assignment
  * of the current level passed, a good enough professional reputation and,
- * for senior roles, a good enough latest performance review.
+ * for senior roles, a good enough latest performance review. From the levels
+ * that have one, a passed readiness assessment of the current level too.
  */
 export function promotionProgress(profile: ProfileData) {
-  const { current, next } = careerLevel(profile)
+  const { career, current, next } = careerLevel(profile)
+  const level = career.levels.findIndex((l) => l.id === current.id) + 1
+  const assessment = next ? (assessmentAtLevel(profile.careerId, level) ?? null) : null
+  const assessmentMet = !assessment || hasPassed(profile, assessment.id)
   const levelAssignments = careerAssignments(profile.careerId).filter(
     (a) => a.levelId === current.id,
   )
@@ -229,13 +234,17 @@ export function promotionProgress(profile: ProfileData) {
     reputationMet,
     latestReview,
     reviewMet,
+    /** The readiness assessment needed for the next promotion, if any. */
+    assessment,
+    assessmentMet,
     eligible:
       next !== null &&
       profile.xp >= next.xpRequired &&
       levelAssignments.length > 0 &&
       passed === levelAssignments.length &&
       reputationMet &&
-      reviewMet,
+      reviewMet &&
+      assessmentMet,
   }
 }
 
