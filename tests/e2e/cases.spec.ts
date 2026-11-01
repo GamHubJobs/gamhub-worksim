@@ -336,3 +336,87 @@ test('meetings: prepare in Slides, join at the right time, then the actions', as
   // The slides were left as the template, and the result says what they lacked.
   await expect(result).toContainText('travel')
 })
+
+test('incidents: integrity under pressure, worked through the real forms', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  await page.goto('/')
+  await page.getByRole('radio', { name: /Data Analysis/ }).check()
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await openApp(page, 'Mail')
+  await page.evaluate("window.__worksim.skipTo('studio-statistics')")
+  await page.evaluate("window.__worksim.arriveCase('inc-data-preferred-conclusion')")
+  await page.getByRole('button', { name: /Tweak the chart for the board/ }).click()
+  await page
+    .getByTestId('mail-message')
+    .getByRole('button', { name: 'Open case' })
+    .click()
+  const detail = page.getByTestId('case-detail')
+  const misleading = detail.getByTestId('step-misleading')
+  await misleading.getByLabel(/Starting the axis at £180k/).check()
+  await misleading.getByLabel(/Leaving out March/).check()
+  await misleading.getByLabel(/new-client sales/).check()
+  // A tempting wrong choice first, then the right one.
+  await detail
+    .getByTestId('step-response')
+    .getByLabel(/Make the changes/)
+    .check()
+  await detail
+    .getByTestId('step-response')
+    .getByLabel(/Keep the honest chart/)
+    .check()
+  const reply = detail.getByRole('textbox', { name: /Reply to Chloe Martin/ })
+  await reply.fill(
+    'Hi Chloe, I understand why you want the board to see the team’s progress. I can’t start the axis at £180k or leave out March, because together they would make total sales look like they grew when they were flat, and the board needs to rely on the pack. But there is real growth to show: new-client sales rose from £20k to £34k a month, and I will add that chart for the board.',
+  )
+  await reply.blur()
+  await detail.getByRole('button', { name: 'Submit to Chloe Martin' }).click()
+  await detail.getByRole('button', { name: 'Send my answer' }).click()
+  await expect(detail.getByTestId('case-score')).toHaveText('100%')
+  await expect(page.getByTestId('indicator-risk')).toHaveText('24')
+})
+
+const INCIDENTS: Array<
+  [career: RegExp, levelTask: string, caseId: string, subject: RegExp]
+> = [
+  [/IT Help Desk/, 'network-intranet', 'inc-it-suspicious-login', /odd sign-ins/],
+  [/Digital Marketing/, 'funnel-analysis', 'inc-mkt-overspend', /£3,000 overspend/],
+  [/Accounting/, 'month-end-close', 'inc-acc-bad-debt', /Steelway: leave it until July/],
+  [
+    /Office Administration/,
+    'petty-cash',
+    'inc-fa-colleague-error',
+    /Payment received: only £48/,
+  ],
+  [
+    /Software Development/,
+    'billing-report',
+    'inc-dev-wrong-report',
+    /Your monthly report is wrong/,
+  ],
+]
+
+for (const [career, levelTask, caseId, subject] of INCIDENTS) {
+  test(`every career has incidents: ${caseId}`, async ({ page }) => {
+    test.setTimeout(120_000)
+    await page.goto('/')
+    await page.getByRole('radio', { name: career }).check()
+    await page.getByLabel('Your first name').fill('Alex')
+    await page.getByRole('button', { name: 'Start my first day' }).click()
+    await openApp(page, 'Mail')
+    await page.evaluate(`window.__worksim.skipTo('${levelTask}')`)
+    await page.evaluate(`window.__worksim.arriveCase('${caseId}')`)
+    await page.getByRole('button', { name: subject }).click()
+    await page
+      .getByTestId('mail-message')
+      .getByRole('button', { name: 'Open case' })
+      .click()
+    const detail = page.getByTestId('case-detail')
+    await page.evaluate(`window.__worksim.answerCase('${caseId}')`)
+    await detail.getByRole('button', { name: /^Submit to / }).click()
+    await detail.getByRole('button', { name: 'Send my answer' }).click()
+    await expect(detail.getByTestId('case-score')).toHaveText('100%')
+  })
+}

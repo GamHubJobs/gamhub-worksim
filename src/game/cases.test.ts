@@ -407,3 +407,28 @@ describe('meetings: prepare, attend, follow up', () => {
     }
   })
 })
+
+describe('incidents', () => {
+  it('every career has an incident that needs judgement, not just a right answer', () => {
+    const incidents = CASES.filter((c) => c.kind === 'incident')
+    expect(new Set(incidents.map((i) => i.careerId)).size).toBe(CAREERS.length)
+    for (const incident of incidents) {
+      const decisions = incident.steps.filter((s) => s.kind === 'decide')
+      expect(decisions.length, incident.id).toBeGreaterThan(0)
+      for (const d of decisions) {
+        if (d.kind !== 'decide') continue
+        // A tempting wrong option, explained, as well as the best one.
+        expect(
+          d.options.some((o) => o.verdict === 'poor'),
+          incident.id,
+        ).toBe(true)
+        for (const o of d.options) expect(o.why.length, o.id).toBeGreaterThan(20)
+      }
+      // Corrective work, not only a choice.
+      expect(
+        incident.steps.some((s) => s.kind === 'reply'),
+        incident.id,
+      ).toBe(true)
+    }
+  })
+})

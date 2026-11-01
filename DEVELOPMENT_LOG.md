@@ -92,10 +92,46 @@ working simulations of the professional software used in its field (see
 - [x] 6.3 Business operations: budgets, purchases, approvals
 - [x] 6.4 Interdepartmental workflows
 - [x] 6.5 Meetings: preparation, meeting, minutes, actions
-- [ ] 6.6 Complex workplace incidents
+- [x] 6.6 Complex workplace incidents
 - [ ] 6.7 Management and leadership
 - [ ] 6.8 Cross-functional programme: the company expansion
 - [ ] 6.9 Office integration, balance, hardening, documentation
+
+---
+
+## 2026-11-01 · Milestone 6.6: Complex workplace incidents
+
+### Built
+
+An incident for every career, each needing investigation of the evidence, a judgement
+between options that are each explained (including a tempting wrong one), and
+corrective work:
+
+- **IT Help Desk: a suspicious login** to the finance director’s account (impossible
+  travel, a forwarding rule for “invoice” emails, a phishing link). Contain first,
+  close the gap, warn Finance about fake bank details, report without blame.
+- **Digital Marketing: a campaign £3,000 over budget**, with IT and Marketing blaming
+  each other. The change history settles it (a typed £4,000 instead of £400); tell
+  the client honestly and credit the overspend.
+- **Data Analysis: a director wants a misleading chart** (a truncated axis, a month
+  left out). Keep the honest chart and show the real growth instead.
+- **Accounting: asked to delay a bad debt** to hit a target. Recognise the £16,200
+  loss this quarter, refuse kindly and help explain the miss.
+- **Finance & Admin: a colleague’s payment mistake** leaves a small supplier unable to
+  pay staff. Pay the £4,752 the same day, tell the colleague privately, never name
+  them to the supplier.
+- **Software Development: a client says our report is wrong**: a clock-change bug
+  double-counting days for 11 clients. Fix it with a test, correct every client, not
+  just the one who noticed, and explain honestly.
+
+### Tested
+
+- Unit tests: every career has an incident with a decision that includes a poor,
+  explained option, and corrective written work; every incident’s model answers get
+  full marks.
+- Browser tests: the data-integrity incident worked through the real forms (findings,
+  a wrong choice changed to the right one, the reply; risk goes down), and the
+  incident of every other career end to end.
 
 ---
 
