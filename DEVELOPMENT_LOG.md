@@ -93,9 +93,49 @@ working simulations of the professional software used in its field (see
 - [x] 6.4 Interdepartmental workflows
 - [x] 6.5 Meetings: preparation, meeting, minutes, actions
 - [x] 6.6 Complex workplace incidents
-- [ ] 6.7 Management and leadership
+- [x] 6.7 Management and leadership
 - [ ] 6.8 Cross-functional programme: the company expansion
 - [ ] 6.9 Office integration, balance, hardening, documentation
+
+---
+
+## 2026-11-01 · Milestone 6.7: Management and leadership
+
+### Built
+
+Leadership arrives with seniority. Approval authority grows level by level (6.3), and
+at the top level of every career a leadership case hands the player a team:
+
+- **Finance & Admin (Finance Officer):** lead month-end: share out the work, review a
+  junior’s petty cash reconciliation (a £6 “rounding” difference, a missing receipt),
+  turn down a colleague’s offer to work the weekend in favour of sharing and coaching,
+  and give feedback.
+- **Accounting (Senior Accountant):** allocate quarter-end work, review a journal that
+  should have been a prepayment (£4,400), settle a disagreement about an accrual on
+  the principle, and give feedback.
+- **IT Help Desk (Service Desk Lead):** run the desk for a week, review an analyst’s
+  curt reply, handle a complaint about him privately and fairly, and give feedback.
+- **Digital Marketing (Manager):** allocate campaigns, review copy with claims that
+  can’t be proved, give fair credit for an award entry, and give feedback.
+- **Data Analysis (Lead):** prioritise the team’s queue, review a new analyst’s
+  conclusion (self-selection, a tiny sample), send an honest early indication, and
+  coach her.
+- **Software Development (Lead Developer):** plan the sprint within capacity, review
+  a pull request (no tests, CSV commas), agree a testing standard together, and write
+  review comments.
+
+Delegation checks strengths and capacity (someone with room for one piece of work
+can’t take three); feedback is checked for praise, specifics and support, and must
+criticise the work, never the person.
+
+### Tested
+
+- Unit tests: leadership cases exist for every career and only at its top level (not
+  one level below); nothing that delegates or approves reaches an intern; delegation
+  respects capacity.
+- Browser tests: the IT lead’s case worked through the real forms (delegation selects,
+  the review, the decision and the feedback), and the leadership case of every other
+  career end to end.
 
 ---
 

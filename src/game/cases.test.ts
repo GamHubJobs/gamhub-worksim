@@ -432,3 +432,45 @@ describe('incidents', () => {
     }
   })
 })
+
+describe('leadership', () => {
+  it('leadership work only reaches people at the top of their career', () => {
+    const leadership = CASES.filter((c) => c.kind === 'leadership')
+    expect(new Set(leadership.map((c) => c.careerId)).size).toBe(CAREERS.length)
+    for (const def of leadership) {
+      const career = CAREERS.find((c) => c.id === def.careerId)!
+      expect(def.minLevel, def.id).toBe(career.levels.length)
+      // Delegation, reviewing someone's work, and written feedback.
+      const kinds = new Set(def.steps.map((s) => s.kind))
+      expect(
+        kinds.has('assign') && kinds.has('review') && kinds.has('reply'),
+        def.id,
+      ).toBe(true)
+    }
+    // Nothing that delegates or approves reaches an intern.
+    for (const def of CASES.filter((c) =>
+      c.steps.some((s) => s.kind === 'assign' || s.kind === 'approve'),
+    )) {
+      expect(def.minLevel, def.id).toBeGreaterThan(1)
+    }
+  })
+
+  it('arrives at the top level, not one level below', () => {
+    const def = getCase('lead-fa-month-end')!
+    const ready = passed(profileFor(def.careerId), 'budget-consolidate')
+    expect(dueCases({ ...ready, levelId: 'assistant' }).map((c) => c.id)).not.toContain(
+      def.id,
+    )
+    expect(dueCases({ ...ready, levelId: 'officer' }).map((c) => c.id)).toContain(def.id)
+  })
+
+  it('delegation respects people’s capacity', () => {
+    const def = getCase('lead-it-queue')!
+    // Everything to Ben, who has room for one piece of work.
+    const step = gradeCase(def, {
+      ...modelAnswers(def),
+      assign: { vip: 'ben', switch: 'ben', hardware: 'ben', printers: 'ben' },
+    }).steps.find((s) => s.id === 'assign')!
+    expect(step.notes.filter((n) => n.includes('no room')).length).toBe(3)
+  })
+})

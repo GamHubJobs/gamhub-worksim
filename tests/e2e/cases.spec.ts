@@ -420,3 +420,82 @@ for (const [career, levelTask, caseId, subject] of INCIDENTS) {
     await expect(detail.getByTestId('case-score')).toHaveText('100%')
   })
 }
+
+test('leadership: delegate, review a colleague’s work and give feedback', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  await page.goto('/')
+  await page.getByRole('radio', { name: /IT Help Desk/ }).check()
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await openApp(page, 'Mail')
+  // Service Desk Lead, the top level.
+  await page.evaluate("window.__worksim.skipTo('outage-triage')")
+  await page.evaluate("window.__worksim.arriveCase('lead-it-queue')")
+  await page.getByRole('button', { name: /The desk is yours this week/ }).click()
+  await page
+    .getByTestId('mail-message')
+    .getByRole('button', { name: 'Open case' })
+    .click()
+  const detail = page.getByTestId('case-detail')
+  const assign = (item: RegExp, person: string) =>
+    detail.getByRole('combobox', { name: item }).selectOption({ label: person })
+  await assign(/Assign: Set up the directors/, 'Nadia Okoye')
+  await assign(/Assign: Replace the floor 2 switch/, 'Ben Carter')
+  await assign(/Assign: Clear the hardware repair backlog/, 'Tom Hughes')
+  await assign(/Assign: Swap the toner/, 'Tom Hughes')
+  const review = detail.getByTestId('step-review')
+  await review.getByLabel(/ignored that the user had already restarted/).check()
+  await review.getByLabel(/closed without the user confirming/).check()
+  await detail
+    .getByTestId('step-complaint')
+    .getByLabel(/Reopen the ticket and help the user today/)
+    .check()
+  const feedback = detail.getByRole('textbox', { name: /Reply to Tom Hughes/ })
+  await feedback.fill(
+    'Hi Tom, thanks for clearing so much of the hardware backlog; you are the quickest fixer on the team. One thing to work on: on INC-4410 the user had already restarted twice, so please read the whole ticket first, and only close it once the user can confirm it is fixed. Shall we look at a couple of replies together on Thursday?',
+  )
+  await feedback.blur()
+  await detail.getByRole('button', { name: /^Submit to / }).click()
+  await detail.getByRole('button', { name: 'Send my answer' }).click()
+  await expect(detail.getByTestId('case-score')).toHaveText('100%')
+})
+
+const LEADERSHIP: Array<
+  [career: RegExp, levelTask: string, caseId: string, subject: RegExp]
+> = [
+  [
+    /Office Administration/,
+    'budget-consolidate',
+    'lead-fa-month-end',
+    /Month-end: over to you/,
+  ],
+  [/Accounting/, 'books-month-end-close', 'lead-acc-review', /Over to you: reviews/],
+  [/Digital Marketing/, 'launch-analytics', 'lead-mkt-team', /Your team’s campaigns/],
+  [/Data Analysis/, 'churn-clean', 'lead-data-team', /The team’s work queue/],
+  [/Software Development/, 'mileage-tests', 'lead-dev-team', /Sprint planning is yours/],
+]
+
+for (const [career, levelTask, caseId, subject] of LEADERSHIP) {
+  test(`every career leads at the top: ${caseId}`, async ({ page }) => {
+    test.setTimeout(120_000)
+    await page.goto('/')
+    await page.getByRole('radio', { name: career }).check()
+    await page.getByLabel('Your first name').fill('Alex')
+    await page.getByRole('button', { name: 'Start my first day' }).click()
+    await openApp(page, 'Mail')
+    await page.evaluate(`window.__worksim.skipTo('${levelTask}')`)
+    await page.evaluate(`window.__worksim.arriveCase('${caseId}')`)
+    await page.getByRole('button', { name: subject }).click()
+    await page
+      .getByTestId('mail-message')
+      .getByRole('button', { name: 'Open case' })
+      .click()
+    const detail = page.getByTestId('case-detail')
+    await page.evaluate(`window.__worksim.answerCase('${caseId}')`)
+    await detail.getByRole('button', { name: /^Submit to / }).click()
+    await detail.getByRole('button', { name: 'Send my answer' }).click()
+    await expect(detail.getByTestId('case-score')).toHaveText('100%')
+  })
+}
