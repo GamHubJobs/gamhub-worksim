@@ -12,7 +12,7 @@ export const marketing: Department = {
     role: 'Marketing Manager',
     email: `sofia.alvarez@${COMPANY.emailDomain}`,
     initials: 'SA',
-    color: 'bg-pink-600',
+    color: 'bg-pink-700',
     startingTrust: 50,
     personality:
       'Creative, energetic and ruthlessly data-driven: loves a bold idea, but only keeps it if the numbers say it works.',
@@ -23,7 +23,7 @@ export const marketing: Department = {
     role: 'Senior Digital Marketer',
     email: `leo.brennan@${COMPANY.emailDomain}`,
     initials: 'LB',
-    color: 'bg-orange-600',
+    color: 'bg-orange-700',
     startingTrust: 40,
     personality:
       'Runs the paid campaigns and guards the budget closely. Witty, a little sceptical of newcomers, and full of hard-won lessons about what actually converts.',

@@ -107,10 +107,49 @@ working simulations of the professional software used in its field (see
 - [x] 7.3 Varied cases and new cases
 - [x] 7.4 Career readiness assessments
 - [x] 7.5 Performance: code splitting and startup
-- [ ] 7.6 Accessibility
+- [x] 7.6 Accessibility
 - [ ] 7.7 Portfolio integration, hardening and documentation
 
 ---
+
+## 2026-11-01 · Milestone 7.6: Accessibility
+
+### Built
+
+- **Automated audit.** axe (`@axe-core/playwright`, MPL-2.0, test-only) checked every
+  main screen against WCAG 2.1 A/AA. It found colour contrast failures and invalid
+  description-list markup in the new performance record; both are fixed:
+  - the lightest grey text colours are darkened app-wide to reach 4.5:1;
+  - five avatar colours with white text are one shade darker.
+- **Focus.** A 3-pixel focus ring on every control, which no control removes any more
+  (the start screen's name field and the formula bar used to).
+- **Conversations in the office** take keyboard focus when they open, close with
+  Escape, and return focus to where the player was.
+- **Reduced motion.** With the system setting on:
+  - animations, transitions and smooth scrolling are off;
+  - the 3D camera jumps between places and people stay still;
+  - the scene redraws only every 30 seconds, for the wall clock.
+- **Announcements and forms.** Case and assessment results are announced to screen
+  readers as they appear. The start screen's hint (and any error) is linked to its
+  field.
+- **docs/ACCESSIBILITY.md** describes what is supported, how it is tested and the
+  limits: no testing yet by people who use assistive technology daily.
+
+### Tested
+
+- Browser: axe finds no violations on:
+  - the start screen, the office and a conversation;
+  - Mail, Tasks, a case and its result;
+  - Career, Readiness and assessment feedback;
+  - Portfolio, Docs and Sheets.
+- Browser: a whole working session with the keyboard alone:
+  - start a career;
+  - a conversation, with focus moving in and back out on Escape;
+  - walk to the desk and use the computer;
+  - read mail;
+  - work a case and submit it, scoring 100%.
+- Browser: the focus ring is visible, and reduced motion removes transitions while the
+  office stays fully usable.
 
 ## 2026-11-01 · Milestone 7.5: Performance: code splitting and startup
 

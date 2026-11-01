@@ -95,7 +95,7 @@ export function Onboarding({
           <label htmlFor="player-name" className="block font-medium text-slate-800">
             Your first name
           </label>
-          <p className="text-sm text-slate-500">
+          <p id="player-name-hint" className="text-sm text-slate-500">
             This is what your colleagues will call you.
           </p>
           <div className="mt-2 flex gap-3">
@@ -104,9 +104,12 @@ export function Onboarding({
               value={name}
               onChange={(event) => setName(event.target.value)}
               maxLength={40}
+              aria-describedby={
+                error ? 'player-name-hint start-error' : 'player-name-hint'
+              }
               autoFocus
               autoComplete="given-name"
-              className="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+              className="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500"
             />
             <button
               type="submit"
@@ -117,7 +120,7 @@ export function Onboarding({
             </button>
           </div>
           {error && (
-            <p role="alert" className="mt-2 text-sm text-red-700">
+            <p id="start-error" role="alert" className="mt-2 text-sm text-red-700">
               {error}
             </p>
           )}

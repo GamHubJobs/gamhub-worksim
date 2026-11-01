@@ -244,7 +244,8 @@ export function CaseDetail({
           className="space-y-3 rounded-xl border border-slate-200 bg-white p-5"
           data-testid="case-result"
         >
-          <div className="flex items-baseline justify-between">
+          {/* Announced to screen readers as soon as the result appears. */}
+          <div className="flex items-baseline justify-between" role="status">
             <h3 className="font-semibold text-slate-900">Result</h3>
             <span className="text-2xl font-bold" data-testid="case-score">
               {result.score}%

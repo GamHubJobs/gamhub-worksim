@@ -1,9 +1,37 @@
 @import 'tailwindcss';
 
+/*
+ * Accessible greys: the lightest text colours are darkened so that small text
+ * meets the WCAG AA contrast ratio (4.5:1) on white and on the pale panel
+ * backgrounds used throughout the app.
+ */
+@theme {
+  --color-slate-400: #5f6f86;
+  --color-slate-500: #536176;
+}
+
 /* Base styles shared by the whole app. Prefer Tailwind classes in components. */
 @layer base {
   body {
     @apply bg-slate-50 font-sans text-slate-800 antialiased;
+  }
+
+  /* A clear focus ring for keyboard users, on every control. */
+  :focus-visible {
+    outline: 3px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+}
+
+/* Players who ask for less motion get no animations or smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

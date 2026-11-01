@@ -12,7 +12,7 @@ export const finance: Department = {
     role: 'Finance & Administration Manager',
     email: `priya.raman@${COMPANY.emailDomain}`,
     initials: 'PR',
-    color: 'bg-teal-600',
+    color: 'bg-teal-700',
     startingTrust: 50,
     personality:
       'Direct and demanding, but fair. Values reliability and honesty above everything, and is under pressure from the directors at quarter-end.',

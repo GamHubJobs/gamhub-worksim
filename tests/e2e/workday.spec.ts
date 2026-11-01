@@ -86,5 +86,8 @@ test('a working day: stand-up, lunch, going home and the next morning', async ({
   await expect(clock(page)).toHaveText('8:50 am')
   await expect(page.getByTestId('workday-bar')).toContainText('Tuesday')
   await page.reload()
-  await expect(page.getByTestId('workday-bar')).toContainText('Tuesday')
+  // After a reload the desktop loads again first (it is loaded on demand).
+  await expect(page.getByTestId('workday-bar')).toContainText('Tuesday', {
+    timeout: 30_000,
+  })
 })

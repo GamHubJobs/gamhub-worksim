@@ -37,7 +37,7 @@ export const SHARED_PEOPLE: Record<string, Person> = {
     role: 'Facilities Coordinator',
     email: `tom.becker@${COMPANY.emailDomain}`,
     initials: 'TB',
-    color: 'bg-amber-600',
+    color: 'bg-amber-700',
     startingTrust: 55,
     personality:
       'Laid-back and practical, with a dry sense of humour. Knows every shortcut in the building and is always up for a coffee.',
@@ -48,7 +48,7 @@ export const SHARED_PEOPLE: Record<string, Person> = {
     role: 'Receptionist & Office Coordinator',
     email: `nina.patel@${COMPANY.emailDomain}`,
     initials: 'NP',
-    color: 'bg-rose-600',
+    color: 'bg-rose-700',
     startingTrust: 55,
     personality:
       'Warm and very organised. Knows everyone, and hears about everything that happens in the office, sometimes a little wrongly.',

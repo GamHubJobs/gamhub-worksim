@@ -481,9 +481,26 @@ function DialogueBox({
 }) {
   const person = dialogue.speaker ? getPerson(dialogue.speaker) : null
   const choices = dialogue.choices ?? []
+  const box = useRef<HTMLElement>(null)
+  // Keyboard and screen-reader users are taken into the conversation, and back
+  // to where they were when it closes.
+  useEffect(() => {
+    const before = document.activeElement
+    return () => {
+      if (before instanceof HTMLElement && before.isConnected) before.focus()
+    }
+  }, [])
+  useEffect(() => {
+    box.current?.focus()
+  }, [dialogue])
   return (
     <section
-      className="absolute right-4 bottom-20 z-20 max-h-[calc(100%-7rem)] w-[28rem] max-w-[calc(100%-2rem)] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl ring-1 ring-slate-200"
+      ref={box}
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose()
+      }}
+      className="absolute right-4 bottom-20 z-20 outline-none max-h-[calc(100%-7rem)] w-[28rem] max-w-[calc(100%-2rem)] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl ring-1 ring-slate-200"
       role="dialog"
       aria-label={dialogue.title}
       data-testid="office-dialogue"

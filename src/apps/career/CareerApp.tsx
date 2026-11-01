@@ -121,12 +121,10 @@ function PerformanceRecord({ profile }: { profile: Profile }) {
             <h3 className="text-sm font-semibold text-slate-800">{section.title}</h3>
             <dl className="mt-2 space-y-2">
               {section.stats.map((stat) => (
-                <div key={stat.label}>
-                  <div className="flex justify-between gap-3 text-sm">
-                    <dt className="text-slate-700">{stat.label}</dt>
-                    <dd className="font-medium text-slate-900">{stat.value}</dd>
-                  </div>
-                  <p className="text-xs text-slate-500">{stat.source}</p>
+                <div key={stat.label} className="flex flex-wrap justify-between gap-x-3">
+                  <dt className="text-sm text-slate-700">{stat.label}</dt>
+                  <dd className="text-sm font-medium text-slate-900">{stat.value}</dd>
+                  <dd className="w-full text-xs text-slate-500">{stat.source}</dd>
                 </div>
               ))}
             </dl>

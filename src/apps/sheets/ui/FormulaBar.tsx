@@ -82,7 +82,7 @@ export function FormulaBar({
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}
           onBlur={(event) => onBlur(event.relatedTarget)}
-          className="min-w-0 flex-1 rounded border border-transparent px-2 py-0.5 font-mono text-slate-800 hover:border-slate-200 focus:border-blue-400 focus:outline-none"
+          className="min-w-0 flex-1 rounded border border-transparent px-2 py-0.5 font-mono text-slate-800 hover:border-slate-200 focus:border-blue-400"
           data-testid="selected-input"
         />
       </div>

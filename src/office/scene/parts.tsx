@@ -9,6 +9,10 @@ import { useRef, type ReactNode } from 'react'
 import type { Group } from 'three'
 import type { Vector } from '../../content/office'
 import { COLORS } from './colors'
+import { prefersReducedMotion } from '../../ui/motion'
+
+/** With reduced motion, people sit still. */
+const STILL = prefersReducedMotion()
 
 interface Placed {
   position?: Vector
@@ -237,6 +241,7 @@ export function Person({
   const arms = useRef<Group>(null)
 
   useFrame(({ clock }) => {
+    if (STILL) return
     const t = clock.elapsedTime + phase
     if (body.current) body.current.position.y = Math.sin(t * 1.6) * 0.008
     if (head.current) head.current.rotation.y = Math.sin(t * 0.35) * 0.25

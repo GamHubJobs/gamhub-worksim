@@ -21,6 +21,10 @@ import {
   type Vector,
 } from '../../content/office'
 import { COLORS } from './colors'
+import { prefersReducedMotion } from '../../ui/motion'
+
+/** With reduced motion, the camera jumps between places and nothing moves by itself. */
+const STILL = prefersReducedMotion()
 import { getDeskItem, type DeskItem } from '../../content/desk'
 import { Box, Desk, OfficeChair, Person, Place, Plant, Sofa } from './parts'
 
@@ -70,7 +74,8 @@ function OfficeScene(props: OfficeSceneProps) {
       onCreated={({ gl }) => setLowPower(isSoftwareRenderer(gl))}
       data-lowpower={lowPower}
     >
-      <Ticker fps={lowPower ? 3 : 30} />
+      {/* Still scenes only redraw now and then, to keep the wall clock right. */}
+      <Ticker fps={STILL ? 1 / 30 : lowPower ? 3 : 30} />
       <color attach="background" args={['#e6edf3']} />
       <hemisphereLight args={['#ffffff', '#b8a990', 1.4]} />
       <directionalLight position={[6, 12, 8]} intensity={1.5} />
@@ -123,7 +128,7 @@ function Ticker({ fps }: { fps: number }) {
   return null
 }
 
-/** Glides the camera to the current viewpoint. */
+/** Glides the camera to the current viewpoint (or jumps, with reduced motion). */
 function CameraRig({ spot }: { spot: SpotId }) {
   const camera = useThree((state) => state.camera)
   const invalidate = useThree((state) => state.invalidate)
@@ -133,7 +138,7 @@ function CameraRig({ spot }: { spot: SpotId }) {
   const goalTarget = useMemo(() => new Vector3(...goal.target), [goal])
 
   useFrame((_, delta) => {
-    const step = 1 - Math.exp(-delta * 3)
+    const step = STILL ? 1 : 1 - Math.exp(-delta * 3)
     camera.position.lerp(goalPosition, step)
     target.current.lerp(goalTarget, step)
     camera.lookAt(target.current)
@@ -164,6 +169,7 @@ function Marker({
   const [hovered, setHovered] = useState(false)
   useCursor(hovered && !hidden)
   useFrame(({ clock }) => {
+    if (STILL) return
     if (ring.current)
       ring.current.scale.setScalar(1 + Math.sin(clock.elapsedTime * 2.5) * 0.08)
   })
@@ -690,6 +696,7 @@ function Workspace({
 function AlertBubble({ position }: { position: Vector }) {
   const group = useRef<Group>(null)
   useFrame(({ clock }) => {
+    if (STILL) return
     if (group.current)
       group.current.position.y = position[1] + Math.sin(clock.elapsedTime * 3) * 0.04
   })
