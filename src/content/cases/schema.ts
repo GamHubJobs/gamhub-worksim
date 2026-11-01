@@ -210,6 +210,8 @@ export const CaseSchema = z.object({
   version: z.number().int().positive(),
   careerId: z.string(),
   kind: z.enum(CASE_KINDS),
+  /** For programme cases: the project the case is a stage of. */
+  projectId: z.string().optional(),
   /** The career level (1 = first) from which the case can arrive. */
   minLevel: z.number().int().min(1).default(1),
   title: Text,

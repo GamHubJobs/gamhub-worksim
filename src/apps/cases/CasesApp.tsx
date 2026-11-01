@@ -20,6 +20,8 @@ import type { CaseProgress, Profile } from '../../persistence/schemas'
 import { Icon } from '../../ui/Icon'
 import { RichText } from '../../ui/RichText'
 import { StepForm } from './CaseSteps'
+import { programmeBoard } from '../../game/programme'
+import { PROGRAMME } from '../../content/programme'
 
 function timeLeft(minutes: number): string {
   if (minutes < 0) return 'Overdue'
@@ -277,6 +279,7 @@ function CaseDetail({
       </section>
 
       {open && <AuthorityPanel def={def} profile={profile} />}
+      {def.kind === 'programme' && <ProgrammeBoard profile={profile} />}
 
       {def.evidence.length > 0 && (
         <section className="space-y-3" aria-label="Evidence">
@@ -496,5 +499,49 @@ function MeetingPanel({
         </p>
       )}
     </li>
+  )
+}
+
+const STATUS_STYLE = {
+  'not started': 'text-slate-500',
+  'in progress': 'text-amber-700',
+  delivered: 'text-blue-700',
+  done: 'text-emerald-700',
+} as const
+
+/** Every department's part of the programme, and where it stands. */
+function ProgrammeBoard({ profile }: { profile: Profile }) {
+  return (
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-5 text-sm"
+      aria-label="Programme board"
+      data-testid="programme-board"
+    >
+      <h3 className="font-semibold text-slate-900">Programme board: {PROGRAMME.title}</h3>
+      <p className="mt-1 text-slate-600">{PROGRAMME.brief}</p>
+      <table className="mt-3 w-full text-left">
+        <thead className="text-xs text-slate-500">
+          <tr>
+            <th className="py-1 font-medium">Workstream</th>
+            <th className="py-1 font-medium">Owner</th>
+            <th className="py-1 font-medium">Hands over</th>
+            <th className="py-1 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {programmeBoard(profile).map((row) => (
+            <tr
+              key={row.title}
+              className={`border-t border-slate-100 ${row.yours ? 'bg-blue-50 font-medium' : ''}`}
+            >
+              <td className="py-1 pr-2">{row.title}</td>
+              <td className="py-1 pr-2">{row.owner}</td>
+              <td className="py-1 pr-2">{row.delivers}</td>
+              <td className={`py-1 ${STATUS_STYLE[row.status]}`}>{row.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   )
 }

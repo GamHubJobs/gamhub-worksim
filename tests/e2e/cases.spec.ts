@@ -499,3 +499,116 @@ for (const [career, levelTask, caseId, subject] of LEADERSHIP) {
     await expect(detail.getByTestId('case-score')).toHaveText('100%')
   })
 }
+
+test('the programme: two stages, the board, and one project in the portfolio', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  await page.goto('/')
+  await page.getByRole('radio', { name: /IT Help Desk/ }).check()
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await openApp(page, 'Mail')
+  await page.evaluate("window.__worksim.skipTo('network-intranet')")
+  await page.evaluate("window.__worksim.arriveCase('prog-it-equipment')")
+  await page.getByRole('button', { name: /Manchester programme: IT’s part/ }).click()
+  await page
+    .getByTestId('mail-message')
+    .getByRole('button', { name: 'Open case' })
+    .click()
+  const detail = page.getByTestId('case-detail')
+  const board = detail.getByTestId('programme-board')
+  await expect(
+    board.getByRole('row', { name: /Technology and equipment You/ }),
+  ).toContainText('in progress')
+  await expect(board).toContainText('Recruitment and onboarding')
+
+  // Stage 1, the laptop order through the real form.
+  for (const [label, value] of [
+    ['Standard laptops', '10'],
+    ['Analyst laptops', '10'],
+    ['Total laptop cost (£)', '27,000'],
+  ]) {
+    const box = detail.getByRole('textbox', { name: label })
+    await box.fill(value)
+    await box.blur()
+  }
+  await detail
+    .getByRole('combobox', { name: 'Needed by' })
+    .selectOption('The week before 1 September')
+  await detail
+    .getByTestId('step-transfers')
+    .getByLabel(/update their office location/)
+    .check()
+  await detail.getByRole('button', { name: /^Submit to / }).click()
+  await detail.getByRole('button', { name: 'Send my answer' }).click()
+  await expect(detail.getByTestId('case-score')).toHaveText('100%')
+  await expect(
+    board.getByRole('row', { name: /Technology and equipment You/ }),
+  ).toContainText('delivered')
+
+  // Stage 2 arrives by itself.
+  await openApp(page, 'Mail')
+  await page
+    .getByRole('button', { name: /Programme review: opening two weeks earlier/ })
+    .click()
+  await page
+    .getByTestId('mail-message')
+    .getByRole('button', { name: 'Open case' })
+    .click()
+  await page.evaluate("window.__worksim.answerCase('prog-it-review')")
+  await detail.getByRole('button', { name: /^Submit to / }).click()
+  await detail.getByRole('button', { name: 'Send my answer' }).click()
+  await expect(detail.getByTestId('case-score')).toHaveText('100%')
+
+  await openApp(page, 'Portfolio')
+  const project = page
+    .getByTestId('portfolio-card')
+    .filter({ hasText: 'Opening the Manchester office' })
+  await expect(project).toContainText('Project')
+  await project.click()
+  await expect(page.getByTestId('project-stages').getByRole('button')).toHaveCount(2)
+})
+
+const PROGRAMME_PARTS: Array<
+  [career: RegExp, levelTask: string, stages: [string, string]]
+> = [
+  [/Office Administration/, 'savings-proposal', ['prog-fa-budget', 'prog-fa-review']],
+  [/Accounting/, 'books-payroll', ['prog-acc-setup', 'prog-acc-review']],
+  [/Digital Marketing/, 'funnel-analysis', ['prog-mkt-launch', 'prog-mkt-review']],
+  [/Data Analysis/, 'portfolio-review', ['prog-data-case', 'prog-data-review']],
+  [/Software Development/, 'billing-report', ['prog-dev-systems', 'prog-dev-review']],
+]
+
+for (const [career, levelTask, stages] of PROGRAMME_PARTS) {
+  test(`every career has a part in the programme: ${stages[0]}`, async ({ page }) => {
+    test.setTimeout(150_000)
+    await page.goto('/')
+    await page.getByRole('radio', { name: career }).check()
+    await page.getByLabel('Your first name').fill('Alex')
+    await page.getByRole('button', { name: 'Start my first day' }).click()
+    await openApp(page, 'Cases')
+    await page.evaluate(`window.__worksim.skipTo('${levelTask}')`)
+    await page.evaluate(`window.__worksim.arriveCase('${stages[0]}')`)
+    for (const id of stages) {
+      await page
+        .getByRole('list', { name: 'Cases' })
+        .getByRole('button', { name: /^Manchester office.* Open Programme/ })
+        .first()
+        .click()
+      const detail = page.getByTestId('case-detail')
+      await expect(detail.getByTestId('programme-board')).toBeVisible()
+      await page.evaluate(`window.__worksim.answerCase('${id}')`)
+      await detail.getByRole('button', { name: /^Submit to / }).click()
+      await detail.getByRole('button', { name: 'Send my answer' }).click()
+      await expect(detail.getByTestId('case-score')).toHaveText('100%')
+      await page.evaluate('window.__worksim.passTime(1)')
+    }
+    await openApp(page, 'Portfolio')
+    await expect(
+      page
+        .getByTestId('portfolio-card')
+        .filter({ hasText: 'Opening the Manchester office' }),
+    ).toContainText('Project')
+  })
+}

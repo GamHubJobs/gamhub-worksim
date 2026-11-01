@@ -15,9 +15,13 @@ import { buildSolutionContent, findSheet } from '../game/workbooks'
 import type { DocContent } from '../persistence/schemas'
 import { ASSIGNMENTS, getAssignment } from './assignments'
 import { CAREERS } from './careers'
+import { CASES, getCase } from './cases'
+import { workstreamFor } from './programme'
 import { PROJECTS } from './projects'
 
-describe.each(PROJECTS.map((p) => [p.id, p] as const))('project %s', (_, project) => {
+describe.each(
+  PROJECTS.filter((p) => p.stageType === 'tasks').map((p) => [p.id, p] as const),
+)('project %s', (_, project) => {
   const stages = project.stages.map((id) => getAssignment(id))
 
   it('its stages are tasks of the same career and level, numbered in order', () => {
@@ -224,5 +228,30 @@ describe('written stages of the other projects', () => {
     )
     expect(result.checks.filter((c) => c.status !== 'passed')).toEqual([])
     expect(result.score).toBe(100)
+  })
+})
+
+describe('the Manchester office programme', () => {
+  const programme = PROJECTS.filter((p) => p.stageType === 'cases')
+
+  it('every career has its part, as a project of cases in order', () => {
+    expect(new Set(programme.map((p) => p.careerId)).size).toBe(CAREERS.length)
+    for (const project of programme) {
+      const stages = project.stages.map((id) => getCase(id))
+      stages.forEach((stage, i) => {
+        expect(stage, project.stages[i]).toBeDefined()
+        expect(stage!.careerId).toBe(project.careerId)
+        expect(stage!.projectId).toBe(project.id)
+        // Each stage opens when the one before is done.
+        if (i > 0) expect(stage!.trigger.afterCase).toBe(project.stages[i - 1])
+      })
+      const claimed = CASES.filter((c) => c.projectId === project.id).map((c) => c.id)
+      expect(claimed.sort()).toEqual([...project.stages].sort())
+    }
+  })
+
+  it('every department has a workstream, and every career owns one', () => {
+    for (const career of CAREERS)
+      expect(workstreamFor(career.id), career.id).toBeDefined()
   })
 })

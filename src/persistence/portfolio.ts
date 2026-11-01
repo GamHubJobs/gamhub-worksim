@@ -8,6 +8,7 @@ import { getProject } from '../content/projects'
 import {
   type CaptureDecision,
   documentBytes,
+  caseKey,
   portfolioKey,
   projectEvidence,
 } from '../game/portfolio'
@@ -175,8 +176,9 @@ export async function applyProjectCapture(
 ): Promise<PortfolioItem | undefined> {
   const project = getProject(projectId)
   if (!project) return undefined
+  const keyOf = project.stageType === 'cases' ? caseKey : portfolioKey
   const stages = await Promise.all(
-    project.stages.map((id) => findPortfolioItem(portfolioKey(profileId, id), database)),
+    project.stages.map((id) => findPortfolioItem(keyOf(profileId, id), database)),
   )
   const evidence = projectEvidence(profileId, project, stages)
   if (!evidence) return undefined

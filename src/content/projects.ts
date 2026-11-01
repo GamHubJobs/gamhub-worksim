@@ -18,13 +18,81 @@ export const ProjectSchema = z.object({
   deliverables: z.array(z.string().min(1)).min(1),
   /** How the project is judged, in plain words. */
   assessment: z.array(z.string().min(1)).min(1),
-  /** The stage tasks' IDs, in order. */
+  /** The stages' IDs, in order: tasks, or cases for organisation-wide programmes. */
   stages: z.array(z.string()).min(2).max(5),
+  stageType: z.enum(['tasks', 'cases']).default('tasks'),
 })
 
 export type Project = z.infer<typeof ProjectSchema>
 
-const SOURCES: Project[] = [
+/** Each career's part in the Manchester office programme, as a project of two cases. */
+const PROGRAMME_PARTS: Array<
+  [careerId: string, levelId: string, part: string, stages: [string, string]]
+> = [
+  [
+    'office-admin-finance',
+    'assistant',
+    'the programme budget',
+    ['prog-fa-budget', 'prog-fa-review'],
+  ],
+  [
+    'accounting',
+    'accountant',
+    'the accounting set-up',
+    ['prog-acc-setup', 'prog-acc-review'],
+  ],
+  [
+    'it-support',
+    'senior-support-analyst',
+    'technology and equipment',
+    ['prog-it-equipment', 'prog-it-review'],
+  ],
+  [
+    'digital-marketing',
+    'digital-marketing-specialist',
+    'the launch campaign',
+    ['prog-mkt-launch', 'prog-mkt-review'],
+  ],
+  [
+    'data-analytics',
+    'senior-data-analyst',
+    'the business case and measures of success',
+    ['prog-data-case', 'prog-data-review'],
+  ],
+  [
+    'software-development',
+    'senior-developer',
+    'the system changes',
+    ['prog-dev-systems', 'prog-dev-review'],
+  ],
+]
+
+const PROGRAMME_PROJECTS: z.input<typeof ProjectSchema>[] = PROGRAMME_PARTS.map(
+  ([careerId, levelId, part, stages]) => ({
+    id: `expansion-${careerId}`,
+    careerId,
+    levelId,
+    title: 'Opening the Manchester office',
+    brief: `An organisation-wide programme to open a second office for 25 staff. Every department had a part; this career delivered ${part}, working with what the other departments handed over, then advised the programme review.`,
+    objectives: [
+      'Contribute one department’s part to a cross-functional programme',
+      'Work with information from other departments',
+      'Advise a programme review on a change',
+    ],
+    deliverables: [
+      `This department’s contribution: ${part}`,
+      'A recommendation to the programme review',
+    ],
+    assessment: [
+      'Each stage is checked like a case and must pass',
+      'The project score is the average of the two stages',
+    ],
+    stages,
+    stageType: 'cases',
+  }),
+)
+
+const SOURCES: z.input<typeof ProjectSchema>[] = [
   {
     id: 'quarter-close',
     careerId: 'accounting',
@@ -169,7 +237,9 @@ const SOURCES: Project[] = [
   },
 ]
 
-export const PROJECTS: Project[] = SOURCES.map((p) => ProjectSchema.parse(p))
+export const PROJECTS: Project[] = [...SOURCES, ...PROGRAMME_PROJECTS].map((p) =>
+  ProjectSchema.parse(p),
+)
 
 export function getProject(id: string | undefined): Project | undefined {
   return id ? PROJECTS.find((p) => p.id === id) : undefined

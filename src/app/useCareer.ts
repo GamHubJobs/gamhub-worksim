@@ -490,6 +490,7 @@ export function useCareer() {
       let level = { id: '', title: '', index: 1 }
       const capture = {
         key: caseKey(profileId, caseId),
+        projectId: def.projectId,
         decide: () =>
           decideCaseCapture({
             profileId,

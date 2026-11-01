@@ -4,6 +4,7 @@ import { CAREERS, getSkill } from '../content/careers'
 import { CASES, getCase } from '../content/cases'
 import type { Case } from '../content/cases/schema'
 import { modelAnswers } from './caseModel'
+import { programmeBoard } from './programme'
 import { HOURS } from '../content/workday'
 import { newProfileData, type ProfileData } from './career'
 import {
@@ -472,5 +473,49 @@ describe('leadership', () => {
       assign: { vip: 'ben', switch: 'ben', hardware: 'ben', printers: 'ben' },
     }).steps.find((s) => s.id === 'assign')!
     expect(step.notes.filter((n) => n.includes('no room')).length).toBe(3)
+  })
+})
+
+describe('the programme board', () => {
+  it('brings the next stage as soon as the first is submitted, even with two cases open', () => {
+    const def = getCase('prog-it-equipment')!
+    let profile = profileFor(def.careerId, { levelId: 'senior-support-analyst' })
+    profile = arriveCase(profile, def, 1)
+    profile = {
+      ...profile,
+      work: {
+        ...profile.work,
+        cases: {
+          ...profile.work.cases,
+          [def.id]: { ...profile.work.cases[def.id]!, status: 'submitted' },
+        },
+      },
+    }
+    for (const id of ['other-one', 'other-two']) {
+      profile = arriveCase(profile, { ...getCase('it-ticket-chaser')!, id } as Case, 2)
+    }
+    expect(checkCases(profile, 3).work.cases['prog-it-review']?.status).toBe('open')
+  })
+
+  it('shows the player’s own workstream from their cases, and colleagues’ advancing with the days', () => {
+    const def = getCase('prog-it-equipment')!
+    const fresh = profileFor(def.careerId, { levelId: 'senior-support-analyst' })
+    expect(programmeBoard(fresh).every((r) => r.status === 'not started')).toBe(true)
+    const started = arriveCase(fresh, def, 1)
+    const board = programmeBoard(started)
+    expect(board.find((r) => r.yours)).toMatchObject({
+      owner: 'You',
+      status: 'in progress',
+      title: 'Technology and equipment',
+    })
+    expect(board.filter((r) => !r.yours).every((r) => r.status === 'in progress')).toBe(
+      true,
+    )
+    const later = { ...started, work: { ...started.work, day: started.work.day + 5 } }
+    expect(
+      programmeBoard(later)
+        .filter((r) => !r.yours)
+        .every((r) => r.status === 'done'),
+    ).toBe(true)
   })
 })

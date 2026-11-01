@@ -94,10 +94,46 @@ working simulations of the professional software used in its field (see
 - [x] 6.5 Meetings: preparation, meeting, minutes, actions
 - [x] 6.6 Complex workplace incidents
 - [x] 6.7 Management and leadership
-- [ ] 6.8 Cross-functional programme: the company expansion
+- [x] 6.8 Cross-functional programme: the company expansion
 - [ ] 6.9 Office integration, balance, hardening, documentation
 
 ---
+
+## 2026-11-01 · Milestone 6.8: Cross-functional programme: the company expansion
+
+### Built
+
+An organisation-wide programme, **Opening the Manchester office** (25 staff, a
+£420,000 one-off budget), in which every department has a workstream. From the
+third career level, the player's department is handed its part as a two-stage
+programme project:
+
+- **Finance & Admin:** consolidate the departments' one-off costs into the
+  programme budget, then advise the review.
+- **Accounting:** set up cost centres and decide which costs are capital
+  (asset register, depreciation), then advise the review.
+- **IT Help Desk:** order laptops and accounts for new hires and transfers, then
+  advise the review on opening two weeks earlier.
+- **Digital Marketing:** plan the launch campaign, then advise the review.
+- **Data Analysis:** build the business case and the measures of success, then
+  advise the review.
+- **Software Development:** plan the system changes for a second office, then
+  advise the review.
+
+A **programme board** in each programme case shows every workstream: the player's
+own follows their cases; the other departments (People & Culture, Operations and
+the rest) are delivered by simulated colleagues as the days pass. The second stage
+arrives as soon as the first is submitted (it is not held back by the limit on open
+cases). When both stages are done, the programme becomes a **project** in the
+portfolio, with both case records as its stages.
+
+### Tested
+
+- Unit: model answers score 100% for all 12 programme cases; stage 2 arrives after
+  stage 1 even with two cases open; the board's statuses; the projects' content.
+- Persistence: the programme project links the two case items atomically.
+- Browser: IT through the real forms (board, stage 2 by mail, the portfolio
+  project with two stages), and both stages to the portfolio for every other career.
 
 ## 2026-11-01 · Milestone 6.7: Management and leadership
 

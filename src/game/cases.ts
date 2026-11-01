@@ -227,9 +227,12 @@ export function checkCases(profile: ProfileData, receivedAt = Date.now()): Profi
   const work = next.work
   if (work.dayOver || work.minute < HOURS.start || work.minute >= HOURS.end) return next
   const due = dueCases(next)
-  // The consequences of the player's own work (follow-ups) come first, and
+  // The consequences of the player's own work (follow-ups, and the next stage
+  // of a programme they are working on) come first, and
   // are not held back by the limit on open cases.
-  const followUp = due.find((c) => c.trigger.onlyIf)
+  const followUp = due.find(
+    (c) => c.trigger.onlyIf || (c.projectId && c.trigger.afterCase),
+  )
   if (followUp) return arriveCase(next, followUp, receivedAt)
   if (openCases(next).length >= MAX_OPEN_CASES) return next
   const [arriving] = due

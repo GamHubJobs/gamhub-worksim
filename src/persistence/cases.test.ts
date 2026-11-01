@@ -4,7 +4,7 @@ import { getCase } from '../content/cases'
 import { arriveCase, gradeCase, recordCaseResult, saveCaseAnswer } from '../game/cases'
 import { caseRecordContent } from '../game/caseRecord'
 import { modelAnswers } from '../game/caseModel'
-import { caseKey, decideCaseCapture } from '../game/portfolio'
+import { caseKey, decideCaseCapture, projectKey } from '../game/portfolio'
 import { createId } from '../lib/ids'
 import { createBackup, importBackup, readBackupFile } from './backup'
 import { WorkSimDatabase } from './db'
@@ -122,5 +122,74 @@ describe('cases in saves', () => {
     expect(item).toMatchObject({ type: 'case', caseId: def.id, score: 100 })
     const [file] = await loadPortfolioFiles(item, database)
     expect(JSON.stringify(file.snapshot.content)).toContain('Pay £552 today')
+  })
+})
+
+describe('the programme in the portfolio', () => {
+  it('both programme cases passed become one project linking the two case records', async () => {
+    const profile = await createProfile({ ...fields, levelId: 'assistant' }, database)
+    for (const id of ['prog-fa-budget', 'prog-fa-review']) {
+      const stage = getCase(id)!
+      await updateProfile(
+        profile.id,
+        (p) => {
+          let next = arriveCase(p, stage, 1)
+          for (const [stepId, answer] of Object.entries(modelAnswers(stage))) {
+            next = saveCaseAnswer(next, stage.id, stepId, answer)
+          }
+          return next
+        },
+        database,
+      )
+      const answers = (await database.profiles.get(profile.id))!.work.cases[id].answers
+      const result = gradeCase(stage, answers)
+      const record = {
+        id: createId(),
+        createdAt: 1,
+        updatedAt: 1,
+        rev: 1,
+        deviceId: createId(),
+        deleted: false,
+        title: `Case record: ${stage.title}`,
+        owner: profile.id,
+        formatVersion: DOCUMENT_FORMAT_VERSIONS.doc,
+        kind: 'doc',
+        content: caseRecordContent(stage, answers, result, 'Alex'),
+      } as AnyDocument
+      await saveSubmission(
+        profile.id,
+        [],
+        (latest) => recordCaseResult(latest, stage, result, 5000),
+        database,
+        {
+          key: caseKey(profile.id, id),
+          projectId: stage.projectId,
+          decide: () =>
+            decideCaseCapture({
+              profileId: profile.id,
+              def: stage,
+              result,
+              level: { id: 'assistant', title: 'Assistant', index: 3 },
+              submittedAt: 5000,
+              files: [{ role: 'main', document: record }],
+            }),
+        },
+      )
+    }
+    const project = (await findPortfolioItem(
+      projectKey(profile.id, 'expansion-office-admin-finance'),
+      database,
+    ))!
+    expect(project).toMatchObject({
+      type: 'project',
+      title: 'Opening the Manchester office',
+      score: 100,
+    })
+    expect(project.stages!.map((s) => s.assignmentId)).toEqual([
+      'prog-fa-budget',
+      'prog-fa-review',
+    ])
+    const first = await findPortfolioItem(caseKey(profile.id, 'prog-fa-budget'), database)
+    expect(project.stages![0].itemId).toBe(first!.id)
   })
 })
