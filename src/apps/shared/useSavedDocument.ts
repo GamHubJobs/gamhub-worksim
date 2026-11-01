@@ -81,6 +81,14 @@ const NAMES: Record<DocumentKind, string> = {
   tool: 'file',
 }
 
+/**
+ * Documents whose unsaved changes were recovered on this page, and when. A
+ * recovery clears the journal at once, so if the editor is mounted again a
+ * moment later (React does this in development, and when a part of the screen
+ * finishes loading) it still tells the player their changes were recovered.
+ */
+const recentlyRecovered = new Map<string, number>()
+
 export function useSavedDocument<Content>(
   documentId: string | null,
   kind: DocumentKind,
@@ -174,8 +182,10 @@ export function useSavedDocument<Content>(
         setState({ status: 'ready', document, content })
         setContentEpoch((n) => n + 1)
 
-        if (recovered) {
+        if (recovered) recentlyRecovered.set(id, Date.now())
+        if (recovered || Date.now() - (recentlyRecovered.get(id) ?? -Infinity) < 10_000)
           setRecoveredUnsavedChanges(true)
+        if (recovered) {
           autosaver.schedule(recovered)
           void autosaver.flush()
         } else {

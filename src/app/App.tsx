@@ -3,8 +3,7 @@
  * either the first-day screen or the desktop. Also owns storage health,
  * backups and saving before another tab takes over.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Desktop } from '../desktop/Desktop'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Onboarding } from '../desktop/Onboarding'
 import {
   getBackupStatus,
@@ -24,6 +23,11 @@ import { StoragePanel } from '../ui/StoragePanel'
 import { handOverAppSession } from './lifecycle'
 import { AppServicesContext, type AppServices } from './services'
 import { useCareer } from './useCareer'
+
+/** The desktop and the office load once there is a career to show (not for the start screen). */
+const Desktop = lazy(() =>
+  import('../desktop/Desktop').then((m) => ({ default: m.Desktop })),
+)
 
 const STORAGE_BLOCKED_MESSAGE =
   "Your browser is not allowing WorkSim to store data, so your work can't be saved. " +
@@ -134,17 +138,21 @@ export function App({ session, tabLock }: AppProps) {
         />
       )}
       {career.state.status === 'ready' && (
-        <Desktop
-          // A different career save is a different desk: start fresh.
-          key={career.state.profile.id}
-          profile={career.state.profile}
-          career={career}
-          storageWarning={storageWarning}
-          onOpenStorage={() => {
-            refreshStorageInfo()
-            setStorageOpen(true)
-          }}
-        />
+        <Suspense
+          fallback={<p className="p-6 text-slate-500">Opening GamHub WorkSim…</p>}
+        >
+          <Desktop
+            // A different career save is a different desk: start fresh.
+            key={career.state.profile.id}
+            profile={career.state.profile}
+            career={career}
+            storageWarning={storageWarning}
+            onOpenStorage={() => {
+              refreshStorageInfo()
+              setStorageOpen(true)
+            }}
+          />
+        </Suspense>
       )}
 
       {storageOpen && (

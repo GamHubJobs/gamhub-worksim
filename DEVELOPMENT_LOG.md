@@ -106,11 +106,64 @@ working simulations of the professional software used in its field (see
 - [x] 7.2 Achievements and desk customisation
 - [x] 7.3 Varied cases and new cases
 - [x] 7.4 Career readiness assessments
-- [ ] 7.5 Performance: code splitting and startup
+- [x] 7.5 Performance: code splitting and startup
 - [ ] 7.6 Accessibility
 - [ ] 7.7 Portfolio integration, hardening and documentation
 
 ---
+
+## 2026-11-01 · Milestone 7.5: Performance: code splitting and startup
+
+### Built
+
+- **Investigation.** A source-map breakdown of the 2,207 kB main file found:
+  - the career content of all six careers (about 620 kB);
+  - the Docs editor, Tiptap/ProseMirror (about 400 kB);
+  - React (203 kB), the database layer (96 kB) and Sheets (95 kB).
+    The 3D office and the profession tools were already loaded on demand, and
+    `npm find-dupes` found no duplicate packages.
+- **Apps load when first opened.** Docs, Sheets, Slides, Code, Help Desk, Cases,
+  Career, Readiness, Portfolio, Tasks and the tool screens each load the first time
+  they are opened, with a short “Opening…” status. The Docs editor loads only when a
+  document is shown, including in the portfolio.
+- **The desktop loads after the start screen**, once there is a career to show.
+- **`scripts/measure-startup.mjs`** measures the production build in a real browser
+  on a throttled “fast 3G” connection (1.6 Mbit/s, 150 ms latency), with the cache
+  off. It refuses to run if its port is busy, so it can never measure another server.
+
+### Measured (production build, median of three runs)
+
+| Moment                              | Before        | After         |
+| ----------------------------------- | ------------- | ------------- |
+| Main JavaScript file (uncompressed) | 2,207 kB      | 391 kB        |
+| New player: start screen ready      | 684 kB, 5.0 s | 484 kB, 3.9 s |
+| Returning player: 3D office drawn   | 929 kB, 8.3 s | 754 kB, 7.3 s |
+
+The kB columns are the compressed JavaScript downloaded. The first time an app is
+opened, it now downloads its own part; Docs, for example, is about 150 kB compressed.
+
+### Not done (recorded for later)
+
+The content of all six careers still loads at start, because the game rules look it
+up synchronously. Loading only the player's career would save roughly another 150 kB
+compressed. It needs a content registry loaded before the career opens: a larger
+change, recommended for Phase 8.
+
+### Tested
+
+- Every existing browser test passes against the lazily loaded apps, in particular
+  Docs, Sheets, Slides, the portfolio viewer, the developer and IT tools, and the
+  readiness assessment, whose report is written in Docs.
+- **Found and fixed through testing:**
+  - When a recovered document was mounted twice in quick succession (React does
+    this in development, and the lazy loading made it more likely), the second mount
+    no longer knew a recovery had happened, so it showed the wrong message. Documents
+    recovered in the last 10 seconds are now remembered.
+  - Test helpers now wait for the desktop to load before deciding whether the player
+    is in the office or at the computer.
+  - The crash-recovery test now crashes immediately after typing, as intended, and
+    then checks that the recovered change is saved: it is still there after another
+    reload, with nothing left to recover.
 
 ## 2026-11-01 · Milestone 7.4: Career readiness assessments
 

@@ -3,22 +3,30 @@
  * read-only. These are frozen copies: later changes to the working file never
  * reach them.
  */
-import { Suspense } from 'react'
+import { lazy, Suspense } from 'react'
 import type { AnyDocument } from '../../persistence/schemas'
 import { getTool } from '../../tools/registry'
 import { getWorkspace } from '../../tools/ui'
 import { CodeEditor } from '../code/CodeEditor'
-import { DocEditor } from '../docs/DocEditor'
 import { TicketsEditor } from '../helpdesk/TicketsEditor'
 import { SheetEditor } from '../sheets/ui/SheetEditor'
 import { SlidesEditor } from '../slides/SlidesEditor'
+
+/** The document editor is large, so it loads only when a document is shown. */
+const DocEditor = lazy(() =>
+  import('../docs/DocEditor').then((m) => ({ default: m.DocEditor })),
+)
 
 export function EvidenceViewer({ document }: { document: AnyDocument }) {
   switch (document.kind) {
     case 'sheet':
       return <SheetEditor content={document.content} readOnly />
     case 'doc':
-      return <DocEditor content={document.content} readOnly />
+      return (
+        <Suspense fallback={<p className="p-4 text-sm text-slate-500">Opening…</p>}>
+          <DocEditor content={document.content} readOnly />
+        </Suspense>
+      )
     case 'slides':
       return <SlidesEditor content={document.content} readOnly />
     case 'code':

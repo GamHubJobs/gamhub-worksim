@@ -3,26 +3,11 @@
  * desk with a dock of apps (Mail, Tasks, Sheets, Career). The top bar with
  * the player's level and XP is shared by both.
  */
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import type { Career } from '../app/useCareer'
-import { CareerApp } from '../apps/career/CareerApp'
-import { PortfolioApp } from '../apps/portfolio/PortfolioApp'
-import { DocsApp } from '../apps/docs/DocsApp'
-import { CodeApp } from '../apps/code/CodeApp'
-import { CodeWindow } from '../apps/code/CodeWindow'
-import { HelpDeskApp } from '../apps/helpdesk/HelpDeskApp'
-import { ToolHome } from '../apps/tools/ToolHome'
-import { ToolWindow } from '../apps/tools/ToolWindow'
 import { openPracticeFile } from '../persistence/toolPractice'
 import { careerTools } from '../tools/registry'
-import { HelpDeskWindow } from '../apps/helpdesk/HelpDeskWindow'
-import { DocWindow } from '../apps/docs/DocWindow'
-import { SlidesApp } from '../apps/slides/SlidesApp'
-import { SlidesWindow } from '../apps/slides/SlidesWindow'
 import { MailApp } from '../apps/mail/MailApp'
-import { SheetsApp } from '../apps/sheets/SheetsApp'
-import { WorkbookWindow } from '../apps/sheets/WorkbookWindow'
-import { TasksApp } from '../apps/tasks/TasksApp'
 import { getAssignment } from '../content/assignments'
 import { COMPANY } from '../content/company'
 import {
@@ -44,7 +29,6 @@ import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
 import { caseFor } from '../game/caseVariants'
 import { chooseDeskItem } from '../game/desk'
-import { ReadinessApp } from '../apps/readiness/ReadinessApp'
 import {
   attemptDef,
   openAttempt,
@@ -62,13 +46,66 @@ import {
 } from '../game/cases'
 import { modelAnswers } from '../game/caseModel'
 import { getCase } from '../content/cases'
-import { CasesApp } from '../apps/cases/CasesApp'
 import { passTime, startNextDay } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
 import { Icon, type IconName } from '../ui/Icon'
 import { DayEnd } from '../workday/DayEnd'
 import { useWorkClock } from '../workday/useWorkClock'
 import { WorkdayBar } from '../workday/WorkdayBar'
+
+// The apps are loaded when first opened, so the office appears without
+// downloading every editor and tool first.
+const CareerApp = lazy(() =>
+  import('../apps/career/CareerApp').then((m) => ({ default: m.CareerApp })),
+)
+const PortfolioApp = lazy(() =>
+  import('../apps/portfolio/PortfolioApp').then((m) => ({ default: m.PortfolioApp })),
+)
+const DocsApp = lazy(() =>
+  import('../apps/docs/DocsApp').then((m) => ({ default: m.DocsApp })),
+)
+const CodeApp = lazy(() =>
+  import('../apps/code/CodeApp').then((m) => ({ default: m.CodeApp })),
+)
+const CodeWindow = lazy(() =>
+  import('../apps/code/CodeWindow').then((m) => ({ default: m.CodeWindow })),
+)
+const HelpDeskApp = lazy(() =>
+  import('../apps/helpdesk/HelpDeskApp').then((m) => ({ default: m.HelpDeskApp })),
+)
+const ToolHome = lazy(() =>
+  import('../apps/tools/ToolHome').then((m) => ({ default: m.ToolHome })),
+)
+const ToolWindow = lazy(() =>
+  import('../apps/tools/ToolWindow').then((m) => ({ default: m.ToolWindow })),
+)
+const HelpDeskWindow = lazy(() =>
+  import('../apps/helpdesk/HelpDeskWindow').then((m) => ({ default: m.HelpDeskWindow })),
+)
+const DocWindow = lazy(() =>
+  import('../apps/docs/DocWindow').then((m) => ({ default: m.DocWindow })),
+)
+const SlidesApp = lazy(() =>
+  import('../apps/slides/SlidesApp').then((m) => ({ default: m.SlidesApp })),
+)
+const SlidesWindow = lazy(() =>
+  import('../apps/slides/SlidesWindow').then((m) => ({ default: m.SlidesWindow })),
+)
+const SheetsApp = lazy(() =>
+  import('../apps/sheets/SheetsApp').then((m) => ({ default: m.SheetsApp })),
+)
+const WorkbookWindow = lazy(() =>
+  import('../apps/sheets/WorkbookWindow').then((m) => ({ default: m.WorkbookWindow })),
+)
+const TasksApp = lazy(() =>
+  import('../apps/tasks/TasksApp').then((m) => ({ default: m.TasksApp })),
+)
+const ReadinessApp = lazy(() =>
+  import('../apps/readiness/ReadinessApp').then((m) => ({ default: m.ReadinessApp })),
+)
+const CasesApp = lazy(() =>
+  import('../apps/cases/CasesApp').then((m) => ({ default: m.CasesApp })),
+)
 
 interface DesktopProps {
   profile: Profile
@@ -382,268 +419,270 @@ export function Desktop({
               onOpenCase={(caseId) => setView({ app: 'cases', item: caseId })}
             />
             <div className="min-h-0 flex-1">
-              {view.app === 'mail' && (
-                <MailApp
-                  profile={profile}
-                  selectedId={view.mailId}
-                  composing={!!view.compose}
-                  onSelect={(mailId, compose) =>
-                    setView({ app: 'mail', mailId, ...(compose ? { compose } : {}) })
-                  }
-                  onMarkRead={onMarkRead}
-                  onOpenTask={openTask}
-                  onOpenCareer={() => setView({ app: 'career' })}
-                  onOpenCase={(caseId) => setView({ app: 'cases', item: caseId })}
-                  // Files open in other apps were saved when the player left them.
-                  onFlush={async () => true}
-                  onSend={career.sendMail}
-                />
-              )}
-              {view.app === 'tasks' && (
-                <TasksApp
-                  profile={profile}
-                  selectedId={view.assignmentId}
-                  onSelect={openTask}
-                  onOpenWorkbook={openAssignmentWorkbook}
-                  onOpenFile={(kind, document) =>
-                    setView({ app: kind === 'doc' ? 'docs' : 'slides', document })
-                  }
-                  onHandIn={(mailId) => setView({ app: 'mail', mailId, compose: true })}
-                />
-              )}
-              {view.app === 'sheets' &&
-                (view.document ? (
-                  <OpenWorkbook
-                    document={view.document}
+              <Suspense fallback={<AppLoading />}>
+                {view.app === 'mail' && (
+                  <MailApp
                     profile={profile}
-                    career={career}
-                    onBack={() => setView({ app: 'sheets' })}
-                    onOpenTask={openTask}
-                  />
-                ) : (
-                  <SheetsApp
-                    profile={profile}
-                    onOpen={(document) => setView({ app: 'sheets', document })}
-                  />
-                ))}
-              {view.app === 'docs' &&
-                (view.document ? (
-                  <DocWindow
-                    key={view.document}
-                    documentId={view.document}
-                    ownerId={profile.id}
-                    onBack={() => setView({ app: 'docs' })}
-                  />
-                ) : (
-                  <DocsApp
-                    playerName={profile.name}
-                    linked={taskFiles}
-                    ownerId={profile.id}
-                    onOpen={(document) => setView({ app: 'docs', document })}
-                  />
-                ))}
-              {view.app === 'slides' &&
-                (view.document ? (
-                  <SlidesWindow
-                    key={view.document}
-                    documentId={view.document}
-                    ownerId={profile.id}
-                    onBack={() => setView({ app: 'slides' })}
-                  />
-                ) : (
-                  <SlidesApp
-                    playerName={profile.name}
-                    linked={taskFiles}
-                    ownerId={profile.id}
-                    onOpen={(document) => setView({ app: 'slides', document })}
-                  />
-                ))}
-              {view.app === 'helpdesk' &&
-                (view.document ? (
-                  <HelpDeskWindow
-                    key={view.document}
-                    documentId={view.document}
-                    assignmentId={
-                      Object.values(profile.assignments).find(
-                        (p) => p.documentId === view.document,
-                      )?.assignmentId ?? null
+                    selectedId={view.mailId}
+                    composing={!!view.compose}
+                    onSelect={(mailId, compose) =>
+                      setView({ app: 'mail', mailId, ...(compose ? { compose } : {}) })
                     }
-                    career={career}
-                    onBack={() => setView({ app: 'helpdesk' })}
+                    onMarkRead={onMarkRead}
                     onOpenTask={openTask}
+                    onOpenCareer={() => setView({ app: 'career' })}
+                    onOpenCase={(caseId) => setView({ app: 'cases', item: caseId })}
+                    // Files open in other apps were saved when the player left them.
+                    onFlush={async () => true}
+                    onSend={career.sendMail}
                   />
-                ) : (
-                  <HelpDeskApp
+                )}
+                {view.app === 'tasks' && (
+                  <TasksApp
                     profile={profile}
-                    onOpen={(document) => setView({ app: 'helpdesk', document })}
-                  />
-                ))}
-              {view.app === 'code' &&
-                (view.document ? (
-                  <CodeWindow
-                    key={view.document}
-                    documentId={view.document}
-                    assignmentId={
-                      Object.values(profile.assignments).find(
-                        (p) => p.documentId === view.document,
-                      )?.assignmentId ?? null
+                    selectedId={view.assignmentId}
+                    onSelect={openTask}
+                    onOpenWorkbook={openAssignmentWorkbook}
+                    onOpenFile={(kind, document) =>
+                      setView({ app: kind === 'doc' ? 'docs' : 'slides', document })
                     }
-                    career={career}
-                    onBack={() => setView({ app: 'code' })}
-                    onOpenTask={openTask}
+                    onHandIn={(mailId) => setView({ app: 'mail', mailId, compose: true })}
                   />
-                ) : (
-                  <CodeApp
-                    profile={profile}
-                    onOpen={(document) => setView({ app: 'code', document })}
-                  />
-                ))}
-              {view.app === 'tool' &&
-                (() => {
-                  const access = tools.find((t) => t.tool.id === view.tool)
-                  if (!access?.unlocked) {
-                    return (
-                      <p className="p-6 text-sm text-slate-600">
-                        {access
-                          ? `${access.tool.name} unlocks when you become ${access.unlocksAt}.`
-                          : 'This tool is not part of your career.'}
-                      </p>
-                    )
-                  }
-                  return view.document ? (
-                    <ToolWindow
+                )}
+                {view.app === 'sheets' &&
+                  (view.document ? (
+                    <OpenWorkbook
+                      document={view.document}
+                      profile={profile}
+                      career={career}
+                      onBack={() => setView({ app: 'sheets' })}
+                      onOpenTask={openTask}
+                    />
+                  ) : (
+                    <SheetsApp
+                      profile={profile}
+                      onOpen={(document) => setView({ app: 'sheets', document })}
+                    />
+                  ))}
+                {view.app === 'docs' &&
+                  (view.document ? (
+                    <DocWindow
                       key={view.document}
                       documentId={view.document}
-                      toolId={access.tool.id}
+                      ownerId={profile.id}
+                      onBack={() => setView({ app: 'docs' })}
+                    />
+                  ) : (
+                    <DocsApp
+                      playerName={profile.name}
+                      linked={taskFiles}
+                      ownerId={profile.id}
+                      onOpen={(document) => setView({ app: 'docs', document })}
+                    />
+                  ))}
+                {view.app === 'slides' &&
+                  (view.document ? (
+                    <SlidesWindow
+                      key={view.document}
+                      documentId={view.document}
+                      ownerId={profile.id}
+                      onBack={() => setView({ app: 'slides' })}
+                    />
+                  ) : (
+                    <SlidesApp
+                      playerName={profile.name}
+                      linked={taskFiles}
+                      ownerId={profile.id}
+                      onOpen={(document) => setView({ app: 'slides', document })}
+                    />
+                  ))}
+                {view.app === 'helpdesk' &&
+                  (view.document ? (
+                    <HelpDeskWindow
+                      key={view.document}
+                      documentId={view.document}
                       assignmentId={
                         Object.values(profile.assignments).find(
                           (p) => p.documentId === view.document,
                         )?.assignmentId ?? null
                       }
                       career={career}
-                      lockedSections={access.lockedSections}
-                      onBack={() => setView({ app: 'tool', tool: access.tool.id })}
+                      onBack={() => setView({ app: 'helpdesk' })}
                       onOpenTask={openTask}
                     />
                   ) : (
-                    <ToolHome
-                      key={access.tool.id}
+                    <HelpDeskApp
                       profile={profile}
-                      access={access}
-                      onOpen={(document) =>
-                        setView({ app: 'tool', tool: access.tool.id, document })
-                      }
-                      onOpenPractice={async () => {
-                        const document = await openPracticeFile(profile.id, access.tool)
-                        setView({ app: 'tool', tool: access.tool.id, document })
-                      }}
+                      onOpen={(document) => setView({ app: 'helpdesk', document })}
                     />
-                  )
-                })()}
-              {view.app === 'cases' && (
-                <CasesApp
-                  profile={profile}
-                  caseId={view.item}
-                  onOpen={(caseId) => setView({ app: 'cases', item: caseId })}
-                  onSave={(caseId, stepId, answer) =>
-                    void career.saveCaseStep(caseId, stepId, answer)
-                  }
-                  onOpenFile={async (caseId, stepId) => {
-                    const documentId = await career.openCaseFile(caseId, stepId)
-                    const step = getCase(caseId)?.steps.find((s) => s.id === stepId)
-                    const kind =
-                      step?.kind === 'document' && step.deliverable.kind === 'slides'
-                        ? 'slides'
-                        : 'docs'
-                    setView({ app: kind, document: documentId })
-                  }}
-                  onSubmit={async (caseId) => {
-                    await career.submitCase(caseId)
-                  }}
-                  onJoin={(caseId) => void act((p) => joinMeeting(p, caseId))}
-                  onWait={(minutes) => void act((p) => passTime(p, minutes, 'work'))}
-                />
-              )}
-              {view.app === 'readiness' && (
-                <ReadinessApp
-                  profile={profile}
-                  selected={view.item}
-                  onSelect={(item) => setView({ app: 'readiness', item })}
-                  onStart={async (id) => {
-                    await act((p) => startAssessment(p, id, levelNumber(p)))
-                  }}
-                  onSave={(id, stepId, answer) =>
-                    void act((p) => saveAssessmentAnswer(p, id, stepId, answer))
-                  }
-                  onOpenFile={async (id, stepId) => {
-                    const documentId = await career.openAssessmentFile(id, stepId)
-                    setView({ app: 'docs', document: documentId })
-                  }}
-                  onSubmit={async (id) => {
-                    await career.submitAssessment(id)
-                  }}
-                />
-              )}
-              {view.app === 'portfolio' && (
-                <PortfolioApp
-                  profile={profile}
-                  itemId={view.item}
-                  tab={view.tab ?? 'work'}
-                  onOpenItem={(item) =>
-                    setView({ app: 'portfolio', item, tab: view.tab })
-                  }
-                  onTab={(tab) => setView({ app: 'portfolio', tab })}
-                  onAct={(action) =>
-                    setView(
-                      action.kind === 'task'
-                        ? { app: 'tasks', assignmentId: action.assignmentId }
-                        : { app: 'tool', tool: action.toolId },
+                  ))}
+                {view.app === 'code' &&
+                  (view.document ? (
+                    <CodeWindow
+                      key={view.document}
+                      documentId={view.document}
+                      assignmentId={
+                        Object.values(profile.assignments).find(
+                          (p) => p.documentId === view.document,
+                        )?.assignmentId ?? null
+                      }
+                      career={career}
+                      onBack={() => setView({ app: 'code' })}
+                      onOpenTask={openTask}
+                    />
+                  ) : (
+                    <CodeApp
+                      profile={profile}
+                      onOpen={(document) => setView({ app: 'code', document })}
+                    />
+                  ))}
+                {view.app === 'tool' &&
+                  (() => {
+                    const access = tools.find((t) => t.tool.id === view.tool)
+                    if (!access?.unlocked) {
+                      return (
+                        <p className="p-6 text-sm text-slate-600">
+                          {access
+                            ? `${access.tool.name} unlocks when you become ${access.unlocksAt}.`
+                            : 'This tool is not part of your career.'}
+                        </p>
+                      )
+                    }
+                    return view.document ? (
+                      <ToolWindow
+                        key={view.document}
+                        documentId={view.document}
+                        toolId={access.tool.id}
+                        assignmentId={
+                          Object.values(profile.assignments).find(
+                            (p) => p.documentId === view.document,
+                          )?.assignmentId ?? null
+                        }
+                        career={career}
+                        lockedSections={access.lockedSections}
+                        onBack={() => setView({ app: 'tool', tool: access.tool.id })}
+                        onOpenTask={openTask}
+                      />
+                    ) : (
+                      <ToolHome
+                        key={access.tool.id}
+                        profile={profile}
+                        access={access}
+                        onOpen={(document) =>
+                          setView({ app: 'tool', tool: access.tool.id, document })
+                        }
+                        onOpenPractice={async () => {
+                          const document = await openPracticeFile(profile.id, access.tool)
+                          setView({ app: 'tool', tool: access.tool.id, document })
+                        }}
+                      />
                     )
-                  }
-                />
-              )}
-              {view.app === 'career' && (
-                <CareerApp
-                  profile={profile}
-                  focus={view.item}
-                  onOpenReadiness={(item) => setView({ app: 'readiness', item })}
-                  onChooseDesk={(slot, itemId) =>
-                    void act((p) => chooseDeskItem(p, slot, itemId))
-                  }
-                  onOpenPortfolio={() => setView({ app: 'portfolio' })}
-                  onSwitchCareer={async (careerId) => {
-                    // The other career starts at its own reception.
-                    writeLastView(DEFAULT_VIEW)
-                    await career.switchCareer(careerId)
-                  }}
-                  onOpenFile={(kind, document) =>
-                    setView(
-                      kind === 'tool'
-                        ? {
-                            app: 'tool',
-                            tool: getAssignment(
-                              Object.values(profile.assignments).find(
-                                (p) => p.documentId === document,
-                              )?.assignmentId ?? '',
-                            )?.tool?.id,
-                            document,
-                          }
-                        : {
-                            app: (
-                              {
-                                sheet: 'sheets',
-                                tickets: 'helpdesk',
-                                code: 'code',
-                                doc: 'docs',
-                                slides: 'slides',
-                              } as const
-                            )[kind],
-                            document,
-                          },
-                    )
-                  }
-                />
-              )}
+                  })()}
+                {view.app === 'cases' && (
+                  <CasesApp
+                    profile={profile}
+                    caseId={view.item}
+                    onOpen={(caseId) => setView({ app: 'cases', item: caseId })}
+                    onSave={(caseId, stepId, answer) =>
+                      void career.saveCaseStep(caseId, stepId, answer)
+                    }
+                    onOpenFile={async (caseId, stepId) => {
+                      const documentId = await career.openCaseFile(caseId, stepId)
+                      const step = getCase(caseId)?.steps.find((s) => s.id === stepId)
+                      const kind =
+                        step?.kind === 'document' && step.deliverable.kind === 'slides'
+                          ? 'slides'
+                          : 'docs'
+                      setView({ app: kind, document: documentId })
+                    }}
+                    onSubmit={async (caseId) => {
+                      await career.submitCase(caseId)
+                    }}
+                    onJoin={(caseId) => void act((p) => joinMeeting(p, caseId))}
+                    onWait={(minutes) => void act((p) => passTime(p, minutes, 'work'))}
+                  />
+                )}
+                {view.app === 'readiness' && (
+                  <ReadinessApp
+                    profile={profile}
+                    selected={view.item}
+                    onSelect={(item) => setView({ app: 'readiness', item })}
+                    onStart={async (id) => {
+                      await act((p) => startAssessment(p, id, levelNumber(p)))
+                    }}
+                    onSave={(id, stepId, answer) =>
+                      void act((p) => saveAssessmentAnswer(p, id, stepId, answer))
+                    }
+                    onOpenFile={async (id, stepId) => {
+                      const documentId = await career.openAssessmentFile(id, stepId)
+                      setView({ app: 'docs', document: documentId })
+                    }}
+                    onSubmit={async (id) => {
+                      await career.submitAssessment(id)
+                    }}
+                  />
+                )}
+                {view.app === 'portfolio' && (
+                  <PortfolioApp
+                    profile={profile}
+                    itemId={view.item}
+                    tab={view.tab ?? 'work'}
+                    onOpenItem={(item) =>
+                      setView({ app: 'portfolio', item, tab: view.tab })
+                    }
+                    onTab={(tab) => setView({ app: 'portfolio', tab })}
+                    onAct={(action) =>
+                      setView(
+                        action.kind === 'task'
+                          ? { app: 'tasks', assignmentId: action.assignmentId }
+                          : { app: 'tool', tool: action.toolId },
+                      )
+                    }
+                  />
+                )}
+                {view.app === 'career' && (
+                  <CareerApp
+                    profile={profile}
+                    focus={view.item}
+                    onOpenReadiness={(item) => setView({ app: 'readiness', item })}
+                    onChooseDesk={(slot, itemId) =>
+                      void act((p) => chooseDeskItem(p, slot, itemId))
+                    }
+                    onOpenPortfolio={() => setView({ app: 'portfolio' })}
+                    onSwitchCareer={async (careerId) => {
+                      // The other career starts at its own reception.
+                      writeLastView(DEFAULT_VIEW)
+                      await career.switchCareer(careerId)
+                    }}
+                    onOpenFile={(kind, document) =>
+                      setView(
+                        kind === 'tool'
+                          ? {
+                              app: 'tool',
+                              tool: getAssignment(
+                                Object.values(profile.assignments).find(
+                                  (p) => p.documentId === document,
+                                )?.assignmentId ?? '',
+                              )?.tool?.id,
+                              document,
+                            }
+                          : {
+                              app: (
+                                {
+                                  sheet: 'sheets',
+                                  tickets: 'helpdesk',
+                                  code: 'code',
+                                  doc: 'docs',
+                                  slides: 'slides',
+                                } as const
+                              )[kind],
+                              document,
+                            },
+                      )
+                    }
+                  />
+                )}
+              </Suspense>
             </div>
           </main>
         </div>
@@ -804,4 +843,13 @@ function OpenWorkbook({
 function SheetsAppFallback({ onBack }: { onBack: () => void }) {
   useEffect(onBack, [onBack])
   return null
+}
+
+/** Shown for the moment an app takes to load the first time it is opened. */
+function AppLoading() {
+  return (
+    <p role="status" className="p-6 text-sm text-slate-500">
+      Opening…
+    </p>
+  )
 }

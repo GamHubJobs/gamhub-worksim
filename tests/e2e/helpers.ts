@@ -18,7 +18,15 @@ export async function startCareerIfNeeded(page: Page, name = 'Alex') {
 
 /** If the player is walking around the office, goes to their desk and uses the computer. */
 export async function sitAtComputer(page: Page) {
-  if (await page.getByTestId('office').isVisible()) {
+  // The desktop loads after the start screen: wait until the office or the
+  // computer is showing before deciding which one it is.
+  const office = page.getByTestId('office')
+  await expect(
+    office.or(page.getByRole('navigation', { name: 'Apps' })).first(),
+  ).toBeVisible({
+    timeout: 30_000,
+  })
+  if (await office.isVisible()) {
     await page
       .getByRole('navigation', { name: 'Places' })
       .getByRole('button', { name: 'Your desk' })
@@ -64,6 +72,13 @@ export async function openWorkbook(page: Page, path = '/') {
   await page.goto(path)
   await startCareerIfNeeded(page)
   const grid = page.getByTestId('sheet-grid')
+  // Wait until the app has loaded far enough to tell where the player is.
+  await expect(
+    grid
+      .or(page.getByTestId('office'))
+      .or(page.getByRole('navigation', { name: 'Apps' }))
+      .first(),
+  ).toBeVisible({ timeout: 30_000 })
   if (!(await grid.isVisible())) {
     await openApp(page, 'Sheets')
     await page.getByRole('button', { name: /Practice Workbook/ }).click()
