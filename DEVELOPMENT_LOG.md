@@ -103,7 +103,7 @@ working simulations of the professional software used in its field (see
 [docs/PHASE7_PLAN.md](docs/PHASE7_PLAN.md).
 
 - [x] 7.1 Career-wide performance record (save format 4)
-- [ ] 7.2 Achievements and desk customisation
+- [x] 7.2 Achievements and desk customisation
 - [ ] 7.3 Varied cases and new cases
 - [ ] 7.4 Career readiness assessments
 - [ ] 7.5 Performance: code splitting and startup
@@ -111,6 +111,35 @@ working simulations of the professional software used in its field (see
 - [ ] 7.7 Portfolio integration, hardening and documentation
 
 ---
+
+## 2026-11-01 · Milestone 7.2: Achievements and desk customisation
+
+### Built
+
+- **19 achievements** in four categories (professional performance, workplace
+  conduct, leadership, career progression), each worked out from the save:
+  - for example, pass 5 tasks first time, pass an incident case, hand off with every
+    detail right, decide every request within policy, share out a team's work well,
+    reach the level where you lead a team, pass 3 tasks in your profession's main tool;
+  - each says exactly how it is earned and shows progress (“2 of 3”);
+  - earned ones keep the office day; they are never taken away;
+  - one line in the day's log when earned: no pop-ups, streaks, log-in rewards or
+    purchases.
+- **Your desk:** 15 cosmetic items in 6 slots (plant, mug, lamp, photo frame,
+  pinboard, chair). They are earned by achievements or promotions, chosen in the
+  Career app, and drawn at the player's desk in the 3D office. “Arrange your desk” at
+  the desk opens the choice. A saved item that is unknown or not earned is ignored.
+
+### Tested
+
+- Unit: no achievement for a new career; achievements earned by real work, with the
+  day, logged once and never removed; every achievement can be earned in all six
+  careers (the cases, steps, projects, tools and levels exist); desk defaults, only
+  earned items accepted, tampered saves ignored.
+- Persistence: the career record (promotions, achievements, desk) survives a backup
+  and restore.
+- Browser: tasks earn achievements; an earned plant is placed and kept after a
+  reload; “Arrange your desk” in the office opens the desk section.
 
 ## 2026-11-01 · Milestone 7.1: Career-wide performance record
 

@@ -64,6 +64,7 @@ export type InteractionId =
   | 'lunch'
   | 'home'
   | 'senior'
+  | 'arrange'
 
 export interface Interaction {
   id: InteractionId
@@ -92,6 +93,12 @@ export const INTERACTIONS: Interaction[] = [
     label: 'Talk to {senior}',
     name: '{seniorFull}',
     minutes: 10,
+  },
+  {
+    id: 'arrange',
+    spot: 'desk',
+    label: 'Arrange your desk',
+    name: 'Your desk',
   },
   {
     id: 'whiteboard',

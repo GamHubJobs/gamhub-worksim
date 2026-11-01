@@ -21,6 +21,7 @@ import {
   type Vector,
 } from '../../content/office'
 import { COLORS } from './colors'
+import { getDeskItem, type DeskItem } from '../../content/desk'
 import { Box, Desk, OfficeChair, Person, Place, Plant, Sofa } from './parts'
 
 export interface OfficeSceneProps {
@@ -28,6 +29,8 @@ export interface OfficeSceneProps {
   /** Highlights the computer when there is something new to read. */
   computerAlert: boolean
   playerName: string
+  /** The items on the player's desk, by ID, comma-separated (a string so the scene only redraws when they change). */
+  desk: string
   onGo: (spot: SpotId) => void
   onInteract: (interaction: InteractionId) => void
 }
@@ -75,7 +78,11 @@ function OfficeScene(props: OfficeSceneProps) {
       <CameraRig spot={props.spot} />
       <Building playerName={props.playerName} />
       <Reception onInteract={props.onInteract} />
-      <Workspace computerAlert={props.computerAlert} onInteract={props.onInteract} />
+      <Workspace
+        computerAlert={props.computerAlert}
+        desk={props.desk}
+        onInteract={props.onInteract}
+      />
       <ManagerOffice onInteract={props.onInteract} />
       <BreakRoom onInteract={props.onInteract} />
       {SPOTS.map((s) => (
@@ -460,7 +467,91 @@ function Reception({ onInteract }: Interact) {
   )
 }
 
-function Workspace({ computerAlert, onInteract }: Interact & { computerAlert: boolean }) {
+/** The items the player has put on their desk (earned through achievements and promotions). */
+function DeskDecor({ items }: { items: DeskItem[] }) {
+  const of = (slot: DeskItem['slot']) => items.find((i) => i.slot === slot)
+  const plant = of('plant')
+  const lamp = of('lamp')
+  const frame = of('frame')
+  const board = of('board')
+  const top = 0.765
+  return (
+    <group>
+      {plant && (
+        <group position={[1.18, top, 0.92]} scale={plant.id === 'monstera' ? 1.5 : 1}>
+          <mesh position={[0, 0.06, 0]}>
+            <cylinderGeometry args={[0.07, 0.055, 0.12, 12]} />
+            <meshStandardMaterial color={COLORS.pot} roughness={0.9} />
+          </mesh>
+          {(plant.id === 'succulent'
+            ? [[0, 0.16, 0, 0.07]]
+            : [
+                [0, 0.2, 0, 0.09],
+                [0.05, 0.28, 0.02, 0.07],
+                [-0.05, 0.3, -0.02, 0.06],
+              ]
+          ).map(([x, y, z, r], i) => (
+            <mesh key={i} position={[x, y, z]}>
+              <icosahedronGeometry args={[r, 1]} />
+              <meshStandardMaterial color={plant.color} flatShading roughness={0.9} />
+            </mesh>
+          ))}
+        </group>
+      )}
+      {lamp && (
+        <group position={[0.02, top, 0.9]}>
+          <mesh position={[0, 0.01, 0]}>
+            <cylinderGeometry args={[0.07, 0.07, 0.02, 16]} />
+            <meshStandardMaterial color={lamp.color} metalness={0.4} roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 0.2, 0]}>
+            <cylinderGeometry args={[0.012, 0.012, 0.38, 8]} />
+            <meshStandardMaterial color={lamp.color} metalness={0.4} roughness={0.5} />
+          </mesh>
+          <mesh position={[0.05, 0.38, 0.03]} rotation={[0.4, 0, -0.5]}>
+            <coneGeometry args={[0.07, 0.11, 16, 1, true]} />
+            <meshStandardMaterial color={lamp.color} metalness={0.4} roughness={0.5} />
+          </mesh>
+        </group>
+      )}
+      {frame && (
+        <group position={[0.98, top, 1.0]} rotation={[0, -0.5, 0]}>
+          <Box size={[0.16, 0.12, 0.015]} position={[0, 0.07, 0]} color={frame.color} />
+          <Box size={[0.13, 0.09, 0.005]} position={[0, 0.07, 0.009]} color="#bae6fd" />
+        </group>
+      )}
+      {board && (
+        <group position={[0.6, 1.35, 0.36]}>
+          <Box size={[0.8, 0.42, 0.02]} position={[0, 0, 0]} color={board.color} />
+          {[
+            [-0.25, 0.08, '#fde68a'],
+            [-0.05, -0.06, '#bbf7d0'],
+            [0.18, 0.07, '#bfdbfe'],
+            [0.28, -0.08, '#fecaca'],
+          ].map(([x, y, color]) => (
+            <Box
+              key={String(color)}
+              size={[0.12, 0.1, 0.005]}
+              position={[Number(x), Number(y), 0.013]}
+              color={String(color)}
+            />
+          ))}
+        </group>
+      )}
+    </group>
+  )
+}
+
+function Workspace({
+  computerAlert,
+  desk,
+  onInteract,
+}: Interact & { computerAlert: boolean; desk: string }) {
+  const items = desk
+    .split(',')
+    .flatMap((id) => (getDeskItem(id) ? [getDeskItem(id)!] : []))
+  const mug = items.find((i) => i.slot === 'mug')?.color
+  const chair = items.find((i) => i.slot === 'chair')?.color ?? '#1d4ed8'
   // Two rows of desks, back to back. The player's desk is front row, middle.
   const front: Array<[number, string | null]> = [
     [-1.2, '#0f766e'],
@@ -482,8 +573,9 @@ function Workspace({ computerAlert, onInteract }: Interact & { computerAlert: bo
             labelPosition={[0.6, 1.65, 0.9]}
             onInteract={onInteract}
           >
-            <Desk position={[0.6, 0, 1.1]} glow={computerAlert} />
-            <OfficeChair position={[0.75, 0, 1.85]} rotation={-0.35} color="#1d4ed8" />
+            <Desk position={[0.6, 0, 1.1]} glow={computerAlert} mug={mug} />
+            <OfficeChair position={[0.75, 0, 1.85]} rotation={-0.35} color={chair} />
+            <DeskDecor items={items} />
             {computerAlert && <AlertBubble position={[0.6, 1.55, 0.88]} />}
           </Interactive>
         ) : (

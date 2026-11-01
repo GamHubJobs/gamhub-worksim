@@ -59,6 +59,7 @@ import {
 import type { Profile } from '../persistence/schemas'
 import { Avatar } from '../ui/Avatar'
 import { supportsWebGL } from './webgl'
+import { deskLayout } from '../game/desk'
 
 const OfficeScene = lazy(() => import('./scene/OfficeScene'))
 
@@ -158,6 +159,9 @@ export function OfficeView({
     switch (id) {
       case 'computer':
         onUseComputer()
+        return
+      case 'arrange':
+        onUseComputer({ app: 'career', item: 'desk' })
         return
       case 'coffee':
         void onAct(takeCoffeeBreak)
@@ -280,6 +284,9 @@ export function OfficeView({
                 spot={spot}
                 computerAlert={unread > 0}
                 playerName={profile.name}
+                desk={Object.values(deskLayout(profile))
+                  .map((item) => item!.id)
+                  .join(',')}
                 onGo={sceneGo}
                 onInteract={sceneInteract}
               />

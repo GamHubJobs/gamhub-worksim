@@ -76,7 +76,12 @@ export function Place({
   )
 }
 
-export function Desk({ position, rotation, glow = false }: Placed & { glow?: boolean }) {
+export function Desk({
+  position,
+  rotation,
+  glow = false,
+  mug = '#f8fafc',
+}: Placed & { glow?: boolean; mug?: string }) {
   return (
     <Place position={position} rotation={rotation}>
       <Box
@@ -113,7 +118,7 @@ export function Desk({ position, rotation, glow = false }: Placed & { glow?: boo
       <Box size={[0.06, 0.02, 0.1]} position={[0.32, 0.775, 0.1]} color="#e2e8f0" />
       <mesh position={[-0.5, 0.82, 0.05]}>
         <cylinderGeometry args={[0.04, 0.035, 0.1, 12]} />
-        <meshStandardMaterial color="#f8fafc" />
+        <meshStandardMaterial color={mug} />
       </mesh>
       <Box
         size={[0.21, 0.01, 0.29]}

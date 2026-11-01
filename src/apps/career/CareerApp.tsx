@@ -23,6 +23,15 @@ import { CASES } from '../../content/cases'
 import { approvalLimit } from '../../content/organisation'
 import { levelNumber } from '../../game/cases'
 import { careerRecord } from '../../game/careerRecord'
+import {
+  ACHIEVEMENT_CATEGORIES,
+  ACHIEVEMENTS,
+  describe,
+  type AchievementCategory,
+} from '../../game/achievements'
+import { DESK_SLOTS, type DeskSlot } from '../../content/desk'
+import { deskLayout, isUnlocked, itemsFor, unlockText } from '../../game/desk'
+import { useEffect, useRef } from 'react'
 
 function ProgressBar({
   value,
@@ -180,16 +189,189 @@ function PerformanceRecord({ profile }: { profile: Profile }) {
   )
 }
 
+/** Achievements by category: earned ones with the day, the rest with progress. */
+function Achievements({ profile }: { profile: Profile }) {
+  const earned = profile.work.record.achievements
+  const total = ACHIEVEMENTS.filter((a) => earned[a.id]).length
+  return (
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-6"
+      aria-labelledby="achievements-heading"
+      data-testid="achievements"
+    >
+      <h2 id="achievements-heading" className="font-semibold text-slate-900">
+        Achievements{' '}
+        <span className="text-sm font-normal text-slate-500">
+          ({total} of {ACHIEVEMENTS.length})
+        </span>
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">
+        Earned only by doing the work. Each one says exactly how.
+      </p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {(Object.keys(ACHIEVEMENT_CATEGORIES) as AchievementCategory[]).map(
+          (category) => (
+            <div key={category}>
+              <h3 className="text-sm font-semibold text-slate-800">
+                {ACHIEVEMENT_CATEGORIES[category]}
+              </h3>
+              <ul className="mt-2 space-y-2">
+                {ACHIEVEMENTS.filter((a) => a.category === category).map((a) => {
+                  const when = earned[a.id]
+                  const { done, of } = a.progress(profile)
+                  return (
+                    <li
+                      key={a.id}
+                      className={
+                        'rounded-md border p-2 text-sm ' +
+                        (when ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200')
+                      }
+                      data-testid={'achievement-' + a.id}
+                    >
+                      <div className="flex justify-between gap-2">
+                        <span className="font-medium text-slate-900">
+                          {when ? '✓ ' : ''}
+                          {a.title}
+                        </span>
+                        <span className="text-xs text-slate-600">
+                          {when
+                            ? 'Earned on day ' + when.day
+                            : of > 1
+                              ? done + ' of ' + of
+                              : 'Not yet'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600">
+                        {describe(a, profile.careerId)}
+                      </p>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ),
+        )}
+      </div>
+    </section>
+  )
+}
+
+/** The player's desk: earned items to choose from, and how to earn the rest. */
+function Desk({
+  profile,
+  onChoose,
+  focus,
+}: {
+  profile: Profile
+  onChoose: (slot: DeskSlot, itemId: string | null) => void
+  focus: boolean
+}) {
+  const layout = deskLayout(profile)
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (!focus) return
+    ref.current?.scrollIntoView({ block: 'start' })
+    ref.current?.focus()
+  }, [focus])
+  return (
+    <section
+      ref={ref}
+      tabIndex={-1}
+      className="rounded-xl border border-slate-200 bg-white p-6 outline-none"
+      aria-labelledby="desk-heading"
+      data-testid="desk"
+    >
+      <h2 id="desk-heading" className="font-semibold text-slate-900">
+        Your desk
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">
+        Make your desk your own with things you have earned. They appear at your desk in
+        the office.
+      </p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {DESK_SLOTS.map((slot) => {
+          const items = itemsFor(slot.id)
+          const required = items.some((i) => !i.unlock)
+          return (
+            // Re-mounted when the saved choice changes; the click shows at once.
+            <fieldset
+              key={slot.id + ':' + (layout[slot.id]?.id ?? '')}
+              className="rounded-lg border border-slate-200 p-3"
+            >
+              <legend className="px-1 text-sm font-semibold text-slate-800">
+                {slot.name}
+              </legend>
+              <div className="space-y-1">
+                {!required && (
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name={'desk-' + slot.id}
+                      defaultChecked={!layout[slot.id]}
+                      onChange={() => onChoose(slot.id, null)}
+                    />
+                    None
+                  </label>
+                )}
+                {items.map((item) => {
+                  const unlocked = isUnlocked(profile, item)
+                  return (
+                    <label
+                      key={item.id}
+                      className={
+                        'flex items-start gap-2 text-sm ' +
+                        (unlocked ? '' : 'text-slate-500')
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name={'desk-' + slot.id}
+                        className="mt-1"
+                        defaultChecked={layout[slot.id]?.id === item.id}
+                        disabled={!unlocked}
+                        onChange={() => onChoose(slot.id, item.id)}
+                      />
+                      <span>
+                        <span
+                          aria-hidden
+                          className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full ring-1 ring-slate-300"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        {item.name}
+                        {!unlocked && (
+                          <span className="block text-xs">
+                            {unlockText(profile, item)}
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            </fieldset>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 export function CareerApp({
   profile,
   onSwitchCareer,
   onOpenFile,
   onOpenPortfolio,
+  onChooseDesk,
+  focus,
 }: {
   profile: Profile
   onSwitchCareer: (careerId: string) => Promise<void>
   onOpenFile: (kind: PortfolioFileKind, documentId: string) => void
   onOpenPortfolio: () => void
+  /** Puts an earned item on the desk, or clears the slot. */
+  onChooseDesk: (slot: DeskSlot, itemId: string | null) => void
+  /** A section to show straight away ("desk"). */
+  focus?: string
 }) {
   const { career, current, next } = careerLevel(profile)
   const promotion = promotionProgress(profile)
@@ -261,6 +443,10 @@ export function CareerApp({
         <Authority profile={profile} />
 
         <PerformanceRecord profile={profile} />
+
+        <Achievements profile={profile} />
+
+        <Desk profile={profile} onChoose={onChooseDesk} focus={focus === 'desk'} />
 
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="font-semibold text-slate-900">Skills</h2>

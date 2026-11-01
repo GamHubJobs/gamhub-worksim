@@ -41,6 +41,7 @@ import type { Profile, Wellbeing } from '../persistence/schemas'
 import type { SpotId } from '../content/office'
 import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
+import { chooseDeskItem } from '../game/desk'
 import { workPace } from '../game/wellbeing'
 import { skipToAssignment } from '../game/devTools'
 import { arriveCase, caseContext, joinMeeting, saveCaseAnswer } from '../game/cases'
@@ -545,6 +546,10 @@ export function Desktop({
               {view.app === 'career' && (
                 <CareerApp
                   profile={profile}
+                  focus={view.item}
+                  onChooseDesk={(slot, itemId) =>
+                    void act((p) => chooseDeskItem(p, slot, itemId))
+                  }
                   onOpenPortfolio={() => setView({ app: 'portfolio' })}
                   onSwitchCareer={async (careerId) => {
                     // The other career starts at its own reception.

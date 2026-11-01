@@ -40,6 +40,7 @@ import { gradeCodeSafely } from '../game/code/runInWorker'
 import { gradeToolTask } from '../tools/grading'
 import { buildStartingContent } from '../game/workbooks'
 import { checkEvents } from '../game/events'
+import { checkAchievements } from '../game/achievements'
 import { checkReviews } from '../game/reviews'
 import { afterSubmission } from '../game/workday'
 import { getDocument } from '../persistence/documentsRepo'
@@ -308,10 +309,13 @@ export function useCareer() {
           reward = result.reward
           return {
             ...latest,
-            ...checkCases(
-              checkEvents(
-                afterSubmission(result.profile, assignment, grade, result.reward),
+            ...checkAchievements(
+              checkCases(
+                checkEvents(
+                  afterSubmission(result.profile, assignment, grade, result.reward),
+                ),
               ),
+              submittedAt,
             ),
           }
         },
@@ -430,7 +434,13 @@ export function useCareer() {
         // After the action: promotions and new tasks, Friday's review if it
         // was missed, then any workplace event the new situation causes.
         const changed = advanceCareer(change(latest), now).profile
-        return { ...latest, ...checkCases(checkEvents(checkReviews(changed, now)), now) }
+        return {
+          ...latest,
+          ...checkAchievements(
+            checkCases(checkEvents(checkReviews(changed, now)), now),
+            now,
+          ),
+        }
       })
       show(profile)
       return profile
@@ -552,8 +562,8 @@ export function useCareer() {
           }
           return {
             ...latest,
-            ...checkCases(
-              recordCaseResult(latest, def, result, submittedAt),
+            ...checkAchievements(
+              checkCases(recordCaseResult(latest, def, result, submittedAt), submittedAt),
               submittedAt,
             ),
           }

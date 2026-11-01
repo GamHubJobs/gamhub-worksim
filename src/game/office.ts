@@ -273,7 +273,7 @@ export function fillDialogue(dialogue: Dialogue): Dialogue {
 export function dialogueFor(
   interaction: Exclude<
     InteractionId,
-    'computer' | 'coffee' | 'lunch' | 'home' | 'senior'
+    'computer' | 'coffee' | 'lunch' | 'home' | 'senior' | 'arrange'
   >,
   profile: ProfileData,
   tipIndex = 0,
@@ -284,7 +284,7 @@ export function dialogueFor(
 function rawDialogue(
   interaction: Exclude<
     InteractionId,
-    'computer' | 'coffee' | 'lunch' | 'home' | 'senior'
+    'computer' | 'coffee' | 'lunch' | 'home' | 'senior' | 'arrange'
   >,
   profile: ProfileData,
   tipIndex: number,
