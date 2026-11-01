@@ -64,9 +64,63 @@ working simulations of the professional software used in its field (see
 - [x] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
 - [x] 4.12 Software Development: terminal, Git, debug console, API Client
 
+**Phase 4 is complete.**
+
+**Phase 5: "Employability & Career Portfolio"** (planned, not started; waiting for the
+owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
+
+- [ ] 5.1 Evidence capture and storage
+- [ ] 5.2 Backfill for existing saves, backup and safety
+- [ ] 5.3 Portfolio app: browse, filter, inspect
+- [ ] 5.4 Competency and experience record
+- [ ] 5.5 Career progress report and recommendations
+- [ ] 5.6 PDF engine and report exports
+- [ ] 5.7 Original file exports and the portfolio package
+- [ ] 5.8 Employability profile
+- [ ] 5.9 Integrated projects framework and first two projects
+- [ ] 5.10 Remaining integrated projects
+- [ ] 5.11 Hardening: scale, regression, documentation
+
 ---
 
-## 2026-11-01 · Milestone 4.12: developer tools (terminal, Git, debugger, API Client)
+## 2026-11-01 · Phase 5 planning: Employability & Career Portfolio
+
+### Done
+
+- Reviewed the persistence layer, submission and grading flow, version history, backup,
+  the existing Career-app portfolio section, the editors’ read-only modes and the content
+  (6 careers, 48 tasks, 23 skills) at commit `2066dc1`.
+- Wrote the plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md) (architecture assessment,
+  data structures, competency rules, user experience, per-career evidence, integrated
+  projects, exports and PDFs, migration and backup, integrity, performance, testing,
+  eleven milestones, dependencies, risks).
+- No application code was changed. The existing check passes (format, lint, types, 976
+  unit tests); the last full browser run (69 tests) passed at Phase 4’s final commit.
+
+### Key decisions in the plan
+
+- A passed submission is frozen into a portfolio record **in the same transaction** as
+  its grade, with its own copies of the submitted files and the grading result; one
+  record per task (no duplicates), replaced only by a better passing attempt.
+- Competencies are the existing skills, with explicit, explainable levels (Demonstrated,
+  Practised, Proficient) calculated only from passed work.
+- PDFs are generated in the browser with free MIT libraries (jsPDF, jspdf-autotable);
+  original files are exported in open formats; ZIP packages with fflate.
+- Existing saves are upgraded by an idempotent backfill from kept submission versions;
+  submission versions become protected from deletion.
+
+### Found during the review
+
+- Attempts link only the main file’s submitted version, not the report’s or slides’.
+- Players can currently un-keep “Submitted” versions in Version history, after which they
+  may be cleaned up. The plan protects them in milestone 5.1.
+
+### Waiting for the owner
+
+Four decisions are listed in section 18 of the plan (whose portfolio it is on a shared
+device, the new free dependencies, native Office formats, and including Finance & Admin).
+
+: developer tools (terminal, Git, debugger, API Client)
 
 ### Built
 
