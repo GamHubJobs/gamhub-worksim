@@ -34,9 +34,11 @@ const FILE_NAMES: Record<PortfolioFileKind, string> = {
 export function PortfolioSection({
   profile,
   onOpenFile,
+  onOpenPortfolio,
 }: {
   profile: Profile
   onOpenFile: (kind: PortfolioFileKind, documentId: string) => void
+  onOpenPortfolio: () => void
 }) {
   const career = getCareer(profile.careerId)
   const items = careerAssignments(profile.careerId).flatMap((assignment) => {
@@ -60,10 +62,19 @@ export function PortfolioSection({
       className="rounded-xl border border-slate-200 bg-white p-6"
       data-testid="portfolio"
     >
-      <h2 className="font-semibold text-slate-900">Portfolio</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-semibold text-slate-900">Portfolio</h2>
+        <button
+          type="button"
+          onClick={onOpenPortfolio}
+          className="text-sm text-blue-700 hover:underline"
+        >
+          Open Portfolio
+        </button>
+      </div>
       <p className="mt-1 text-sm text-slate-600">
-        Work you have completed in this career. Each piece shows what you can do; open the
-        files to look back at them.
+        Work you have completed in this career, with your working files. The Portfolio app
+        keeps each piece exactly as you handed it in, with how it was checked.
       </p>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-slate-500">

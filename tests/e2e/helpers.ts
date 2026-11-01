@@ -37,7 +37,7 @@ export async function sitAtComputer(page: Page) {
 /** Opens a dock app such as "Mail" or "Sheets". */
 export async function openApp(
   page: Page,
-  name: 'Mail' | 'Tasks' | 'Sheets' | 'Docs' | 'Slides' | 'Career',
+  name: 'Mail' | 'Tasks' | 'Sheets' | 'Docs' | 'Slides' | 'Career' | 'Portfolio',
 ) {
   await sitAtComputer(page)
   await page
@@ -94,4 +94,24 @@ export async function waitUntilSaved(page: Page) {
       timeout: 10_000,
     },
   )
+}
+
+/**
+ * After a passing submission: closes the results, opens the task in the
+ * Portfolio app and shows its main file as handed in. Returns the viewer.
+ */
+export async function openMainFileInPortfolio(page: Page, title: string | RegExp) {
+  await page
+    .getByTestId('submission-results')
+    .getByRole('button', { name: /^(Close|Back to )/ })
+    .click()
+  await page
+    .getByRole('navigation', { name: 'Apps' })
+    .getByRole('button', { name: /^Portfolio/ })
+    .click()
+  await page.getByTestId('portfolio-card').filter({ hasText: title }).click()
+  const itemPage = page.getByTestId('portfolio-item-page')
+  await expect(itemPage.getByText('Completed (passed)')).toBeVisible()
+  await itemPage.getByRole('button', { name: /^Main file:/ }).click()
+  return itemPage.getByTestId('evidence-viewer')
 }

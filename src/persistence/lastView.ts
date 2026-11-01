@@ -21,6 +21,7 @@ export const ViewSchema = z.object({
     'code',
     'tool',
     'career',
+    'portfolio',
   ]),
   /** For 'tool': which professional tool (e.g. "books"). */
   tool: z.string().optional(),
@@ -33,6 +34,8 @@ export const ViewSchema = z.object({
    * In Docs, Slides and the professional tools: the open file.
    */
   document: z.string().optional(),
+  /** In Portfolio: the open item. */
+  item: z.string().optional(),
   /** In Tasks: the selected assignment. */
   assignmentId: z.string().optional(),
   /** In Mail: the selected message. */

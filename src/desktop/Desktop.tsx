@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Career } from '../app/useCareer'
 import { CareerApp } from '../apps/career/CareerApp'
+import { PortfolioApp } from '../apps/portfolio/PortfolioApp'
 import { DocsApp } from '../apps/docs/DocsApp'
 import { CodeApp } from '../apps/code/CodeApp'
 import { CodeWindow } from '../apps/code/CodeWindow'
@@ -66,6 +67,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'helpdesk', label: 'Help Desk', icon: 'helpdesk' },
     { id: 'code', label: 'Code', icon: 'code' },
     { id: 'career', label: 'Career', icon: 'career' },
+    { id: 'portfolio', label: 'Portfolio', icon: 'portfolio' },
   ]
 
 export function Desktop({
@@ -256,11 +258,13 @@ export function Desktop({
                 view: { app: 'tool', tool: tool.id } as View,
                 locked: unlocksAt,
               })),
-              ...APPS.filter((app) => app.id === 'career').map((app) => ({
-                ...app,
-                key: app.id as string,
-                view: { app: app.id } as View,
-              })),
+              ...APPS.filter((app) => app.id === 'career' || app.id === 'portfolio').map(
+                (app) => ({
+                  ...app,
+                  key: app.id as string,
+                  view: { app: app.id } as View,
+                }),
+              ),
             ].map((app) => {
               const locked = 'locked' in app ? app.locked : null
               const active =
@@ -469,9 +473,17 @@ export function Desktop({
                     />
                   )
                 })()}
+              {view.app === 'portfolio' && (
+                <PortfolioApp
+                  profile={profile}
+                  itemId={view.item}
+                  onOpenItem={(item) => setView({ app: 'portfolio', item })}
+                />
+              )}
               {view.app === 'career' && (
                 <CareerApp
                   profile={profile}
+                  onOpenPortfolio={() => setView({ app: 'portfolio' })}
                   onSwitchCareer={async (careerId) => {
                     // The other career starts at its own reception.
                     writeLastView(DEFAULT_VIEW)

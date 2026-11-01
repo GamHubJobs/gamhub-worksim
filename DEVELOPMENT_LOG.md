@@ -71,7 +71,7 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 
 - [x] 5.1 Evidence capture and storage
 - [x] 5.2 Backfill for existing saves, backup and safety
-- [ ] 5.3 Portfolio app: browse, filter, inspect
+- [x] 5.3 Portfolio app: browse, filter, inspect
 - [ ] 5.4 Competency and experience record
 - [ ] 5.5 Career progress report and recommendations
 - [ ] 5.6 PDF engine and report exports
@@ -80,6 +80,35 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [ ] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.3: the Portfolio app
+
+### Built
+
+- A **Portfolio** app on every career’s dock (after Career). It lists every passed task
+  in the current career save, or in all saves on this device, newest first, with
+  featured work at the top.
+- **Filters:** career save, skill, tool, level, “Included only”; **sort** by date, score
+  or level. Only options that appear in the work are offered.
+- **Item page:** what was asked (summary and objectives), “Completed (passed)”, score,
+  rating, pass mark and date; what it demonstrates (skills, tools); every check with
+  its result and why it matters; every attempt; and the files handed in.
+- **Read-only file viewer:** each file opens in its own app’s editor (Sheets, Docs,
+  Slides, Help Desk, Code or the professional tool), exactly as submitted. Later
+  changes to working files never reach these copies.
+- **Presentation choices:** include in exports, feature, and a note (up to 600
+  characters). They are saved straight away and never change the results.
+- Reloading returns to the open item. The Career app’s Portfolio section links to it.
+
+### Tested
+
+- 4 new unit tests for filtering and sorting.
+- Browser tests open the portfolio after a real pass in five careers and file types:
+  Software Development (code, read-only, with note and “include” kept after a reload
+  and the “Included only” filter), Finance & Admin (workbook and report), IT Help Desk
+  (ticket queue), Data Analysis (workbook) and Accounting (Books).
 
 ---
 

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { openApp } from './helpers.ts'
+import { openApp, openMainFileInPortfolio } from './helpers.ts'
 
 const apps = (page: Page) => page.getByRole('navigation', { name: 'Apps' })
 
@@ -165,6 +165,10 @@ test('Books: invoices, bills, payments and a duplicate bill caught', async ({ pa
   await expect(page.getByTestId('aged-purchases')).toContainText('Clearline Telecom')
 
   await submitForFull(page)
+
+  // The portfolio keeps the Books file as handed in, read-only.
+  const viewer = await openMainFileInPortfolio(page, 'Invoices, bills and payments')
+  await expect(viewer.getByTestId('books')).toBeVisible()
 })
 
 test('Books: a bank reconciliation with a keying error found and fixed', async ({

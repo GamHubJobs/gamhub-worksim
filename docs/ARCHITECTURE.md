@@ -77,6 +77,8 @@ Next start → journal newer than saved document? → recovered and saved
 | `workbench.ts`          | The practice workbook                                          |
 | `profiles.ts`           | Player profile (career, rewards, mail); start and submit tasks |
 | `lastView.ts`           | Which app/workbook was open, to return there after a reload    |
+| `portfolio.ts`          | Portfolio items and frozen file copies; presentation changes   |
+| `portfolioBackfill.ts`  | Adds earlier passed work to the portfolio (safe to re-run)     |
 
 ## Source folders
 
@@ -91,6 +93,7 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/apps/code/`                      | Code: file list, editor, Run tests panel                          |
 | `src/apps/shared/`                    | Save hook, document window, file browser, "insert from Sheets"    |
 | `src/apps/mail/`, `tasks/`, `career/` | The other desktop apps                                            |
+| `src/apps/portfolio/`                 | Portfolio app: list, filters, item page, read-only file viewer    |
 | `src/content/`                        | Content as validated data: company, careers, assignments          |
 | `src/content/departments/`            | One file per department: its people, meetings, tips and news      |
 | `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
@@ -190,6 +193,17 @@ rename. A change that would make a file invalid is refused before it is saved.
 Charts are drawn by `src/ui/ChartView.tsx` (SVG) everywhere: live in Sheets,
 and as frozen copies in Docs and Slides (like pasting a chart into a report).
 
+### The portfolio (Phase 5)
+
+Passing a task saves a portfolio item **in the same transaction** as the grade
+(`saveSubmission` with a capture decision from `game/portfolio.ts`). An item is
+the task's frozen description, the grade with every check, the attempt history,
+and copies of the files handed in (`portfolioFiles`). There is one item per task
+(a unique `key`); only a better pass replaces the evidence. The player can change
+only how it is presented (included, featured, note, order). Earlier saves and
+old backups get their items from the backfill, which runs at start-up. The plan
+is in [PHASE5_PLAN.md](PHASE5_PLAN.md).
+
 ### The working life (Phase 2)
 
 All of it is stored in `profile.work` (profile format 2), so it autosaves and is
@@ -252,9 +266,10 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 1. Vertical slice: "Your First Day as an Intern" (done, including the 3D office)
 2. The Living Workplace: workday, wellbeing, colleagues, events, career growth (done)
 3. Productivity depth: Docs, advanced Sheets, Slides, multi-app assignments (done)
-4. More careers and departments (done), and profession-specific software ← _now_
+4. More careers and departments, and profession-specific software (done)
    (see [PROFESSIONAL_TOOLS.md](PROFESSIONAL_TOOLS.md))
-5. Achievements and customisation
-6. Polish
-7. Cloud accounts and sync
-8. Future: optional cosmetics, GamHub Jobs connection
+5. Employability and career portfolio ← _now_ (see [PHASE5_PLAN.md](PHASE5_PLAN.md))
+6. Achievements and customisation
+7. Polish
+8. Cloud accounts and sync
+9. Future: optional cosmetics, GamHub Jobs connection

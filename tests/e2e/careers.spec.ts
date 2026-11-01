@@ -4,6 +4,7 @@ import {
   enterValue,
   openApp,
   sitAtComputer,
+  openMainFileInPortfolio,
   startCareerIfNeeded,
 } from './helpers.ts'
 
@@ -203,6 +204,12 @@ test('an IT Help Desk career: triage a ticket queue in the Help Desk app', async
   await expect(page.getByTestId('submission-results').getByTestId('score')).toHaveText(
     '100%',
   )
+
+  // The portfolio keeps the queue as handed in, read-only.
+  const viewer = await openMainFileInPortfolio(page, 'Triage the morning queue')
+  await expect(viewer.getByRole('button', { name: /INC-2044/ })).toContainText(
+    'Escalated',
+  )
 })
 
 test('a Digital Marketing career: campaign metrics done end to end', async ({ page }) => {
@@ -319,6 +326,10 @@ test('a Data Analysis career: the customer export cleaned end to end', async ({
   await expect(page.getByTestId('submission-results').getByTestId('score')).toHaveText(
     '100%',
   )
+
+  const viewer = await openMainFileInPortfolio(page, 'Clean the customer export')
+  await expect(viewer.getByTestId('sheet-grid')).toBeVisible()
+  await expect(viewer.locator('[data-address="G9"]')).toHaveText('David Clarke')
 })
 
 test('a Software Development career: a bug fixed in Code, tested and handed in', async ({

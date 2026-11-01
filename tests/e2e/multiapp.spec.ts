@@ -161,6 +161,23 @@ test('a report task: analyse in Sheets, write in Docs, present in Slides, hand i
     }
   })`)
   expect(roles).toEqual(['main:sheet', 'report:doc', 'presentation:slides'])
+
+  // In the Portfolio app, the report and workbook open as they were handed in.
+  await results.getByRole('button', { name: 'Close' }).click()
+  await apps(page)
+    .getByRole('button', { name: /^Portfolio/ })
+    .click()
+  await page
+    .getByTestId('portfolio-card')
+    .filter({ hasText: 'performance report' })
+    .click()
+  const itemPage = page.getByTestId('portfolio-item-page')
+  await itemPage.getByRole('button', { name: /^Report:/ }).click()
+  await expect(itemPage.getByTestId('evidence-viewer')).toContainText('Executive summary')
+  await itemPage.getByRole('button', { name: /^Main file:/ }).click()
+  await expect(
+    itemPage.getByTestId('evidence-viewer').getByTestId('sheet-grid'),
+  ).toBeVisible()
 })
 
 test('handing in without the report explains what is missing', async ({ page }) => {

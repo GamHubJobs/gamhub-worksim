@@ -83,6 +83,37 @@ test('passing a task captures exactly what was handed in, once', async ({ page }
   await page.reload()
   await expect(page.getByTestId('desktop')).toBeVisible()
   expect(await readTable(page, 'portfolioItems')).toHaveLength(1)
+
+  // The Portfolio app shows the item, how it was checked, and the code as handed in.
+  await openApp(page, 'Portfolio')
+  await expect(page.getByTestId('portfolio-card')).toHaveCount(1)
+  await page.getByTestId('portfolio-card').click()
+  const itemPage = page.getByTestId('portfolio-item-page')
+  await expect(
+    itemPage.getByRole('heading', { name: 'Fix the invoice totals' }),
+  ).toBeVisible()
+  await expect(itemPage.getByTestId('item-score')).toHaveText('100%')
+  await expect(itemPage.getByTestId('item-attempts').getByRole('listitem')).toHaveCount(3)
+  await itemPage.getByRole('button', { name: /^Main file/ }).click()
+  const viewer = itemPage.getByTestId('evidence-viewer')
+  await expect(viewer.getByTestId('code-editor')).toHaveValue(/\/\/ passed version/)
+  await expect(viewer.getByTestId('code-editor')).not.toBeEditable()
+
+  // A note and the include choice are kept; the score cannot be changed here.
+  await itemPage.getByLabel('Your note').fill('Found three bugs with the tests.')
+  await itemPage.getByLabel('Include in my portfolio exports').uncheck()
+  await page.reload()
+  await expect(page.getByTestId('portfolio-item-page')).toBeVisible()
+  await expect(page.getByLabel('Your note')).toHaveValue(
+    'Found three bugs with the tests.',
+  )
+  await expect(page.getByLabel('Include in my portfolio exports')).not.toBeChecked()
+
+  // Back to the list: the "Included only" filter now hides it.
+  await page.getByRole('button', { name: 'All work' }).click()
+  await page.getByLabel('Included only').check()
+  await expect(page.getByTestId('portfolio-card')).toHaveCount(0)
+  await expect(page.getByText('No work matches these filters.')).toBeVisible()
 })
 
 test('passed work missing from the portfolio is added back when WorkSim opens', async ({

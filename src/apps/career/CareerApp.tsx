@@ -48,10 +48,12 @@ export function CareerApp({
   profile,
   onSwitchCareer,
   onOpenFile,
+  onOpenPortfolio,
 }: {
   profile: Profile
   onSwitchCareer: (careerId: string) => Promise<void>
   onOpenFile: (kind: PortfolioFileKind, documentId: string) => void
+  onOpenPortfolio: () => void
 }) {
   const { career, current, next } = careerLevel(profile)
   const promotion = promotionProgress(profile)
@@ -148,7 +150,11 @@ export function CareerApp({
           </ul>
         </section>
 
-        <PortfolioSection profile={profile} onOpenFile={onOpenFile} />
+        <PortfolioSection
+          profile={profile}
+          onOpenFile={onOpenFile}
+          onOpenPortfolio={onOpenPortfolio}
+        />
 
         <TeamSection profile={profile} />
 

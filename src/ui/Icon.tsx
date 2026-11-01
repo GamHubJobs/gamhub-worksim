@@ -39,6 +39,7 @@ const PATHS = {
   send: 'M4 12l16-8-6 16-2.5-6.5L4 12Z',
   storage:
     'M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 0v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
+  portfolio: 'M4 8h16v11H4V8Zm5 0V5.5h6V8M4 13h16M11 13v2h2v-2',
 } as const
 
 export type IconName = keyof typeof PATHS
