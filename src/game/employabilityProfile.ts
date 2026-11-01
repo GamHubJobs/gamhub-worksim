@@ -103,7 +103,9 @@ export function buildEmployabilityProfile(
     careers: profiles.map((profile) => {
       const { career, current } = careerLevel(profile)
       const number = career.levels.findIndex((l) => l.id === current.id) + 1
-      const passed = own.filter((i) => i.profileId === profile.id).length
+      const passed = own.filter(
+        (i) => i.profileId === profile.id && i.type === 'task',
+      ).length
       return {
         statement: `Reached ${current.title} (level ${number} of ${career.levels.length}) in the simulated ${career.name} career`,
         tasksPassed: passed,

@@ -211,6 +211,10 @@ the items when shown (`game/competencies.ts`, `game/progressReport.ts`); nothing
 is stored. Exports turn each file into blocks (headings, text, tables, charts,
 code) and write them as real PDF text and vector charts, never screenshots.
 
+Integrated projects (`content/projects.ts`) are short series of ordinary tasks
+(`projectId`, `stage`). When the last stage passes, `applyProjectCapture` writes
+one project item in the same transaction, linking the stages' items.
+
 ### The working life (Phase 2)
 
 All of it is stored in `profile.work` (profile format 2), so it autosaves and is

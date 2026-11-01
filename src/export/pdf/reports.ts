@@ -65,7 +65,19 @@ function itemSection(w: PdfWriter, { item, files, saveName }: ItemWithFiles) {
     ]),
   })
 
-  w.heading('The work, as handed in', 2)
+  if (item.stages && item.stages.length > 0) {
+    w.heading('Stages', 2)
+    w.paragraph('Each stage is a piece of work of its own, with its files and checks.', {
+      muted: true,
+      size: 9,
+    })
+    w.table({
+      title: '',
+      head: ['Stage', 'Score'],
+      rows: item.stages.map((s, i) => [`${i + 1}. ${s.title}`, `${s.score}%`]),
+    })
+  }
+  if (item.files.length > 0) w.heading('The work, as handed in', 2)
   for (const meta of item.files) {
     w.heading(`${ROLES[meta.role]}: ${meta.title}`, 3)
     const file = files.find((f) => f.id === meta.fileId)
@@ -199,6 +211,9 @@ export function competencyReportPdf(name: string, reports: ProgressReport[]): Ui
     w.heading('Experience', 2)
     w.list([
       `${report.experience.tasksCompleted} tasks passed, ${report.experience.attempts} attempts`,
+      ...(report.experience.projectsCompleted > 0
+        ? [`${report.experience.projectsCompleted} integrated projects completed`]
+        : []),
       `Tools used in passed work: ${Object.keys(report.experience.tools).map(toolName).join(', ') || 'none yet'}`,
       `Estimated practice time: ${report.experience.estimatedMinutes} minutes (from the tasks' expected times)`,
       ...report.reviews.map((r) => `Week ${r.week} review: ${r.rating}`),

@@ -6,7 +6,7 @@
  */
 import { z } from 'zod'
 import type { CaptureDecision } from '../game/portfolio'
-import { applyCapture, findPortfolioItem } from './portfolio'
+import { applyCapture, applyProjectCapture, findPortfolioItem } from './portfolio'
 import { createId } from '../lib/ids'
 import { db as defaultDb, getDeviceId, recordChange, type WorkSimDatabase } from './db'
 import { createDocument, type NewDocument } from './documentsRepo'
@@ -297,6 +297,8 @@ export async function saveSubmission(
   capture?: {
     key: string
     decide: (saved: Profile, existing: PortfolioItem | undefined) => CaptureDecision
+    /** For a project stage: the project, whose item is written once every stage passes. */
+    projectId?: string
   },
 ): Promise<Profile> {
   const list = Array.isArray(documents) ? documents : [documents]
@@ -326,6 +328,7 @@ export async function saveSubmission(
       if (capture) {
         const existing = await findPortfolioItem(capture.key, database)
         await applyCapture(capture.decide(saved, existing), existing, database)
+        await applyProjectCapture(profileId, capture.projectId, database)
       }
       return saved
     },

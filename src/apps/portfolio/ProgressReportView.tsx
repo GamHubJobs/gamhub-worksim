@@ -155,6 +155,9 @@ export function ProgressReportView({
           <h3 className="font-semibold text-slate-900">Experience</h3>
           <ul className="mt-1 text-sm text-slate-700">
             <li>{report.experience.tasksCompleted} tasks passed</li>
+            {report.experience.projectsCompleted > 0 && (
+              <li>{report.experience.projectsCompleted} integrated projects completed</li>
+            )}
             <li>{report.experience.attempts} attempts in total</li>
             <li>
               Tools:{' '}

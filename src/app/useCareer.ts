@@ -249,6 +249,7 @@ export function useCareer() {
       const submittedAt = Date.now()
       const capture = {
         key: portfolioKey(profileId, assignment.id),
+        projectId: assignment.projectId,
         decide: (saved: Profile, existing: PortfolioItem | undefined) =>
           decideCapture({
             profileId,

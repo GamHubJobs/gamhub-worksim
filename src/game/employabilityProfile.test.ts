@@ -26,6 +26,7 @@ function item(fields: Partial<PortfolioItem>): PortfolioItem {
   next += 1
   return {
     id: `i${next}`,
+    type: 'task',
     profileId: 'p',
     title: `Task ${next}`,
     summary: 'Did the work.',

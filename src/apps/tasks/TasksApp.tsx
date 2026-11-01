@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { getTool } from '../../tools/registry'
 import { getSkill } from '../../content/careers'
 import { getPerson } from '../../content/departments'
+import { getProject } from '../../content/projects'
 import type { Assignment } from '../../content/schemas'
 import {
   assignmentStatus,
@@ -80,6 +81,12 @@ export function TasksApp({
                       {assignment.order}. {assignment.title}
                     </span>
                   </div>
+                  {assignment.projectId && (
+                    <p className="mt-0.5 text-xs font-medium text-violet-700">
+                      Project · stage {assignment.stage} of{' '}
+                      {getProject(assignment.projectId)?.stages.length}
+                    </p>
+                  )}
                   <div className="mt-1 flex items-center gap-2 text-xs">
                     <span
                       className={`rounded-full px-2 py-0.5 font-medium ${badge.className}`}
@@ -142,6 +149,7 @@ function TaskDetail({
   const previous = careerAssignments(assignment.careerId).find(
     (a) => a.order === assignment.order - 1,
   )
+  const project = getProject(assignment.projectId)
 
   const actionLabel = {
     locked: '',
@@ -179,6 +187,36 @@ function TaskDetail({
           <span>Pass mark {assignment.passScore}%</span>
         </div>
       </header>
+
+      {project && (
+        <section
+          className="space-y-2 rounded-lg border border-violet-200 bg-violet-50 p-4 text-sm"
+          data-testid="project-brief"
+        >
+          <p className="font-semibold text-violet-900">
+            Project: {project.title} · stage {assignment.stage} of {project.stages.length}
+          </p>
+          <p className="text-slate-700">{project.brief}</p>
+          <ol className="list-decimal pl-5 text-slate-700">
+            {project.stages.map((id) => {
+              const stage = careerAssignments(assignment.careerId).find(
+                (a) => a.id === id,
+              )
+              const done = stage && assignmentStatus(profile, stage) === 'completed'
+              return (
+                <li key={id} className={id === assignment.id ? 'font-medium' : undefined}>
+                  {stage?.title.replace(/^.*?: /, '')}
+                  {done && ' ✓'}
+                </li>
+              )
+            })}
+          </ol>
+          <p className="text-slate-600">
+            The project is complete when every stage has passed. It then joins your
+            portfolio as one piece of work that links to each stage.
+          </p>
+        </section>
+      )}
 
       {status === 'locked' ? (
         <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-4 text-slate-600">

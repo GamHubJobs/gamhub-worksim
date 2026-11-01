@@ -19,6 +19,7 @@ const profile = {
 
 const item = {
   id: 'i1',
+  type: 'task',
   profileId: 'p',
   title: 'Record the week’s transactions',
   summary: 'Journals for the week.',

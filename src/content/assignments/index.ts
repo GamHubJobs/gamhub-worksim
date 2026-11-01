@@ -11,7 +11,13 @@ import { booksSalesPurchases } from './accounting/booksSalesPurchases'
 import { depreciation } from './accounting/depreciation'
 import { journalEntries } from './accounting/journalEntries'
 import { monthEnd } from './accounting/monthEnd'
+import {
+  quarterCloseAdjustments,
+  quarterCloseBoardPack,
+  quarterCloseVariances,
+} from './accounting/projectQuarterClose'
 import { cleanCustomers } from './data/cleanCustomers'
+import { churnClean, churnDashboard, churnFindings } from './data/projectChurn'
 import { studioCleaning } from './data/studioCleaning'
 import { studioDashboard } from './data/studioDashboard'
 import { studioSql } from './data/studioSql'
@@ -70,6 +76,9 @@ const SOURCES = [
   bankReconciliation,
   depreciation,
   monthEnd,
+  quarterCloseAdjustments,
+  quarterCloseVariances,
+  quarterCloseBoardPack,
   // IT Help Desk
   triageQueue,
   userReplies,
@@ -97,6 +106,9 @@ const SOURCES = [
   studioSql,
   studioDashboard,
   studioStatistics,
+  churnClean,
+  churnDashboard,
+  churnFindings,
   // Software Development
   invoiceBug,
   timesheetValidation,

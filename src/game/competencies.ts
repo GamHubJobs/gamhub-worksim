@@ -95,9 +95,11 @@ function levelOf(counted: CompetencyEvidenceItem[]): {
 
 /** Every listed skill's level, reasons and evidence, from passed work. */
 export function competencies(items: PortfolioItem[], skillIds: string[]): Competency[] {
+  // A project's stages are tasks of their own, so projects are not counted again.
+  const tasks = items.filter((item) => item.type === 'task')
   return skillIds.map((skillId) => {
     const skill = getSkill(skillId)
-    const evidence = items
+    const evidence = tasks
       .filter((item) => (item.skills[skillId] ?? 0) > 0)
       .sort((a, b) => b.completedAt - a.completedAt)
       .map((item) => ({
@@ -138,6 +140,8 @@ export function skillsOf(profiles: Profile[]): string[] {
 
 export interface ExperienceRecord {
   tasksCompleted: number
+  /** Integrated projects with every stage passed. */
+  projectsCompleted: number
   attempts: number
   /** Tool or app ID → number of passed tasks done in it. */
   tools: Record<string, number>
@@ -158,11 +162,14 @@ export function experienceRecord(
   items: PortfolioItem[],
   profiles: Profile[],
 ): ExperienceRecord {
+  const projects = items.filter((item) => item.type === 'project')
+  items = items.filter((item) => item.type === 'task')
   const tools: Record<string, number> = {}
   for (const item of items)
     for (const tool of item.tools) tools[tool] = (tools[tool] ?? 0) + 1
   return {
     tasksCompleted: items.length,
+    projectsCompleted: projects.length,
     attempts: items.reduce((sum, item) => sum + item.attempts.length, 0),
     tools,
     estimatedMinutes: items.reduce(

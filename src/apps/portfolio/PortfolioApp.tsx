@@ -109,6 +109,7 @@ export function PortfolioApp({
         item={open}
         saveName={saveName(profileOf(open.profileId))}
         onBack={() => onOpenItem(undefined)}
+        onOpenItem={onOpenItem}
         onChanged={(changed) =>
           setLoaded({
             ...loaded,
@@ -328,6 +329,9 @@ export function PortfolioApp({
                     </span>
                   </div>
                   <p className="mt-0.5 text-xs text-slate-500">
+                    {item.type === 'project' && (
+                      <span className="font-medium text-violet-700">Project · </span>
+                    )}
                     {item.featured && '★ Featured · '}
                     {item.levelTitle} · {formatDateTime(item.completedAt)}
                     {!item.included && ' · not included in exports'}

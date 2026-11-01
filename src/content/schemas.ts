@@ -262,6 +262,9 @@ export const AssignmentSchema = z.object({
   levelId: z.string(),
   /** Position in the career path; each assignment unlocks the next one. */
   order: z.number().int().positive(),
+  /** For the stages of an integrated project: the project and the stage number. */
+  projectId: z.string().optional(),
+  stage: z.number().int().positive().optional(),
   title: z.string().min(1),
   /** One line for the task list. */
   summary: z.string().min(1),

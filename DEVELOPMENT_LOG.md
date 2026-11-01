@@ -77,9 +77,53 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [x] 5.6 PDF engine and report exports
 - [x] 5.7 Original file exports and the portfolio package
 - [x] 5.8 Employability profile
-- [ ] 5.9 Integrated projects framework and first two projects
+- [x] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.9: Integrated projects (framework and the first two)
+
+### Built
+
+- **Projects** (`src/content/projects.ts`): a brief, objectives, deliverables, how it is
+  assessed, and its stages. Each stage is an ordinary task (`projectId` and `stage` on
+  the assignment), so it uses the same tools, checks, hand-in and feedback; stages
+  open one after another.
+- **Project records:** when the last stage passes, the same save that records the
+  grade writes one project item: the brief, a row per stage, the average score, and
+  every skill and tool used. It links to the stages’ own items (which keep the files)
+  instead of copying them. A better stage later refreshes it; the backfill builds
+  projects for older saves.
+- Projects are not counted twice in skills: competencies use the stages; the
+  experience record counts projects separately.
+- **Tasks app:** stages show “Project · stage 1 of 3”, and a stage’s page shows the
+  project brief with every stage and a tick for each one done.
+- **Portfolio:** project items are labelled, show “Project · 3 stages” and a list of
+  stages that open each stage’s item; PDFs list the stages.
+- **Accounting, “Close the quarter for the board”** (Senior Accountant):
+  1. Books: accrue the audit fee and the electricity, record deposit interest.
+  2. Sheets: Q1 against budget with variances, percentages and an “Investigate” flag
+     for anything over 10% either way, totals and profit.
+  3. Sheets and Docs: monthly profit and margin, and the board report, by email.
+- **Data Analysis, “Why are customers leaving?”** (Lead Data Analyst), with a new
+  subscriptions dataset:
+  1. Data Studio: clean the billing export and measure churn by plan with SQL.
+  2. Data Studio: a churn dashboard (by plan, by region, revenue lost).
+  3. Sheets and Docs: churn and revenue lost by plan, and a findings memo. The insight:
+     Basic loses the most customers, but Premium loses the most revenue.
+
+### Tested
+
+- 14 new unit tests: projects are consistent (stages of the same career and level, in
+  order, at the top of the career); the project record appears only after the last
+  stage, links to the stage items, updates when a stage improves, and is built by the
+  backfill; every churn query’s SQL gives the expected result in the real SQL engine;
+  correct board and memo reports get full marks. Every stage’s model answer gets full
+  marks through the existing content tests.
+- New browser test: the whole Accounting project (journals in Books, the variance
+  analysis, the board pack by email) and the project item linking its three stages.
 
 ---
 

@@ -187,6 +187,64 @@ export function training(): Dataset {
   }
 }
 
+export const PLANS = [
+  { name: 'Basic', fee: 19 },
+  { name: 'Standard', fee: 39 },
+  { name: 'Premium', fee: 79 },
+] as const
+
+/**
+ * An export of 63 subscription customers (21 on each plan), with a test row
+ * and two customers exported twice. Basic customers cancel most often
+ * (7 of 21), then Standard (5) and Premium (3), but Premium's cancellations
+ * lose the most monthly revenue.
+ */
+export function subscriptionsRaw(): Dataset {
+  const rows: Value[][] = []
+  for (let i = 0; i < 63; i++) {
+    const plan = PLANS[i % 3]
+    const j = Math.floor(i / 3)
+    const cancelled =
+      plan.name === 'Basic'
+        ? j % 3 === 0
+        : plan.name === 'Standard'
+          ? j % 5 === 0
+          : j % 10 === 0
+    const planText =
+      i % 4 === 0 ? plan.name.toLowerCase() : i % 5 === 2 ? ` ${plan.name} ` : plan.name
+    const status = cancelled
+      ? ['Cancelled', 'cancelled', 'CANCELLED'][i % 3]
+      : ['Active', 'active'][i % 2]
+    const month = (i % 12) + 1
+    rows.push([
+      `S-${1001 + i}`,
+      planText,
+      REGIONS[(i * 2 + j) % 3],
+      `2025-${String(month).padStart(2, '0')}-${String((i % 27) + 1).padStart(2, '0')}`,
+      `£${plan.fee}.00`,
+      status,
+    ])
+  }
+  // Two customers exported twice, and a test row.
+  rows.splice(20, 0, [...rows[5]])
+  rows.splice(41, 0, [...rows[33]])
+  rows.push(['', 'premium', 'North', '2026-01-01', '£0.00', 'active'])
+  return {
+    name: 'subscriptions',
+    description: 'Subscription customers exported from the billing system.',
+    columns: [
+      { name: 'customer_id', type: 'text' },
+      { name: 'plan', type: 'text' },
+      { name: 'region', type: 'text' },
+      { name: 'signed_up', type: 'date' },
+      { name: 'monthly_fee', type: 'text' },
+      { name: 'status', type: 'text' },
+    ],
+    rows,
+    steps: [],
+  }
+}
+
 export function sampleStudio(): DataStudioState {
   return {
     datasets: [bookingsRaw(), clients(), orders(), training()],

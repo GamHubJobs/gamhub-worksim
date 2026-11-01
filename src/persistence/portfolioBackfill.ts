@@ -16,11 +16,13 @@ import {
   decideCapture,
   gradeFromAttempt,
   portfolioKey,
+  projectKey,
   type SubmittedFile,
 } from '../game/portfolio'
 import { db as defaultDb, type WorkSimDatabase } from './db'
 import { getDocument } from './documentsRepo'
-import { applyCapture, findPortfolioItem } from './portfolio'
+import { applyCapture, applyProjectCapture, findPortfolioItem } from './portfolio'
+import { PROJECTS } from '../content/projects'
 import { listProfiles } from './profiles'
 import type { AnyDocument, AssignmentProgress, Attempt, Profile } from './schemas'
 import { getVersion, listVersions } from './versions'
@@ -129,6 +131,22 @@ export async function backfillPortfolio(
         // One damaged task must not stop the others.
         console.error(`Portfolio backfill skipped ${progress.assignmentId}:`, error)
       }
+    }
+    // Projects whose stages are all in the portfolio now.
+    for (const project of PROJECTS.filter((p) => p.careerId === profile.careerId)) {
+      const before = await findPortfolioItem(projectKey(profile.id, project.id), database)
+      if (before) continue
+      const made = await database.transaction(
+        'rw',
+        [
+          database.meta,
+          database.outbox,
+          database.portfolioItems,
+          database.portfolioFiles,
+        ],
+        () => applyProjectCapture(profile.id, project.id, database),
+      )
+      if (made) added++
     }
   }
   return added

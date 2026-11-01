@@ -782,6 +782,17 @@ export const PortfolioItemSchema = SyncFieldsSchema.extend({
       available: z.boolean(),
     }),
   ),
+  /** For projects: the stages, each a task item with its own files. */
+  stages: z
+    .array(
+      z.object({
+        assignmentId: z.string(),
+        itemId: IdSchema,
+        title: z.string(),
+        score: z.number().int().min(0).max(100),
+      }),
+    )
+    .optional(),
   // The player's presentation choices.
   included: z.boolean(),
   featured: z.boolean(),

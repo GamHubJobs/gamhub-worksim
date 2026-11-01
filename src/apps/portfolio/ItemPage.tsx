@@ -34,12 +34,15 @@ export function ItemPage({
   item,
   saveName,
   onBack,
+  onOpenItem,
   onChanged,
 }: {
   item: PortfolioItem
   /** The career save it belongs to, e.g. "Alex · Accounting". */
   saveName: string
   onBack: () => void
+  /** Opens another item (a project's stage). */
+  onOpenItem: (itemId: string) => void
   onChanged: (item: PortfolioItem) => void
 }) {
   const [files, setFiles] = useState<PortfolioFile[] | null>(null)
@@ -123,6 +126,11 @@ export function ItemPage({
             </span>
           </div>
           <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            {item.type === 'project' && (
+              <span className="rounded-full bg-violet-100 px-2 py-0.5 font-medium text-violet-800">
+                Project · {item.stages?.length ?? 0} stages
+              </span>
+            )}
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-800">
               Completed (passed)
             </span>
@@ -183,55 +191,84 @@ export function ItemPage({
           </ul>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="font-semibold text-slate-900">Files handed in</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Copies kept exactly as you submitted them. Changing your working files later
-            does not change these.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {item.files.map((file) =>
-              file.available ? (
-                <button
-                  key={file.fileId}
-                  type="button"
-                  aria-pressed={openFile === file.fileId}
-                  onClick={() =>
-                    setOpenFile(openFile === file.fileId ? null : file.fileId)
-                  }
-                  className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm ${
-                    openFile === file.fileId
-                      ? 'border-blue-300 bg-blue-50 text-blue-800'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <Icon name="file" className="h-4 w-4" />
-                  {ROLE_NAMES[file.role]}: {file.title}
-                </button>
-              ) : (
-                <span
-                  key={file.fileId}
-                  className="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-sm text-slate-500"
-                >
-                  {ROLE_NAMES[file.role]}: {file.title} (not available: this copy was
-                  removed before the portfolio existed)
-                </span>
-              ),
-            )}
-          </div>
-          {openFile && (
-            <div
-              className="mt-4 h-[70vh] overflow-hidden rounded-lg border border-slate-300 bg-white"
-              data-testid="evidence-viewer"
-            >
-              {shown ? (
-                <EvidenceViewer document={shown.snapshot} />
-              ) : (
-                <p className="p-6 text-sm text-slate-600">Opening the file…</p>
+        {item.stages && item.stages.length > 0 && (
+          <section className="rounded-xl border border-slate-200 bg-white p-6">
+            <h2 className="font-semibold text-slate-900">Stages</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Each stage is a piece of work of its own, with its files and checks.
+            </p>
+            <ol className="mt-3 space-y-2" data-testid="project-stages">
+              {item.stages.map((stage, i) => (
+                <li key={stage.itemId}>
+                  <button
+                    type="button"
+                    onClick={() => onOpenItem(stage.itemId)}
+                    className="flex w-full items-baseline justify-between gap-3 rounded-md border border-slate-200 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                  >
+                    <span>
+                      {i + 1}. {stage.title}
+                    </span>
+                    <span className="shrink-0 font-semibold text-emerald-700">
+                      {stage.score}%
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {item.files.length > 0 && (
+          <section className="rounded-xl border border-slate-200 bg-white p-6">
+            <h2 className="font-semibold text-slate-900">Files handed in</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Copies kept exactly as you submitted them. Changing your working files later
+              does not change these.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {item.files.map((file) =>
+                file.available ? (
+                  <button
+                    key={file.fileId}
+                    type="button"
+                    aria-pressed={openFile === file.fileId}
+                    onClick={() =>
+                      setOpenFile(openFile === file.fileId ? null : file.fileId)
+                    }
+                    className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm ${
+                      openFile === file.fileId
+                        ? 'border-blue-300 bg-blue-50 text-blue-800'
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Icon name="file" className="h-4 w-4" />
+                    {ROLE_NAMES[file.role]}: {file.title}
+                  </button>
+                ) : (
+                  <span
+                    key={file.fileId}
+                    className="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-sm text-slate-500"
+                  >
+                    {ROLE_NAMES[file.role]}: {file.title} (not available: this copy was
+                    removed before the portfolio existed)
+                  </span>
+                ),
               )}
             </div>
-          )}
-        </section>
+            {openFile && (
+              <div
+                className="mt-4 h-[70vh] overflow-hidden rounded-lg border border-slate-300 bg-white"
+                data-testid="evidence-viewer"
+              >
+                {shown ? (
+                  <EvidenceViewer document={shown.snapshot} />
+                ) : (
+                  <p className="p-6 text-sm text-slate-600">Opening the file…</p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="font-semibold text-slate-900">Attempts</h2>

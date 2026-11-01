@@ -11,6 +11,7 @@
  * always kept.
  */
 import { getCareer } from '../content/careers'
+import type { Project } from '../content/projects'
 import type { Assignment } from '../content/schemas'
 import { getTool } from '../tools/registry'
 import type {
@@ -197,5 +198,73 @@ export function decideCapture(input: {
       })),
       attempts,
     },
+  }
+}
+
+/** The unique key of a project's item in a career save. */
+export function projectKey(profileId: string, projectId: string): string {
+  return `${profileId}|project:${projectId}`
+}
+
+/**
+ * A completed project's evidence, built from its stages' items: one row per
+ * stage, the average score, and every skill and tool used. Returns null until
+ * every stage has passed. The stages keep their own files.
+ */
+export function projectEvidence(
+  profileId: string,
+  project: Project,
+  stages: Array<PortfolioItem | undefined>,
+): ItemEvidence | null {
+  if (stages.length !== project.stages.length || stages.some((s) => !s)) return null
+  const items = stages as PortfolioItem[]
+  const career = getCareer(project.careerId)
+  const levelIndex = Math.max(
+    0,
+    career.levels.findIndex((l) => l.id === project.levelId),
+  )
+  const score = Math.round(items.reduce((sum, i) => sum + i.score, 0) / items.length)
+  const skills: Record<string, number> = {}
+  for (const item of items) {
+    for (const [id, weight] of Object.entries(item.skills)) {
+      skills[id] = (skills[id] ?? 0) + weight
+    }
+  }
+  return {
+    key: projectKey(profileId, project.id),
+    profileId,
+    careerId: project.careerId,
+    type: 'project',
+    projectId: project.id,
+    contentVersion: 1,
+    title: project.title,
+    summary: project.brief,
+    levelId: project.levelId,
+    levelTitle: career.levels[levelIndex]?.title ?? project.levelId,
+    levelIndex: levelIndex + 1,
+    objectives: project.objectives,
+    skills,
+    tools: [...new Set(items.flatMap((i) => i.tools))],
+    completedAt: Math.max(...items.map((i) => i.completedAt)),
+    score,
+    rating: score >= 90 ? 'excellent' : score >= 80 ? 'good' : 'pass',
+    passScore: Math.max(...items.map((i) => i.passScore)),
+    checks: items.map((item, i) => ({
+      id: `stage-${i + 1}`,
+      title: `Stage ${i + 1}: ${item.title}`,
+      why: item.summary,
+      status: 'passed' as const,
+      earned: item.score,
+      points: 100,
+    })),
+    attempts: items
+      .flatMap((i) => i.attempts)
+      .sort((a, b) => a.submittedAt - b.submittedAt),
+    stages: items.map((item, i) => ({
+      assignmentId: project.stages[i],
+      itemId: item.id,
+      title: item.title,
+      score: item.score,
+    })),
   }
 }

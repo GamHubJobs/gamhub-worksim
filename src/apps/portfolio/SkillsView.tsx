@@ -57,6 +57,12 @@ export function SkillsView({
               {experience.tasksCompleted}
             </dd>
           </div>
+          {experience.projectsCompleted > 0 && (
+            <div>
+              <dt className="text-xs text-slate-500">Projects completed</dt>
+              <dd className="text-xl font-semibold">{experience.projectsCompleted}</dd>
+            </div>
+          )}
           <div>
             <dt className="text-xs text-slate-500">Attempts made</dt>
             <dd className="text-xl font-semibold">{experience.attempts}</dd>

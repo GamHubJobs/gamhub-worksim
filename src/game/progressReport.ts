@@ -143,6 +143,7 @@ export function recommendations(
 
 export function progressReport(profile: Profile, items: PortfolioItem[]): ProgressReport {
   const own = items.filter((i) => i.profileId === profile.id)
+  const ownTasks = own.filter((i) => i.type === 'task')
   const { career, current } = careerLevel(profile)
   const skills = competencies(own, career.skills)
   const improvements = improvementAreas(profile)
@@ -160,10 +161,10 @@ export function progressReport(profile: Profile, items: PortfolioItem[]): Progre
   const shown = skills.filter((s) => s.level !== 'not-yet').length
   const tools = Object.keys(experience.tools).map(toolName)
   const summary =
-    own.length === 0
+    ownTasks.length === 0
       ? `${profile.name} has started the ${career.name} career as ${current.title} and has not passed a task yet.`
       : `${profile.name} is a ${current.title} (level ${levelNumber} of ${career.levels.length}) in ${career.name}, ` +
-        `with ${own.length} passed ${own.length === 1 ? 'task' : 'tasks'} showing ${shown} of ${skills.length} skills` +
+        `with ${ownTasks.length} passed ${ownTasks.length === 1 ? 'task' : 'tasks'} showing ${shown} of ${skills.length} skills` +
         (tools.length > 0 ? `, using ${tools.join(', ')}.` : '.')
 
   return {

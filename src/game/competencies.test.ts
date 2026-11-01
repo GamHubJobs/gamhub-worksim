@@ -8,6 +8,7 @@ function item(skills: Record<string, number>, fields: Partial<PortfolioItem> = {
   next += 1
   return {
     id: `item-${next}`,
+    type: 'task',
     title: `Task ${next}`,
     skills,
     score: 90,

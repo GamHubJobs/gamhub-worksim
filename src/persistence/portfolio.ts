@@ -4,7 +4,13 @@
  * `applyCapture`, inside the same transaction that saves the grade (or by the
  * backfill); the player can change only the presentation fields.
  */
-import { type CaptureDecision, documentBytes } from '../game/portfolio'
+import { getProject } from '../content/projects'
+import {
+  type CaptureDecision,
+  documentBytes,
+  portfolioKey,
+  projectEvidence,
+} from '../game/portfolio'
 import { createId } from '../lib/ids'
 import { db as defaultDb, getDeviceId, recordChange, type WorkSimDatabase } from './db'
 import {
@@ -155,4 +161,33 @@ export async function updatePortfolioPresentation(
       return item
     },
   )
+}
+
+/**
+ * After a stage of a project is captured: when every stage has passed, writes
+ * (or refreshes) the project's item from the stages' items. Must run inside a
+ * transaction that includes the portfolio tables, the meta table and the outbox.
+ */
+export async function applyProjectCapture(
+  profileId: string,
+  projectId: string | undefined,
+  database: WorkSimDatabase,
+): Promise<PortfolioItem | undefined> {
+  const project = getProject(projectId)
+  if (!project) return undefined
+  const stages = await Promise.all(
+    project.stages.map((id) => findPortfolioItem(portfolioKey(profileId, id), database)),
+  )
+  const evidence = projectEvidence(profileId, project, stages)
+  if (!evidence) return undefined
+  const existing = await findPortfolioItem(evidence.key, database)
+  // Nothing to do when the stages have not changed since it was written.
+  if (
+    existing &&
+    JSON.stringify(existing.stages) === JSON.stringify(evidence.stages) &&
+    existing.completedAt === evidence.completedAt
+  ) {
+    return existing
+  }
+  return applyCapture({ action: 'evidence', evidence, files: [] }, existing, database)
 }
