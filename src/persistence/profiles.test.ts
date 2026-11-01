@@ -50,7 +50,7 @@ describe('profiles', () => {
     expect(await getActiveProfile(database)).toBeUndefined()
     const profile = await createProfile(fields, database)
     expect(profile.rev).toBe(1)
-    expect(profile.formatVersion).toBe(2)
+    expect(profile.formatVersion).toBe(3)
     expect(await getActiveProfile(database)).toEqual(profile)
     expect(await database.outbox.count()).toBe(1)
   })
@@ -85,9 +85,24 @@ describe('profiles', () => {
     const { work: _work, ...old } = profile
     await database.profiles.put({ ...old, formatVersion: 1 } as never)
     const loaded = await getActiveProfile(database)
-    expect(loaded?.formatVersion).toBe(2)
+    expect(loaded?.formatVersion).toBe(3)
     expect(loaded?.work).toEqual(startingWorkState())
     expect(loaded?.xp).toBe(profile.xp)
+  })
+
+  it('upgrades a format 2 profile (Phases 2 to 5): everything kept, no cases yet', async () => {
+    const profile = await createProfile(fields, database)
+    const { cases: _cases, org: _org, ...oldWork } = profile.work
+    const old = { ...profile, formatVersion: 2, work: { ...oldWork, reputation: 64 } }
+    await database.profiles.put(old as never)
+    const loaded = (await getActiveProfile(database))!
+    expect(loaded.formatVersion).toBe(3)
+    expect(loaded.work.reputation).toBe(64)
+    expect(loaded.work.cases).toEqual({})
+    expect(loaded.work.org).toEqual({
+      indicators: { satisfaction: 70, risk: 30, discipline: 70 },
+      spend: {},
+    })
   })
 
   it('starts a task with a report and a presentation as well as the workbook', async () => {

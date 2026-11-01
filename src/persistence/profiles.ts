@@ -29,7 +29,7 @@ import {
   type SyncFields,
 } from './schemas'
 import { createVersion } from './versions'
-import { startingWorkState } from './workState'
+import { startingOrgState, startingWorkState } from './workState'
 
 const ACTIVE_PROFILE_KEY = 'activeProfileId'
 
@@ -41,6 +41,8 @@ export type ProfileFields = Omit<Profile, keyof SyncFields | 'formatVersion'>
  * `documentMigrations.ts`.
  * - 1 → 2: adds the working life (office clock, wellbeing, colleagues). Older
  *   careers continue on a fresh Monday morning; their tasks have no deadlines.
+ * - 2 → 3: adds cases and the organisation's state (no cases yet, ordinary
+ *   indicators). Nothing else changes.
  */
 export function upgradeProfile(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw
@@ -52,6 +54,14 @@ export function upgradeProfile(raw: unknown): unknown {
   let upgraded = raw as Record<string, unknown>
   if (version < 2) {
     upgraded = { ...upgraded, formatVersion: 2, work: startingWorkState() }
+  }
+  if (version < 3) {
+    const work = upgraded.work as Record<string, unknown>
+    upgraded = {
+      ...upgraded,
+      formatVersion: 3,
+      work: { ...work, cases: work.cases ?? {}, org: work.org ?? startingOrgState() },
+    }
   }
   return upgraded
 }
@@ -178,6 +188,59 @@ export async function updateProfile(
     async () => {
       const current = await loadForUpdate(id, database)
       return saveProfile(current, change(current), database)
+    },
+  )
+}
+
+/**
+ * Creates the file for a case's document step (a report or presentation from
+ * its template, with an "original" version) and records it in the case. If it
+ * already exists, its ID is returned.
+ */
+export async function startCaseFile(
+  profileId: string,
+  caseId: string,
+  stepId: string,
+  file:
+    | { kind: 'doc'; title: string; content: DocContent }
+    | { kind: 'slides'; title: string; content: SlidesContent },
+  database: WorkSimDatabase = defaultDb,
+): Promise<{ profile: Profile; documentId: string }> {
+  return database.transaction(
+    'rw',
+    [
+      database.meta,
+      database.profiles,
+      database.documents,
+      database.documentVersions,
+      database.outbox,
+    ],
+    async () => {
+      const current = await loadForUpdate(profileId, database)
+      const progress = current.work.cases[caseId]
+      if (!progress) throw new Error('This case has not arrived.')
+      const existing = progress.files[stepId]
+      if (existing) return { profile: current, documentId: existing }
+      const created = await createDocument({ ...file, owner: profileId }, database)
+      await createVersion(created, 'original', { keep: true }, database)
+      const profile = await saveProfile(
+        current,
+        {
+          ...current,
+          work: {
+            ...current.work,
+            cases: {
+              ...current.work.cases,
+              [caseId]: {
+                ...progress,
+                files: { ...progress.files, [stepId]: created.id },
+              },
+            },
+          },
+        },
+        database,
+      )
+      return { profile, documentId: created.id }
     },
   )
 }

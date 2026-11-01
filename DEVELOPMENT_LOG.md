@@ -87,7 +87,7 @@ working simulations of the professional software used in its field (see
 **Phase 6: "Real-World Career Simulation"** (in progress). Plan:
 [docs/PHASE6_PLAN.md](docs/PHASE6_PLAN.md).
 
-- [ ] 6.1 Organisation model, case engine, Cases app, save migration
+- [x] 6.1 Organisation model, case engine, Cases app, save migration
 - [ ] 6.2 Clients and customers
 - [ ] 6.3 Business operations: budgets, purchases, approvals
 - [ ] 6.4 Interdepartmental workflows
@@ -96,6 +96,59 @@ working simulations of the professional software used in its field (see
 - [ ] 6.7 Management and leadership
 - [ ] 6.8 Cross-functional programme: the company expansion
 - [ ] 6.9 Office integration, balance, hardening, documentation
+
+---
+
+## 2026-11-01 · Milestone 6.1: Organisation model, case engine and the Cases app
+
+### Built
+
+- **Cases** (`src/content/cases/`, engine in `src/game/cases.ts`): pieces of real
+  workplace business from clients, colleagues, suppliers and other departments. A case
+  has a sender, evidence (text and tables), steps, a deadline in office hours, outcomes
+  and the requester’s replies.
+- **Eight kinds of step**, each graded with its reasons: review the evidence (mark the
+  problems), work out a figure, decide (every option is judged best, acceptable or poor,
+  with why), approve / reject / escalate requests, delegate work to team members (with
+  capacity), record meeting actions with owners, write a reply (what it must say and
+  must not promise, with an example of a good reply shown afterwards), and produce a Doc
+  or Slides file with the existing apps (graded by the existing report checks).
+- **Arrival and deadlines:** cases arrive after the task or case that leads to them, at
+  the right career level, during working hours, at most two open at once, by email
+  (shown from the outside contact, with an “Open case” button). A case left past its
+  deadline lapses with a small, explained consequence.
+- **Consequences:** decisions and outcomes change trust, reputation, departmental
+  spending and three organisation indicators (client satisfaction, operational risk,
+  budget discipline). XP and skill XP scale with the score, and promotions follow as
+  for tasks.
+- **The organisation** (`src/content/organisation.ts`): eight departments with heads
+  and quarterly budgets, approval limits by career level (interns approve nothing),
+  the indicators, clients and suppliers.
+- **The Cases app** on every career’s dock (with a badge for open cases): the work queue
+  with time left, the organisation indicators, the evidence and steps (answers are
+  saved as you work), a confirmation that a case is answered once, and the result with
+  every step’s reasons.
+- **Portfolio:** a passed case becomes a portfolio item (type “case”) with a frozen
+  **case record** (what was asked, the evidence, every answer, how it was judged and why)
+  and any documents made for it, in the same save as the result. Cases count as skill
+  evidence; the experience record counts them.
+- The first case: Finance & Admin, **“A supplier chases an unpaid invoice”** (a
+  three-way match with a short delivery: pay £552, ask for the rest, reply politely).
+
+### Save format
+
+- Profile format 3: `work.cases` and `work.org` (indicators and spending). Format 2
+  saves and backups (Phases 2 to 5) upgrade automatically with no cases and ordinary
+  indicators; nothing else changes.
+
+### Tested
+
+- 12 new unit tests: arrival rules (trigger, working hours, at most two, never twice),
+  lapsing with consequences, explained grading, answer validation, recording results
+  and rewards, every case’s model answers getting full marks; the upgrade from format 2;
+  a pre-Phase 6 backup restoring; a submitted case saved with its portfolio record.
+- New browser test: the supplier case from email to result, answers kept across a
+  reload, indicators updated, the supplier’s reply, and the case record in the portfolio.
 
 ---
 

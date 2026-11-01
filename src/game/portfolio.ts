@@ -11,6 +11,7 @@
  * always kept.
  */
 import { getCareer } from '../content/careers'
+import type { Case } from '../content/cases/schema'
 import type { Project } from '../content/projects'
 import type { Assignment } from '../content/schemas'
 import { getTool } from '../tools/registry'
@@ -20,6 +21,7 @@ import type {
   PortfolioFileRole,
   PortfolioItem,
 } from '../persistence/schemas'
+import type { CaseRating, StepResult } from './cases'
 import type { GradeResult } from './grading'
 
 /** The unique key of a task's item in a career save. */
@@ -51,6 +53,7 @@ export function toolName(id: string): string {
     slides: 'Slides',
     helpdesk: 'Help Desk',
     code: 'Code',
+    cases: 'Cases',
   }
   return apps[id] ?? getTool(id)?.name ?? id
 }
@@ -266,5 +269,71 @@ export function projectEvidence(
       title: item.title,
       score: item.score,
     })),
+  }
+}
+
+/** The unique key of a case's item in a career save. */
+export function caseKey(profileId: string, caseId: string): string {
+  return `${profileId}|case:${caseId}`
+}
+
+/**
+ * A passed case's evidence: the case, the player's level when they handled
+ * it, every step's result, and the files (the case record and any documents).
+ * Cases are answered once, so there is never an earlier item to replace.
+ */
+export function decideCaseCapture(input: {
+  profileId: string
+  def: Case
+  result: { score: number; rating: CaseRating; passed: boolean; steps: StepResult[] }
+  level: { id: string; title: string; index: number }
+  submittedAt: number
+  files: SubmittedFile[]
+}): CaptureDecision {
+  const { def, result } = input
+  if (!result.passed || result.rating === 'fail') return { action: 'none' }
+  const documentKinds = def.steps.flatMap((s) =>
+    s.kind === 'document' ? [s.deliverable.kind === 'doc' ? 'docs' : 'slides'] : [],
+  )
+  return {
+    action: 'evidence',
+    files: input.files,
+    evidence: {
+      key: caseKey(input.profileId, def.id),
+      profileId: input.profileId,
+      careerId: def.careerId,
+      type: 'case',
+      caseId: def.id,
+      contentVersion: def.version,
+      title: def.title,
+      summary: def.summary,
+      levelId: input.level.id,
+      levelTitle: input.level.title,
+      levelIndex: input.level.index,
+      objectives: def.objectives,
+      skills: def.skills,
+      tools: [...new Set(['cases', ...documentKinds])],
+      completedAt: input.submittedAt,
+      score: result.score,
+      rating: result.rating,
+      passScore: def.passScore,
+      checks: result.steps.map((s) => {
+        const step = def.steps.find((x) => x.id === s.id)
+        return {
+          id: s.id,
+          title: s.title,
+          why: step?.prompt ?? '',
+          status:
+            s.earned >= s.points
+              ? ('passed' as const)
+              : s.earned > 0
+                ? ('partial' as const)
+                : ('failed' as const),
+          earned: Math.round(s.earned),
+          points: s.points,
+        }
+      }),
+      attempts: [{ submittedAt: input.submittedAt, score: result.score }],
+    },
   }
 }

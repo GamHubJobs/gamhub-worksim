@@ -13,7 +13,7 @@ export const SheetRangeSchema = z
     message: 'Expected a range such as "Order!E2:E11"',
   })
 
-const SkillGainsSchema = z.record(z.string(), z.number().int().positive())
+export const SkillGainsSchema = z.record(z.string(), z.number().int().positive())
 
 const CheckBaseSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),

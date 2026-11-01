@@ -571,6 +571,7 @@ export const MailMessageSchema = z.object({
     'review',
     'info',
     'sent',
+    'case',
   ]),
   /** For messages the player sent: who to ("manager"). */
   to: z.string().optional(),
@@ -588,6 +589,8 @@ export const MailMessageSchema = z.object({
   assignmentId: z.string().optional(),
   /** For feedback: which attempt (0-based) it is about. */
   attemptIndex: z.number().int().nonnegative().optional(),
+  /** For case messages: the case they are about. */
+  caseId: z.string().optional(),
 })
 
 // ---------------------------------------------------------------------------
@@ -675,6 +678,48 @@ export const ReviewSchema = z.object({
   improvements: z.array(z.string()),
 })
 
+/** One case in a career save: when it arrived, the player's answers, and the result. */
+export const CaseProgressSchema = z.object({
+  caseId: z.string(),
+  version: z.number().int().positive(),
+  status: z.enum(['open', 'submitted', 'lapsed']),
+  /** Absolute office times (see `DeadlineSchema`). */
+  arrivedAt: z.number().nonnegative(),
+  due: z.number().nonnegative(),
+  /** Draft answers by step ID, checked against the step when graded. */
+  answers: z.record(z.string(), z.unknown()),
+  /** Files made for the case's document steps, by step ID. */
+  files: z.record(z.string(), IdSchema).default({}),
+  result: z
+    .object({
+      submittedAt: TimestampSchema,
+      score: z.number().int().min(0).max(100),
+      rating: z.enum(['excellent', 'good', 'pass', 'fail']),
+      steps: z.array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          earned: z.number().nonnegative(),
+          points: z.number().nonnegative(),
+          notes: z.array(z.string()),
+        }),
+      ),
+    })
+    .optional(),
+})
+
+/** The organisation as this career save sees it. */
+export const OrgStateSchema = z.object({
+  /** 0–100: client satisfaction, operational risk (lower is better), budget discipline. */
+  indicators: z.object({
+    satisfaction: PercentSchema,
+    risk: PercentSchema,
+    discipline: PercentSchema,
+  }),
+  /** Spending committed this quarter, by department ID. */
+  spend: z.record(z.string(), z.number()),
+})
+
 export const WorkStateSchema = z.object({
   day: z.number().int().min(1),
   minute: OfficeMinuteSchema,
@@ -700,10 +745,16 @@ export const WorkStateSchema = z.object({
   /** Finished days, newest last. */
   history: z.array(DaySummarySchema),
   reviews: z.array(ReviewSchema),
+  /** Cases by case ID (added in profile format 3). */
+  cases: z.record(z.string(), CaseProgressSchema).default({}),
+  org: OrgStateSchema.default({
+    indicators: { satisfaction: 70, risk: 30, discipline: 70 },
+    spend: {},
+  }),
 })
 
 /** Current format of player profiles; raise it (with an upgrade) when the shape changes. */
-export const PROFILE_FORMAT_VERSION = 2
+export const PROFILE_FORMAT_VERSION = 3
 
 /** One player's career save. */
 export const ProfileSchema = SyncFieldsSchema.extend({
@@ -738,8 +789,9 @@ export const PortfolioItemSchema = SyncFieldsSchema.extend({
   key: z.string().min(1).max(200),
   profileId: IdSchema,
   careerId: z.string(),
-  type: z.enum(['task', 'project']),
+  type: z.enum(['task', 'project', 'case']),
   assignmentId: z.string().optional(),
+  caseId: z.string().optional(),
   projectId: z.string().optional(),
   /** The task's content version when it was passed. */
   contentVersion: z.number().int().positive(),
@@ -880,6 +932,8 @@ export type DocumentVersion = z.infer<typeof DocumentVersionSchema>
 export type Attempt = z.infer<typeof AttemptSchema>
 export type AssignmentProgress = z.infer<typeof AssignmentProgressSchema>
 export type MailMessage = z.infer<typeof MailMessageSchema>
+export type CaseProgress = z.infer<typeof CaseProgressSchema>
+export type OrgState = z.infer<typeof OrgStateSchema>
 export type Wellbeing = z.infer<typeof WellbeingSchema>
 export type Relationship = z.infer<typeof RelationshipSchema>
 export type LogEntry = z.infer<typeof LogEntrySchema>

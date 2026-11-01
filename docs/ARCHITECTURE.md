@@ -94,6 +94,7 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/apps/code/`                      | Code: file list, editor, Run tests panel                          |
 | `src/apps/shared/`                    | Save hook, document window, file browser, "insert from Sheets"    |
 | `src/apps/mail/`, `tasks/`, `career/` | The other desktop apps                                            |
+| `src/apps/cases/`                     | Cases app: work queue, evidence, steps, results                   |
 | `src/apps/portfolio/`                 | Portfolio app: work, skills, progress report, export              |
 | `src/export/`                         | Exports: blocks, PDFs (`pdf/`), open formats, ZIP package         |
 | `src/content/`                        | Content as validated data: company, careers, assignments          |
@@ -214,6 +215,16 @@ code) and write them as real PDF text and vector charts, never screenshots.
 Integrated projects (`content/projects.ts`) are short series of ordinary tasks
 (`projectId`, `stage`). When the last stage passes, `applyProjectCapture` writes
 one project item in the same transaction, linking the stages' items.
+
+### Cases and the organisation (Phase 6)
+
+Workplace business arrives as **cases** (`content/cases/`, engine `game/cases.ts`):
+evidence, steps graded with reasons, a deadline in office time, and consequences for
+trust, reputation, departmental spending and the organisation's indicators
+(`content/organisation.ts`). Case state lives in the career save (`work.cases`,
+`work.org`, profile format 3). `checkCases` runs after every game action, like
+workplace events. Passed cases become portfolio items with a frozen case record. The
+plan is in [PHASE6_PLAN.md](PHASE6_PLAN.md).
 
 ### The working life (Phase 2)
 

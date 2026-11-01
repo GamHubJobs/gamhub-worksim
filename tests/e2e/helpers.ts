@@ -37,7 +37,8 @@ export async function sitAtComputer(page: Page) {
 /** Opens a dock app such as "Mail" or "Sheets". */
 export async function openApp(
   page: Page,
-  name: 'Mail' | 'Tasks' | 'Sheets' | 'Docs' | 'Slides' | 'Career' | 'Portfolio',
+  name:
+    'Mail' | 'Tasks' | 'Sheets' | 'Docs' | 'Slides' | 'Career' | 'Portfolio' | 'Cases',
 ) {
   await sitAtComputer(page)
   await page

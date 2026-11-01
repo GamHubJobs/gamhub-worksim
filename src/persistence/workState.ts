@@ -3,6 +3,7 @@
  * rules) because upgrading older saves needs it too.
  */
 import type { Today, Wellbeing, WorkState } from './schemas'
+import { STARTING_INDICATORS } from '../content/organisation'
 
 /** 8:50 am: new days start a few minutes before work. */
 export const ARRIVAL_MINUTE = 8 * 60 + 50
@@ -40,5 +41,12 @@ export function startingWorkState(): WorkState {
     events: { done: {}, pending: [] },
     history: [],
     reviews: [],
+    cases: {},
+    org: startingOrgState(),
   }
+}
+
+/** The organisation at the start of a career: steady indicators, nothing spent. */
+export function startingOrgState(): WorkState['org'] {
+  return { indicators: { ...STARTING_INDICATORS }, spend: {} }
 }

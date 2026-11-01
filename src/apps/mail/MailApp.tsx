@@ -8,6 +8,8 @@ import type { SubmissionResult } from '../../app/useCareer'
 import { getAssignment } from '../../content/assignments'
 import { COMPANY } from '../../content/company'
 import { getPerson } from '../../content/departments'
+import { personFor, senderOf } from '../../game/mailSender'
+import { getCase } from '../../content/cases'
 import { firstName } from '../../game/career'
 import { formatDateTime } from '../../lib/time'
 import { listDocuments } from '../../persistence/documentsRepo'
@@ -33,6 +35,7 @@ interface MailAppProps {
   onMarkRead: (mailId: string) => void
   onOpenTask: (assignmentId: string) => void
   onOpenCareer: () => void
+  onOpenCase: (caseId: string) => void
   /** Saves all open files before sending, so attachments are up to date. */
   onFlush: () => Promise<boolean>
   onSend: (input: {
@@ -75,6 +78,7 @@ export function MailApp({
   onMarkRead,
   onOpenTask,
   onOpenCareer,
+  onOpenCase,
   onFlush,
   onSend,
 }: MailAppProps) {
@@ -126,7 +130,7 @@ export function MailApp({
           )}
           {messages.map((mail) => {
             const sent = mail.kind === 'sent'
-            const person = getPerson(sent ? (mail.to ?? 'manager') : mail.from)
+            const person = senderOf(mail)
             const unread = mail.readAt === null
             return (
               <li key={mail.id}>
@@ -198,6 +202,7 @@ export function MailApp({
             onReply={() => onSelect(selected.id, true)}
             onOpenTask={onOpenTask}
             onOpenCareer={onOpenCareer}
+            onOpenCase={onOpenCase}
           />
         ) : (
           <p className="p-6 text-slate-500">No messages.</p>
@@ -226,15 +231,18 @@ function MessageView({
   onReply,
   onOpenTask,
   onOpenCareer,
+  onOpenCase,
 }: {
   mail: MailMessage
   playerName: string
   onReply: () => void
   onOpenTask: (assignmentId: string) => void
   onOpenCareer: () => void
+  onOpenCase: (caseId: string) => void
 }) {
   const sent = mail.kind === 'sent'
-  const sender = sent ? null : getPerson(mail.from)
+  const caseDef = mail.caseId ? getCase(mail.caseId) : undefined
+  const sender = sent ? null : senderOf(mail)
   const recipient = getPerson(sent ? (mail.to ?? 'manager') : 'manager')
   const assignment = mail.assignmentId ? getAssignment(mail.assignmentId) : undefined
 
@@ -315,6 +323,23 @@ function MessageView({
           </button>
         </div>
       )}
+      {caseDef && (
+        <div className="mt-6 flex items-center justify-between gap-4 rounded-lg border border-violet-200 bg-violet-50 p-4">
+          <div>
+            <p className="text-xs font-medium tracking-wide text-violet-700 uppercase">
+              Case
+            </p>
+            <p className="font-medium text-slate-900">{caseDef.title}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenCase(caseDef.id)}
+            className="rounded-md bg-violet-700 px-4 py-2 text-sm font-medium text-white hover:bg-violet-800"
+          >
+            Open case
+          </button>
+        </div>
+      )}
       {(mail.kind === 'promotion' || mail.kind === 'review') && (
         <button
           type="button"
@@ -349,7 +374,7 @@ function Compose({
     attachments: Attachment[]
   }) => Promise<void>
 }) {
-  const recipient = getPerson(replyTo.from)
+  const recipient = personFor(replyTo.from)
   const assignment = replyTo.assignmentId
     ? getAssignment(replyTo.assignmentId)
     : undefined

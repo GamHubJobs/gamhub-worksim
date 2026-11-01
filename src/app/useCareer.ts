@@ -5,7 +5,25 @@
  * `src/persistence`; this hook only connects them.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { decideCapture, portfolioKey } from '../game/portfolio'
+import {
+  caseKey,
+  decideCapture,
+  decideCaseCapture,
+  portfolioKey,
+} from '../game/portfolio'
+import {
+  checkCases,
+  gradeCase,
+  levelNumber,
+  recordCaseResult,
+  saveCaseAnswer,
+} from '../game/cases'
+import { caseRecordContent } from '../game/caseRecord'
+import { getCase } from '../content/cases'
+import { careerLevel } from '../game/career'
+import { getDeviceId } from '../persistence/db'
+import { DOCUMENT_FORMAT_VERSIONS } from '../persistence/schemas'
+import type { CaseResult } from '../game/cases'
 import { getAssignment } from '../content/assignments'
 import {
   advanceCareer,
@@ -32,6 +50,7 @@ import {
   listProfiles,
   setActiveProfile,
   saveSubmission,
+  startCaseFile,
   startAssignment as startAssignmentInStorage,
   updateProfile,
 } from '../persistence/profiles'
@@ -279,8 +298,10 @@ export function useCareer() {
           reward = result.reward
           return {
             ...latest,
-            ...checkEvents(
-              afterSubmission(result.profile, assignment, grade, result.reward),
+            ...checkCases(
+              checkEvents(
+                afterSubmission(result.profile, assignment, grade, result.reward),
+              ),
             ),
           }
         },
@@ -399,12 +420,134 @@ export function useCareer() {
         // After the action: promotions and new tasks, Friday's review if it
         // was missed, then any workplace event the new situation causes.
         const changed = advanceCareer(change(latest), now).profile
-        return { ...latest, ...checkEvents(checkReviews(changed, now)) }
+        return { ...latest, ...checkCases(checkEvents(checkReviews(changed, now)), now) }
       })
       show(profile)
       return profile
     },
     [profileId, show],
+  )
+
+  /** Saves a draft answer to a step of an open case. */
+  const saveCaseStep = useCallback(
+    (caseId: string, stepId: string, answer: unknown) =>
+      act((p) => saveCaseAnswer(p, caseId, stepId, answer)),
+    [act],
+  )
+
+  /** Creates (or finds) the file for a case's document step. */
+  const openCaseFile = useCallback(
+    async (caseId: string, stepId: string): Promise<string> => {
+      if (!profileId || state.status !== 'ready')
+        throw new Error('Your career is not loaded yet.')
+      const def = getCase(caseId)
+      const step = def?.steps.find((s) => s.id === stepId)
+      if (!def || step?.kind !== 'document')
+        throw new Error('This case has no such document.')
+      const { profile, documentId } = await startCaseFile(
+        profileId,
+        caseId,
+        stepId,
+        deliverableFile(step.deliverable, state.profile.name),
+      )
+      show(profile)
+      return documentId
+    },
+    [profileId, state, show],
+  )
+
+  /**
+   * Submits a case: grades it, records the result and its consequences, and
+   * keeps the evidence in the portfolio when it passes, all in one save.
+   */
+  const submitCase = useCallback(
+    async (caseId: string): Promise<CaseResult> => {
+      if (!profileId || state.status !== 'ready')
+        throw new Error('Your career is not loaded yet.')
+      const def = getCase(caseId)
+      const progress = state.profile.work.cases[caseId]
+      if (!def || !progress || progress.status !== 'open') {
+        throw new Error('This case is no longer open.')
+      }
+      // The documents made for the case, as they are now.
+      const handedIn: AnyDocument[] = []
+      const contents: Record<string, DocContent | SlidesContent | undefined> = {}
+      for (const step of def.steps) {
+        const fileId = progress.files[step.id]
+        const document = fileId ? await getDocument(fileId) : undefined
+        if (document && (document.kind === 'doc' || document.kind === 'slides')) {
+          handedIn.push(document)
+          contents[step.id] = document.content
+        }
+      }
+      const submittedAt = Date.now()
+      const deviceId = await getDeviceId()
+      // Graded inside the save, from the answers as they are stored then, so an
+      // answer saved a moment before submitting is never missed.
+      let result: CaseResult | null = null
+      let record: AnyDocument | null = null
+      let level = { id: '', title: '', index: 1 }
+      const capture = {
+        key: caseKey(profileId, caseId),
+        decide: () =>
+          decideCaseCapture({
+            profileId,
+            def,
+            result: result!,
+            level,
+            submittedAt,
+            files: [
+              { role: 'main' as const, document: record! },
+              ...handedIn.map((document) => ({
+                role:
+                  document.kind === 'slides'
+                    ? ('presentation' as const)
+                    : ('report' as const),
+                document,
+              })),
+            ],
+          }),
+      }
+      const profile = await saveSubmission(
+        profileId,
+        handedIn,
+        (latest) => {
+          const answers = latest.work.cases[caseId]?.answers ?? {}
+          result = gradeCase(def, answers, contents)
+          const { current } = careerLevel(latest)
+          level = {
+            id: current.id,
+            title: current.title,
+            index: Math.max(1, levelNumber(latest)),
+          }
+          record = {
+            id: createId(),
+            createdAt: submittedAt,
+            updatedAt: submittedAt,
+            rev: 1,
+            deviceId,
+            deleted: false,
+            title: `Case record: ${def.title}`,
+            owner: profileId,
+            formatVersion: DOCUMENT_FORMAT_VERSIONS.doc,
+            kind: 'doc',
+            content: caseRecordContent(def, answers, result, latest.name),
+          }
+          return {
+            ...latest,
+            ...checkCases(
+              recordCaseResult(latest, def, result, submittedAt),
+              submittedAt,
+            ),
+          }
+        },
+        undefined,
+        capture,
+      )
+      show(profile)
+      return result!
+    },
+    [profileId, state, show],
   )
 
   return {
@@ -417,6 +560,9 @@ export function useCareer() {
     markRead,
     toggleStep,
     act,
+    saveCaseStep,
+    openCaseFile,
+    submitCase,
   }
 }
 

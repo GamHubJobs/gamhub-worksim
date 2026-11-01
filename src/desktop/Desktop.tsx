@@ -43,6 +43,9 @@ import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
 import { workPace } from '../game/wellbeing'
 import { skipToAssignment } from '../game/devTools'
+import { arriveCase } from '../game/cases'
+import { getCase } from '../content/cases'
+import { CasesApp } from '../apps/cases/CasesApp'
 import { passTime, startNextDay } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
 import { Icon, type IconName } from '../ui/Icon'
@@ -61,6 +64,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
   [
     { id: 'mail', label: 'Mail', icon: 'mail' },
     { id: 'tasks', label: 'Tasks', icon: 'tasks' },
+    { id: 'cases', label: 'Cases', icon: 'cases' },
     { id: 'sheets', label: 'Sheets', icon: 'sheets' },
     { id: 'docs', label: 'Docs', icon: 'docs' },
     { id: 'slides', label: 'Slides', icon: 'slides' },
@@ -91,7 +95,11 @@ export function Desktop({
     const status = assignmentStatus(profile, a)
     return status === 'available' || status === 'needs-revision'
   }).length
-  const badges: Partial<Record<View['app'], number>> = { mail: unread, tasks: openTasks }
+  const badges: Partial<Record<View['app'], number>> = {
+    mail: unread,
+    tasks: openTasks,
+    cases: Object.values(profile.work.cases).filter((c) => c.status === 'open').length,
+  }
   const xpStart = current.xpRequired
   const xpPercent = next
     ? Math.min(
@@ -157,6 +165,11 @@ export function Desktop({
         act((p) => ({ ...p, work: { ...p.work, day, minute } })),
       /** Marks every task before this one as done (e.g. 'performance-report'). */
       skipTo: (assignmentId: string) => act((p) => skipToAssignment(p, assignmentId)),
+      arriveCase: (caseId: string) =>
+        act((p) => {
+          const def = getCase(caseId)
+          return def && !p.work.cases[caseId] ? arriveCase(p, def, Date.now()) : p
+        }),
     }
     Object.assign(window, { __worksim: hooks })
   }, [act])
@@ -243,6 +256,7 @@ export function Desktop({
                 (app) =>
                   app.id === 'mail' ||
                   app.id === 'tasks' ||
+                  app.id === 'cases' ||
                   (careerApps as string[]).includes(app.id),
               ).map((app) => ({
                 ...app,
@@ -327,6 +341,7 @@ export function Desktop({
                   onMarkRead={onMarkRead}
                   onOpenTask={openTask}
                   onOpenCareer={() => setView({ app: 'career' })}
+                  onOpenCase={(caseId) => setView({ app: 'cases', item: caseId })}
                   // Files open in other apps were saved when the player left them.
                   onFlush={async () => true}
                   onSend={career.sendMail}
@@ -473,6 +488,28 @@ export function Desktop({
                     />
                   )
                 })()}
+              {view.app === 'cases' && (
+                <CasesApp
+                  profile={profile}
+                  caseId={view.item}
+                  onOpen={(caseId) => setView({ app: 'cases', item: caseId })}
+                  onSave={(caseId, stepId, answer) =>
+                    void career.saveCaseStep(caseId, stepId, answer)
+                  }
+                  onOpenFile={async (caseId, stepId) => {
+                    const documentId = await career.openCaseFile(caseId, stepId)
+                    const step = getCase(caseId)?.steps.find((s) => s.id === stepId)
+                    const kind =
+                      step?.kind === 'document' && step.deliverable.kind === 'slides'
+                        ? 'slides'
+                        : 'docs'
+                    setView({ app: kind, document: documentId })
+                  }}
+                  onSubmit={async (caseId) => {
+                    await career.submitCase(caseId)
+                  }}
+                />
+              )}
               {view.app === 'portfolio' && (
                 <PortfolioApp
                   profile={profile}

@@ -1,4 +1,4 @@
-import { getPerson } from '../content/departments'
+import { personFor } from '../game/mailSender'
 
 export function Avatar({
   personId,
@@ -7,7 +7,7 @@ export function Avatar({
   personId: string
   size?: 'sm' | 'md'
 }) {
-  const person = getPerson(personId)
+  const person = personFor(personId)
   return (
     <span
       className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white ${person.color} ${
