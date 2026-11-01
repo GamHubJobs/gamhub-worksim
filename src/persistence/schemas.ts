@@ -722,6 +722,33 @@ export const OrgStateSchema = z.object({
   spend: z.record(z.string(), z.number()),
 })
 
+/**
+ * What a career save remembers about the player's development that cannot be
+ * worked out again later (added in profile format 4). Everything else in the
+ * career record is derived from saved tasks and cases.
+ */
+export const CareerRecordSchema = z.object({
+  /** Levels reached, oldest first. Day and time are null for promotions made before records began. */
+  promotions: z
+    .array(
+      z.object({
+        levelId: z.string(),
+        day: z.number().int().min(1).nullable(),
+        at: TimestampSchema.nullable(),
+        xp: z.number().int().nonnegative().nullable(),
+      }),
+    )
+    .default([]),
+  /** Earned achievements by ID: the office day and the time they were earned. */
+  achievements: z
+    .record(z.string(), z.object({ day: z.number().int().min(1), at: TimestampSchema }))
+    .default({}),
+  /** Chosen desk items by slot (e.g. { plant: 'fern' }). */
+  desk: z.record(z.string(), z.string()).default({}),
+  /** Chooses this save's variant of each case (0 = the original wording). */
+  seed: z.number().int().nonnegative().default(0),
+})
+
 export const WorkStateSchema = z.object({
   day: z.number().int().min(1),
   minute: OfficeMinuteSchema,
@@ -753,10 +780,12 @@ export const WorkStateSchema = z.object({
     indicators: { satisfaction: 70, risk: 30, discipline: 70 },
     spend: {},
   }),
+  /** The career record (added in profile format 4). */
+  record: CareerRecordSchema.prefault({}),
 })
 
 /** Current format of player profiles; raise it (with an upgrade) when the shape changes. */
-export const PROFILE_FORMAT_VERSION = 3
+export const PROFILE_FORMAT_VERSION = 4
 
 /** One player's career save. */
 export const ProfileSchema = SyncFieldsSchema.extend({

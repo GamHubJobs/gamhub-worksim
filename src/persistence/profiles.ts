@@ -5,6 +5,7 @@
  * one transaction.
  */
 import { z } from 'zod'
+import { CAREERS } from '../content/careers'
 import type { CaptureDecision } from '../game/portfolio'
 import { applyCapture, applyProjectCapture, findPortfolioItem } from './portfolio'
 import { createId } from '../lib/ids'
@@ -44,6 +45,25 @@ export type ProfileFields = Omit<Profile, keyof SyncFields | 'formatVersion'>
  * - 2 → 3: adds cases and the organisation's state (no cases yet, ordinary
  *   indicators). Nothing else changes.
  */
+/** Levels held before records began: known, but not when they were reached. */
+function earlierPromotions(careerId: unknown, levelId: unknown) {
+  const career = CAREERS.find((c) => c.id === careerId)
+  const index = career?.levels.findIndex((l) => l.id === levelId) ?? -1
+  return (career?.levels.slice(1, index + 1) ?? []).map((level) => ({
+    levelId: level.id,
+    day: null,
+    at: null,
+    xp: null,
+  }))
+}
+
+/** A stable case-variation seed for a save made before seeds existed. */
+export function seedFrom(text: string): number {
+  let hash = 2166136261
+  for (const char of text) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+  return hash >>> 0
+}
+
 export function upgradeProfile(raw: unknown): unknown {
   if (typeof raw !== 'object' || raw === null) return raw
   const version = (raw as { formatVersion?: unknown }).formatVersion
@@ -61,6 +81,20 @@ export function upgradeProfile(raw: unknown): unknown {
       ...upgraded,
       formatVersion: 3,
       work: { ...work, cases: work.cases ?? {}, org: work.org ?? startingOrgState() },
+    }
+  }
+  if (version < 4) {
+    const work = upgraded.work as Record<string, unknown>
+    upgraded = {
+      ...upgraded,
+      formatVersion: 4,
+      work: {
+        ...work,
+        record: work.record ?? {
+          promotions: earlierPromotions(upgraded.careerId, upgraded.levelId),
+          seed: seedFrom(String(upgraded.id ?? '')),
+        },
+      },
     }
   }
   return upgraded

@@ -99,7 +99,49 @@ working simulations of the professional software used in its field (see
 
 **Phase 6 is complete.**
 
+**Phase 7: "Career Intelligence, Engagement and Accessibility"** (in progress). Plan:
+[docs/PHASE7_PLAN.md](docs/PHASE7_PLAN.md).
+
+- [x] 7.1 Career-wide performance record (save format 4)
+- [ ] 7.2 Achievements and desk customisation
+- [ ] 7.3 Varied cases and new cases
+- [ ] 7.4 Career readiness assessments
+- [ ] 7.5 Performance: code splitting and startup
+- [ ] 7.6 Accessibility
+- [ ] 7.7 Portfolio integration, hardening and documentation
+
 ---
+
+## 2026-11-01 · Milestone 7.1: Career-wide performance record
+
+### Built
+
+- **Save format 4.** Each career save gains a record of what cannot be worked out
+  later: promotions (the level, the office day, the time and the XP), and room for
+  achievements, desk items and the case-variation seed. Older saves upgrade
+  automatically: levels already held are kept as “before records began”.
+- **Performance record** in the Career app, worked out from saved tasks, cases,
+  meetings and relationships. Each figure says how it is calculated:
+  - clients and customers (cases handled, average score, missed deadlines, client
+    satisfaction);
+  - budgets and approvals (requests approved, rejected and escalated, the value
+    approved, decisions within policy and authority, the spending limit, the
+    department’s remaining budget);
+  - workplace incidents;
+  - meetings and deliverables (team meetings, case meetings joined, files handed in);
+  - work with other departments (hand-offs right first time, follow-ups needed);
+  - leadership (teams led, work delegated and how well matched, reviews, decisions);
+  - relationships (colleagues, average trust, reputation);
+  - progression (level, tasks, average score, integrated projects, weekly reviews).
+- **Level by level:** tasks and cases are counted at the level the player held when
+  they submitted them, so earlier levels keep their record after a promotion.
+
+### Tested
+
+- Unit: the format 3 → 4 upgrade (levels kept, a stable seed); promotions recorded
+  with the day; every section explained; customer, approval and hand-off figures
+  from real answers; periods split by promotion; all six careers.
+- Browser: the record counts a real case, explains it, and survives a reload.
 
 ## 2026-11-01 · Milestone 6.9: Office integration, balance, hardening, documentation
 

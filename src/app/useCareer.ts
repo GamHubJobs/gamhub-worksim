@@ -79,6 +79,11 @@ export interface SubmissionResult {
   reward: Reward
 }
 
+/** A random seed for a new save's case variants (never 0, which is the original wording). */
+function newSeed(): number {
+  return 1 + Math.floor(Math.random() * 0x7ffffffe)
+}
+
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
@@ -124,7 +129,9 @@ export function useCareer() {
 
   const createCareer = useCallback(
     async (name: string, careerId?: string) => {
-      const profile = await createProfile(newProfileData(name, Date.now(), careerId))
+      const profile = await createProfile(
+        newProfileData(name, Date.now(), careerId, newSeed()),
+      )
       show(profile, true)
     },
     [show],
@@ -141,7 +148,9 @@ export function useCareer() {
       const existing = saves.find((p) => p.careerId === careerId)
       const profile = existing
         ? await setActiveProfile(existing.id)
-        : await createProfile(newProfileData(state.profile.name, Date.now(), careerId))
+        : await createProfile(
+            newProfileData(state.profile.name, Date.now(), careerId, newSeed()),
+          )
       show(profile, true)
     },
     [state, show],

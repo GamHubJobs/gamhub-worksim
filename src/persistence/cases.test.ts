@@ -60,7 +60,7 @@ describe('cases in saves', () => {
     backup.checksum = await sha256(JSON.stringify(backup.data))
     await importBackup(await readBackupFile(JSON.stringify(backup)), database)
     const restored = (await database.profiles.get(profile.id))!
-    expect(restored.formatVersion).toBe(3)
+    expect(restored.formatVersion).toBe(4)
     expect(restored.work.cases).toEqual({})
     expect(restored.work.org.indicators).toEqual({
       satisfaction: 70,

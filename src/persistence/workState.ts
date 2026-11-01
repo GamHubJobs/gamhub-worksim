@@ -28,7 +28,7 @@ export function freshToday(minute = ARRIVAL_MINUTE): Today {
   }
 }
 
-export function startingWorkState(): WorkState {
+export function startingWorkState(seed = 0): WorkState {
   return {
     day: 1,
     minute: ARRIVAL_MINUTE,
@@ -43,6 +43,7 @@ export function startingWorkState(): WorkState {
     reviews: [],
     cases: {},
     org: startingOrgState(),
+    record: { promotions: [], achievements: {}, desk: {}, seed },
   }
 }
 

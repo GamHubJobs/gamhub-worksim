@@ -22,6 +22,7 @@ import { Icon } from '../../ui/Icon'
 import { CASES } from '../../content/cases'
 import { approvalLimit } from '../../content/organisation'
 import { levelNumber } from '../../game/cases'
+import { careerRecord } from '../../game/careerRecord'
 
 function ProgressBar({
   value,
@@ -78,6 +79,103 @@ function Authority({ profile }: { profile: Profile }) {
           </li>
         )}
       </ul>
+    </section>
+  )
+}
+
+/**
+ * The career-wide record: each figure with how it is worked out, and the work
+ * done at each level so the player can see how it developed.
+ */
+function PerformanceRecord({ profile }: { profile: Profile }) {
+  const record = careerRecord(profile)
+  return (
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-6"
+      aria-labelledby="record-heading"
+      data-testid="performance-record"
+    >
+      <h2 id="record-heading" className="font-semibold text-slate-900">
+        Performance record
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">
+        Worked out from your saved tasks, cases, meetings and relationships. Each figure
+        says where it comes from.
+      </p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {record.sections.map((section) => (
+          <div
+            key={section.id}
+            className="rounded-lg border border-slate-200 p-4"
+            data-testid={`record-${section.id}`}
+          >
+            <h3 className="text-sm font-semibold text-slate-800">{section.title}</h3>
+            <dl className="mt-2 space-y-2">
+              {section.stats.map((stat) => (
+                <div key={stat.label}>
+                  <div className="flex justify-between gap-3 text-sm">
+                    <dt className="text-slate-700">{stat.label}</dt>
+                    <dd className="font-medium text-slate-900">{stat.value}</dd>
+                  </div>
+                  <p className="text-xs text-slate-500">{stat.source}</p>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+      <h3 className="mt-6 text-sm font-semibold text-slate-800">Level by level</h3>
+      <table className="mt-2 w-full text-left text-sm" data-testid="record-periods">
+        <caption className="sr-only">Your work at each level you have held</caption>
+        <thead className="text-xs text-slate-500">
+          <tr>
+            <th scope="col" className="py-1 font-medium">
+              Level
+            </th>
+            <th scope="col" className="py-1 font-medium">
+              From
+            </th>
+            <th scope="col" className="py-1 font-medium">
+              Tasks passed
+            </th>
+            <th scope="col" className="py-1 font-medium">
+              Average task score
+            </th>
+            <th scope="col" className="py-1 font-medium">
+              Cases
+            </th>
+            <th scope="col" className="py-1 font-medium">
+              Average case score
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {record.periods.map((period) => (
+            <tr key={period.levelId} className="border-t border-slate-100">
+              <th scope="row" className="py-1.5 font-medium text-slate-800">
+                {period.title}
+              </th>
+              <td className="py-1.5">
+                {period.fromDay === null
+                  ? 'Before records began'
+                  : `Day ${period.fromDay}`}
+              </td>
+              <td className="py-1.5">{period.tasksPassed}</td>
+              <td className="py-1.5">
+                {period.averageTaskScore === null ? '–' : `${period.averageTaskScore}%`}
+              </td>
+              <td className="py-1.5">{period.casesSubmitted}</td>
+              <td className="py-1.5">
+                {period.averageCaseScore === null ? '–' : `${period.averageCaseScore}%`}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 text-xs text-slate-500">
+        Work is counted at the level you held when you submitted it. Earlier levels keep
+        their record when you are promoted.
+      </p>
     </section>
   )
 }
@@ -161,6 +259,8 @@ export function CareerApp({
         )}
 
         <Authority profile={profile} />
+
+        <PerformanceRecord profile={profile} />
 
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="font-semibold text-slate-900">Skills</h2>

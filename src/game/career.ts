@@ -100,11 +100,13 @@ export function newProfileData(
   name: string,
   now: number,
   careerId = DEFAULT_CAREER_ID,
+  /** Chooses this save's case variants; 0 keeps every case's original wording. */
+  seed = 0,
 ): ProfileData {
   const first = ASSIGNMENTS.filter((a) => a.careerId === careerId).sort(
     (a, b) => a.order - b.order,
   )[0]
-  const work = startingWorkState()
+  const work = startingWorkState(seed)
   return {
     work: first ? addDeadline(work, first.id) : work,
     name: name.trim(),
@@ -341,6 +343,21 @@ export function advanceCareer(
     updated = {
       ...updated,
       levelId: promotion.next.id,
+      work: {
+        ...updated.work,
+        record: {
+          ...updated.work.record,
+          promotions: [
+            ...updated.work.record.promotions,
+            {
+              levelId: promotion.next.id,
+              day: updated.work.day,
+              at: now,
+              xp: updated.xp,
+            },
+          ],
+        },
+      },
       inbox: [
         ...updated.inbox,
         promotionMessage(profile.name, promotion.next.title, now + 3, profile.careerId),
