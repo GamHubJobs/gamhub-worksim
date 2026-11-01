@@ -19,6 +19,9 @@ import {
 } from '../../game/career'
 import type { Profile } from '../../persistence/schemas'
 import { Icon } from '../../ui/Icon'
+import { CASES } from '../../content/cases'
+import { approvalLimit } from '../../content/organisation'
+import { levelNumber } from '../../game/cases'
 
 function ProgressBar({
   value,
@@ -41,6 +44,41 @@ function ProgressBar({
     >
       <div className="h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} />
     </div>
+  )
+}
+
+/** What the player's level lets them decide: spending, and leading a team. */
+function Authority({ profile }: { profile: Profile }) {
+  const { career } = careerLevel(profile)
+  const level = levelNumber(profile)
+  const limit = approvalLimit(level)
+  const leadsFrom = Math.min(
+    ...CASES.filter(
+      (c) => c.kind === 'leadership' && c.careerId === profile.careerId,
+    ).map((c) => c.minLevel),
+  )
+  const leader = career.levels[leadsFrom - 1]
+  return (
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-6"
+      data-testid="authority"
+    >
+      <h2 className="font-semibold text-slate-900">Your authority</h2>
+      <ul className="mt-3 space-y-2 text-sm text-slate-700">
+        <li>
+          {limit > 0
+            ? `You can approve spending of up to £${limit.toLocaleString('en-GB')}, if it is within policy and the department’s remaining budget. Anything larger goes up to the budget holder.`
+            : 'You cannot approve spending yet: requests go to your manager. Your approval limit grows with each promotion.'}
+        </li>
+        {leader && (
+          <li>
+            {level >= leadsFrom
+              ? 'You lead a team: you share out the work, review it, settle disagreements and give feedback.'
+              : `Leading a team starts at ${leader.title}.`}
+          </li>
+        )}
+      </ul>
+    </section>
   )
 }
 
@@ -121,6 +159,8 @@ export function CareerApp({
             </ul>
           </section>
         )}
+
+        <Authority profile={profile} />
 
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="font-semibold text-slate-900">Skills</h2>

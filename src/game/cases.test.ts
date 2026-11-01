@@ -519,3 +519,25 @@ describe('the programme board', () => {
     ).toBe(true)
   })
 })
+
+describe('balance between the careers', () => {
+  const byCareer = CAREERS.map((career) => CASES.filter((c) => c.careerId === career.id))
+
+  it('gives every career the same kinds of cases, in the same numbers', () => {
+    // A career's customers are clients or colleagues (the help desk serves colleagues).
+    const kindOf = (c: Case) => (c.kind === 'internal' ? 'client' : c.kind)
+    const shape = (cases: Case[]) =>
+      Object.fromEntries(
+        [...new Set(cases.map(kindOf))]
+          .sort()
+          .map((kind) => [kind, cases.filter((c) => kindOf(c) === kind).length]),
+      )
+    for (const cases of byCareer) expect(shape(cases)).toEqual(shape(byCareer[0]))
+  })
+
+  it('offers similar experience from cases in every career', () => {
+    const totals = byCareer.map((cases) => cases.reduce((sum, c) => sum + c.xp, 0))
+    const mean = totals.reduce((a, b) => a + b, 0) / totals.length
+    for (const total of totals) expect(Math.abs(total - mean) / mean).toBeLessThan(0.15)
+  })
+})

@@ -2,7 +2,12 @@
  * What people and things in the office say, based on the player's progress.
  * Pure functions, so the office always reflects the real state of the career.
  */
+import { getCase } from '../content/cases'
 import { activeDepartment, fill } from '../content/departments'
+import { PROGRAMME } from '../content/programme'
+import { minutesLeft, openCases } from './cases'
+import { formatDuration } from './clock'
+import { programmeBoard, programmeStartDay } from './programme'
 import type { InteractionId } from '../content/office'
 import type { Assignment } from '../content/schemas'
 import type { Choice, EffectNote } from './scenes'
@@ -21,7 +26,12 @@ import {
 export interface DialogueAction {
   label: string
   /** Opens the computer at this app (and task). */
-  open: { app: 'mail' | 'tasks' | 'sheets' | 'career'; assignmentId?: string }
+  open: {
+    app: 'mail' | 'tasks' | 'sheets' | 'career' | 'cases'
+    assignmentId?: string
+    /** In Cases: the case to open. */
+    item?: string
+  }
 }
 
 export interface Dialogue {
@@ -182,11 +192,24 @@ function whiteboardDialogue(profile: ProfileData): Dialogue {
                 : 'new'
       return `${assignment.title}: ${mark}`
     })
+  const cases = openCases(profile).flatMap((progress) => {
+    const def = getCase(progress.caseId)
+    if (!def) return []
+    const left = minutesLeft(profile.work, progress)
+    return [
+      `Case: ${def.title}: ${left > 0 ? `due in ${formatDuration(left)}` : 'overdue'}`,
+    ]
+  })
   return {
     speaker: null,
     title: `This week: ${firstName(profile.name)}`,
-    lines,
-    actions: [{ label: 'Open Tasks', open: { app: 'tasks' } }],
+    lines: [...lines, ...cases],
+    actions: [
+      { label: 'Open Tasks', open: { app: 'tasks' } },
+      ...(cases.length > 0
+        ? [{ label: 'Open Cases', open: { app: 'cases' as const } }]
+        : []),
+    ],
   }
 }
 
@@ -198,9 +221,24 @@ function noticeboardDialogue(profile: ProfileData): Dialogue {
     lines: [
       ...activeDepartment().news,
       `Welcome to the team: ${profile.name}, ${current.title}.`,
+      ...companyNews(profile),
     ],
     actions: [],
   }
+}
+
+/** What the company-wide notices say: its indicators, and the programme if it has started. */
+function companyNews(profile: ProfileData): string[] {
+  const { indicators } = profile.work.org
+  const news = [
+    `Company dashboard: client satisfaction ${indicators.satisfaction}, risk ${indicators.risk}, discipline ${indicators.discipline} (out of 100).`,
+  ]
+  if (programmeStartDay(profile) !== null) {
+    const board = programmeBoard(profile)
+    const done = board.filter((row) => row.status === 'done').length
+    news.push(`${PROGRAMME.title}: ${done} of ${board.length} workstreams done.`)
+  }
+  return news
 }
 
 /** A dialogue with role names filled in ({manager} → "Priya"). */

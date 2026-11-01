@@ -339,6 +339,7 @@ export function Desktop({
             <Notices
               profile={profile}
               onGo={(spot, event) => setView({ app: 'office', spot, event })}
+              onOpenCase={(caseId) => setView({ app: 'cases', item: caseId })}
             />
             <div className="min-h-0 flex-1">
               {view.app === 'mail' && (
@@ -608,9 +609,11 @@ function WorkClock({
 function Notices({
   profile,
   onGo,
+  onOpenCase,
 }: {
   profile: Profile
   onGo: (spot: SpotId, event?: string) => void
+  onOpenCase: (caseId: string) => void
 }) {
   const [dismissed, setDismissed] = useState<string[]>([])
   const notices = computerNotices(profile).filter((n) => !dismissed.includes(n.id))
@@ -633,7 +636,11 @@ function Notices({
           <span className="flex-1">{notice.text}</span>
           <button
             type="button"
-            onClick={() => onGo(notice.action.spot, notice.action.event)}
+            onClick={() => {
+              const { action } = notice
+              if ('caseId' in action) onOpenCase(action.caseId)
+              else onGo(action.spot, action.event)
+            }}
             className="rounded-md bg-white px-2.5 py-1 text-xs font-medium shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
           >
             {notice.action.label}

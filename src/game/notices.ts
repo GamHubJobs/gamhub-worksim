@@ -1,22 +1,73 @@
 /**
  * Gentle reminders shown at the computer: a meeting starting, lunchtime, a
- * break, going home. They never block work; each has a button that walks the
- * player to the right place in the office.
+ * break, going home, a case falling due. They never block work; each has a
+ * button that walks the player to the right place in the office, or opens the
+ * case.
  */
+import { getCase } from '../content/cases'
 import type { SpotId } from '../content/office'
 import { BREAK_DUE_AFTER, HOURS } from '../content/workday'
 import { fill, findPerson } from '../content/departments'
 import type { ProfileData } from './career'
 import { pendingEvents } from './events'
-import { formatTime } from './clock'
+import { formatDuration, formatTime } from './clock'
+import { meetingStatus, minutesLeft, minutesToMeeting, openCases } from './cases'
 import { lunchAvailability, openMeeting } from './workday'
 
 export interface Notice {
   id: string
   text: string
   tone: 'info' | 'warning'
-  /** Where the button takes the player, and the event to open there. */
-  action: { label: string; spot: SpotId; event?: string }
+  /** Where the button takes the player (and the event to open there), or the case it opens. */
+  action:
+    { label: string; spot: SpotId; event?: string } | { label: string; caseId: string }
+}
+
+/** A case's meeting is this close (minutes) before it is mentioned. */
+export const CASE_MEETING_NOTICE = 30
+/** A case is this close (minutes) to its deadline before it is mentioned. */
+export const CASE_DUE_NOTICE = 60
+
+/** Reminders about open cases: a meeting about to start, a deadline close. */
+export function caseNotices(profile: ProfileData): Notice[] {
+  const notices: Notice[] = []
+  for (const progress of openCases(profile)) {
+    const def = getCase(progress.caseId)
+    if (!def) continue
+    const open = { label: 'Open the case', caseId: def.id }
+    const status = meetingStatus(profile.work, def, progress)
+    if (def.meeting && status === 'open') {
+      notices.push({
+        id: `case-meeting:${def.id}`,
+        text: `${def.meeting.title} has started (${def.meeting.room}). You can still join.`,
+        tone: 'warning',
+        action: open,
+      })
+      continue
+    }
+    if (def.meeting && status === 'upcoming') {
+      const wait = minutesToMeeting(profile.work, def, progress)
+      if (wait <= CASE_MEETING_NOTICE) {
+        notices.push({
+          id: `case-meeting:${def.id}`,
+          text: `${def.meeting.title} starts in ${formatDuration(wait)}. Is your preparation ready?`,
+          tone: 'info',
+          action: open,
+        })
+        continue
+      }
+    }
+    const left = minutesLeft(profile.work, progress)
+    if (left > 0 && left <= CASE_DUE_NOTICE) {
+      notices.push({
+        id: `case-due:${def.id}`,
+        text: `“${def.title}” is due in ${formatDuration(left)}.`,
+        tone: 'warning',
+        action: open,
+      })
+    }
+  }
+  return notices
 }
 
 export function computerNotices(profile: ProfileData): Notice[] {
@@ -34,6 +85,8 @@ export function computerNotices(profile: ProfileData): Notice[] {
       action: { label: `Talk to ${name}`, spot: 'desk', event: event.id },
     })
   }
+
+  notices.push(...caseNotices(profile))
 
   const meeting = openMeeting(work)
   if (meeting) {

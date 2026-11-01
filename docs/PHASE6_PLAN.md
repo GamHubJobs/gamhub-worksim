@@ -1,7 +1,8 @@
 # Phase 6 plan: Real-World Career Simulation
 
-Status: **in progress** (authorised by the owner on 1 November 2026). Progress is recorded
-in [DEVELOPMENT_LOG.md](../DEVELOPMENT_LOG.md).
+Status: **implemented** (milestones 6.1 to 6.9, November 2026). What was built, and the
+tests, are recorded in [DEVELOPMENT_LOG.md](../DEVELOPMENT_LOG.md); the player guide is
+[CASES_GUIDE.md](CASES_GUIDE.md).
 
 ## Goal
 

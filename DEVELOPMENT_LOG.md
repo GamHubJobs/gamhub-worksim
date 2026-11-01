@@ -84,7 +84,7 @@ working simulations of the professional software used in its field (see
 
 **Phase 5 is complete.**
 
-**Phase 6: "Real-World Career Simulation"** (in progress). Plan:
+**Phase 6: "Real-World Career Simulation"** (complete). Plan:
 [docs/PHASE6_PLAN.md](docs/PHASE6_PLAN.md).
 
 - [x] 6.1 Organisation model, case engine, Cases app, save migration
@@ -95,9 +95,38 @@ working simulations of the professional software used in its field (see
 - [x] 6.6 Complex workplace incidents
 - [x] 6.7 Management and leadership
 - [x] 6.8 Cross-functional programme: the company expansion
-- [ ] 6.9 Office integration, balance, hardening, documentation
+- [x] 6.9 Office integration, balance, hardening, documentation
+
+**Phase 6 is complete.**
 
 ---
+
+## 2026-11-01 · Milestone 6.9: Office integration, balance, hardening, documentation
+
+### Built
+
+- **Cases in the office.** Reminders at the computer when a case is due within the
+  hour, or its meeting is about to start or has started, with **Open the case**. The
+  team whiteboard lists open cases and the time left (and opens Cases). The break
+  room notice board shows the company indicators and the programme's progress.
+- **Your authority** in the Career app: the player's approval limit, and when leading
+  a team begins.
+- **Balance.** A test keeps the six careers equal: every career has 10 cases of the
+  same kinds (two customer cases, whether clients or colleagues, one operations, two
+  workflow, one meeting, one incident, one leadership and two programme), with
+  985 to 1,020 XP from cases.
+- **Hardening.** A save that names a case no longer in the game is ignored
+  everywhere (reminders, arrivals, the programme board, the office).
+- **Documentation.** A player guide ([docs/CASES_GUIDE.md](docs/CASES_GUIDE.md)), the
+  architecture notes and the roadmap updated, and the Phase 6 plan marked implemented.
+
+### Tested
+
+- Unit: deadline and meeting reminders, the whiteboard and notice board, a retired
+  case in a save, and the balance between careers.
+- Browser: a deadline reminder opens the case, the whiteboard lists it and opens
+  Cases, and the Career app shows the player's authority.
+- Full regression of every unit and browser test.
 
 ## 2026-11-01 · Milestone 6.8: Cross-functional programme: the company expansion
 

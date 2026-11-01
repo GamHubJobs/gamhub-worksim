@@ -612,3 +612,44 @@ for (const [career, levelTask, stages] of PROGRAMME_PARTS) {
     ).toContainText('Project')
   })
 }
+
+test('cases in the office: a deadline reminder, the whiteboard and the player’s authority', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  await page.goto('/')
+  await page.getByRole('radio', { name: /Office Administration/ }).check()
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await openApp(page, 'Career')
+  await expect(page.getByTestId('authority')).toContainText(
+    'You cannot approve spending yet',
+  )
+  await page.evaluate("window.__worksim.arriveCase('fa-short-delivery')")
+  await page.evaluate('window.__worksim.passTime(5 * 60 + 15)')
+
+  // A reminder at the top of the computer opens the case.
+  const reminder = page
+    .getByTestId('notices')
+    .getByRole('status')
+    .filter({ hasText: 'is due in 45 min' })
+  await expect(reminder).toBeVisible()
+  await reminder.getByRole('button', { name: 'Open the case' }).click()
+  await expect(
+    page.getByTestId('case-detail').getByRole('heading', { level: 2 }),
+  ).toBeVisible()
+
+  // The team whiteboard lists it too.
+  await page.getByRole('button', { name: 'Leave desk' }).click()
+  const panel = page.getByTestId('office-panel')
+  await page
+    .getByRole('navigation', { name: 'Places' })
+    .getByRole('button', { name: 'Your desk' })
+    .click()
+  await panel.getByRole('button', { name: 'Read the team whiteboard' }).click()
+  const dialogue = page.getByTestId('office-dialogue')
+  await expect(dialogue).toContainText('Case: ')
+  await expect(dialogue).toContainText('due in 45 min')
+  await dialogue.getByRole('button', { name: 'Open Cases' }).click()
+  await expect(page.getByRole('heading', { name: 'Cases', level: 1 })).toBeVisible()
+})

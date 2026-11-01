@@ -224,7 +224,26 @@ trust, reputation, departmental spending and the organisation's indicators
 (`content/organisation.ts`). Case state lives in the career save (`work.cases`,
 `work.org`, profile format 3). `checkCases` runs after every game action, like
 workplace events. Passed cases become portfolio items with a frozen case record. The
-plan is in [PHASE6_PLAN.md](PHASE6_PLAN.md).
+plan is in [PHASE6_PLAN.md](PHASE6_PLAN.md); the player guide is
+[CASES_GUIDE.md](CASES_GUIDE.md).
+
+- **Kinds.** Client, internal, operations (approvals against `approvalLimit` and
+  departmental budgets), workflow (hand-offs with a follow-up case when wrong), meeting
+  (`meeting` timing; steps in `prepare`, `meeting` and `after` phases), incident,
+  leadership (`minLevel` 4) and programme.
+- **Arrival.** At most two ordinary cases are open at once. Follow-ups (`onlyIf`) and
+  the next stage of a programme bypass the limit, because they come from the player’s
+  own work.
+- **The programme** (`content/programme.ts`, `game/programme.ts`). The Manchester
+  office programme gives every career two programme cases. Other departments’
+  workstreams advance with the days on the programme board. Both cases form a project
+  with `stageType: 'cases'`, whose stages are case portfolio items.
+- **In the office.** `caseNotices` (`game/notices.ts`) adds computer reminders for
+  deadlines and case meetings; a notice action can open a case. The team whiteboard
+  lists open cases. The notice board shows the company indicators and the programme’s
+  progress. The Career app shows the player’s approval authority.
+- **Old saves.** A save that names a case no longer in the content is ignored
+  everywhere.
 
 ### The working life (Phase 2)
 
@@ -295,7 +314,10 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
    (see [PROFESSIONAL_TOOLS.md](PROFESSIONAL_TOOLS.md))
 5. Employability and career portfolio (done; see [PHASE5_PLAN.md](PHASE5_PLAN.md) and
    the player guide [PORTFOLIO_GUIDE.md](PORTFOLIO_GUIDE.md))
-6. Achievements and customisation
-7. Polish
-8. Cloud accounts and sync
-9. Future: optional cosmetics, GamHub Jobs connection
+6. Real-world career simulation: clients, operations, workflows, meetings, incidents,
+   leadership, a cross-functional programme (done; see [PHASE6_PLAN.md](PHASE6_PLAN.md)
+   and the player guide [CASES_GUIDE.md](CASES_GUIDE.md))
+7. Achievements and customisation
+8. Polish
+9. Cloud accounts and sync
+10. Future: optional cosmetics, GamHub Jobs connection
