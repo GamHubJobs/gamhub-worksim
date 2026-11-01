@@ -9,6 +9,7 @@ import {
   type BackupPreview,
   type BackupStatus,
 } from '../persistence/backup'
+import { backfillPortfolio } from '../persistence/portfolioBackfill'
 import { formatBytes, type StorageHealth } from '../persistence/storageHealth'
 
 interface StoragePanelProps {
@@ -36,6 +37,7 @@ export function StoragePanel({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<BackupPreview | null>(null)
+  const [rebuilt, setRebuilt] = useState<number | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const dialog = useRef<HTMLDivElement>(null)
 
@@ -69,6 +71,10 @@ export function StoragePanel({
     const { fileName, text } = await exportBackup()
     downloadTextFile(fileName, text)
     onBackupDone()
+  }
+
+  async function rebuildPortfolio() {
+    setRebuilt(await backfillPortfolio())
   }
 
   async function chooseFile(file: File) {
@@ -207,6 +213,7 @@ export function StoragePanel({
                     `: ${preview.documentTitles.join(', ')}`}
                 </li>
                 <li>{preview.counts.documentVersions ?? 0} saved versions</li>
+                <li>{preview.counts.portfolioItems ?? 0} portfolio items</li>
                 {preview.skippedCount > 0 && (
                   <li>{preview.skippedCount} damaged items will be skipped</li>
                 )}
@@ -236,6 +243,30 @@ export function StoragePanel({
               </div>
             </div>
           )}
+
+          <div className="space-y-2 border-t border-slate-200 pt-3">
+            <h3 className="font-medium">Portfolio</h3>
+            <p className="text-sm text-slate-600">
+              Your portfolio is made from the work you passed. If something you passed is
+              missing, this adds it from your saved submissions. It never changes or
+              removes what is already there.
+            </p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => run(rebuildPortfolio)}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
+            >
+              Rebuild portfolio
+            </button>
+            {rebuilt !== null && (
+              <p className="text-sm text-slate-700" role="status" data-testid="rebuilt">
+                {rebuilt === 0
+                  ? 'Your portfolio was already complete.'
+                  : `Added ${rebuilt} item${rebuilt === 1 ? '' : 's'} to your portfolio.`}
+              </p>
+            )}
+          </div>
 
           {error && (
             <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">

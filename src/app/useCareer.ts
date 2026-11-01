@@ -24,6 +24,7 @@ import { checkEvents } from '../game/events'
 import { checkReviews } from '../game/reviews'
 import { afterSubmission } from '../game/workday'
 import { getDocument } from '../persistence/documentsRepo'
+import { backfillPortfolio } from '../persistence/portfolioBackfill'
 import { setActiveCareer } from '../content/departments'
 import {
   createProfile,
@@ -81,7 +82,11 @@ export function useCareer() {
 
   useEffect(() => {
     let active = true
-    getActiveProfile()
+    // Work passed in older saves (or restored backups) joins the portfolio.
+    // A problem here must never stop the game from opening.
+    backfillPortfolio()
+      .catch((error: unknown) => console.error('Portfolio backfill failed:', error))
+      .then(() => getActiveProfile())
       .then((profile) => {
         if (!active) return
         if (profile) show(profile, true)

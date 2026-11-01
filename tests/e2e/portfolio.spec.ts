@@ -84,3 +84,54 @@ test('passing a task captures exactly what was handed in, once', async ({ page }
   await expect(page.getByTestId('desktop')).toBeVisible()
   expect(await readTable(page, 'portfolioItems')).toHaveLength(1)
 })
+
+test('passed work missing from the portfolio is added back when WorkSim opens', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await page.goto('/')
+  await page.getByRole('radio', { name: /Software Development/ }).check()
+  await page.getByLabel('Your first name').fill('Sam')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await openApp(page, 'Tasks')
+  await page
+    .getByTestId('task-detail')
+    .getByRole('button', { name: 'Start task' })
+    .click()
+  const original = await page.getByTestId('code-editor').inputValue()
+  const fixed = original
+    .replace('let i = 1', 'let i = 0')
+    .replace('quantity + lines', 'quantity * lines')
+    .replace('subtotal * discountPercent', 'subtotal * (discountPercent / 100)')
+  expect(await submitCode(page, fixed)).toBe('100%')
+
+  // Like a save from before the portfolio existed: the record is not there.
+  await page.evaluate(`new Promise((resolve) => {
+    const open = indexedDB.open('gamhub-worksim')
+    open.onsuccess = () => {
+      const db = open.result
+      const tx = db.transaction(['portfolioItems', 'portfolioFiles'], 'readwrite')
+      tx.objectStore('portfolioItems').clear()
+      tx.objectStore('portfolioFiles').clear()
+      tx.oncomplete = () => {
+        db.close()
+        resolve(true)
+      }
+    }
+  })`)
+  expect(await readTable(page, 'portfolioItems')).toEqual([])
+
+  await page.reload()
+  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect.poll(async () => (await readTable(page, 'portfolioItems')).length).toBe(1)
+  expect(await readTable(page, 'portfolioFiles')).toHaveLength(1)
+
+  // Rebuilding again changes nothing.
+  await page.getByRole('button', { name: /Storage & backup/ }).click()
+  const panel = page.getByTestId('storage-panel')
+  await panel.getByRole('button', { name: 'Rebuild portfolio' }).click()
+  await expect(panel.getByTestId('rebuilt')).toHaveText(
+    'Your portfolio was already complete.',
+  )
+  expect(await readTable(page, 'portfolioItems')).toHaveLength(1)
+})

@@ -70,7 +70,7 @@ working simulations of the professional software used in its field (see
 owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 
 - [x] 5.1 Evidence capture and storage
-- [ ] 5.2 Backfill for existing saves, backup and safety
+- [x] 5.2 Backfill for existing saves, backup and safety
 - [ ] 5.3 Portfolio app: browse, filter, inspect
 - [ ] 5.4 Competency and experience record
 - [ ] 5.5 Career progress report and recommendations
@@ -80,6 +80,35 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [ ] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.2: Backfill, backup and safety
+
+### Built
+
+- **Backfill:** work passed before the portfolio existed now joins it automatically
+  each time WorkSim opens (and so after restoring a backup, which reloads the app). It
+  uses the best passing attempt and its “Submitted” copies from version history. Check
+  names are looked up from the task, since older attempts stored only their IDs.
+- Safe to run any number of times: tasks that already have a record are never changed.
+- If a submitted copy no longer exists, the record is still created from the grade and
+  the file is listed as “not available”.
+- Tasks skipped with the development shortcut (no check results) never become evidence.
+- **Storage & backup panel:** a new Portfolio section with **Rebuild portfolio**, which
+  adds anything missing and says how many items were added. The restore preview now
+  shows how many portfolio items a backup holds.
+- A problem in the backfill is logged and never stops the game from opening.
+
+### Tested
+
+- 54 new unit tests: a Phase 4-style save gets its record (with the exact submitted file
+  and check names), running twice changes nothing, failed and skipped work are ignored,
+  a missing file is marked “not available”, a pre-Phase 5 backup (database version 3,
+  no portfolio tables) restores and then gets its portfolio, and every task’s checks
+  have names.
+- New browser test: the portfolio is removed, WorkSim reopens and rebuilds it, and the
+  Rebuild button then reports it complete.
 
 ---
 
