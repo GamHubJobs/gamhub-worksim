@@ -93,7 +93,8 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/apps/code/`                      | Code: file list, editor, Run tests panel                          |
 | `src/apps/shared/`                    | Save hook, document window, file browser, "insert from Sheets"    |
 | `src/apps/mail/`, `tasks/`, `career/` | The other desktop apps                                            |
-| `src/apps/portfolio/`                 | Portfolio app: list, filters, item page, read-only file viewer    |
+| `src/apps/portfolio/`                 | Portfolio app: work, skills, progress report, export              |
+| `src/export/`                         | Exports: files as blocks (`blocks.ts`); PDFs (`pdf/`)             |
 | `src/content/`                        | Content as validated data: company, careers, assignments          |
 | `src/content/departments/`            | One file per department: its people, meetings, tips and news      |
 | `src/game/`                           | Game rules (pure TS): grading, rewards, unlocks, promotion, mail  |
@@ -204,6 +205,11 @@ only how it is presented (included, featured, note, order). Earlier saves and
 old backups get their items from the backfill, which runs at start-up. The plan
 is in [PHASE5_PLAN.md](PHASE5_PLAN.md).
 
+Competencies, the experience record and the progress report are calculated from
+the items when shown (`game/competencies.ts`, `game/progressReport.ts`); nothing
+is stored. Exports turn each file into blocks (headings, text, tables, charts,
+code) and write them as real PDF text and vector charts, never screenshots.
+
 ### The working life (Phase 2)
 
 All of it is stored in `profile.work` (profile format 2), so it autosaves and is
@@ -259,6 +265,8 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 | Charts, Slides    | Own SVG charts and slide editor          |
 | Spreadsheet       | Own engine and grid, built incrementally |
 | SQL (Data Studio) | sql.js (SQLite in the browser), MIT      |
+| PDF exports       | jsPDF + jspdf-autotable, MIT (on demand) |
+| PDF tests         | pdfjs-dist, Apache-2.0 (tests only)      |
 
 ## Roadmap
 

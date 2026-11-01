@@ -74,12 +74,55 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [x] 5.3 Portfolio app: browse, filter, inspect
 - [x] 5.4 Competency and experience record
 - [x] 5.5 Career progress report and recommendations
-- [ ] 5.6 PDF engine and report exports
+- [x] 5.6 PDF engine and report exports
 - [ ] 5.7 Original file exports and the portfolio package
 - [ ] 5.8 Employability profile
 - [ ] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.6: PDF exports
+
+### Built
+
+- An **Export** section in the Portfolio app, with a “Name on your documents” field and
+  two downloads:
+  - **Portfolio PDF:** a cover page (name, careers, honesty statement), a contents page
+    with page numbers, then every included item, featured first.
+  - **Competency report PDF:** how levels are decided, every competency with its
+    reasons and evidence, areas to improve, recommended next steps and experience.
+- **Download as PDF** on each item’s page.
+- Each item shows what was asked, the grade, every check and why it matters, the
+  player’s note, and **the work itself as handed in**: spreadsheets as tables of the
+  values shown (formulas calculated), reports as headings, text, lists and tables,
+  slides slide by slide with speaker notes, ticket queues as tables, code as numbered
+  listings, and professional-tool files as tables of their data.
+- Charts (in reports and slides) are drawn as vector graphics with their data table
+  underneath. All text is real, selectable PDF text; nothing is a screenshot.
+- Page numbers and a footer on every page; text the standard PDF fonts cannot show is
+  replaced safely (for example “→” becomes “->”).
+- `src/export/blocks.ts` turns any file into blocks (headings, paragraphs, lists,
+  tables, charts, code). It works for every tool without per-tool code, and the
+  original-file exports in 5.7 will reuse it.
+- The PDF code is loaded only when exporting (a separate 145 kB compressed file).
+
+### Dependencies added
+
+- **jsPDF** 4.2.1 and **jspdf-autotable** 5.0.9 (MIT): PDF writing in the browser.
+- **pdfjs-dist** 6.4.299 (Apache-2.0), tests only: reads the PDFs back to check text.
+
+### Tested
+
+- 68 new unit tests: blocks for sheets (calculated values, formulas), documents,
+  slides, tickets, code and every tool’s sample file; every task’s files export;
+  generated PDFs read back with pdf.js (item, report with slides, code, portfolio
+  contents page numbers pointing at the right pages, a 48-item portfolio, the
+  competency report, safe text).
+- New browser test: the portfolio, competency report and item PDFs download with the
+  right names, start with a PDF header, and contain the work and honesty statement.
+- Checked visually by rendering pages with pdf.js.
 
 ---
 

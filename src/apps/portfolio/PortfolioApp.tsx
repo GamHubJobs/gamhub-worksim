@@ -20,6 +20,7 @@ import {
   PORTFOLIO_TABS,
 } from './filters'
 import { ItemPage } from './ItemPage'
+import { ExportView } from './ExportView'
 import { ProgressReportView } from './ProgressReportView'
 import { SkillsView } from './SkillsView'
 import type { Recommendation } from '../../game/progressReport'
@@ -245,7 +246,18 @@ export function PortfolioApp({
           )}
         </section>
 
-        {tab === 'report' ? (
+        {tab === 'export' ? (
+          <ExportView
+            items={inSaves}
+            profiles={
+              filters.profileId === 'all'
+                ? loaded.profiles
+                : loaded.profiles.filter((p) => p.id === filters.profileId)
+            }
+            defaultName={profile.name}
+            saveName={(item) => saveName(profileOf(item.profileId))}
+          />
+        ) : tab === 'report' ? (
           <div className="space-y-5">
             {(filters.profileId === 'all'
               ? loaded.profiles

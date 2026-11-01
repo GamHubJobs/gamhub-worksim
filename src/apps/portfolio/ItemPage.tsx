@@ -14,6 +14,7 @@ import {
 import type { PortfolioFile, PortfolioItem } from '../../persistence/schemas'
 import { Icon } from '../../ui/Icon'
 import { EvidenceViewer } from './EvidenceViewer'
+import { downloadItemPdf } from './exports'
 
 const RATINGS = { excellent: 'Excellent', good: 'Good', pass: 'Pass' } as const
 
@@ -65,6 +66,19 @@ export function ItemPage({
     }
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- reload only when the files change
   }, [item.id, fileIds])
+
+  const [exporting, setExporting] = useState(false)
+  async function exportPdf() {
+    setExporting(true)
+    setError(null)
+    try {
+      await downloadItemPdf(item, saveName)
+    } catch (e) {
+      setError(`The PDF could not be made: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   function change(presentation: PresentationChange) {
     if (presentation.included !== undefined || presentation.featured !== undefined) {
@@ -232,7 +246,17 @@ export function ItemPage({
         </section>
 
         <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="font-semibold text-slate-900">How it is shown</h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-semibold text-slate-900">How it is shown</h2>
+            <button
+              type="button"
+              onClick={() => void exportPdf()}
+              disabled={exporting}
+              className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50 disabled:opacity-60"
+            >
+              {exporting ? 'Preparing the PDF…' : 'Download as PDF'}
+            </button>
+          </div>
           <p className="text-sm text-slate-600">
             These choices change only how this work is presented, never the results.
           </p>

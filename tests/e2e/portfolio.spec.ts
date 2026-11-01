@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
+import { expect, test, type Download, type Page } from '@playwright/test'
 import { openApp } from './helpers.ts'
 
 /** Reads every row of a table straight from the browser's database. */
@@ -204,4 +205,79 @@ test('passed work missing from the portfolio is added back when WorkSim opens', 
     'Your portfolio was already complete.',
   )
   expect(await readTable(page, 'portfolioItems')).toHaveLength(1)
+})
+
+/** The text of a downloaded PDF, read back with pdf.js. */
+async function downloadedPdfText(download: Download): Promise<string> {
+  const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs')
+  const data = new Uint8Array(await readFile(await download.path()))
+  expect(new TextDecoder().decode(data.slice(0, 5))).toBe('%PDF-')
+  const pdf = await getDocument({ data, verbosity: 0 }).promise
+  let text = ''
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const content = await (await pdf.getPage(i)).getTextContent()
+    text += content.items.map((item) => ('str' in item ? item.str : '')).join(' ') + '\n'
+  }
+  return text.replace(/[ \t]+/g, ' ')
+}
+
+test('the portfolio, the competency report and an item download as PDFs', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  await page.goto('/')
+  await page.getByRole('radio', { name: /Software Development/ }).check()
+  await page.getByLabel('Your first name').fill('Robin')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await openApp(page, 'Tasks')
+  await page
+    .getByTestId('task-detail')
+    .getByRole('button', { name: 'Start task' })
+    .click()
+  const original = await page.getByTestId('code-editor').inputValue()
+  const fixed = original
+    .replace('let i = 1', 'let i = 0')
+    .replace('quantity + lines', 'quantity * lines')
+    .replace('subtotal * discountPercent', 'subtotal * (discountPercent / 100)')
+  expect(await submitCode(page, `${fixed}\n// exported version`)).toBe('100%')
+
+  await openApp(page, 'Portfolio')
+  await page
+    .getByRole('navigation', { name: 'Portfolio sections' })
+    .getByRole('button', { name: 'Export' })
+    .click()
+  const view = page.getByTestId('export-view')
+  await view.getByLabel('Name on your documents').fill('Robin Ellis')
+
+  let download = page.waitForEvent('download')
+  await view.getByRole('button', { name: 'Download portfolio PDF' }).click()
+  let file = await download
+  expect(file.suggestedFilename()).toBe('Robin Ellis - portfolio.pdf')
+  let text = await downloadedPdfText(file)
+  expect(text).toContain('Robin Ellis')
+  expect(text).toContain('Contents')
+  expect(text).toContain('Fix the invoice totals')
+  expect(text).toContain('// exported version')
+  expect(text).toContain('It is not a record of employment')
+  await expect(view.getByTestId('export-done')).toContainText('Portfolio PDF is ready')
+
+  download = page.waitForEvent('download')
+  await view.getByRole('button', { name: 'Download competency report' }).click()
+  file = await download
+  expect(file.suggestedFilename()).toBe('Robin Ellis - competency report.pdf')
+  text = await downloadedPdfText(file)
+  expect(text).toContain('How levels are decided')
+  expect(text).toContain('Demonstrated')
+
+  // One item on its own.
+  await page
+    .getByRole('navigation', { name: 'Portfolio sections' })
+    .getByRole('button', { name: 'Work' })
+    .click()
+  await page.getByTestId('portfolio-card').click()
+  download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download as PDF' }).click()
+  file = await download
+  expect(file.suggestedFilename()).toBe('Fix the invoice totals.pdf')
+  expect(await downloadedPdfText(file)).toContain('How it was checked')
 })

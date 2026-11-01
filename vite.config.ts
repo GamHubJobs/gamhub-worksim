@@ -10,8 +10,9 @@ const { version } = JSON.parse(readFileSync('./package.json', 'utf8')) as {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // The 3D office is loaded only when needed. Pre-bundle its libraries when the
-  // dev server starts, so the first visit does not trigger a page reload.
+  // The 3D office and the PDF exports are loaded only when needed. Pre-bundle
+  // their libraries when the dev server starts, so the first use does not
+  // trigger a page reload.
   optimizeDeps: {
     include: [
       'three',
@@ -24,6 +25,8 @@ export default defineConfig({
       '@tiptap/extension-text-align',
       '@tiptap/extension-text-style',
       '@tiptap/extensions',
+      'jspdf',
+      'jspdf-autotable',
     ],
   },
   build: {
