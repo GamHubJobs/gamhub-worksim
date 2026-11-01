@@ -78,8 +78,52 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [x] 5.7 Original file exports and the portfolio package
 - [x] 5.8 Employability profile
 - [x] 5.9 Integrated projects framework and first two projects
-- [ ] 5.10 Remaining integrated projects
+- [x] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.10: The remaining integrated projects
+
+### Built
+
+Every career now has an integrated project at its top level:
+
+- **IT Help Desk, “The Thursday outage”** (Service Desk Lead):
+  1. Help Desk: triage the flood of shared-drive and internet tickets as one incident,
+     and update the first reporter.
+  2. Network Tools: three causes (a stopped file-sharing service, the provider’s line
+     down, a reception PC with a hand-typed gateway): findings with evidence, two
+     fixed remotely, one passed to the provider.
+  3. Help Desk, Docs and Slides: resolve the tickets, write the incident review and
+     brief management.
+- **Digital Marketing, “Rescue the Health Check launch”** (Digital Marketing Manager),
+  with new launch traffic and a new ad account:
+  1. Site Analytics: the launch page sends almost nobody to pricing, and paid social
+     brings visits that do nothing.
+  2. Ad Campaigns: pause the two money-losing ad sets, back the best one, land June
+     on budget.
+  3. Sheets, Docs and Slides: the scorecard (ROAS and keep or pause), the revised plan
+     and the slides.
+- **Software Development, “Ship the new mileage rates”** (Lead Developer):
+  1. Code: tests for today’s rules that catch deliberate mistakes.
+  2. Code and Git: the new rates and a passenger rate on a branch, tested and merged.
+  3. Code, Git and Docs: the changelog, a release commit and release notes.
+     (The plan suggested starting this project in the API Client; its only bug is
+     already the subject of an earlier task, so the project starts with tests instead.)
+- **Finance & Admin, “The year-end budget pack”** (Finance Officer):
+  1. Sheets: consolidate three departments with cross-sheet references.
+  2. Sheets: next year’s proposals against this year, flagging rises over 8%.
+  3. Sheets and Slides: the key figures and the directors’ presentation.
+
+### Tested
+
+- The project tests now cover all six projects (stages consistent, in order, at the
+  top of the career), and every stage’s model answer gets full marks through the
+  content tests. New tests give full marks to a correct outage review and briefing,
+  and to the mileage release notes.
+- The project browser test now accepts any passing score (full marks are proven by
+  the unit tests): under heavy load a long typed report sometimes lost a few points.
 
 ---
 

@@ -75,6 +75,98 @@ const SOURCES: Project[] = [
     ],
     stages: ['churn-clean', 'churn-dashboard', 'churn-findings'],
   },
+  {
+    id: 'thursday-outage',
+    careerId: 'it-support',
+    levelId: 'service-desk-lead',
+    title: 'The Thursday outage',
+    brief:
+      'Lead a real outage from the first ticket to the lessons learnt: triage the flood of tickets in Help Desk, find and fix the three causes in Network Tools, then close the incident, write the review and brief management.',
+    objectives: [
+      'Run the service desk side of an incident',
+      'Separate several causes with evidence',
+      'Turn an outage into improvements',
+    ],
+    deliverables: [
+      'The triaged queue and the update to users (Help Desk)',
+      'Findings, fixes and evidence (Network Tools)',
+      'The resolved queue, the incident review (Docs) and the briefing (Slides)',
+    ],
+    stages: ['outage-triage', 'outage-diagnosis', 'outage-review'],
+    assessment: [
+      'Each stage is checked like a task and must pass',
+      'The project score is the average of the three stages',
+    ],
+  },
+  {
+    id: 'launch-rescue',
+    careerId: 'digital-marketing',
+    levelId: 'digital-marketing-manager',
+    title: 'Rescue the Health Check launch',
+    brief:
+      'A launch with plenty of visitors and few bookings, and a budget running away: diagnose the problem in Site Analytics, fix the spending in Ad Campaigns, then score the first two weeks and present the revised plan.',
+    objectives: [
+      'Diagnose a funnel before spending more',
+      'Move money from what doesn’t work to what does',
+      'Present a recovery plan with consistent figures',
+    ],
+    deliverables: [
+      'Saved reports and the diagnosis (Site Analytics)',
+      'The changed ad account (Ad Campaigns)',
+      'The scorecard (Sheets), the revised plan (Docs) and the slides (Slides)',
+    ],
+    stages: ['launch-analytics', 'launch-campaigns', 'launch-plan'],
+    assessment: [
+      'Each stage is checked like a task and must pass',
+      'The project score is the average of the three stages',
+    ],
+  },
+  {
+    id: 'mileage-release',
+    careerId: 'software-development',
+    levelId: 'lead-developer',
+    title: 'Ship the new mileage rates',
+    brief:
+      'Ship a change to a business rule safely: cover the current rules with tests, implement the new rates on a branch and merge them, then release with a changelog entry, a release commit and release notes for Finance.',
+    objectives: [
+      'Build a safety net of tests before changing code',
+      'Change behaviour through a branch and a merge',
+      'Release and explain the change to its users',
+    ],
+    deliverables: [
+      'The tests for today’s rules (Code)',
+      'The new rules, merged into main (Code and Git)',
+      'The changelog and release commit (Code and Git) and the release notes (Docs)',
+    ],
+    stages: ['mileage-tests', 'mileage-change', 'mileage-release'],
+    assessment: [
+      'Each stage is checked like a task and must pass',
+      'The project score is the average of the three stages',
+    ],
+  },
+  {
+    id: 'budget-pack',
+    careerId: 'office-admin-finance',
+    levelId: 'officer',
+    title: 'The year-end budget pack',
+    brief:
+      'Prepare the directors’ budget pack: consolidate this year’s spending from three departments with cross-sheet formulas, review next year’s proposals against a threshold, then present the key figures and a recommendation.',
+    objectives: [
+      'Consolidate several workbooks with references',
+      'Review budget requests against a threshold',
+      'Present one consistent set of figures',
+    ],
+    deliverables: [
+      'The consolidated summary (Sheets)',
+      'The budget review (Sheets)',
+      'The key figures (Sheets) and the presentation (Slides)',
+    ],
+    stages: ['budget-consolidate', 'budget-review', 'budget-presentation'],
+    assessment: [
+      'Each stage is checked like a task and must pass',
+      'The project score is the average of the three stages',
+    ],
+  },
 ]
 
 export const PROJECTS: Project[] = SOURCES.map((p) => ProjectSchema.parse(p))

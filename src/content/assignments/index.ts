@@ -55,6 +55,10 @@ import { paymentRun } from './paymentRun'
 import { performanceReport } from './performanceReport'
 import { pettyCash } from './pettyCash'
 import { savingsProposal } from './savingsProposal'
+import { budgetConsolidate, budgetPresentation, budgetReview } from './projectBudgetPack'
+import { outageDiagnosis, outageReview, outageTriage } from './it/projectOutage'
+import { launchAnalytics, launchCampaigns, launchPlan } from './marketing/projectLaunch'
+import { mileageChange, mileageRelease, mileageTests } from './dev/projectMileage'
 import { suppliesOrder } from './suppliesOrder'
 
 const SOURCES = [
@@ -66,6 +70,9 @@ const SOURCES = [
   pettyCash,
   performanceReport,
   savingsProposal,
+  budgetConsolidate,
+  budgetReview,
+  budgetPresentation,
   // Accounting
   journalEntries,
   booksJournals,
@@ -88,6 +95,9 @@ const SOURCES = [
   directoryLeaver,
   networkPrinting,
   networkIntranet,
+  outageTriage,
+  outageDiagnosis,
+  outageReview,
   // Digital Marketing
   campaignMetrics,
   contentCalendar,
@@ -97,6 +107,9 @@ const SOURCES = [
   seoFixes,
   campaignBudget,
   funnelAnalysis,
+  launchAnalytics,
+  launchCampaigns,
+  launchPlan,
   // Data Analysis
   cleanCustomers,
   salesSummary,
@@ -117,6 +130,9 @@ const SOURCES = [
   gitFirstFix,
   debugNaN,
   apiTesting,
+  mileageTests,
+  mileageChange,
+  mileageRelease,
 ]
 
 /** Every text in a value with role names filled in for a department. */

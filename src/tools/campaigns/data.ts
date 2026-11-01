@@ -53,6 +53,7 @@ function adSet(
   audience: string,
   dailyBudget: number,
   profile: Profile,
+  firstDay = '2026-04-01',
 ): AdSet {
   return {
     id,
@@ -61,7 +62,7 @@ function adSet(
     audience,
     status: 'active',
     dailyBudget,
-    results: results(seed, dailyBudget, profile, '2026-04-01', 14),
+    results: results(seed, dailyBudget, profile, firstDay, 14),
   }
 }
 
@@ -149,6 +150,82 @@ export function aprilAccount(): CampaignsState {
             'Finance managers and accountants',
             90,
             { ctr: 0.006, cpc: 3.4, conversionRate: 0.018, value: 170 },
+          ),
+        ],
+      },
+    ],
+    changes: [],
+  }
+}
+
+/**
+ * June, half way through the Cash-flow Health Check launch: spending runs
+ * well ahead of the month's budget, and two ad sets bring almost nothing.
+ */
+export function launchAccount(): CampaignsState {
+  const june = '2026-06-01'
+  return {
+    account: 'Cobalt Ridge Consulting · Ads',
+    today: '2026-06-15',
+    monthDays: 30,
+    monthBudget: 16500,
+    spentBefore: 0,
+    dailyCap: 800,
+    campaigns: [
+      {
+        id: 'health-check',
+        name: 'Cash-flow Health Check launch',
+        objective: 'Leads: booked health checks',
+        adSets: [
+          adSet(
+            11,
+            'search-healthcheck',
+            'Search: cash-flow help',
+            'Search',
+            'People searching for cash-flow and finance help',
+            200,
+            { ctr: 0.055, cpc: 2.9, conversionRate: 0.07, value: 240 },
+            june,
+          ),
+          adSet(
+            12,
+            'search-brand-launch',
+            'Search: brand name',
+            'Search',
+            'People searching for Cobalt Ridge by name',
+            40,
+            { ctr: 0.17, cpc: 0.9, conversionRate: 0.1, value: 90 },
+            june,
+          ),
+          adSet(
+            13,
+            'social-broad',
+            'Social: broad business audience',
+            'Social',
+            'Business owners, broadly',
+            260,
+            { ctr: 0.008, cpc: 1.3, conversionRate: 0.008, value: 80 },
+            june,
+          ),
+          adSet(
+            14,
+            'social-retarget-launch',
+            'Social: launch page visitors',
+            'Social',
+            'People who visited the Health Check page',
+            80,
+            { ctr: 0.022, cpc: 1.1, conversionRate: 0.045, value: 110 },
+            june,
+          ),
+          adSet(
+            15,
+            'display-launch',
+            'Display: finance news sites',
+            'Display',
+            'Readers of finance news websites',
+            150,
+            { ctr: 0.002, cpc: 0.8, conversionRate: 0.005, value: 60 },
+            june,
           ),
         ],
       },

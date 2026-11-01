@@ -7,7 +7,10 @@ import { cleanTable } from '../tools/datastudio/transform'
 import { addChart } from '../apps/sheets/features'
 import { parseRange } from '../apps/sheets/model'
 import { bullets, docContent, h, p } from '../apps/docs/templates'
+import { createSlide } from '../apps/slides/model'
+import { buildCodeSolution, gradeCode } from '../game/code/grading'
 import { gradeAssignment } from '../game/grading'
+import { applyTicketSolution, buildQueueContent } from '../game/tickets'
 import { buildSolutionContent, findSheet } from '../game/workbooks'
 import type { DocContent } from '../persistence/schemas'
 import { ASSIGNMENTS, getAssignment } from './assignments'
@@ -156,6 +159,69 @@ describe('the churn investigation', () => {
         p('Focus retention offers on Premium customers first.'),
       ]),
     })
+    expect(result.checks.filter((c) => c.status !== 'passed')).toEqual([])
+    expect(result.score).toBe(100)
+  })
+})
+
+describe('written stages of the other projects', () => {
+  const words = (n: number) =>
+    'The service is back and the actions are agreed. '.repeat(n)
+
+  it('the outage review and briefing get full marks', () => {
+    const task = getAssignment('outage-review')!
+    const queue = applyTicketSolution(task, buildQueueContent(task))
+    const result = gradeAssignment(task, queue, {
+      doc: docContent([
+        h(1, 'Incident review'),
+        h(2, 'Summary'),
+        p('Shared drives and the internet failed on Thursday morning.'),
+        h(2, 'Timeline'),
+        p('09:02 first report; 09:30 file sharing restarted; 11:20 internet back.'),
+        h(2, 'Impact'),
+        p('About 120 staff were affected.'),
+        h(2, 'Causes'),
+        bullets([
+          'The file sharing service on FILE-01 did not restart after updates.',
+          'The provider’s internet line was cut by roadworks.',
+          'The reception PC had a gateway typed in by hand.',
+        ]),
+        p(words(25)),
+        h(2, 'Actions'),
+        p(
+          'Alerts when a service fails to start; a backup line; automatic settings only.',
+        ),
+      ]),
+      slides: {
+        theme: 'corporate',
+        slides: [
+          createSlide('title', ['Thursday outage', 'Service desk']),
+          createSlide('title-content', ['Impact', '120 staff affected']),
+          createSlide('title-content', ['Actions', 'Prevent a repeat: three actions']),
+        ],
+      },
+    })
+    expect(result.checks.filter((c) => c.status !== 'passed')).toEqual([])
+    expect(result.score).toBe(100)
+  })
+
+  it('the mileage release notes get full marks', () => {
+    const task = getAssignment('mileage-release')!
+    const project = buildCodeSolution(task)
+    const result = gradeAssignment(
+      task,
+      project,
+      {
+        doc: docContent([
+          h(1, 'Release notes: mileage rates'),
+          p(
+            'From next month the mileage allowance is 50p a mile for the first 10,000 business miles in the tax year, then 30p a mile. You can also claim 5p a mile for each passenger.',
+          ),
+          p(words(6)),
+        ]),
+      },
+      gradeCode(task, project),
+    )
     expect(result.checks.filter((c) => c.status !== 'passed')).toEqual([])
     expect(result.score).toBe(100)
   })
