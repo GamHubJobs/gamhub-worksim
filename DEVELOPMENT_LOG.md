@@ -84,6 +84,19 @@ working simulations of the professional software used in its field (see
 
 **Phase 5 is complete.**
 
+**Phase 6: "Real-World Career Simulation"** (in progress). Plan:
+[docs/PHASE6_PLAN.md](docs/PHASE6_PLAN.md).
+
+- [ ] 6.1 Organisation model, case engine, Cases app, save migration
+- [ ] 6.2 Clients and customers
+- [ ] 6.3 Business operations: budgets, purchases, approvals
+- [ ] 6.4 Interdepartmental workflows
+- [ ] 6.5 Meetings: preparation, meeting, minutes, actions
+- [ ] 6.6 Complex workplace incidents
+- [ ] 6.7 Management and leadership
+- [ ] 6.8 Cross-functional programme: the company expansion
+- [ ] 6.9 Office integration, balance, hardening, documentation
+
 ---
 
 ## 2026-11-01 · Milestone 5.11: Hardening (Phase 5 complete)
