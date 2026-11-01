@@ -145,6 +145,9 @@ export function SkillsView({
                       }
                     >
                       {e.title} · {e.score}%
+                      {!e.counts && (
+                        <span className="sr-only"> (a smaller part of this task)</span>
+                      )}
                     </button>
                   ))}
                 </div>

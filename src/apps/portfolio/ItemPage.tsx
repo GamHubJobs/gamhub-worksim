@@ -258,6 +258,8 @@ export function ItemPage({
             {openFile && (
               <div
                 className="mt-4 h-[70vh] overflow-hidden rounded-lg border border-slate-300 bg-white"
+                role="region"
+                aria-label={`File as handed in: ${shown?.snapshot.title ?? ''}`}
                 data-testid="evidence-viewer"
               >
                 {shown ? (

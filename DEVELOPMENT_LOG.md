@@ -66,8 +66,9 @@ working simulations of the professional software used in its field (see
 
 **Phase 4 is complete.**
 
-**Phase 5: "Employability & Career Portfolio"** (planned, not started; waiting for the
-owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
+**Phase 5: "Employability & Career Portfolio"**. Plan:
+[docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md); player guide:
+[docs/PORTFOLIO_GUIDE.md](docs/PORTFOLIO_GUIDE.md).
 
 - [x] 5.1 Evidence capture and storage
 - [x] 5.2 Backfill for existing saves, backup and safety
@@ -79,7 +80,46 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [x] 5.8 Employability profile
 - [x] 5.9 Integrated projects framework and first two projects
 - [x] 5.10 Remaining integrated projects
-- [ ] 5.11 Hardening: scale, regression, documentation
+- [x] 5.11 Hardening: scale, regression, documentation
+
+**Phase 5 is complete.**
+
+---
+
+## 2026-11-01 · Milestone 5.11: Hardening (Phase 5 complete)
+
+### Done
+
+- **Scale:** a test with 500 portfolio records (about ten times what one device can
+  hold today) stores and lists them in well under two seconds, filters and sorts in
+  milliseconds, calculates competencies, the experience record, the progress report
+  and the profile quickly, and exports 100 items as one PDF.
+- **Accessibility review of the Portfolio app:** every control is a labelled button,
+  checkbox, field or menu; sections use headings; the open file is a labelled region;
+  status messages are announced; skill evidence that counts only as “a smaller part”
+  now says so to screen readers too (it was shown only by a dashed border).
+- **Documentation:** a player guide ([docs/PORTFOLIO_GUIDE.md](docs/PORTFOLIO_GUIDE.md));
+  the architecture document covers the portfolio, exports and projects; the plan is
+  marked as implemented.
+- **Full regression:** format, lint, types, all unit tests and all browser tests.
+
+### Phase 5 in short
+
+Passed work becomes a portfolio automatically and safely (same save as the grade, one
+record per task, protected submitted versions, backfill and backup). Players can browse
+it, see their competencies with reasons, read a progress report with explained
+recommendations, write an honest employability profile, and export real PDFs and
+original files. Every career has an integrated project. Every export says that the work
+was done in a simulation and is not employment, a qualification or a reference.
+
+### Known limitations
+
+- Original files are exported in open formats (CSV, HTML, Markdown, source code, JSON),
+  not as native Office files (owner’s decision 18.3, recommended default).
+- The data lives in the browser: exports state what the simulation is rather than
+  claiming to be verified.
+- One browser test (“changes made just before a tab crash are recovered”) is
+  timing-sensitive when several test browsers run at once; it passes on its own.
 
 ---
 

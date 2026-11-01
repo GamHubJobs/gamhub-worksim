@@ -1,7 +1,8 @@
 # Phase 5 plan: Employability & Career Portfolio
 
-Status: **planning only**. Nothing in this document has been implemented. Implementation
-starts only when the owner authorises it.
+Status: **implemented** (milestones 5.1 to 5.11, November 2026). What was built, and the
+few places where it differs from this plan, are recorded in
+[DEVELOPMENT_LOG.md](../DEVELOPMENT_LOG.md).
 
 Prepared 1 November 2026, after reviewing the codebase at commit `2066dc1` (Phase 4
 complete: 976 unit tests and 69 browser tests passing).

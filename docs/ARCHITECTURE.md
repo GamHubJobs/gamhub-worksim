@@ -282,7 +282,8 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 3. Productivity depth: Docs, advanced Sheets, Slides, multi-app assignments (done)
 4. More careers and departments, and profession-specific software (done)
    (see [PROFESSIONAL_TOOLS.md](PROFESSIONAL_TOOLS.md))
-5. Employability and career portfolio ← _now_ (see [PHASE5_PLAN.md](PHASE5_PLAN.md))
+5. Employability and career portfolio (done; see [PHASE5_PLAN.md](PHASE5_PLAN.md) and
+   the player guide [PORTFOLIO_GUIDE.md](PORTFOLIO_GUIDE.md))
 6. Achievements and customisation
 7. Polish
 8. Cloud accounts and sync
