@@ -482,6 +482,13 @@ export function Desktop({
                     setView({ app: 'portfolio', item, tab: view.tab })
                   }
                   onTab={(tab) => setView({ app: 'portfolio', tab })}
+                  onAct={(action) =>
+                    setView(
+                      action.kind === 'task'
+                        ? { app: 'tasks', assignmentId: action.assignmentId }
+                        : { app: 'tool', tool: action.toolId },
+                    )
+                  }
                 />
               )}
               {view.app === 'career' && (

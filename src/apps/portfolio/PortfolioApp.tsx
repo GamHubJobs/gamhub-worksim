@@ -20,7 +20,9 @@ import {
   PORTFOLIO_TABS,
 } from './filters'
 import { ItemPage } from './ItemPage'
+import { ProgressReportView } from './ProgressReportView'
 import { SkillsView } from './SkillsView'
+import type { Recommendation } from '../../game/progressReport'
 
 type Loaded =
   | { status: 'loading' }
@@ -39,6 +41,7 @@ export function PortfolioApp({
   tab,
   onOpenItem,
   onTab,
+  onAct,
 }: {
   /** The career save in use (shown first). */
   profile: Profile
@@ -48,6 +51,8 @@ export function PortfolioApp({
   tab: PortfolioTab
   onOpenItem: (itemId: string | undefined) => void
   onTab: (tab: PortfolioTab) => void
+  /** Opens a recommended task or tool. */
+  onAct: (action: NonNullable<Recommendation['action']>) => void
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ status: 'loading' })
   const [filters, setFilters] = useState<PortfolioFilters>(() =>
@@ -240,7 +245,22 @@ export function PortfolioApp({
           )}
         </section>
 
-        {tab === 'skills' ? (
+        {tab === 'report' ? (
+          <div className="space-y-5">
+            {(filters.profileId === 'all'
+              ? loaded.profiles
+              : loaded.profiles.filter((p) => p.id === filters.profileId)
+            ).map((p) => (
+              <ProgressReportView
+                key={p.id}
+                profile={p}
+                items={items}
+                isActive={p.id === profile.id}
+                onAct={onAct}
+              />
+            ))}
+          </div>
+        ) : tab === 'skills' ? (
           <SkillsView
             items={inSaves}
             profiles={

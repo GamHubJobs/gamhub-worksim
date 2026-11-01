@@ -138,6 +138,21 @@ test('passing a task captures exactly what was handed in, once', async ({ page }
     .getByRole('button', { name: /Fix the invoice totals/ })
     .click()
   await expect(page.getByTestId('portfolio-item-page')).toBeVisible()
+
+  // The progress report: a summary, reasoned next steps, and the honesty statement.
+  await page.getByRole('button', { name: 'All work' }).click()
+  await page
+    .getByRole('navigation', { name: 'Portfolio sections' })
+    .getByRole('button', { name: 'Progress report' })
+    .click()
+  const report = page.getByTestId('progress-report')
+  await expect(report.getByTestId('report-summary')).toContainText('with 1 passed task')
+  await expect(report).toContainText('It is not a record of employment')
+  const next = report.getByTestId('recommendations').getByRole('listitem').first()
+  await expect(next).toContainText('Do your next task')
+  await expect(next).toContainText('Why:')
+  await next.getByRole('button', { name: 'Open task' }).click()
+  await expect(page.getByTestId('task-detail')).toBeVisible()
 })
 
 test('passed work missing from the portfolio is added back when WorkSim opens', async ({

@@ -73,13 +73,43 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [x] 5.2 Backfill for existing saves, backup and safety
 - [x] 5.3 Portfolio app: browse, filter, inspect
 - [x] 5.4 Competency and experience record
-- [ ] 5.5 Career progress report and recommendations
+- [x] 5.5 Career progress report and recommendations
 - [ ] 5.6 PDF engine and report exports
 - [ ] 5.7 Original file exports and the portfolio package
 - [ ] 5.8 Employability profile
 - [ ] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.5: Career progress report and recommendations
+
+### Built
+
+- A **Progress report** section in the Portfolio app: one report per career save, with
+  a one-paragraph summary, recommended next steps, strongest competencies, every
+  competency’s level, areas to improve, experience, weekly review ratings, and the
+  honesty statement (simulated work, not employment or a qualification).
+- **Recommendations** are rule-based, at most five, and each says **why**:
+  1. Resubmit a task that has not passed yet (naming the checks not passed).
+  2. Do the next task (naming the skills it trains and the weakest one’s level).
+  3. Practise a skill shown only once, through a later task that trains it (skipped
+     when the next task already does).
+  4. Get to know an unlocked tool not used in any passed work yet.
+- “Open task” and “Open tool” buttons act on a recommendation (in the career save in
+  use).
+- Every statement comes from portfolio items, check results or reviews
+  (`src/game/progressReport.ts`); nothing is invented or estimated except the clearly
+  labelled practice time.
+
+### Tested
+
+- 5 new unit tests on scripted careers: a new career (no claims, first task
+  recommended), a failed task first with its checks, only passed work counted with
+  every claim linked to an item, unused tools, and no duplicate “practise” advice.
+- The portfolio browser test opens the report, checks the summary, the honesty
+  statement and a reasoned recommendation, and follows “Open task”.
 
 ---
 
