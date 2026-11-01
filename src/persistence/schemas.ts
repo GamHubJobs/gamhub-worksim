@@ -690,6 +690,8 @@ export const CaseProgressSchema = z.object({
   answers: z.record(z.string(), z.unknown()),
   /** Files made for the case's document steps, by step ID. */
   files: z.record(z.string(), IdSchema).default({}),
+  /** For meeting cases: when the player joined the meeting (absolute office time). */
+  joinedAt: z.number().nonnegative().optional(),
   result: z
     .object({
       submittedAt: TimestampSchema,

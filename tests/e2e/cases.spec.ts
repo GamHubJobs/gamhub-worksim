@@ -288,3 +288,51 @@ test('workflows: a wrong hand-off comes back from the next department', async ({
   await page.getByRole('button', { name: /Invoice on hold: PO mismatch/ }).click()
   await expect(page.getByTestId('mail-message')).toContainText('Daniel Okoro')
 })
+
+test('meetings: prepare in Slides, join at the right time, then the actions', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  await page.goto('/')
+  await startCareerIfNeeded(page, 'Alex Morgan')
+  await openApp(page, 'Mail')
+  await page.evaluate("window.__worksim.skipTo('performance-report')")
+  await page.evaluate("window.__worksim.arriveCase('mtg-fa-team')")
+  await page.getByRole('button', { name: /Monthly meeting: can you present/ }).click()
+  await page
+    .getByTestId('mail-message')
+    .getByRole('button', { name: 'Open case' })
+    .click()
+  const detail = page.getByTestId('case-detail')
+  const meeting = detail.getByTestId('meeting-panel')
+  await expect(meeting).toContainText('Meeting room 2')
+  await expect(meeting).toContainText('Starts in 3 h')
+  // Decisions in the room wait for the meeting.
+  await expect(
+    detail.getByTestId('step-question').getByRole('radio').first(),
+  ).toBeDisabled()
+
+  // Preparation happens in the real Slides app.
+  await detail.getByRole('button', { name: /Start “Spending update” in Slides/ }).click()
+  await expect(page.getByTestId('slide-canvas')).toBeVisible()
+  await openApp(page, 'Cases')
+  await page
+    .getByRole('list', { name: 'Cases' })
+    .getByRole('button', { name: /Present the month at the team meeting/ })
+    .click()
+
+  await meeting.getByRole('button', { name: 'Work until the meeting starts' }).click()
+  await meeting.getByRole('button', { name: 'Join the meeting' }).click()
+  await expect(meeting).toContainText('You attended this meeting')
+  await expect(
+    detail.getByTestId('step-question').getByRole('radio').first(),
+  ).toBeEnabled()
+
+  await page.evaluate("window.__worksim.answerCase('mtg-fa-team')")
+  await detail.getByRole('button', { name: /^Submit to / }).click()
+  await detail.getByRole('button', { name: 'Send my answer' }).click()
+  const result = detail.getByTestId('case-result')
+  await expect(result).toBeVisible()
+  // The slides were left as the template, and the result says what they lacked.
+  await expect(result).toContainText('travel')
+})

@@ -91,11 +91,43 @@ working simulations of the professional software used in its field (see
 - [x] 6.2 Clients and customers
 - [x] 6.3 Business operations: budgets, purchases, approvals
 - [x] 6.4 Interdepartmental workflows
-- [ ] 6.5 Meetings: preparation, meeting, minutes, actions
+- [x] 6.5 Meetings: preparation, meeting, minutes, actions
 - [ ] 6.6 Complex workplace incidents
 - [ ] 6.7 Management and leadership
 - [ ] 6.8 Cross-functional programme: the company expansion
 - [ ] 6.9 Office integration, balance, hardening, documentation
+
+---
+
+## 2026-11-01 · Milestone 6.5: Meetings (preparation, the meeting, minutes and actions)
+
+### Built
+
+- **Meeting cases** have three phases:
+  1. **Prepare** a document or slides in the real Docs or Slides app (graded by the
+     existing report checks: structure, figures, what it must cover, length).
+  2. **The meeting** happens at a set time and place in the office day. The Cases app
+     shows when and where; “Work until the meeting starts” moves the office clock, and
+     “Join the meeting” records attendance and takes the meeting’s time. Decisions
+     that come up in the room unlock only then.
+  3. **After the meeting**: record the actions with the right owners (the minutes) and
+     send the follow-up.
+- Missing the meeting is possible: it goes ahead without you, and the decisions and
+  actions score nothing, with the reason.
+- **A meeting for every career:** the Finance & Admin team meeting (present the
+  spending update), an Accounting client meeting on late payments (agree a payment
+  plan), the IT change advisory board (a VPN security update with pilot and rollback),
+  a Digital Marketing client quarterly review (budget cut challenge), a Data Analysis
+  leadership review (stand by the evidence when asked to drop a risk slide), and a
+  Software Development sprint review (a late request goes to the backlog).
+
+### Tested
+
+- Unit tests: joining only from the start until the end, the meeting taking office
+  time, missing a meeting, missed meetings scoring their steps zero with the reason,
+  and every career having a meeting with preparation, decisions and actions.
+- Browser test: the Finance & Admin meeting: steps locked before the meeting, the
+  slides opened in Slides, working until the start, joining, and the result.
 
 ---
 

@@ -4,11 +4,18 @@
  * evidence to examine, the steps to complete and a deadline in office time.
  * Answered cases show every step's result with the reasons.
  */
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { getCase } from '../../content/cases'
 import { CASE_KIND_NAMES, type Case } from '../../content/cases/schema'
 import { getOrgDepartment, INDICATORS } from '../../content/organisation'
-import { caseContext, minutesLeft } from '../../game/cases'
+import {
+  caseContext,
+  meetingStart,
+  meetingStatus,
+  minutesLeft,
+  minutesToMeeting,
+} from '../../game/cases'
+import { formatDuration, formatTime, splitTime } from '../../game/clock'
 import type { CaseProgress, Profile } from '../../persistence/schemas'
 import { Icon } from '../../ui/Icon'
 import { RichText } from '../../ui/RichText'
@@ -34,6 +41,8 @@ export function CasesApp({
   onSave,
   onOpenFile,
   onSubmit,
+  onJoin,
+  onWait,
 }: {
   profile: Profile
   caseId: string | undefined
@@ -42,6 +51,10 @@ export function CasesApp({
   /** Creates (if needed) and opens the file of a document step. */
   onOpenFile: (caseId: string, stepId: string) => Promise<void>
   onSubmit: (caseId: string) => Promise<void>
+  /** Joins the meeting of a meeting case. */
+  onJoin: (caseId: string) => void
+  /** Passes office time (to wait for a meeting). */
+  onWait: (minutes: number) => void
 }) {
   const all = Object.values(profile.work.cases)
     .map((progress) => ({ progress, def: getCase(progress.caseId) }))
@@ -129,6 +142,8 @@ export function CasesApp({
             onSave={(stepId, answer) => onSave(selected.def.id, stepId, answer)}
             onOpenFile={(stepId) => onOpenFile(selected.def.id, stepId)}
             onSubmit={() => onSubmit(selected.def.id)}
+            onJoin={() => onJoin(selected.def.id)}
+            onWait={onWait}
           />
         )}
       </div>
@@ -143,6 +158,8 @@ function CaseDetail({
   onSave,
   onOpenFile,
   onSubmit,
+  onJoin,
+  onWait,
 }: {
   def: Case
   progress: CaseProgress
@@ -150,12 +167,17 @@ function CaseDetail({
   onSave: (stepId: string, answer: unknown) => void
   onOpenFile: (stepId: string) => Promise<void>
   onSubmit: () => Promise<void>
+  onJoin: () => void
+  onWait: (minutes: number) => void
 }) {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const open = progress.status === 'open'
   const result = progress.result
+  /** Meeting and follow-up steps open once the player has joined the meeting. */
+  const locked = (step: Case['steps'][number]) =>
+    !!def.meeting && step.phase !== 'prepare' && progress.joinedAt === undefined
 
   async function run(action: () => Promise<void>) {
     setBusy(true)
@@ -297,24 +319,44 @@ function CaseDetail({
 
       <ol className="space-y-4">
         {def.steps.map((step, i) => (
-          <li
-            key={step.id}
-            className="rounded-xl border border-slate-200 bg-white p-5"
-            data-testid={`step-${step.id}`}
-          >
-            <h3 className="font-semibold text-slate-900">
-              {i + 1}. {step.title}
-            </h3>
-            <p className="mt-1 mb-3 text-sm text-slate-700">{step.prompt}</p>
-            <StepForm
-              step={step}
-              answer={progress.answers[step.id]}
-              disabled={!open || busy}
-              fileOpened={!!progress.files[step.id]}
-              onSave={(answer) => onSave(step.id, answer)}
-              onOpenFile={() => void run(() => onOpenFile(step.id))}
-            />
-          </li>
+          <Fragment key={step.id}>
+            {def.meeting &&
+              step.phase === 'meeting' &&
+              def.steps.findIndex((s) => s.phase === 'meeting') === i && (
+                <MeetingPanel
+                  def={def}
+                  progress={progress}
+                  profile={profile}
+                  onJoin={onJoin}
+                  onWait={onWait}
+                />
+              )}
+            <li
+              key={step.id}
+              className="rounded-xl border border-slate-200 bg-white p-5"
+              data-testid={`step-${step.id}`}
+            >
+              <h3 className="font-semibold text-slate-900">
+                {i + 1}. {step.title}
+              </h3>
+              <p className="mt-1 mb-3 text-sm text-slate-700">{step.prompt}</p>
+              {locked(step) && (
+                <p className="mb-2 text-xs text-slate-500">
+                  {step.phase === 'meeting'
+                    ? 'Opens when you join the meeting.'
+                    : 'Opens after the meeting.'}
+                </p>
+              )}
+              <StepForm
+                step={step}
+                answer={progress.answers[step.id]}
+                disabled={!open || busy || locked(step)}
+                fileOpened={!!progress.files[step.id]}
+                onSave={(answer) => onSave(step.id, answer)}
+                onOpenFile={() => void run(() => onOpenFile(step.id))}
+              />
+            </li>
+          </Fragment>
         ))}
       </ol>
 
@@ -397,5 +439,62 @@ function AuthorityPanel({ def, profile }: { def: Case; profile: Profile }) {
         ))}
       </ul>
     </section>
+  )
+}
+
+/** The meeting of a meeting case: when and where, and joining it. */
+function MeetingPanel({
+  def,
+  progress,
+  profile,
+  onJoin,
+  onWait,
+}: {
+  def: Case
+  progress: CaseProgress
+  profile: Profile
+  onJoin: () => void
+  onWait: (minutes: number) => void
+}) {
+  const meeting = def.meeting!
+  const status = meetingStatus(profile.work, def, progress)
+  const start = splitTime(meetingStart(def, progress)!)
+  const wait = minutesToMeeting(profile.work, def, progress)
+  const button =
+    'rounded-md bg-violet-700 px-4 py-2 text-sm font-medium text-white hover:bg-violet-800'
+  return (
+    <li
+      className="rounded-xl border border-violet-200 bg-violet-50 p-5 text-sm"
+      data-testid="meeting-panel"
+      aria-label="The meeting"
+    >
+      <h3 className="font-semibold text-violet-900">{meeting.title}</h3>
+      <p className="text-slate-700">
+        {meeting.room} · {formatTime(start.minute)}
+        {start.day !== profile.work.day ? ` on day ${start.day}` : ''} ·{' '}
+        {formatDuration(meeting.minutes)}
+      </p>
+      {status === 'upcoming' && progress.status === 'open' && (
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <span className="text-slate-700">Starts in {formatDuration(wait)}.</span>
+          <button type="button" className={button} onClick={() => onWait(wait)}>
+            Work until the meeting starts
+          </button>
+        </div>
+      )}
+      {status === 'open' && progress.status === 'open' && (
+        <button type="button" className={`${button} mt-2`} onClick={onJoin}>
+          Join the meeting
+        </button>
+      )}
+      {status === 'attended' && (
+        <p className="mt-1 text-emerald-800">You attended this meeting.</p>
+      )}
+      {status === 'missed' && (
+        <p className="mt-1 text-red-800">
+          You missed this meeting: it went ahead without you.
+        </p>
+      )}
+    </li>
   )
 }

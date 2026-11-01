@@ -34,7 +34,64 @@ import {
 import { now } from './deadlines'
 import { gradeDeliverables } from './deliverables'
 import { changeReputation, changeTrust } from './relationships'
-import { log } from './workday'
+import { log, passTime } from './workday'
+
+// ---------------------------------------------------------------------------
+// Meetings
+// ---------------------------------------------------------------------------
+
+export type MeetingStatus = 'upcoming' | 'open' | 'attended' | 'missed'
+
+/** When a case's meeting starts (absolute office time). */
+export function meetingStart(def: Case, progress: CaseProgress): number | null {
+  return def.meeting ? progress.arrivedAt + def.meeting.inHours * 60 : null
+}
+
+export function meetingStatus(
+  work: WorkState,
+  def: Case,
+  progress: CaseProgress,
+): MeetingStatus | null {
+  const start = meetingStart(def, progress)
+  if (start === null || !def.meeting) return null
+  if (progress.joinedAt !== undefined) return 'attended'
+  const time = now(work)
+  if (time < start) return 'upcoming'
+  return time <= start + def.meeting.minutes ? 'open' : 'missed'
+}
+
+/** Joins a case's meeting: the meeting takes its time on the office clock. */
+export function joinMeeting(profile: ProfileData, caseId: string): ProfileData {
+  const def = getCase(caseId)
+  const progress = profile.work.cases[caseId]
+  if (!def?.meeting || !progress || progress.status !== 'open') return profile
+  if (meetingStatus(profile.work, def, progress) !== 'open') return profile
+  const joined: ProfileData = {
+    ...profile,
+    work: log(
+      {
+        ...profile.work,
+        cases: {
+          ...profile.work.cases,
+          [caseId]: { ...progress, joinedAt: now(profile.work) },
+        },
+      },
+      `Joined: ${def.meeting.title} (${def.meeting.room})`,
+      'good',
+    ),
+  }
+  return passTime(joined, def.meeting.minutes, 'meeting')
+}
+
+/** Office minutes until a case's meeting starts (0 if it has started). */
+export function minutesToMeeting(
+  work: WorkState,
+  def: Case,
+  progress: CaseProgress,
+): number {
+  const start = meetingStart(def, progress)
+  return start === null ? 0 : Math.max(0, start - now(work))
+}
 
 /** At most this many cases wait for the player at once. */
 export const MAX_OPEN_CASES = 2
@@ -459,8 +516,19 @@ export function gradeCase(
   answers: Record<string, unknown>,
   documents: CaseDocuments = {},
   context: CaseContext = NO_AUTHORITY,
+  /** For meeting cases: whether the player joined the meeting. */
+  attended = true,
 ): CaseResult {
   const steps = def.steps.map((step) => {
+    if (def.meeting && step.phase !== 'prepare' && !attended) {
+      return {
+        id: step.id,
+        title: step.title,
+        earned: 0,
+        points: step.points,
+        notes: ['You did not attend the meeting, so this was decided without you.'],
+      }
+    }
     const { fraction, notes } = gradeStep(step, answers[step.id], documents, context)
     const earned = Math.round(step.points * Math.max(0, Math.min(1, fraction)) * 10) / 10
     return { id: step.id, title: step.title, earned, points: step.points, notes }

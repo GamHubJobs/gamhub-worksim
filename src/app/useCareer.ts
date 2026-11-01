@@ -514,7 +514,13 @@ export function useCareer() {
         handedIn,
         (latest) => {
           const answers = latest.work.cases[caseId]?.answers ?? {}
-          result = gradeCase(def, answers, contents, caseContext(latest))
+          result = gradeCase(
+            def,
+            answers,
+            contents,
+            caseContext(latest),
+            latest.work.cases[caseId]?.joinedAt !== undefined,
+          )
           const { current } = careerLevel(latest)
           level = {
             id: current.id,

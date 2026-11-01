@@ -43,7 +43,7 @@ import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
 import { workPace } from '../game/wellbeing'
 import { skipToAssignment } from '../game/devTools'
-import { arriveCase, caseContext, saveCaseAnswer } from '../game/cases'
+import { arriveCase, caseContext, joinMeeting, saveCaseAnswer } from '../game/cases'
 import { modelAnswers } from '../game/caseModel'
 import { getCase } from '../content/cases'
 import { CasesApp } from '../apps/cases/CasesApp'
@@ -519,6 +519,8 @@ export function Desktop({
                   onSubmit={async (caseId) => {
                     await career.submitCase(caseId)
                   }}
+                  onJoin={(caseId) => void act((p) => joinMeeting(p, caseId))}
+                  onWait={(minutes) => void act((p) => passTime(p, minutes, 'work'))}
                 />
               )}
               {view.app === 'portfolio' && (

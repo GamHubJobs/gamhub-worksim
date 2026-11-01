@@ -8,6 +8,9 @@ import { HOURS } from '../content/workday'
 import { newProfileData, type ProfileData } from './career'
 import {
   answerFor,
+  joinMeeting,
+  meetingStatus,
+  NO_AUTHORITY,
   caseContext,
   expectedDecision,
   type CaseContext,
@@ -348,5 +351,59 @@ describe('workflows: hand-offs between departments', () => {
       ).toBe(true)
     }
     expect(new Set(workflows.map((w) => w.careerId)).size).toBe(CAREERS.length)
+  })
+})
+
+describe('meetings: prepare, attend, follow up', () => {
+  const def = getCase('mtg-fa-team')!
+  const arrived = arriveCase(profileFor(def.careerId, { levelId: 'junior' }), def, 1)
+  const at = (profile: ProfileData, minutes: number): ProfileData => ({
+    ...profile,
+    work: { ...profile.work, minute: profile.work.minute + minutes },
+  })
+
+  it('the meeting can be joined only from its start until it ends', () => {
+    expect(meetingStatus(arrived.work, def, arrived.work.cases[def.id])).toBe('upcoming')
+    expect(joinMeeting(arrived, def.id)).toBe(arrived)
+    const started = at(arrived, def.meeting!.inHours * 60)
+    expect(meetingStatus(started.work, def, started.work.cases[def.id])).toBe('open')
+    const joined = joinMeeting(started, def.id)
+    expect(joined.work.cases[def.id].joinedAt).toBeDefined()
+    // The meeting takes its time on the office clock.
+    expect(joined.work.minute).toBe(started.work.minute + def.meeting!.minutes)
+    expect(meetingStatus(joined.work, def, joined.work.cases[def.id])).toBe('attended')
+    const late = at(arrived, def.meeting!.inHours * 60 + def.meeting!.minutes + 1)
+    expect(meetingStatus(late.work, def, late.work.cases[def.id])).toBe('missed')
+  })
+
+  it('missing the meeting scores its decisions and actions zero, with the reason', () => {
+    const result = gradeCase(def, modelAnswers(def), {}, NO_AUTHORITY, false)
+    const meetingSteps = result.steps.filter(
+      (s) => def.steps.find((x) => x.id === s.id)!.phase !== 'prepare',
+    )
+    expect(meetingSteps.every((s) => s.earned === 0)).toBe(true)
+    expect(meetingSteps[0].notes[0]).toContain('did not attend')
+  })
+
+  it('every career has a meeting with preparation, decisions in the room and actions after', () => {
+    const meetings = CASES.filter((c) => c.kind === 'meeting')
+    expect(new Set(meetings.map((m) => m.careerId)).size).toBe(CAREERS.length)
+    for (const m of meetings) {
+      expect(m.meeting, m.id).toBeDefined()
+      const phases = new Set(m.steps.map((s) => s.phase))
+      expect([...phases].sort(), m.id).toEqual(['after', 'meeting', 'prepare'])
+      expect(
+        m.steps.some((s) => s.kind === 'document' && s.phase === 'prepare'),
+        m.id,
+      ).toBe(true)
+      expect(
+        m.steps.some((s) => s.kind === 'actions'),
+        m.id,
+      ).toBe(true)
+      // The meeting starts before the deadline, with time to follow up.
+      expect(m.meeting!.inHours * 60 + m.meeting!.minutes, m.id).toBeLessThan(
+        m.deadlineHours * 60,
+      )
+    }
   })
 })

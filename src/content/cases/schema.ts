@@ -31,6 +31,12 @@ export const CaseEffectsSchema = z.object({
 
 const StepBase = z.object({
   id: Id,
+  /**
+   * For meeting cases: before the meeting (preparation), in the meeting, or
+   * after it (actions and follow-up). Meeting and after steps need the player
+   * to have joined the meeting.
+   */
+  phase: z.enum(['prepare', 'meeting', 'after']).default('prepare'),
   title: Text,
   /** What the player is asked to do. */
   prompt: Text,
@@ -225,6 +231,15 @@ export const CaseSchema = z.object({
   }),
   /** Office hours from arrival to the deadline. */
   deadlineHours: z.number().positive(),
+  /** A meeting the player joins at a set time (office hours after arrival). */
+  meeting: z
+    .object({
+      title: Text,
+      inHours: z.number().positive(),
+      minutes: z.number().int().positive(),
+      room: Text,
+    })
+    .optional(),
   email: z.object({ subject: Text, body: Text }),
   whyItMatters: Text,
   objectives: z.array(Text).min(1),
