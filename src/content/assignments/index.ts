@@ -25,6 +25,10 @@ import { majorIncident } from './it/majorIncident'
 import { networkIntranet } from './it/networkIntranet'
 import { networkPrinting } from './it/networkPrinting'
 import { abTest } from './marketing/abTest'
+import { campaignBudget } from './marketing/campaignBudget'
+import { funnelAnalysis } from './marketing/funnelAnalysis'
+import { seoFixes } from './marketing/seoFixes'
+import { socialLaunch } from './marketing/socialLaunch'
 import { campaignMetrics } from './marketing/campaignMetrics'
 import { contentCalendar } from './marketing/contentCalendar'
 import { quarterlyReport } from './marketing/quarterlyReport'
@@ -73,6 +77,10 @@ const SOURCES = [
   contentCalendar,
   abTest,
   quarterlyReport,
+  socialLaunch,
+  seoFixes,
+  campaignBudget,
+  funnelAnalysis,
   // Data Analysis
   cleanCustomers,
   salesSummary,

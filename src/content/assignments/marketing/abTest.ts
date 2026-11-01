@@ -24,7 +24,7 @@ export const abTest: AssignmentInput = {
   version: 1,
   careerId: 'digital-marketing',
   levelId: 'digital-marketing-executive',
-  order: 3,
+  order: 5,
   title: 'Which subject line won?',
   summary:
     'Analyse an email A/B test, pick the winner on the evidence and recommend what to do.',

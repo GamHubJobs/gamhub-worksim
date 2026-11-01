@@ -60,13 +60,63 @@ working simulations of the professional software used in its field (see
       progressive unlocks, guides, practice data)
 - [x] 4.8 Accounting: Books (ledger, sales, purchases, banking, payroll, reports)
 - [x] 4.9 IT Help Desk: Service Desk, Directory and assets, Network Tools
-- [ ] 4.10 Digital Marketing: Campaigns, Social Planner, Site Analytics, SEO Audit
+- [x] 4.10 Digital Marketing: Campaigns, Social Planner, Site Analytics, SEO Audit
 - [ ] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
 - [ ] 4.12 Software Development: terminal, Git, debug console, API Client
 
 ---
 
-## 2026-11-01 · Milestone 4.9: IT support tools (Directory and Network Tools)
+## 2026-11-01 · Milestone 4.10: Digital Marketing tools
+
+### Built
+
+Four separate tools, each a module registered with the tools framework:
+
+- **Social Planner** (social media scheduling): posts per channel with live character
+  counts and each channel’s rules (X 280 characters; Instagram needs an image and
+  allows no links), images, a week calendar, best posting times per channel, blackout
+  periods (website maintenance), and two-hour spacing per channel. Editing a scheduled
+  post sends it back to draft to be checked again.
+- **SEO Audit** (search engine optimisation): the company website as a crawler sees it.
+  A crawl lists issues by type (title missing, too long or short, duplicated; meta
+  description missing or wrong length; no H1; images without alt text; broken links),
+  and the list only updates when the site is crawled again. Page editor with length
+  counters and a search-result preview, keyword data (volume and position) and
+  redirects for removed addresses.
+- **Ad Campaigns** (paid advertising): campaigns and ad sets with 14 days of realistic
+  daily results (generated from typical rates, repeatable), CTR, CPC, CPA, revenue and
+  ROAS, switches and daily budgets with an account limit, **budget pacing** (spent,
+  projected month, the daily budget that lands exactly on budget) and a change history.
+- **Site Analytics** (website analytics): a fortnight of traffic by source, device and
+  landing page, explored by any dimension with filters, a booking funnel (arrived →
+  pricing → form started → booked) with drop-off at each step, saved reports, and a
+  questions panel for the task’s questions. The data hides a real problem: the booking
+  form almost never works on phones.
+- **Progressive unlocking**: Social Planner from Marketing Assistant; SEO Audit and Ad
+  Campaigns from Executive; Site Analytics from Specialist.
+- **Four new Marketing tasks** (the path is now eight; promotions at 300, 700 and 1,050
+  XP):
+  - _Schedule the launch week_ (Assistant, Social Planner): five posts on three channels,
+    on brand, at the best times, around a maintenance window.
+  - _Get the website ready for search_ (Executive, SEO Audit): fix all 15 issues, target
+    “free business review” on the offer page, confirm with a second crawl.
+  - _Rescue the April ad budget_ (Executive, Ad Campaigns): pause the three ad sets
+    with ROAS below 1, keep the profitable ones, move budget to the best one that is
+    held back by its budget, and land the month at 95–100% of budget.
+  - _Where do the bookings go?_ (Specialist, Site Analytics + Docs): find the broken
+    mobile form, size it (about 108 bookings lost in two weeks), answer the questions,
+    save the views, and recommend the fix in a memo.
+
+### Tested
+
+- Unit tests for each tool’s rules (channel limits, blackouts, spacing, back-to-draft;
+  the seeded SEO issues, re-crawl behaviour, duplicate titles, unsafe redirects; pacing,
+  the daily limit, ratios from totals; consistent analytics data), and for every task:
+  model answer 100%, starting file fails.
+- Browser tests: the launch week and the budget rescue done end to end (100% each), and
+  the SEO audit’s fix-then-recrawl behaviour.
+
+IT support tools (Directory and Network Tools)
 
 ### Built
 

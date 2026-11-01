@@ -50,7 +50,7 @@ export const quarterlyReport: AssignmentInput = {
   version: 1,
   careerId: 'digital-marketing',
   levelId: 'digital-marketing-specialist',
-  order: 4,
+  order: 8,
   title: 'Quarterly campaign report',
   summary:
     'Summarise a quarter of campaigns by channel, then report and present what worked.',

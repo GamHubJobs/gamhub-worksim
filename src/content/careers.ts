@@ -321,6 +321,12 @@ CAREERS.push({
     'presentation',
   ],
   apps: ['sheets', 'docs', 'slides'],
+  tools: [
+    { tool: 'social', fromLevel: 'marketing-assistant' },
+    { tool: 'seo', fromLevel: 'digital-marketing-executive' },
+    { tool: 'campaigns', fromLevel: 'digital-marketing-executive' },
+    { tool: 'analytics', fromLevel: 'digital-marketing-specialist' },
+  ],
   levels: [
     {
       id: 'marketing-assistant',
@@ -331,20 +337,20 @@ CAREERS.push({
     {
       id: 'digital-marketing-executive',
       title: 'Digital Marketing Executive',
-      xpRequired: 200,
+      xpRequired: 300,
       minReputation: 35,
     },
     {
       id: 'digital-marketing-specialist',
       title: 'Digital Marketing Specialist',
-      xpRequired: 350,
+      xpRequired: 700,
       minReputation: 50,
       minReview: 'solid',
     },
     {
       id: 'digital-marketing-manager',
       title: 'Digital Marketing Manager',
-      xpRequired: 550,
+      xpRequired: 1050,
       minReputation: 60,
       minReview: 'strong',
     },
