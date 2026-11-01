@@ -373,6 +373,17 @@ CAREERS.push({
     'formulas',
   ],
   apps: ['sheets', 'docs', 'slides'],
+  tools: [
+    {
+      tool: 'datastudio',
+      fromLevel: 'junior-data-analyst',
+      sections: {
+        sql: 'data-analyst',
+        dashboard: 'data-analyst',
+        stats: 'senior-data-analyst',
+      },
+    },
+  ],
   levels: [
     {
       id: 'junior-data-analyst',
@@ -380,18 +391,18 @@ CAREERS.push({
       xpRequired: 0,
       minReputation: 0,
     },
-    { id: 'data-analyst', title: 'Data Analyst', xpRequired: 200, minReputation: 35 },
+    { id: 'data-analyst', title: 'Data Analyst', xpRequired: 300, minReputation: 35 },
     {
       id: 'senior-data-analyst',
       title: 'Senior Data Analyst',
-      xpRequired: 350,
+      xpRequired: 700,
       minReputation: 50,
       minReview: 'solid',
     },
     {
       id: 'lead-data-analyst',
       title: 'Lead Data Analyst',
-      xpRequired: 550,
+      xpRequired: 1050,
       minReputation: 60,
       minReview: 'strong',
     },

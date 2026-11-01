@@ -61,8 +61,58 @@ working simulations of the professional software used in its field (see
 - [x] 4.8 Accounting: Books (ledger, sales, purchases, banking, payroll, reports)
 - [x] 4.9 IT Help Desk: Service Desk, Directory and assets, Network Tools
 - [x] 4.10 Digital Marketing: Campaigns, Social Planner, Site Analytics, SEO Audit
-- [ ] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
+- [x] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
 - [ ] 4.12 Software Development: terminal, Git, debug console, API Client
+
+---
+
+## 2026-11-01 · Milestone 4.11: Data Studio for the Data Analysis career
+
+### Built
+
+- **Data Studio** (data preparation, SQL and dashboards), one module with five sections
+  that unlock with promotions:
+  - **Data** (from Junior): datasets with a raw and a clean view, a profile of every
+    column (distinct values, blanks, totals), text with stray spaces highlighted, and
+    **applied steps** (trim, capitals, replace, change type, remove duplicates, remove
+    blank rows, fill blanks, filter, calculated column, rename, remove column). The raw
+    data is never changed; steps can be removed; a step that can’t apply is reported
+    and skipped.
+  - **SQL** (from Analyst): real SQL with **SQLite** (sql.js, MIT licence, runs in the
+    browser: no server and no cost), run in a fresh Web Worker with a 5-second limit,
+    over the clean tables; result grids, SQLite’s own error messages, saved queries.
+  - **Dashboard** (from Analyst): column, bar, line, pie and single-number tiles built
+    from saved queries (reusing the app’s chart drawing).
+  - **Statistics** (from Senior): count, mean, median, standard deviation, quartiles,
+    split by a group, and correlation with a plain-English reading and a reminder that
+    correlation is not cause.
+  - **Questions**: the task’s questions, answered in the tool.
+- **Four new Data Analysis tasks** (the path is now eight; promotions at 300, 700 and
+  1,050 XP):
+  - _Clean the bookings export in Data Studio_ (Junior): 40 messy rows to 36 clean ones
+    with recorded steps.
+  - _Answer the sales questions with SQL_ (Analyst): a JOIN with GROUP BY, top 3 with
+    LIMIT, months with strftime, and clients with no orders with LEFT JOIN.
+  - _Build the Q1 sales dashboard_ (Analyst): a line for the trend, columns for the
+    comparison, a headline number.
+  - _Did the training work?_ (Senior): a calculated column, group comparison, correlation,
+    the honest conclusion (attendance was voluntary) and a memo for the board.
+- Expected answers are calculated from the data in code, never typed in.
+
+### Fixed during testing
+
+- The browser tests found two real problems that unit tests could not: sql.js’s browser
+  build needs its own engine file (the first version hung on “Running…”), and two clients
+  tied for third place, so “the top 3” had two right answers. The order amounts now give a
+  clear ranking, and a unit test guards against ties at the cut-off.
+
+### Tested
+
+- Unit tests for every cleaning step, number and date parsing, failing steps, statistics
+  (checked against known values), correlation, SQL on SQLite (joins, LEFT JOIN, errors)
+  and result comparison; every task’s model answer scores 100% and its starting file fails.
+- Browser tests: the cleaning task and the SQL task done end to end with real SQLite in the
+  browser (100% each), and sections locked by level.
 
 ---
 

@@ -167,7 +167,7 @@ own files, colleagues and progress. Finance needed no changes to its saves.
 | Accounting           | Accounting      | Sheets, Docs, Slides    | Books                                                   |
 | IT Help Desk         | IT Services     | Help Desk, Docs, Slides | Help Desk, Directory, Network Tools                     |
 | Digital Marketing    | Marketing       | Sheets, Docs, Slides    | Social Planner, SEO Audit, Ad Campaigns, Site Analytics |
-| Data Analysis        | Data & Insights | Sheets, Docs, Slides    | (new functions)                                         |
+| Data Analysis        | Data & Insights | Sheets, Docs, Slides    | Data Studio (and new Sheets functions)                  |
 | Software Development | Engineering     | Code, Docs              | Code                                                    |
 
 ### Professional tools
@@ -230,20 +230,21 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 
 ## Technology
 
-| Purpose        | Choice                                   |
-| -------------- | ---------------------------------------- |
-| Language       | TypeScript                               |
-| Build tool     | Vite                                     |
-| UI             | React                                    |
-| Code checks    | Oxlint                                   |
-| Local database | IndexedDB via Dexie                      |
-| Validation     | Zod                                      |
-| Styling        | Tailwind CSS                             |
-| Tests          | Vitest (unit), Playwright (browser)      |
-| 3D             | three.js + React Three Fiber + drei      |
-| Docs editor    | TipTap (on ProseMirror), MIT             |
-| Charts, Slides | Own SVG charts and slide editor          |
-| Spreadsheet    | Own engine and grid, built incrementally |
+| Purpose           | Choice                                   |
+| ----------------- | ---------------------------------------- |
+| Language          | TypeScript                               |
+| Build tool        | Vite                                     |
+| UI                | React                                    |
+| Code checks       | Oxlint                                   |
+| Local database    | IndexedDB via Dexie                      |
+| Validation        | Zod                                      |
+| Styling           | Tailwind CSS                             |
+| Tests             | Vitest (unit), Playwright (browser)      |
+| 3D                | three.js + React Three Fiber + drei      |
+| Docs editor       | TipTap (on ProseMirror), MIT             |
+| Charts, Slides    | Own SVG charts and slide editor          |
+| Spreadsheet       | Own engine and grid, built incrementally |
+| SQL (Data Studio) | sql.js (SQLite in the browser), MIT      |
 
 ## Roadmap
 

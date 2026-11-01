@@ -56,7 +56,7 @@ export const surveyAnalysis: AssignmentInput = {
   version: 1,
   careerId: 'data-analytics',
   levelId: 'data-analyst',
-  order: 3,
+  order: 4,
   title: 'What the client survey says',
   summary:
     'Analyse satisfaction by team, find the weakest team and what explains it, and write an insight memo.',

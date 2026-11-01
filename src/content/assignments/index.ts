@@ -12,6 +12,10 @@ import { depreciation } from './accounting/depreciation'
 import { journalEntries } from './accounting/journalEntries'
 import { monthEnd } from './accounting/monthEnd'
 import { cleanCustomers } from './data/cleanCustomers'
+import { studioCleaning } from './data/studioCleaning'
+import { studioDashboard } from './data/studioDashboard'
+import { studioSql } from './data/studioSql'
+import { studioStatistics } from './data/studioStatistics'
 import { portfolioReview } from './data/portfolioReview'
 import { salesSummary } from './data/salesSummary'
 import { surveyAnalysis } from './data/surveyAnalysis'
@@ -86,6 +90,10 @@ const SOURCES = [
   salesSummary,
   surveyAnalysis,
   portfolioReview,
+  studioCleaning,
+  studioSql,
+  studioDashboard,
+  studioStatistics,
   // Software Development
   invoiceBug,
   timesheetValidation,

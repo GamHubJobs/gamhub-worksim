@@ -7,13 +7,23 @@ import type { Career } from '../content/schemas'
 import { books } from './books/definition'
 import { analytics } from './analytics/definition'
 import { campaigns } from './campaigns/definition'
+import { dataStudio } from './datastudio/definition'
 import { directory } from './directory/definition'
 import { network } from './network/definition'
 import { seo } from './seo/definition'
 import { social } from './social/definition'
 import type { AnyTool, CareerTool } from './types'
 
-const TOOLS: AnyTool[] = [books, directory, network, social, seo, campaigns, analytics]
+const TOOLS: AnyTool[] = [
+  books,
+  directory,
+  network,
+  social,
+  seo,
+  campaigns,
+  analytics,
+  dataStudio,
+]
 
 export function getTool(id: string): AnyTool | undefined {
   return TOOLS.find((tool) => tool.id === id)

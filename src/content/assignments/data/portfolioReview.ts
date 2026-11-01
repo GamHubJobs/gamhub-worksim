@@ -35,7 +35,7 @@ export const portfolioReview: AssignmentInput = {
   version: 1,
   careerId: 'data-analytics',
   levelId: 'senior-data-analyst',
-  order: 4,
+  order: 7,
   title: 'Annual client portfolio review',
   summary:
     'Analyse two years of client revenue by sector, find where we grow and where we shrink, and present it.',
