@@ -1,7 +1,8 @@
 # Phase 7 plan: Career Intelligence, Engagement and Accessibility
 
-Status: **in progress** (authorised by the owner on 1 November 2026). Progress is recorded
-in [DEVELOPMENT_LOG.md](../DEVELOPMENT_LOG.md).
+Status: **implemented** (milestones 7.1 to 7.7, November 2026). What was built, and the
+tests, are recorded in [DEVELOPMENT_LOG.md](../DEVELOPMENT_LOG.md); the player guide is
+[CAREER_GUIDE.md](CAREER_GUIDE.md).
 
 ## Goal
 
@@ -71,5 +72,5 @@ An assessment is a timed piece of work for the player's current level. It is bui
 the case engine, uses evidence, figures, decisions, written communication and a real
 document made in Docs or Slides, and is graded with explanations, strengths and areas
 to improve. A failed attempt can be retaken (with a different variant) after practice.
-From level 3, the next promotion also asks for a passed assessment of the current
-level. Players who already hold a level keep it.
+From level 2, the next promotion also asks for a passed assessment of the current
+level (80% needed, so the report cannot be skipped). Players who already hold a level keep it.

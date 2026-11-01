@@ -245,6 +245,33 @@ plan is in [PHASE6_PLAN.md](PHASE6_PLAN.md); the player guide is
 - **Old saves.** A save that names a case no longer in the content is ignored
   everywhere.
 
+### Career intelligence (Phase 7)
+
+The plan is in [PHASE7_PLAN.md](PHASE7_PLAN.md), the player guide is
+[CAREER_GUIDE.md](CAREER_GUIDE.md), and accessibility is described in
+[ACCESSIBILITY.md](ACCESSIBILITY.md).
+
+- **Save format 4.** `work.record` keeps what cannot be worked out again later:
+  promotions, achievements, readiness attempts, desk items and the case-variation seed.
+- **The record** (`game/careerRecord.ts`) is derived from saved tasks, case answers and
+  results, relationships and promotions. Every figure carries its `source` text.
+- **Achievements** (`game/achievements.ts`) are rules over the save, each with a
+  `progress`. `checkAchievements` runs after every action and records new ones with
+  the day. **Desk items** (`content/desk.ts`, `game/desk.ts`) unlock from
+  achievements or levels; a saved item that is no longer earned is ignored.
+- **Case variants** (`content/cases/variants.ts`, `game/caseVariants.ts`):
+  - text replacements in one pass, plus answer and amount replacements;
+  - chosen from the seed when a case arrives, and stored with it as `variant`;
+  - `caseFor(profile, id)` gives the case as a save sees it.
+- **Readiness assessments** (`content/assessments.ts`, `game/assessments.ts`):
+  - case-shaped definitions of kind `assessment`, built from parameters in two
+    versions;
+  - attempts live in `work.record.assessments` and are graded with `gradeCase`;
+  - `promotionProgress` requires the current level's assessment from level 2.
+- **Loading.** The desktop, every app and the Docs editor are loaded on demand
+  (`React.lazy`). `npm run measure:startup` measures a production build on a
+  throttled connection.
+
 ### The working life (Phase 2)
 
 All of it is stored in `profile.work` (profile format 2), so it autosaves and is
@@ -317,7 +344,10 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
 6. Real-world career simulation: clients, operations, workflows, meetings, incidents,
    leadership, a cross-functional programme (done; see [PHASE6_PLAN.md](PHASE6_PLAN.md)
    and the player guide [CASES_GUIDE.md](CASES_GUIDE.md))
-7. Achievements and customisation
+7. Career intelligence, engagement and accessibility: the performance record,
+   achievements and desk items, varied cases, readiness assessments, faster loading and
+   accessibility (done; see [PHASE7_PLAN.md](PHASE7_PLAN.md) and
+   [CAREER_GUIDE.md](CAREER_GUIDE.md))
 8. Polish
 9. Cloud accounts and sync
 10. Future: optional cosmetics, GamHub Jobs connection

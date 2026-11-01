@@ -99,7 +99,7 @@ working simulations of the professional software used in its field (see
 
 **Phase 6 is complete.**
 
-**Phase 7: "Career Intelligence, Engagement and Accessibility"** (in progress). Plan:
+**Phase 7: "Career Intelligence, Engagement and Accessibility"** (complete). Plan:
 [docs/PHASE7_PLAN.md](docs/PHASE7_PLAN.md).
 
 - [x] 7.1 Career-wide performance record (save format 4)
@@ -108,9 +108,43 @@ working simulations of the professional software used in its field (see
 - [x] 7.4 Career readiness assessments
 - [x] 7.5 Performance: code splitting and startup
 - [x] 7.6 Accessibility
-- [ ] 7.7 Portfolio integration, hardening and documentation
+- [x] 7.7 Portfolio integration, hardening and documentation
+
+**Phase 7 is complete.**
 
 ---
+
+## 2026-11-01 · Milestone 7.7: Portfolio integration, hardening and documentation
+
+### Built
+
+- **The progress report** (on screen and as a PDF) now includes:
+  - the simulated workplace experience: only figures above zero, each with its source;
+  - readiness assessment results and attempts;
+  - earned achievements with their day.
+    It also recommends the readiness assessment the next promotion needs, with a button
+    that opens it.
+- **Passed assessments** are already portfolio items, with their report; the
+  simulated-experience statement is unchanged on every report and export.
+- **Hardening.** Assessments now need **80%**, not 70%. Everything except the Docs
+  report is worth 75 marks, so the report can no longer be skipped. A test checks
+  this for every assessment version.
+- **Documentation:**
+  - a player guide, [docs/CAREER_GUIDE.md](docs/CAREER_GUIDE.md);
+  - the architecture notes (Phase 7 section), the roadmap and the README;
+  - the Phase 7 plan, marked implemented.
+
+### Tested
+
+- Unit: the report shows nothing that has not happened; it recommends the
+  assessment, and reports its attempts, earned achievements and sourced workplace
+  figures.
+- Browser: after passing an assessment, the progress report shows “Passed (100%) on
+  attempt 2” and the achievements.
+- Browser, all six careers: the level-2 assessment opens from the Career app. With
+  everything right except the report, it scores 75%, is not passed, names the report
+  as the thing to work on, and offers a retake.
+- Full regression: every unit test, every browser test, and the production build.
 
 ## 2026-11-01 · Milestone 7.6: Accessibility
 

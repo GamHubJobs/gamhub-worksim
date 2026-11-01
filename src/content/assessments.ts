@@ -56,7 +56,8 @@ function assessment(base: Base): CaseInput {
     objectives: base.objectives,
     evidence: base.evidence,
     steps: base.steps,
-    passScore: 70,
+    // High enough that the report cannot be skipped: everything else is 75 marks.
+    passScore: 80,
     outcomes: {},
     replies: {
       excellent:

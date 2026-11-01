@@ -92,4 +92,54 @@ test('a readiness assessment: a failed attempt with feedback, a retake in anothe
   await expect(
     page.getByTestId('portfolio-card').filter({ hasText: 'process the expense claims' }),
   ).toBeVisible()
+
+  // The progress report shows the result, the achievements and the workplace record.
+  await page
+    .getByRole('navigation', { name: 'Portfolio sections' })
+    .getByRole('button', { name: 'Progress report' })
+    .click()
+  await expect(page.getByTestId('report-readiness')).toContainText(
+    'process the expense claims',
+  )
+  await expect(page.getByTestId('report-readiness')).toContainText(
+    'Passed (100%) on attempt 2',
+  )
+  await expect(page.getByTestId('report-achievements')).toContainText('First delivery')
 })
+
+const CAREER_ASSESSMENTS: Array<[career: RegExp, levelTask: string, id: string]> = [
+  [/Office Administration/, 'budget-report', 'ready-fa-practitioner'],
+  [/Accounting/, 'books-sales-purchases', 'ready-acc-practitioner'],
+  [/IT Help Desk/, 'directory-leaver', 'ready-it-practitioner'],
+  [/Digital Marketing/, 'seo-fixes', 'ready-mkt-practitioner'],
+  [/Data Analysis/, 'survey-analysis', 'ready-data-practitioner'],
+  [/Software Development/, 'working-days-tests', 'ready-dev-practitioner'],
+]
+
+for (const [career, levelTask, id] of CAREER_ASSESSMENTS) {
+  test(`every career has a readiness assessment that needs its report: ${id}`, async ({
+    page,
+  }) => {
+    test.setTimeout(150_000)
+    await page.goto('/')
+    await page.getByRole('radio', { name: career }).check()
+    await page.getByLabel('Your first name').fill('Alex')
+    await page.getByRole('button', { name: 'Start my first day' }).click()
+    await openApp(page, 'Career')
+    await page.evaluate(`window.__worksim.skipTo('${levelTask}')`)
+    await page.getByRole('button', { name: 'Go to the assessment' }).click()
+    const view = page.getByTestId('readiness')
+    await view.getByRole('button', { name: 'Start the assessment' }).click()
+    await page.evaluate(`window.__worksim.answerAssessment('${id}')`)
+    // Everything right except the report, which was never written: not passed.
+    const detail = view.getByTestId('case-detail')
+    await detail.getByRole('button', { name: 'Submit the assessment' }).click()
+    await detail.getByRole('button', { name: 'Submit for marking' }).click()
+    await expect(detail.getByTestId('case-score')).toHaveText('75%')
+    await expect(view.getByTestId(`status-${id}`)).toHaveText('Not yet passed')
+    await expect(view.getByTestId('assessment-feedback')).toContainText(
+      'Write the report',
+    )
+    await expect(view.getByRole('button', { name: 'Take it again' })).toBeEnabled()
+  })
+}

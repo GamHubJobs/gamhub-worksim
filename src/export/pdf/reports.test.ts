@@ -1,3 +1,4 @@
+import { startingWorkState } from '../../persistence/workState'
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { describe, expect, it } from 'vitest'
 import { ASSIGNMENTS, getAssignment } from '../../content/assignments'
@@ -180,7 +181,7 @@ describe('PDF exports', () => {
       careerId: e.item.careerId,
       levelId: getAssignment('supplies-order')!.levelId,
       assignments: {},
-      work: { reviews: [] },
+      work: startingWorkState(),
     } as unknown as Profile
     const report = progressReport(profile, [{ ...e.item, profileId: 'p' }])
     const text = (await pdfText(competencyReportPdf('Alex', [report]))).join(' ')

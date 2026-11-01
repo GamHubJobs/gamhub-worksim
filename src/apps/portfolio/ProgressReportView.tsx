@@ -70,7 +70,11 @@ export function ProgressReportView({
                       onClick={() => onAct(r.action!)}
                       className="shrink-0 rounded-md border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-100"
                     >
-                      {r.action.kind === 'task' ? 'Open task' : 'Open tool'}
+                      {r.action.kind === 'task'
+                        ? 'Open task'
+                        : r.action.kind === 'readiness'
+                          ? 'Open assessment'
+                          : 'Open tool'}
                     </button>
                   )}
                 </div>
@@ -177,6 +181,57 @@ export function ProgressReportView({
               {report.reviews.map((r) => (
                 <li key={r.week}>
                   Week {r.week}: {r.rating}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <section data-testid="report-workplace">
+        <h3 className="font-semibold text-slate-900">Simulated workplace experience</h3>
+        {report.workplace.length === 0 ? (
+          <p className="mt-1 text-sm text-slate-600">
+            No cases handled yet: clients, budgets, meetings and leadership appear here as
+            they happen.
+          </p>
+        ) : (
+          <dl className="mt-2 space-y-2 text-sm">
+            {report.workplace.map((stat) => (
+              <div key={stat.label} className="flex flex-wrap justify-between gap-x-3">
+                <dt className="text-slate-700">{stat.label}</dt>
+                <dd className="font-medium text-slate-900">{stat.value}</dd>
+                <dd className="w-full text-xs text-slate-500">{stat.source}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2">
+        <div data-testid="report-readiness">
+          <h3 className="font-semibold text-slate-900">Readiness assessments</h3>
+          {report.readiness.length === 0 ? (
+            <p className="mt-1 text-sm text-slate-600">The first one opens at level 2.</p>
+          ) : (
+            <ul className="mt-1 text-sm text-slate-700">
+              {report.readiness.map((r) => (
+                <li key={r.title}>
+                  {r.title} ({r.levelTitle}): {r.result}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div data-testid="report-achievements">
+          <h3 className="font-semibold text-slate-900">Achievements</h3>
+          {report.achievements.length === 0 ? (
+            <p className="mt-1 text-sm text-slate-600">None earned yet.</p>
+          ) : (
+            <ul className="mt-1 text-sm text-slate-700">
+              {report.achievements.map((a) => (
+                <li key={a.title}>
+                  {a.title} (day {a.day}): {a.how}
                 </li>
               ))}
             </ul>

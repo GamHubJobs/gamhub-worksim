@@ -218,6 +218,18 @@ export function competencyReportPdf(name: string, reports: ProgressReport[]): Ui
       `Estimated practice time: ${report.experience.estimatedMinutes} minutes (from the tasks' expected times)`,
       ...report.reviews.map((r) => `Week ${r.week} review: ${r.rating}`),
     ])
+
+    w.heading('Simulated workplace experience', 2)
+    if (report.workplace.length === 0) w.paragraph('No cases handled yet.')
+    else w.list(report.workplace.map((s) => `${s.label}: ${s.value}. ${s.source}`))
+
+    w.heading('Readiness assessments', 2)
+    if (report.readiness.length === 0) w.paragraph('The first one opens at level 2.')
+    else w.list(report.readiness.map((r) => `${r.title} (${r.levelTitle}): ${r.result}`))
+
+    w.heading('Achievements', 2)
+    if (report.achievements.length === 0) w.paragraph('None earned yet.')
+    else w.list(report.achievements.map((a) => `${a.title} (day ${a.day}): ${a.how}`))
   }
   w.space(4)
   w.paragraph(HONESTY_STATEMENT, { muted: true, size: 8.5 })

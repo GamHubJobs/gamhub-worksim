@@ -2,6 +2,7 @@
  * The portfolio at scale: 500 records (ten times what one device can hold
  * today) stay quick to store, list, filter, assess and export.
  */
+import { startingWorkState } from '../../persistence/workState'
 import { Dexie } from 'dexie'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ASSIGNMENTS } from '../../content/assignments'
@@ -79,7 +80,7 @@ const profile = {
   careerId: ASSIGNMENTS[0].careerId,
   levelId: ASSIGNMENTS[0].levelId,
   assignments: {},
-  work: { reviews: [] },
+  work: startingWorkState(),
 } as unknown as Profile
 
 /** Milliseconds taken by a function. */

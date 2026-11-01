@@ -635,7 +635,9 @@ export function Desktop({
                       setView(
                         action.kind === 'task'
                           ? { app: 'tasks', assignmentId: action.assignmentId }
-                          : { app: 'tool', tool: action.toolId },
+                          : action.kind === 'readiness'
+                            ? { app: 'readiness', item: action.assessmentId }
+                            : { app: 'tool', tool: action.toolId },
                       )
                     }
                   />

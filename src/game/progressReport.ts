@@ -15,7 +15,15 @@ import {
   type ExperienceRecord,
   type ImprovementArea,
 } from './competencies'
-import { assignmentStatus, careerAssignments, careerLevel } from './career'
+import {
+  assignmentStatus,
+  careerAssignments,
+  careerLevel,
+  promotionProgress,
+} from './career'
+import { ACHIEVEMENT_CATEGORIES, ACHIEVEMENTS, describe } from './achievements'
+import { attemptsOf, careerAssessments, isPassedAttempt } from './assessments'
+import { careerRecord, type RecordStat } from './careerRecord'
 import { toolName, toolsOf } from './portfolio'
 import { RATING_NAMES } from './reviews'
 
@@ -30,7 +38,19 @@ export interface Recommendation {
   /** Why, in words, from the records. */
   reason: string
   /** Where to act: a task (opens in Tasks) or a tool (opens its start page). */
-  action?: { kind: 'task'; assignmentId: string } | { kind: 'tool'; toolId: string }
+  action?:
+    | { kind: 'task'; assignmentId: string }
+    | { kind: 'tool'; toolId: string }
+    | { kind: 'readiness'; assessmentId: string }
+}
+
+/** A readiness assessment and how the player has done in it. */
+export interface ReadinessResult {
+  title: string
+  levelTitle: string
+  /** "Passed (85%)", "Not yet passed (2 attempts)", "Not taken yet". */
+  result: string
+  passed: boolean
 }
 
 export interface ProgressReport {
@@ -48,6 +68,12 @@ export interface ProgressReport {
   experience: ExperienceRecord
   reviews: Array<{ week: number; rating: string }>
   recommendations: Recommendation[]
+  /** Highlights of the simulated workplace record: only figures above zero, each with its source. */
+  workplace: RecordStat[]
+  /** Achievements earned, oldest first. */
+  achievements: Array<{ title: string; category: string; how: string; day: number }>
+  /** The readiness assessments opened so far (at or below the player's level). */
+  readiness: ReadinessResult[]
 }
 
 const RANK = { 'not-yet': 0, demonstrated: 1, practised: 2, proficient: 3 } as const
@@ -66,6 +92,16 @@ export function recommendations(
       profile,
       tasks.find((a) => a.id === id)!,
     )
+
+  // 0. The readiness assessment the next promotion needs.
+  const promotion = promotionProgress(profile)
+  if (promotion.assessment && !promotion.assessmentMet) {
+    result.push({
+      title: `Take the readiness assessment: ${promotion.assessment.title.replace(/^Readiness assessment: /, '')}`,
+      reason: `It is needed for promotion to ${promotion.next?.title ?? 'the next level'}, and shows you can handle this level's responsibilities.`,
+      action: { kind: 'readiness', assessmentId: promotion.assessment.id },
+    })
+  }
 
   // 1. Tasks handed in but not passed yet.
   for (const area of improvements.filter((a) => a.needsRevision)) {
@@ -184,5 +220,60 @@ export function progressReport(profile: Profile, items: PortfolioItem[]): Progre
       rating: RATING_NAMES[r.rating],
     })),
     recommendations: recommendations(profile, skills, improvements),
+    workplace: workplaceHighlights(profile),
+    achievements: ACHIEVEMENTS.flatMap((a) => {
+      const earned = profile.work.record.achievements[a.id]
+      return earned
+        ? [
+            {
+              title: a.title,
+              category: ACHIEVEMENT_CATEGORIES[a.category],
+              how: describe(a, profile.careerId),
+              day: earned.day,
+            },
+          ]
+        : []
+    }).sort((a, b) => a.day - b.day),
+    readiness: careerAssessments(profile.careerId)
+      .filter((a) => a.minLevel <= levelNumber)
+      .map((a) => {
+        const attempts = attemptsOf(profile, a.id)
+        const pass = attempts.find(isPassedAttempt)
+        return {
+          title: a.title.replace(/^Readiness assessment: /, ''),
+          levelTitle: career.levels[a.minLevel - 1]?.title ?? '',
+          passed: !!pass,
+          result: pass
+            ? `Passed (${pass.result?.score}%)${attempts.length > 1 ? ` on attempt ${pass.attempt}` : ''}`
+            : attempts.length > 0
+              ? `Not yet passed (${attempts.length} ${attempts.length === 1 ? 'attempt' : 'attempts'})`
+              : 'Not taken yet',
+        }
+      }),
   }
+}
+
+/** The record figures worth showing in a report: those above zero. */
+const HIGHLIGHTS: Array<[section: string, label: string]> = [
+  ['customers', 'Customer cases handled'],
+  ['budgets', 'Requests decided'],
+  ['budgets', 'Value you approved'],
+  ['incidents', 'Incidents handled'],
+  ['meetings', 'Case meetings attended'],
+  ['meetings', 'Files handed in for cases'],
+  ['handoffs', 'Right first time'],
+  ['leadership', 'Teams led'],
+  ['leadership', 'Work delegated'],
+  ['progression', 'Integrated projects completed'],
+]
+
+function workplaceHighlights(profile: Profile): RecordStat[] {
+  const record = careerRecord(profile)
+  return HIGHLIGHTS.flatMap(([section, label]) => {
+    const stat = record.sections
+      .find((s) => s.id === section)
+      ?.stats.find((s) => s.label === label)
+    // Nothing that has not happened: "0", "£0", "0 of 0" and "0 pieces" are left out.
+    return stat && !/^(£?0\b|0 of 0)/.test(stat.value) ? [stat] : []
+  })
 }

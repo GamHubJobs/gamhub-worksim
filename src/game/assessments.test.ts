@@ -80,8 +80,8 @@ describe('readiness assessment content', () => {
       const result = gradeCase(def, modelAnswers(def, NO_AUTHORITY), reportFor(def))
       expect(result.steps.filter((s) => s.earned < s.points)).toEqual([])
       expect(result.score).toBe(100)
-      // Without the report, it cannot be passed with full marks.
-      expect(gradeCase(def, modelAnswers(def, NO_AUTHORITY)).score).toBeLessThan(100)
+      // Without the report, it cannot be passed at all.
+      expect(gradeCase(def, modelAnswers(def, NO_AUTHORITY)).passed).toBe(false)
     },
   )
 

@@ -44,4 +44,6 @@ First-time setup for browser tests: `npx playwright install chromium`.
 
 - [Architecture overview](docs/ARCHITECTURE.md)
 - [Cases: a guide for players](docs/CASES_GUIDE.md)
+- [Your career: record, achievements, desk and readiness](docs/CAREER_GUIDE.md)
+- [Accessibility](docs/ACCESSIBILITY.md)
 - [Development log](DEVELOPMENT_LOG.md): completed work, decisions and next tasks

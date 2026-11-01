@@ -5,6 +5,11 @@ import { careerAssignments, newProfileData, recordSubmission } from './career'
 import type { GradeResult } from './grading'
 import { checkCatalogue, decideCapture } from './portfolio'
 import { progressReport } from './progressReport'
+import { skipToAssignment } from './devTools'
+import { checkAchievements } from './achievements'
+import { recordAssessmentResult, startAssessment } from './assessments'
+import { ASSESSMENT_VERSIONS } from '../content/assessments'
+import { gradeCase } from './cases'
 
 /** A grade where the first `failing` checks fail and the rest pass. */
 function grade(task: Assignment, score: number, failing = 0): GradeResult {
@@ -129,5 +134,58 @@ describe('progress report', () => {
     expect(formulas.reason).toBe(
       'It has been shown in 1 passed task. “Reconcile the bank account” trains it (it opens after the tasks before it).',
     )
+  })
+})
+
+describe('the report’s Phase 7 sections', () => {
+  function atLevel2(careerId = 'office-admin-finance'): Profile {
+    const base = { ...newProfileData('Alex', 1, careerId), id: 'p' } as unknown as Profile
+    return { ...skipToAssignment(base, 'budget-report'), id: 'p' } as Profile
+  }
+
+  it('shows only what has happened: no workplace figures, achievements or results before any', () => {
+    const fresh = {
+      ...newProfileData('Alex', 1, 'accounting'),
+      id: 'p',
+    } as unknown as Profile
+    const report = progressReport(fresh, [])
+    expect(report.workplace).toEqual([])
+    expect(report.achievements).toEqual([])
+    expect(report.readiness).toEqual([])
+  })
+
+  it('recommends the readiness assessment the next promotion needs, and reports attempts', () => {
+    let profile = atLevel2()
+    let report = progressReport(profile, [])
+    expect(report.recommendations[0]).toMatchObject({
+      title: 'Take the readiness assessment: process the expense claims',
+      action: { kind: 'readiness', assessmentId: 'ready-fa-practitioner' },
+    })
+    expect(report.readiness).toEqual([
+      {
+        title: 'process the expense claims',
+        levelTitle: expect.any(String),
+        passed: false,
+        result: 'Not taken yet',
+      },
+    ])
+    profile = startAssessment(profile, 'ready-fa-practitioner', 2) as Profile
+    const def = ASSESSMENT_VERSIONS['ready-fa-practitioner'][0]
+    profile = recordAssessmentResult(
+      profile,
+      'ready-fa-practitioner',
+      gradeCase(def, {}),
+      5,
+    ) as Profile
+    report = progressReport(profile, [])
+    expect(report.readiness[0].result).toBe('Not yet passed (1 attempt)')
+  })
+
+  it('lists earned achievements with their day, and workplace figures with their source', () => {
+    const profile = checkAchievements(atLevel2(), 3) as Profile
+    const report = progressReport(profile, [])
+    expect(report.achievements.map((a) => a.title)).toContain('First delivery')
+    expect(report.achievements.every((a) => a.day >= 1 && a.how.length > 0)).toBe(true)
+    for (const stat of report.workplace) expect(stat.source.length).toBeGreaterThan(10)
   })
 })
