@@ -4,6 +4,7 @@
  * for the team. The knowledge base holds the desk's guides.
  */
 import { useState } from 'react'
+import { PriorityMatrix } from './PriorityMatrix'
 import {
   TICKET_PRIORITIES,
   TICKET_STATUSES,
@@ -189,6 +190,11 @@ export function TicketsEditor({
                 </select>
               </label>
             </section>
+
+            <PriorityMatrix
+              current={ticket.priority}
+              onChoose={editable ? (priority) => change({ priority }) : undefined}
+            />
 
             <TextField
               key={`reply-${ticket.id}`}

@@ -271,6 +271,10 @@ CAREERS.push({
     'accuracy',
   ],
   apps: ['helpdesk', 'docs', 'slides'],
+  tools: [
+    { tool: 'directory', fromLevel: 'service-desk-trainee' },
+    { tool: 'network', fromLevel: 'service-desk-analyst' },
+  ],
   levels: [
     {
       id: 'service-desk-trainee',
@@ -281,20 +285,20 @@ CAREERS.push({
     {
       id: 'service-desk-analyst',
       title: 'Service Desk Analyst',
-      xpRequired: 200,
+      xpRequired: 300,
       minReputation: 35,
     },
     {
       id: 'senior-support-analyst',
       title: 'Senior Support Analyst',
-      xpRequired: 350,
+      xpRequired: 700,
       minReputation: 50,
       minReview: 'solid',
     },
     {
       id: 'service-desk-lead',
       title: 'Service Desk Team Lead',
-      xpRequired: 550,
+      xpRequired: 1050,
       minReputation: 60,
       minReview: 'strong',
     },

@@ -59,14 +59,68 @@ working simulations of the professional software used in its field (see
 - [x] 4.7 Professional-tools framework (registry, saving, tool tasks, grading,
       progressive unlocks, guides, practice data)
 - [x] 4.8 Accounting: Books (ledger, sales, purchases, banking, payroll, reports)
-- [ ] 4.9 IT Help Desk: Service Desk, Directory and assets, Network Tools
+- [x] 4.9 IT Help Desk: Service Desk, Directory and assets, Network Tools
 - [ ] 4.10 Digital Marketing: Campaigns, Social Planner, Site Analytics, SEO Audit
 - [ ] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
 - [ ] 4.12 Software Development: terminal, Git, debug console, API Client
 
 ---
 
-## 2026-10-31 · Milestone 4.8: Books, complete accounting software
+## 2026-11-01 · Milestone 4.9: IT support tools (Directory and Network Tools)
+
+### Built
+
+- **Directory** (identity and asset management): user accounts with sign-in names,
+  status, lockouts, failed sign-ins and where they came from, MFA and “must change
+  password”; actions to create, disable and enable accounts, unlock, reset passwords
+  (a reset no longer unlocks: the two are separate decisions), reset and register MFA,
+  and add and remove groups; security groups with what each gives access to, privileged
+  groups marked; an asset inventory (laptops, phones, monitors) with assignment, return,
+  report lost, repair, retire and warranty status; and an **audit log** of every change.
+  Sample data uses the company’s own people across all departments.
+- **Network Tools** (network diagnostics): a simulated office network (server room, two
+  floors, router, firewall, internet link, servers with services, printers, laptops) and
+  a console that runs `ping`, `ipconfig`, `nslookup`, `tracert` and
+  `portcheck` with realistic output, from your PC or **from a user’s computer** over a
+  remote session (with command history). Faults live in the network itself, so every
+  command answers consistently: stopped services, wrong gateways, wrong DNS servers,
+  wrong DNS records, IP conflicts, dead devices. Remote fixes (restart a crashed device
+  or a service, switch a computer to automatic settings, correct a DNS record), a
+  network map, DNS records, and **findings** (device, fault, evidence). Devices that
+  are physically down cannot be fixed remotely: they must be escalated.
+- **Help Desk**: a priority guide (impact × urgency matrix, matching the knowledge base)
+  on every ticket; clicking a cell sets the priority.
+- **Four new IT tasks** (the path is now eight; promotions at 300, 700 and 1,050 XP):
+  - *A new starter and a lost phone* (Trainee, Directory): an account with exactly the
+    requested access, MFA, equipment from stock; a lost phone reported, MFA reset and
+    the phone replaced.
+  - *A leaver, two lockouts and a request* (Analyst, Directory): full offboarding; a
+    verified user unlocked; an account under attack (214 failures from abroad, owner on
+    holiday) kept locked with its password reset; a request for admin rights refused.
+  - *Nobody can print, and Maya can’t get online* (Analyst, Network Tools): a stopped
+    print spooler (ping works, the port doesn’t) and a hand-typed wrong gateway.
+  - *Monday after the change* (Senior, Network Tools): a DNS record missed in a server
+    move, a laptop using a public DNS server, and an access point needing a site visit.
+  Graded on the actual state (accounts, groups, devices, what resolves and answers from
+  where), the findings and the evidence gathered in the console.
+- Network Tools unlocks at Service Desk Analyst; Directory is available from the start.
+
+### Not built (yet)
+
+- From the plan for the service desk: SLA countdown timers, linking tickets to
+  incidents and an editable knowledge base. The Help Desk already covers queues,
+  priorities, categories, statuses, replies, notes and a read-only knowledge base;
+  knowledge articles are written in Docs.
+
+### Tested
+
+- Unit tests for both scenarios (each symptom appears with the right commands, each fix
+  works, the access point can’t be fixed remotely), and for every task: the model answer
+  scores 100%, the starting file fails.
+- Browser tests: the new-starter task and the Monday incident done end to end in the
+  real interface (100% each), and Network Tools locked for a trainee.
+
+ Books, complete accounting software
 
 ### Built
 

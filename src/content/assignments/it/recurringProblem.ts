@@ -56,7 +56,7 @@ export const recurringProblem: AssignmentInput = {
   version: 1,
   careerId: 'it-support',
   levelId: 'service-desk-analyst',
-  order: 3,
+  order: 5,
   title: 'One problem, many tickets',
   summary:
     'Spot a recurring Outlook problem, resolve every ticket, and write a knowledge-base article.',

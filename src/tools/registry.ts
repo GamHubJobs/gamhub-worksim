@@ -5,9 +5,11 @@
  */
 import type { Career } from '../content/schemas'
 import { books } from './books/definition'
+import { directory } from './directory/definition'
+import { network } from './network/definition'
 import type { AnyTool, CareerTool } from './types'
 
-const TOOLS: AnyTool[] = [books]
+const TOOLS: AnyTool[] = [books, directory, network]
 
 export function getTool(id: string): AnyTool | undefined {
   return TOOLS.find((tool) => tool.id === id)

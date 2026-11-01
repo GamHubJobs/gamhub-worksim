@@ -19,7 +19,11 @@ import { billingReport } from './dev/billingReport'
 import { invoiceBug } from './dev/invoiceBug'
 import { timesheetValidation } from './dev/timesheetValidation'
 import { workingDaysTests } from './dev/workingDaysTests'
+import { directoryJoiner } from './it/directoryJoiner'
+import { directoryLeaver } from './it/directoryLeaver'
 import { majorIncident } from './it/majorIncident'
+import { networkIntranet } from './it/networkIntranet'
+import { networkPrinting } from './it/networkPrinting'
 import { abTest } from './marketing/abTest'
 import { campaignMetrics } from './marketing/campaignMetrics'
 import { contentCalendar } from './marketing/contentCalendar'
@@ -60,6 +64,10 @@ const SOURCES = [
   userReplies,
   recurringProblem,
   majorIncident,
+  directoryJoiner,
+  directoryLeaver,
+  networkPrinting,
+  networkIntranet,
   // Digital Marketing
   campaignMetrics,
   contentCalendar,

@@ -18,6 +18,8 @@ type Workspace = LazyExoticComponent<ComponentType<ToolWorkspaceProps<any>>>
 
 const WORKSPACES: Record<string, Workspace> = {
   books: lazy(() => import('./books/BooksWorkspace')),
+  directory: lazy(() => import('./directory/DirectoryWorkspace')),
+  network: lazy(() => import('./network/NetworkWorkspace')),
 }
 
 export function getWorkspace(toolId: string): Workspace | undefined {
