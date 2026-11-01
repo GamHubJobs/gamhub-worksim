@@ -6,6 +6,7 @@
 import type { Career } from '../content/schemas'
 import { books } from './books/definition'
 import { analytics } from './analytics/definition'
+import { apiClient } from './api/definition'
 import { campaigns } from './campaigns/definition'
 import { dataStudio } from './datastudio/definition'
 import { directory } from './directory/definition'
@@ -23,6 +24,7 @@ const TOOLS: AnyTool[] = [
   campaigns,
   analytics,
   dataStudio,
+  apiClient,
 ]
 
 export function getTool(id: string): AnyTool | undefined {

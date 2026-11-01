@@ -19,7 +19,10 @@ import { studioStatistics } from './data/studioStatistics'
 import { portfolioReview } from './data/portfolioReview'
 import { salesSummary } from './data/salesSummary'
 import { surveyAnalysis } from './data/surveyAnalysis'
+import { apiTesting } from './dev/apiTesting'
 import { billingReport } from './dev/billingReport'
+import { debugNaN } from './dev/debugNaN'
+import { gitFirstFix } from './dev/gitFirstFix'
 import { invoiceBug } from './dev/invoiceBug'
 import { timesheetValidation } from './dev/timesheetValidation'
 import { workingDaysTests } from './dev/workingDaysTests'
@@ -99,6 +102,9 @@ const SOURCES = [
   timesheetValidation,
   workingDaysTests,
   billingReport,
+  gitFirstFix,
+  debugNaN,
+  apiTesting,
 ]
 
 /** Every text in a value with role names filled in for a department. */

@@ -425,6 +425,7 @@ CAREERS.push({
     'technical-writing',
   ],
   apps: ['code', 'docs'],
+  tools: [{ tool: 'api', fromLevel: 'software-developer' }],
   levels: [
     {
       id: 'junior-developer',
@@ -435,20 +436,20 @@ CAREERS.push({
     {
       id: 'software-developer',
       title: 'Software Developer',
-      xpRequired: 200,
+      xpRequired: 300,
       minReputation: 35,
     },
     {
       id: 'senior-developer',
       title: 'Senior Developer',
-      xpRequired: 350,
+      xpRequired: 700,
       minReputation: 50,
       minReview: 'solid',
     },
     {
       id: 'lead-developer',
       title: 'Lead Developer',
-      xpRequired: 550,
+      xpRequired: 950,
       minReputation: 60,
       minReview: 'strong',
     },

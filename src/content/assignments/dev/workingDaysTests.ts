@@ -89,7 +89,7 @@ export const workingDaysTests: AssignmentInput = {
   version: 1,
   careerId: 'software-development',
   levelId: 'software-developer',
-  order: 3,
+  order: 4,
   kind: 'code',
   title: 'Write the tests for working days',
   summary: 'Write tests good enough to catch the bugs that slip into date code.',

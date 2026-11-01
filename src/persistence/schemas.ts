@@ -7,6 +7,7 @@
  * so the code and the checks can never disagree.
  */
 import { z } from 'zod'
+import { GitSchema } from '../game/code/git'
 import { isId } from '../lib/ids'
 
 // ---------------------------------------------------------------------------
@@ -414,6 +415,31 @@ export const CodeFileSchema = z.object({
 export const CodeContentSchema = z.object({
   language: z.literal('javascript'),
   files: z.array(CodeFileSchema).min(1).max(20),
+  /** The project's Git repository (created by the first git command). */
+  git: GitSchema.optional(),
+  /** The terminal's history. */
+  terminal: z
+    .array(
+      z.object({
+        command: z.string().max(500),
+        output: z.array(z.string().max(500)).max(300),
+      }),
+    )
+    .max(200)
+    .optional(),
+  /** Calls made in the debug console. */
+  debug: z
+    .array(
+      z.object({
+        file: z.string().max(60),
+        fn: z.string().max(60),
+        args: z.string().max(2000),
+        value: z.string().max(500).nullable(),
+        error: z.string().max(500).nullable(),
+      }),
+    )
+    .max(100)
+    .optional(),
 })
 
 export const CodeDocumentSchema = DocumentBaseSchema.extend({

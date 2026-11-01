@@ -315,3 +315,79 @@ export function runTests(files: SourceFile[], only?: string[]): RunResult {
   })
   return { tests, logs, error: null }
 }
+
+// ---------------------------------------------------------------------------
+// Debug console: call one function with chosen arguments
+// ---------------------------------------------------------------------------
+
+export interface CallResult {
+  /** The returned value, as text (e.g. 12.5, "OK", NaN, undefined). */
+  value: string | null
+  logs: string[]
+  error: string | null
+  /** The line in the file where the error happened, if known. */
+  line: number | null
+}
+
+const RESULT = '\u0000RESULT'
+const FAILED = '\u0000ERROR'
+/** Lines that new Function and "use strict" add before a file's first line. */
+const LINE_OFFSET = 3
+
+export function callFunction(
+  files: SourceFile[],
+  file: string,
+  fn: string,
+  args: unknown[],
+): CallResult {
+  const suite = `const __m = require(${JSON.stringify(`./${file}`)})
+test('call', () => {
+  const __f = __m[${JSON.stringify(fn)}]
+  if (typeof __f !== 'function') {
+    console.log(${JSON.stringify(FAILED)}, ${JSON.stringify(`${fn} is not a function exported by ${file}.`)})
+    return
+  }
+  try {
+    console.log(${JSON.stringify(RESULT)}, __f(...${JSON.stringify(args)}))
+  } catch (e) {
+    console.log(${JSON.stringify(FAILED)}, JSON.stringify({
+      message: String(e && e.name ? e.name + ': ' + e.message : e),
+      stack: String(e && e.stack),
+    }))
+  }
+})`
+  const name = '__debug__.test.js'
+  const run = runTests([...files, { name, text: suite }], [name])
+  if (run.error) return { value: null, logs: run.logs, error: run.error, line: null }
+  const logs = run.logs.filter((l) => !l.startsWith(RESULT) && !l.startsWith(FAILED))
+  const result = run.logs.find((l) => l.startsWith(RESULT))
+  if (result !== undefined) {
+    return { value: result.slice(RESULT.length + 1), logs, error: null, line: null }
+  }
+  const failed = run.logs.find((l) => l.startsWith(FAILED))
+  if (failed === undefined) {
+    const message = run.tests[0]?.message || 'The function could not be called.'
+    return { value: null, logs, error: message, line: null }
+  }
+  let detail: { message: string; stack: string }
+  try {
+    detail = JSON.parse(failed.slice(FAILED.length + 1)) as typeof detail
+  } catch {
+    // The function name was not found: the log holds the plain message.
+    return {
+      value: null,
+      logs,
+      error: failed.slice(FAILED.length + 1).trim(),
+      line: null,
+    }
+  }
+  // The first stack frame in the player's file gives the line.
+  const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const at = new RegExp(`${escaped}:(\\d+)`).exec(detail.stack)
+  return {
+    value: null,
+    logs,
+    error: detail.message,
+    line: at ? Math.max(1, Number(at[1]) - LINE_OFFSET) : null,
+  }
+}

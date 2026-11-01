@@ -156,7 +156,7 @@ export const billingReport: AssignmentInput = {
   version: 1,
   careerId: 'software-development',
   levelId: 'senior-developer',
-  order: 4,
+  order: 7,
   kind: 'code',
   title: 'Build the billing report',
   summary:

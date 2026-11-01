@@ -25,6 +25,7 @@ const WORKSPACES: Record<string, Workspace> = {
   campaigns: lazy(() => import('./campaigns/CampaignsWorkspace')),
   analytics: lazy(() => import('./analytics/AnalyticsWorkspace')),
   datastudio: lazy(() => import('./datastudio/DataStudioWorkspace')),
+  api: lazy(() => import('./api/ApiWorkspace')),
 }
 
 export function getWorkspace(toolId: string): Workspace | undefined {

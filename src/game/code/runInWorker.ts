@@ -7,7 +7,7 @@ import type { Assignment } from '../../content/schemas'
 import type { CodeContent } from '../../persistence/schemas'
 import { failedCodeChecks } from './grading'
 import type { CheckResult } from '../grading'
-import type { RunResult, SourceFile } from './runner'
+import type { CallResult, RunResult, SourceFile } from './runner'
 import type { WorkerRequest } from './codeWorker'
 
 export const TIME_LIMIT_MS = 5000
@@ -37,6 +37,25 @@ function inWorker<T>(request: WorkerRequest): Promise<T> {
     }
     worker.postMessage(request)
   })
+}
+
+/** Calls one function in the debug console. */
+export async function callInWorker(
+  files: SourceFile[],
+  file: string,
+  fn: string,
+  args: unknown[],
+): Promise<CallResult> {
+  try {
+    return await inWorker<CallResult>({ type: 'call', files, file, fn, args })
+  } catch (error) {
+    return {
+      value: null,
+      logs: [],
+      error: error instanceof Error ? error.message : String(error),
+      line: null,
+    }
+  }
 }
 
 /** Runs every test file in the project, as the Run tests button does. */

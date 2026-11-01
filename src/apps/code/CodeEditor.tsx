@@ -4,6 +4,7 @@
  * others fail. The code runs in a Web Worker (see `game/code`).
  */
 import { useRef, useState, type KeyboardEvent } from 'react'
+import { DebugPanel, TerminalPanel } from './CodePanels'
 import { runProjectTests } from '../../game/code/runInWorker'
 import type { RunResult } from '../../game/code/runner'
 import { isTestFile } from '../../game/code/runner'
@@ -21,6 +22,9 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
   const [active, setActive] = useState(content.files[0]?.name ?? '')
   const [running, setRunning] = useState(false)
   const [run, setRun] = useState<RunResult | null>(null)
+  const [panel, setPanel] = useState<'tests' | 'terminal' | 'debug'>('tests')
+  const [errorLine, setErrorLine] = useState<{ file: string; line: number } | null>(null)
+  const canEdit = !readOnly && !!onUpdate
   const gutter = useRef<HTMLDivElement>(null)
   const file = content.files.find((f) => f.name === active) ?? content.files[0]
   const editable = !readOnly && !!onUpdate && !file?.readOnly
@@ -130,7 +134,16 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
               className="w-12 shrink-0 overflow-hidden bg-slate-50 py-2 pr-2 text-right text-slate-400 select-none"
             >
               {Array.from({ length: lines }, (_, i) => (
-                <div key={i}>{i + 1}</div>
+                <div
+                  key={i}
+                  className={
+                    errorLine && errorLine.file === file?.name && errorLine.line === i + 1
+                      ? 'bg-red-200 font-semibold text-red-800'
+                      : ''
+                  }
+                >
+                  {i + 1}
+                </div>
               ))}
             </div>
             <textarea
@@ -157,10 +170,62 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
         </div>
       </div>
 
+      <div
+        className="flex shrink-0 gap-1 border-t border-slate-200 bg-slate-900 px-2 pt-1"
+        role="tablist"
+      >
+        {(
+          [
+            ['tests', 'Tests'],
+            ['terminal', 'Terminal'],
+            ['debug', 'Debug'],
+          ] as const
+        ).map(([id, name]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={panel === id}
+            onClick={() => setPanel(id)}
+            className={`rounded-t px-3 py-1 text-xs font-medium ${
+              panel === id
+                ? 'bg-slate-950 text-white'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+      {panel === 'terminal' && (
+        <section
+          aria-label="Terminal"
+          className="h-56 shrink-0 bg-slate-950 p-3 text-slate-100"
+        >
+          <TerminalPanel content={content} editable={canEdit} update={onUpdate} />
+        </section>
+      )}
+      {panel === 'debug' && (
+        <section
+          aria-label="Debug console"
+          className="h-56 shrink-0 overflow-y-auto bg-slate-950 p-3 text-slate-100"
+        >
+          <DebugPanel
+            content={content}
+            editable={canEdit}
+            update={onUpdate}
+            onLine={(name, line) => {
+              setActive(name)
+              setErrorLine({ file: name, line })
+            }}
+          />
+        </section>
+      )}
       <section
         aria-label="Test results"
         data-testid="test-results"
-        className="h-56 shrink-0 overflow-y-auto border-t border-slate-200 bg-slate-950 p-3 font-mono text-sm text-slate-100"
+        hidden={panel !== 'tests'}
+        className="h-56 shrink-0 overflow-y-auto bg-slate-950 p-3 font-mono text-sm text-slate-100"
       >
         {!run ? (
           <p className="text-slate-400">

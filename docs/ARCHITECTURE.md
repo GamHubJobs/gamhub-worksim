@@ -168,7 +168,7 @@ own files, colleagues and progress. Finance needed no changes to its saves.
 | IT Help Desk         | IT Services     | Help Desk, Docs, Slides | Help Desk, Directory, Network Tools                     |
 | Digital Marketing    | Marketing       | Sheets, Docs, Slides    | Social Planner, SEO Audit, Ad Campaigns, Site Analytics |
 | Data Analysis        | Data & Insights | Sheets, Docs, Slides    | Data Studio (and new Sheets functions)                  |
-| Software Development | Engineering     | Code, Docs              | Code                                                    |
+| Software Development | Engineering     | Code, Docs              | Code (terminal, Git, debugger), API Client              |
 
 ### Professional tools
 

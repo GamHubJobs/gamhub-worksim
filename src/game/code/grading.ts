@@ -5,6 +5,8 @@
  * the player's code never finishes (see `codeWorker.ts`).
  */
 import type { Assignment, CodeCheck } from '../../content/schemas'
+import { CodeContentSchema } from '../../persistence/schemas'
+import { headCommit, history, initRepository, isAncestor, status } from './git'
 import type { CodeContent } from '../../persistence/schemas'
 import type { CheckResult, CheckStatus } from '../grading'
 import { runTests, type RunResult, type SourceFile } from './runner'
@@ -19,11 +21,20 @@ export function buildProjectContent(assignment: Assignment): CodeContent {
       text: file.text,
       readOnly: file.readOnly,
     })),
+    ...(assignment.project.git
+      ? {
+          git: initRepository(
+            Object.fromEntries(assignment.project.files.map((f) => [f.name, f.text])),
+          ),
+        }
+      : {}),
   }
 }
 
 /** The model answer: the starting project with the solution files in place. */
 export function buildCodeSolution(assignment: Assignment): CodeContent {
+  if (assignment.codeSolutionProject)
+    return CodeContentSchema.parse(assignment.codeSolutionProject)
   const start = buildProjectContent(assignment)
   return {
     ...start,
@@ -57,13 +68,98 @@ function failures(run: RunResult): string[] {
     .map((test) => `“${test.name}” fails: ${test.message}`)
 }
 
+/** Commits the player made: in the repository now, but not at the start. */
+function newCommits(content: CodeContent, startContent: CodeContent) {
+  const before = new Set((startContent.git?.commits ?? []).map((c) => c.id))
+  return (content.git?.commits ?? []).filter((c) => !before.has(c.id))
+}
+
 function gradeCodeCheck(
   check: CodeCheck,
-  player: SourceFile[],
-  start: SourceFile[],
+  content: CodeContent,
+  startContent: CodeContent,
 ): CheckResult {
+  const start = startContent.files
+  let player: SourceFile[] = content.files
   switch (check.type) {
+    case 'commits': {
+      const repo = content.git
+      const mine = newCommits(content, startContent).filter((c) => c.parents.length < 2)
+      const reachable = check.branch
+        ? new Set(history(repo!, repo?.branches[check.branch]).map((c) => c.id))
+        : null
+      const terms = check.messageIncludes.map((t) => t.toLowerCase())
+      const good = mine.filter(
+        (c) =>
+          (!reachable || reachable.has(c.id)) &&
+          (terms.length === 0 || terms.some((t) => c.message.toLowerCase().includes(t))),
+      )
+      const problems =
+        mine.length === 0
+          ? ['You haven’t made any commits: use git add, then git commit -m "…".']
+          : good.length < check.min
+            ? [
+                `No commit${check.branch ? ` on ${check.branch}` : ''} has a message that says what changed (e.g. mentioning ${check.messageIncludes.map((t) => `“${t}”`).join(' or ')}).`,
+              ]
+            : []
+      return result(check, Math.min(1, good.length / check.min), problems)
+    }
+    case 'branch-merged': {
+      const repo = content.git
+      const main = repo?.branches.main
+      const merged =
+        !!repo &&
+        !!main &&
+        Object.entries(repo.branches).some(
+          ([name, tip]) =>
+            name !== 'main' &&
+            newCommits(content, startContent).some((c) => c.id === tip) &&
+            isAncestor(repo, tip, main),
+        )
+      return result(
+        check,
+        merged ? 1 : 0,
+        merged
+          ? []
+          : ['Make your fix on its own branch, then merge that branch into main.'],
+      )
+    }
+    case 'clean': {
+      const repo = content.git
+      const files = Object.fromEntries(content.files.map((f) => [f.name, f.text]))
+      const problems: string[] = []
+      if (!repo) problems.push('The project has no Git repository.')
+      else {
+        if (!status(repo, files).clean)
+          problems.push(
+            'There are changes that are not committed: git status shows them.',
+          )
+        if (repo.head !== 'main')
+          problems.push(
+            `You are on ${repo.head}: switch back to main (git checkout main).`,
+          )
+      }
+      return result(check, problems.length ? 0 : 1, problems)
+    }
+    case 'debugged': {
+      const used = (content.debug ?? []).some((d) => d.fn === check.fn)
+      return result(
+        check,
+        used ? 1 : 0,
+        used
+          ? []
+          : [`Call ${check.fn} in the Debug console to see what it really returns.`],
+      )
+    }
     case 'tests': {
+      if (check.on === 'main') {
+        const committed =
+          content.git && headCommit({ ...content.git, head: 'main' })?.files
+        if (!committed) {
+          return result(check, 0, ['Nothing is committed on main yet.'])
+        }
+        player = Object.entries(committed).map(([name, text]) => ({ name, text }))
+      }
       // The test file as the task wrote it: the player's copy may be edited.
       const source = check.source ?? start.find((f) => f.name === check.file)?.text ?? ''
       const files = [
@@ -129,13 +225,15 @@ export function gradeCode(
   assignment: Assignment,
   content: CodeContent | null,
 ): CheckResult[] {
-  const start = buildProjectContent(assignment).files
   if (!content) {
     return assignment.codeChecks.map((check) =>
       result(check, 0, ['The project was not handed in.']),
     )
   }
-  return assignment.codeChecks.map((check) => gradeCodeCheck(check, content.files, start))
+  const startContent = buildProjectContent(assignment)
+  return assignment.codeChecks.map((check) =>
+    gradeCodeCheck(check, content, startContent),
+  )
 }
 
 /** Every check failed with the same reason, e.g. when the code took too long. */

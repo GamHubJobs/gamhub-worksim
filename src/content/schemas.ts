@@ -148,6 +148,28 @@ export const CodeCheckSchema = z.discriminatedUnion('type', [
     type: z.literal('tests'),
     file: z.string().regex(/^[\w.-]+\.test\.js$/),
     source: z.string().optional(),
+    /** Test the files being edited, or what is committed on the main branch. */
+    on: z.enum(['working', 'main']).default('working'),
+  }),
+  /** Commits the player made (on a branch, or anywhere) whose message mentions one of the words. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('commits'),
+    branch: z.string().optional(),
+    messageIncludes: z.array(z.string()).default([]),
+    min: z.number().int().positive().default(1),
+  }),
+  /** Work was done on a separate branch, then merged into main. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('branch-merged'),
+  }),
+  /** Everything is committed, and main is checked out. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('clean'),
+  }),
+  /** The player called this function in the debug console. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('debugged'),
+    fn: z.string(),
   }),
   /** The player's own tests in `file`: at least `minTests`, all passing. */
   FileCheckBaseSchema.extend({
@@ -278,6 +300,8 @@ export const AssignmentSchema = z.object({
   project: z
     .object({
       title: z.string().min(1),
+      /** Start with a Git repository whose first commit is these files. */
+      git: z.boolean().default(false),
       files: z
         .array(
           z.object({
@@ -291,6 +315,8 @@ export const AssignmentSchema = z.object({
     .optional(),
   /** The model answer for Code tasks: the full text of each changed file. */
   codeSolution: z.record(z.string(), z.string()).default({}),
+  /** A whole model-answer project (with its Git history), when files alone aren't enough. */
+  codeSolutionProject: z.unknown().optional(),
   codeChecks: z.array(CodeCheckSchema).default([]),
   /** The ticket queue, for Help Desk tasks. */
   queue: QueueSchema.optional(),

@@ -62,7 +62,54 @@ working simulations of the professional software used in its field (see
 - [x] 4.9 IT Help Desk: Service Desk, Directory and assets, Network Tools
 - [x] 4.10 Digital Marketing: Campaigns, Social Planner, Site Analytics, SEO Audit
 - [x] 4.11 Data Analysis: Data Studio (datasets, cleaning, SQL, statistics, dashboards)
-- [ ] 4.12 Software Development: terminal, Git, debug console, API Client
+- [x] 4.12 Software Development: terminal, Git, debug console, API Client
+
+---
+
+## 2026-11-01 · Milestone 4.12: developer tools (terminal, Git, debugger, API Client)
+
+### Built
+
+- **Terminal** in the Code app (a tab next to Tests): `ls`, `cat`, `npm test` (the
+  real tests, in the test worker), `clear`, `help`, command history, and `git`.
+- **Git**, simulated faithfully over the project’s files and saved with the project:
+  `status`, `add` (files or `.`), `commit -m` / `-am`, `log` (and
+  `--oneline`), `diff` (working tree or `--staged`, line by line), `branch`,
+  `checkout` / `switch` (with `-b` / `-c`; refuses to throw away uncommitted
+  work), `merge` (fast-forward, a merge commit when branches changed different files,
+  and a clear stop on conflicts) and `restore`. Commits have short hashes and parents;
+  the prompt shows the current branch.
+- **Debug console** (a tab next to Terminal): call any exported function with arguments
+  written as a JSON list, and see what it really returns (including `NaN` and
+  `undefined`), its `console.log` output, and errors with the line they happened on,
+  highlighted in the editor. Runs in the code worker with the time limit.
+- **API Client** (a new tool, from Software Developer): a simulated company timesheet API
+  with bearer-token authentication, read and write scopes, validation, persistent data
+  and the usual status codes (200, 201, 204, 400, 401, 403, 404, 405, 422); a request
+  builder (method, URL, headers, JSON body), environment variables (`{{baseUrl}}`,
+  tokens), response viewer, history, a saved collection, an API reference and a bug
+  report. It has one planted bug: PATCH does not validate hours.
+- **New code checks**: tests run on what is committed on **main**, commits with a meaningful
+  message, work done on a branch and merged, a clean working tree, and use of the debug
+  console. Code projects can start with a Git repository, and tasks can give a whole model
+  project (with its history) as the model answer.
+- **Three new Software Development tasks** (the path is now seven; promotions at 300,
+  700 and 950 XP):
+  - _Your first branch, commit and merge_ (Junior): fix late fees on a branch, test,
+    commit with a clear message, merge into main, leave the tree clean.
+  - _Why does the report say NaN?_ (Developer): reproduce in the debug console (an empty
+    week gives NaN; hours sent as text are concatenated), fix both functions, commit.
+  - _Test the timesheet API_ (Developer, API Client): happy and sad paths, permissions, a
+    saved collection, and a bug report for the PATCH bug.
+
+### Tested
+
+- Unit tests for Git (status, commits, branches, refusing to lose work, fast-forward and
+  merge commits, conflicts, diff order, restore), the terminal (quotes, unknown commands),
+  the debug call (values, NaN, logs, errors with the right line), and the API (tokens,
+  scopes, validation, persistence, unknown paths and methods, the planted bug). Every
+  task’s model answer scores 100% and its starting project fails.
+- Browser tests: all three tasks done end to end in the real interface (100% each).
 
 ---
 
