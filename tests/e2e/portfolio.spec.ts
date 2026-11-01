@@ -114,6 +114,30 @@ test('passing a task captures exactly what was handed in, once', async ({ page }
   await page.getByLabel('Included only').check()
   await expect(page.getByTestId('portfolio-card')).toHaveCount(0)
   await expect(page.getByText('No work matches these filters.')).toBeVisible()
+
+  // Skills: calculated from the passed work, with reasons and links to it.
+  await page
+    .getByRole('navigation', { name: 'Portfolio sections' })
+    .getByRole('button', { name: 'Skills' })
+    .click()
+  const skills = page.getByTestId('skills-view')
+  await expect(skills.getByTestId('tasks-completed')).toHaveText('1')
+  const demonstrated = skills
+    .getByTestId('competency')
+    .filter({ has: page.getByTestId('competency-level').getByText('Demonstrated') })
+  await expect(demonstrated.first()).toContainText(
+    'Shown in 1 passed task, average score 100%',
+  )
+  // The latest (failed) attempt shows what to improve; the task itself stays passed.
+  await expect(skills.getByTestId('improvements')).toContainText('Fix the invoice totals')
+  await expect(skills.getByTestId('improvements')).not.toContainText('Not passed yet')
+  // The section is kept after a reload, and the evidence opens the item.
+  await page.reload()
+  await demonstrated
+    .first()
+    .getByRole('button', { name: /Fix the invoice totals/ })
+    .click()
+  await expect(page.getByTestId('portfolio-item-page')).toBeVisible()
 })
 
 test('passed work missing from the portfolio is added back when WorkSim opens', async ({

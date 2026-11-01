@@ -477,7 +477,11 @@ export function Desktop({
                 <PortfolioApp
                   profile={profile}
                   itemId={view.item}
-                  onOpenItem={(item) => setView({ app: 'portfolio', item })}
+                  tab={view.tab ?? 'work'}
+                  onOpenItem={(item) =>
+                    setView({ app: 'portfolio', item, tab: view.tab })
+                  }
+                  onTab={(tab) => setView({ app: 'portfolio', tab })}
                 />
               )}
               {view.app === 'career' && (

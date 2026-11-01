@@ -52,3 +52,11 @@ export function filterOptions(items: PortfolioItem[]) {
     levels: [...new Set(items.map((i) => i.levelIndex))].sort((a, b) => a - b),
   }
 }
+
+/** The Portfolio app's sections. */
+export const PORTFOLIO_TABS = [
+  { id: 'work', label: 'Work' },
+  { id: 'skills', label: 'Skills' },
+] as const
+
+export type PortfolioTab = (typeof PORTFOLIO_TABS)[number]['id']

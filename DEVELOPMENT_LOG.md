@@ -72,7 +72,7 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [x] 5.1 Evidence capture and storage
 - [x] 5.2 Backfill for existing saves, backup and safety
 - [x] 5.3 Portfolio app: browse, filter, inspect
-- [ ] 5.4 Competency and experience record
+- [x] 5.4 Competency and experience record
 - [ ] 5.5 Career progress report and recommendations
 - [ ] 5.6 PDF engine and report exports
 - [ ] 5.7 Original file exports and the portfolio package
@@ -80,6 +80,36 @@ owner’s authorisation). Plan: [docs/PHASE5_PLAN.md](docs/PHASE5_PLAN.md).
 - [ ] 5.9 Integrated projects framework and first two projects
 - [ ] 5.10 Remaining integrated projects
 - [ ] 5.11 Hardening: scale, regression, documentation
+
+---
+
+## 2026-11-01 · Milestone 5.4: Competency and experience record
+
+### Built
+
+- A **Skills** section in the Portfolio app (next to Work), for one career save or all.
+- **Competencies** are the game’s skills, with levels calculated only from passed work.
+  A task counts when the skill is a main part of it (20 skill points or more):
+  - **Demonstrated:** 1 such task. **Practised:** 2.
+  - **Proficient:** 3, at least one at a career’s second level or above, with an
+    average score of 80% or more.
+  - Each level says why in words (“Shown in 3 passed tasks, average score 90%,
+    including 1 at level 2 or above”) and what the next level needs. Each piece of
+    evidence links to the work.
+- **Experience:** tasks completed, attempts, estimated practice time (labelled as an
+  estimate), tools used in passed work, and each career’s level and tasks passed.
+- **To improve:** the checks not fully passed in each task’s latest attempt, and tasks
+  not yet passed, with their skills.
+- Nothing is stored: opening tools, visiting careers or failing tasks can never raise a
+  level. The rules live in `src/game/competencies.ts` and are shown to the player.
+
+### Tested
+
+- 7 new unit tests: every level boundary (including Proficient refused for level 1
+  work only, or a low average), minor use not counting, improvement areas from failed
+  and partial checks, and the experience record.
+- The portfolio browser test opens Skills, checks a Demonstrated skill and its reason,
+  the improvement from a failed resubmission, and the link back to the work.
 
 ---
 

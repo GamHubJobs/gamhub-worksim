@@ -34,8 +34,9 @@ export const ViewSchema = z.object({
    * In Docs, Slides and the professional tools: the open file.
    */
   document: z.string().optional(),
-  /** In Portfolio: the open item. */
+  /** In Portfolio: the open item, and the section shown when none is open. */
   item: z.string().optional(),
+  tab: z.enum(['work', 'skills']).optional(),
   /** In Tasks: the selected assignment. */
   assignmentId: z.string().optional(),
   /** In Mail: the selected message. */

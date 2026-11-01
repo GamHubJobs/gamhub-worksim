@@ -16,8 +16,11 @@ import {
   filterOptions,
   type PortfolioFilters,
   type PortfolioSort,
+  type PortfolioTab,
+  PORTFOLIO_TABS,
 } from './filters'
 import { ItemPage } from './ItemPage'
+import { SkillsView } from './SkillsView'
 
 type Loaded =
   | { status: 'loading' }
@@ -33,13 +36,18 @@ function saveName(profile: Profile | undefined): string {
 export function PortfolioApp({
   profile,
   itemId,
+  tab,
   onOpenItem,
+  onTab,
 }: {
   /** The career save in use (shown first). */
   profile: Profile
   /** The open item, if any. */
   itemId: string | undefined
+  /** The screen shown when no item is open. */
+  tab: PortfolioTab
   onOpenItem: (itemId: string | undefined) => void
+  onTab: (tab: PortfolioTab) => void
 }) {
   const [loaded, setLoaded] = useState<Loaded>({ status: 'loading' })
   const [filters, setFilters] = useState<PortfolioFilters>(() =>
@@ -65,15 +73,14 @@ export function PortfolioApp({
 
   const items = useMemo(() => (loaded.status === 'ready' ? loaded.items : []), [loaded])
   const shown = useMemo(() => filterItems([...items], filters), [items, filters])
-  const options = useMemo(
+  const inSaves = useMemo(
     () =>
-      filterOptions(
-        filters.profileId === 'all'
-          ? items
-          : items.filter((i) => i.profileId === filters.profileId),
-      ),
+      filters.profileId === 'all'
+        ? items
+        : items.filter((i) => i.profileId === filters.profileId),
     [items, filters.profileId],
   )
+  const options = useMemo(() => filterOptions(inSaves), [inSaves])
 
   if (loaded.status === 'loading') {
     return <p className="p-6 text-slate-500">Opening your portfolio…</p>
@@ -120,6 +127,27 @@ export function PortfolioApp({
           </p>
         </header>
 
+        <nav
+          className="flex gap-1 border-b border-slate-200"
+          aria-label="Portfolio sections"
+        >
+          {PORTFOLIO_TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => onTab(t.id)}
+              aria-current={tab === t.id ? 'page' : undefined}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${
+                tab === t.id
+                  ? 'border-blue-700 text-blue-800'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+
         <section
           className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4"
           aria-label="Filters"
@@ -141,74 +169,88 @@ export function PortfolioApp({
               <option value="all">All career saves</option>
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-xs text-slate-600">
-            Skill
-            <select
-              className={select}
-              value={filters.skill}
-              onChange={(e) => set({ skill: e.target.value })}
-            >
-              <option value="">Any skill</option>
-              {options.skills.map((id) => (
-                <option key={id} value={id}>
-                  {getSkill(id)?.name ?? id}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-slate-600">
-            Tool
-            <select
-              className={select}
-              value={filters.tool}
-              onChange={(e) => set({ tool: e.target.value })}
-            >
-              <option value="">Any tool</option>
-              {options.tools.map((id) => (
-                <option key={id} value={id}>
-                  {toolName(id)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-slate-600">
-            Level
-            <select
-              className={select}
-              value={filters.level}
-              onChange={(e) => set({ level: Number(e.target.value) })}
-            >
-              <option value={0}>Any level</option>
-              {options.levels.map((level) => (
-                <option key={level} value={level}>
-                  Level {level}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-slate-600">
-            Sort by
-            <select
-              className={select}
-              value={filters.sort}
-              onChange={(e) => set({ sort: e.target.value as PortfolioSort })}
-            >
-              <option value="date">Newest first</option>
-              <option value="score">Highest score</option>
-              <option value="level">Highest level</option>
-            </select>
-          </label>
-          <label className="flex items-center gap-2 pb-1 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              checked={filters.includedOnly}
-              onChange={(e) => set({ includedOnly: e.target.checked })}
-            />
-            Included only
-          </label>
+          {tab === 'work' && (
+            <>
+              <label className="flex flex-col gap-1 text-xs text-slate-600">
+                Skill
+                <select
+                  className={select}
+                  value={filters.skill}
+                  onChange={(e) => set({ skill: e.target.value })}
+                >
+                  <option value="">Any skill</option>
+                  {options.skills.map((id) => (
+                    <option key={id} value={id}>
+                      {getSkill(id)?.name ?? id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-slate-600">
+                Tool
+                <select
+                  className={select}
+                  value={filters.tool}
+                  onChange={(e) => set({ tool: e.target.value })}
+                >
+                  <option value="">Any tool</option>
+                  {options.tools.map((id) => (
+                    <option key={id} value={id}>
+                      {toolName(id)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-slate-600">
+                Level
+                <select
+                  className={select}
+                  value={filters.level}
+                  onChange={(e) => set({ level: Number(e.target.value) })}
+                >
+                  <option value={0}>Any level</option>
+                  {options.levels.map((level) => (
+                    <option key={level} value={level}>
+                      Level {level}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-slate-600">
+                Sort by
+                <select
+                  className={select}
+                  value={filters.sort}
+                  onChange={(e) => set({ sort: e.target.value as PortfolioSort })}
+                >
+                  <option value="date">Newest first</option>
+                  <option value="score">Highest score</option>
+                  <option value="level">Highest level</option>
+                </select>
+              </label>
+              <label className="flex items-center gap-2 pb-1 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={filters.includedOnly}
+                  onChange={(e) => set({ includedOnly: e.target.checked })}
+                />
+                Included only
+              </label>
+            </>
+          )}
         </section>
 
-        {shown.length === 0 ? (
+        {tab === 'skills' ? (
+          <SkillsView
+            items={inSaves}
+            profiles={
+              filters.profileId === 'all'
+                ? loaded.profiles
+                : loaded.profiles.filter((p) => p.id === filters.profileId)
+            }
+            onOpenItem={onOpenItem}
+          />
+        ) : shown.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600">
             {items.length === 0
               ? 'Nothing here yet. Pass a task to add it to your portfolio, with the files you handed in.'

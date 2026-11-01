@@ -3,7 +3,7 @@
  * why, every attempt, and the files exactly as they were handed in.
  */
 import { useEffect, useRef, useState } from 'react'
-import { getCareer, getSkill } from '../../content/careers'
+import { getSkill } from '../../content/careers'
 import { toolName } from '../../game/portfolio'
 import { formatDateTime } from '../../lib/time'
 import {
@@ -80,7 +80,6 @@ export function ItemPage({
   }
 
   const shown = files?.find((f) => f.id === openFile)
-  const career = getCareer(item.careerId)
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50" data-testid="portfolio-item-page">
@@ -95,7 +94,7 @@ export function ItemPage({
 
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <p className="text-sm text-slate-500">
-            {career.name} · {item.levelTitle} · {saveName}
+            {saveName} · {item.levelTitle}
           </p>
           <div className="mt-1 flex items-baseline justify-between gap-4">
             <h1 className="text-2xl font-bold text-slate-900">{item.title}</h1>
