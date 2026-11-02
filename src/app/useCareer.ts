@@ -5,6 +5,7 @@
  * `src/persistence`; this hook only connects them.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { loadCareers } from '../content/loader'
 import {
   caseKey,
   decideCapture,
@@ -21,7 +22,7 @@ import {
 } from '../game/cases'
 import { caseRecordContent } from '../game/caseRecord'
 import { caseFor } from '../game/caseVariants'
-import { careerLevel } from '../game/career'
+import { careerLevel, DEFAULT_CAREER_ID } from '../game/career'
 import { getDeviceId } from '../persistence/db'
 import { DOCUMENT_FORMAT_VERSIONS } from '../persistence/schemas'
 import type { CaseResult } from '../game/cases'
@@ -95,6 +96,21 @@ function newSeed(): number {
   return 1 + Math.floor(Math.random() * 0x7ffffffe)
 }
 
+/**
+ * Loads the content of these careers, with a message a player can act on if
+ * it fails (usually a lost connection before WorkSim was fully downloaded).
+ */
+async function ensureContent(careerIds: Iterable<string>): Promise<void> {
+  try {
+    await loadCareers(careerIds)
+  } catch (error) {
+    console.error('Career content failed to load:', error)
+    throw new Error(
+      'WorkSim could not load the content for this career. Check your internet connection (it is needed the first time a career is opened) and try again.',
+    )
+  }
+}
+
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
@@ -120,8 +136,15 @@ export function useCareer() {
     let active = true
     // Work passed in older saves (or restored backups) joins the portfolio.
     // A problem here must never stop the game from opening.
-    backfillPortfolio()
-      .catch((error: unknown) => console.error('Portfolio backfill failed:', error))
+    // The content of every career with a save is loaded first: the portfolio
+    // and the career overview look up their tasks and cases.
+    listProfiles()
+      .then((saves) => ensureContent(saves.map((p) => p.careerId)))
+      .then(() =>
+        backfillPortfolio().catch((error: unknown) =>
+          console.error('Portfolio backfill failed:', error),
+        ),
+      )
       .then(() => getActiveProfile())
       .then((profile) => {
         if (!active) return
@@ -140,6 +163,7 @@ export function useCareer() {
 
   const createCareer = useCallback(
     async (name: string, careerId?: string) => {
+      await ensureContent([careerId ?? DEFAULT_CAREER_ID])
       const profile = await createProfile(
         newProfileData(name, Date.now(), careerId, newSeed()),
       )
@@ -155,6 +179,7 @@ export function useCareer() {
   const switchCareer = useCallback(
     async (careerId: string) => {
       if (state.status !== 'ready') return
+      await ensureContent([careerId])
       const saves = await listProfiles()
       const existing = saves.find((p) => p.careerId === careerId)
       const profile = existing

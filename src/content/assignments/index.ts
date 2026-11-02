@@ -1,139 +1,10 @@
-/** All assignments, checked against the content blueprint when the app starts. */
+/**
+ * The assignments of the careers loaded so far (see `content/loader.ts`), checked
+ * against the content blueprint as each career's content is registered.
+ */
 import { departmentFor, fill, type Department } from '../departments'
 import { getTool } from '../../tools/registry'
 import { AssignmentSchema, type Assignment } from '../schemas'
-import { bankReconciliation } from './accounting/bankReconciliation'
-import { booksBankRec } from './accounting/booksBankRec'
-import { booksJournals } from './accounting/booksJournals'
-import { booksMonthEndClose } from './accounting/booksMonthEndClose'
-import { booksPayroll } from './accounting/booksPayroll'
-import { booksSalesPurchases } from './accounting/booksSalesPurchases'
-import { depreciation } from './accounting/depreciation'
-import { journalEntries } from './accounting/journalEntries'
-import { monthEnd } from './accounting/monthEnd'
-import {
-  quarterCloseAdjustments,
-  quarterCloseBoardPack,
-  quarterCloseVariances,
-} from './accounting/projectQuarterClose'
-import { cleanCustomers } from './data/cleanCustomers'
-import { churnClean, churnDashboard, churnFindings } from './data/projectChurn'
-import { studioCleaning } from './data/studioCleaning'
-import { studioDashboard } from './data/studioDashboard'
-import { studioSql } from './data/studioSql'
-import { studioStatistics } from './data/studioStatistics'
-import { portfolioReview } from './data/portfolioReview'
-import { salesSummary } from './data/salesSummary'
-import { surveyAnalysis } from './data/surveyAnalysis'
-import { apiTesting } from './dev/apiTesting'
-import { billingReport } from './dev/billingReport'
-import { debugNaN } from './dev/debugNaN'
-import { gitFirstFix } from './dev/gitFirstFix'
-import { invoiceBug } from './dev/invoiceBug'
-import { timesheetValidation } from './dev/timesheetValidation'
-import { workingDaysTests } from './dev/workingDaysTests'
-import { directoryJoiner } from './it/directoryJoiner'
-import { directoryLeaver } from './it/directoryLeaver'
-import { majorIncident } from './it/majorIncident'
-import { networkIntranet } from './it/networkIntranet'
-import { networkPrinting } from './it/networkPrinting'
-import { abTest } from './marketing/abTest'
-import { campaignBudget } from './marketing/campaignBudget'
-import { funnelAnalysis } from './marketing/funnelAnalysis'
-import { seoFixes } from './marketing/seoFixes'
-import { socialLaunch } from './marketing/socialLaunch'
-import { campaignMetrics } from './marketing/campaignMetrics'
-import { contentCalendar } from './marketing/contentCalendar'
-import { quarterlyReport } from './marketing/quarterlyReport'
-import { recurringProblem } from './it/recurringProblem'
-import { triageQueue } from './it/triageQueue'
-import { userReplies } from './it/userReplies'
-import { budgetReport } from './budgetReport'
-import { expenseSummary } from './expenseSummary'
-import { invoiceCheck } from './invoiceCheck'
-import { paymentRun } from './paymentRun'
-import { performanceReport } from './performanceReport'
-import { pettyCash } from './pettyCash'
-import { savingsProposal } from './savingsProposal'
-import { budgetConsolidate, budgetPresentation, budgetReview } from './projectBudgetPack'
-import { outageDiagnosis, outageReview, outageTriage } from './it/projectOutage'
-import { launchAnalytics, launchCampaigns, launchPlan } from './marketing/projectLaunch'
-import { mileageChange, mileageRelease, mileageTests } from './dev/projectMileage'
-import { suppliesOrder } from './suppliesOrder'
-
-const SOURCES = [
-  suppliesOrder,
-  expenseSummary,
-  invoiceCheck,
-  budgetReport,
-  paymentRun,
-  pettyCash,
-  performanceReport,
-  savingsProposal,
-  budgetConsolidate,
-  budgetReview,
-  budgetPresentation,
-  // Accounting
-  journalEntries,
-  booksJournals,
-  booksSalesPurchases,
-  booksBankRec,
-  booksPayroll,
-  booksMonthEndClose,
-  bankReconciliation,
-  depreciation,
-  monthEnd,
-  quarterCloseAdjustments,
-  quarterCloseVariances,
-  quarterCloseBoardPack,
-  // IT Help Desk
-  triageQueue,
-  userReplies,
-  recurringProblem,
-  majorIncident,
-  directoryJoiner,
-  directoryLeaver,
-  networkPrinting,
-  networkIntranet,
-  outageTriage,
-  outageDiagnosis,
-  outageReview,
-  // Digital Marketing
-  campaignMetrics,
-  contentCalendar,
-  abTest,
-  quarterlyReport,
-  socialLaunch,
-  seoFixes,
-  campaignBudget,
-  funnelAnalysis,
-  launchAnalytics,
-  launchCampaigns,
-  launchPlan,
-  // Data Analysis
-  cleanCustomers,
-  salesSummary,
-  surveyAnalysis,
-  portfolioReview,
-  studioCleaning,
-  studioSql,
-  studioDashboard,
-  studioStatistics,
-  churnClean,
-  churnDashboard,
-  churnFindings,
-  // Software Development
-  invoiceBug,
-  timesheetValidation,
-  workingDaysTests,
-  billingReport,
-  gitFirstFix,
-  debugNaN,
-  apiTesting,
-  mileageTests,
-  mileageChange,
-  mileageRelease,
-]
 
 /** Every text in a value with role names filled in for a department. */
 function fillAll<T>(value: T, department: Department): T {
@@ -167,11 +38,19 @@ function withToolData(assignment: Assignment): Assignment {
   }
 }
 
-export const ASSIGNMENTS: Assignment[] = SOURCES.map((source) => {
-  const assignment = withToolData(AssignmentSchema.parse(source))
-  // {manager}, {senior} and {director} become the names in this career's department.
-  return fillAll(assignment, departmentFor(assignment.careerId))
-}).sort((a, b) => a.order - b.order)
+/** Every assignment of the loaded careers, in order. */
+export const ASSIGNMENTS: Assignment[] = []
+
+/** Adds a career's assignments (once), checked and with role names filled in. */
+export function registerAssignments(sources: unknown[]): void {
+  for (const source of sources) {
+    const assignment = withToolData(AssignmentSchema.parse(source))
+    if (ASSIGNMENTS.some((a) => a.id === assignment.id)) continue
+    // {manager}, {senior} and {director} become the names in this career's department.
+    ASSIGNMENTS.push(fillAll(assignment, departmentFor(assignment.careerId)))
+  }
+  ASSIGNMENTS.sort((a, b) => a.order - b.order)
+}
 
 export function getAssignment(id: string): Assignment | undefined {
   return ASSIGNMENTS.find((assignment) => assignment.id === id)

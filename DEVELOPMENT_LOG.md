@@ -112,7 +112,71 @@ working simulations of the professional software used in its field (see
 
 **Phase 7 is complete.**
 
+**Phase 8: "Launch Readiness and Ecosystem"** (in progress). Plan:
+[docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md).
+
+- [x] 8.1 Career-specific content loading
+- [ ] 8.2 Profession-specific readiness assessments
+- [ ] 8.3 Expanded case variations and advanced cases
+- [ ] 8.4 Accessibility validation
+- [ ] 8.5 Installable progressive web app
+- [ ] 8.6 Security and data-integrity hardening
+- [ ] 8.7 Onboarding, documentation and user experience
+- [ ] 8.8 Browser compatibility and performance
+- [ ] 8.9 Final end-to-end regression
+
 ---
+
+## 2026-11-02 · Milestone 8.1: Career-specific content loading
+
+### Built
+
+- **Content packs.** Each career's tasks, cases and readiness assessments are now in
+  their own pack, `content/packs/<career>.ts`.
+- **Splitting the shared files.** The case and assessment files that mixed all six
+  careers were split by career, with shared helpers kept in a `shared.ts`. A script
+  did the split and refused to continue if any case had no single career. The full
+  unit suite (every task, case, variant and assessment) passed unchanged afterwards.
+- **Registries.** `ASSIGNMENTS`, `CASES` and `ASSESSMENTS` start empty and fill as
+  packs register, so the game's lookups did not change.
+- **`content/loader.ts`** loads a pack once:
+  - concurrent requests share one download;
+  - a failed download is forgotten, so trying again works;
+  - unknown careers are refused.
+- **When packs load:**
+  - at start, the packs of every career that has a save load before the desk opens
+    (the portfolio and the career overview use them);
+  - a new player downloads none until a career is chosen;
+  - switching careers loads the new career first.
+- **Failures.** If a pack cannot be downloaded, the player is told to check their
+  connection and try again; the start screen keeps its form.
+
+### Measured (production build, median of three runs, throttled “fast 3G”)
+
+| Moment                            | Phase 7 (before) | 8.1 (after)   |
+| --------------------------------- | ---------------- | ------------- |
+| New player: start screen ready    | 484 kB, 3.9 s    | 277 kB, 2.3 s |
+| Returning player: 3D office drawn | 754 kB, 5.6 s    | 589 kB, 5.9 s |
+| One career's content (compressed) | (in the start)   | 35 to 41 kB   |
+
+The office time is about the same: drawing the 3D office (the 3D library is 250 kB
+compressed) dominates it, but 165 kB less is downloaded. The office panel itself
+appears earlier.
+
+### Tested
+
+- Unit:
+  - every career has a pack, and each pack contains only its own career's tasks and
+    cases;
+  - a career is loaded once, and registering twice adds nothing;
+  - tasks stay in order;
+  - the whole existing suite runs with all packs loaded.
+- Browser:
+  - a new player downloads no pack before choosing;
+  - a failed download shows the message, and trying again works;
+  - switching careers downloads only that career;
+  - after a reload, a returning player with two careers has both;
+  - the existing career-switching and backup tests pass.
 
 ## 2026-11-01 · Milestone 7.7: Portfolio integration, hardening and documentation
 

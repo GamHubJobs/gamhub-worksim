@@ -1,35 +1,6 @@
-/** All cases, checked against the case blueprint when the app starts. */
+/** The cases of the careers loaded so far (see `content/loader.ts`). */
 import { fill, departmentFor } from '../departments'
 import { CaseSchema, type Case, type CaseInput } from './schema'
-import { ACCOUNTING_CASES } from './accounting'
-import { ADVANCED_CASES } from './advanced'
-import { DATA_CASES } from './data'
-import { DEV_CASES } from './dev'
-import { FINANCE_CASES } from './finance'
-import { IT_CASES } from './it'
-import { MARKETING_CASES } from './marketing'
-import { INCIDENT_CASES } from './incidents'
-import { LEADERSHIP_CASES } from './leadership'
-import { MEETING_CASES } from './meetings'
-import { OPERATIONS_CASES } from './operations'
-import { PROGRAMME_CASES } from './programme'
-import { WORKFLOW_CASES } from './workflows'
-
-const SOURCES: CaseInput[] = [
-  ...FINANCE_CASES,
-  ...ACCOUNTING_CASES,
-  ...IT_CASES,
-  ...MARKETING_CASES,
-  ...DATA_CASES,
-  ...DEV_CASES,
-  ...OPERATIONS_CASES,
-  ...WORKFLOW_CASES,
-  ...MEETING_CASES,
-  ...INCIDENT_CASES,
-  ...LEADERSHIP_CASES,
-  ...PROGRAMME_CASES,
-  ...ADVANCED_CASES,
-]
 
 /** Every text with role names filled in for the case's department. */
 function fillAll<T>(value: T, careerId: string): T {
@@ -45,10 +16,17 @@ function fillAll<T>(value: T, careerId: string): T {
   return walk(value) as T
 }
 
-export const CASES: Case[] = SOURCES.map((source) => {
-  const parsed = CaseSchema.parse(source)
-  return fillAll(parsed, parsed.careerId)
-})
+/** Every case of the loaded careers. */
+export const CASES: Case[] = []
+
+/** Adds a career's cases (once), checked and with role names filled in. */
+export function registerCases(sources: CaseInput[]): void {
+  for (const source of sources) {
+    const parsed = CaseSchema.parse(source)
+    if (CASES.some((c) => c.id === parsed.id)) continue
+    CASES.push(fillAll(parsed, parsed.careerId))
+  }
+}
 
 export function getCase(id: string): Case | undefined {
   return CASES.find((c) => c.id === id)
