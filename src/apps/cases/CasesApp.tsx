@@ -377,6 +377,7 @@ export function CaseDetail({
                 answer={progress.answers[step.id]}
                 disabled={!open || busy || locked(step)}
                 fileOpened={!!progress.files[step.id]}
+                playerName={profile.name.split(' ')[0]}
                 onSave={(answer) => onSave(step.id, answer)}
                 onOpenFile={() => void run(() => onOpenFile(step.id))}
               />

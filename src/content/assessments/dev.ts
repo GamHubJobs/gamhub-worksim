@@ -5,6 +5,7 @@ import { assessment, report } from './shared'
 /** Level 2: a discount bug, its tests and its fix. */
 function devDiscount(p: {
   version: string
+  practical: string
   total: number
   percent: number
   reported: [number, number]
@@ -13,6 +14,7 @@ function devDiscount(p: {
   const [rt, rp] = p.reported
   const right = (rt * (100 - rp)) / 100
   return assessment({
+    practical: p.practical,
     id: 'ready-dev-practitioner',
     careerId: 'software-development',
     level: 2,
@@ -145,12 +147,14 @@ Investigate the discount bug from the code and the failing test, work out what t
 /** Level 3: reviewing a performance change before release. */
 function devReview(p: {
   version: string
+  practical: string
   before: number
   after: number
   author: string
 }) {
   const reduction = Math.round(((p.before - p.after) / p.before) * 1000) / 10
   return assessment({
+    practical: p.practical,
     id: 'ready-dev-senior',
     careerId: 'software-development',
     level: 3,
@@ -285,11 +289,35 @@ Review ${p.author}’s caching change, calculate the improvement, decide whether
 
 export const ASSESSMENTS_DEV: Record<string, CaseInput[]> = {
   'ready-dev-practitioner': [
-    devDiscount({ version: 'a', total: 250, percent: 20, reported: [200, 10] }),
-    devDiscount({ version: 'b', total: 400, percent: 15, reported: [300, 20] }),
+    devDiscount({
+      version: 'a',
+      practical: 'working-days-tests',
+      total: 250,
+      percent: 20,
+      reported: [200, 10],
+    }),
+    devDiscount({
+      version: 'b',
+      practical: 'debug-nan',
+      total: 400,
+      percent: 15,
+      reported: [300, 20],
+    }),
   ],
   'ready-dev-senior': [
-    devReview({ version: 'a', before: 800, after: 300, author: 'Jamie' }),
-    devReview({ version: 'b', before: 1200, after: 420, author: 'Priyanka' }),
+    devReview({
+      version: 'a',
+      practical: 'billing-report',
+      before: 800,
+      after: 300,
+      author: 'Jamie',
+    }),
+    devReview({
+      version: 'b',
+      practical: 'api-testing',
+      before: 1200,
+      after: 420,
+      author: 'Priyanka',
+    }),
   ],
 }

@@ -5,6 +5,7 @@ import { gbp, forms, assessment, report } from './shared'
 /** Level 2: expense claims against policy. */
 function faClaims(p: {
   version: string
+  practical: string
   meal: number
   miles: number
   train: number
@@ -15,6 +16,7 @@ function faClaims(p: {
   const total = p.train + 25 + mileage + 8
   const [a, b, c, d] = p.names
   return assessment({
+    practical: p.practical,
     id: 'ready-fa-practitioner',
     careerId: 'office-admin-finance',
     level: 2,
@@ -157,6 +159,7 @@ Review the five claims against the expenses policy, work out what to pay, decide
 /** Level 3: department budget monitoring with a forecast. */
 function faBudget(p: {
   version: string
+  practical: string
   travel: number
   events: number
   booked: number
@@ -169,6 +172,7 @@ function faBudget(p: {
   const over = forecast - totalBudget
   const travelOver = spent.travel - budget.travel
   return assessment({
+    practical: p.practical,
     id: 'ready-fa-senior',
     careerId: 'office-admin-finance',
     level: 3,
@@ -311,6 +315,7 @@ export const ASSESSMENTS_FINANCE: Record<string, CaseInput[]> = {
   'ready-fa-practitioner': [
     faClaims({
       version: 'a',
+      practical: 'budget-report',
       meal: 32,
       miles: 120,
       train: 48,
@@ -318,6 +323,7 @@ export const ASSESSMENTS_FINANCE: Record<string, CaseInput[]> = {
     }),
     faClaims({
       version: 'b',
+      practical: 'petty-cash',
       meal: 38,
       miles: 90,
       train: 56,
@@ -325,7 +331,19 @@ export const ASSESSMENTS_FINANCE: Record<string, CaseInput[]> = {
     }),
   ],
   'ready-fa-senior': [
-    faBudget({ version: 'a', travel: 7800, events: 2400, booked: 2000 }),
-    faBudget({ version: 'b', travel: 8200, events: 1900, booked: 1800 }),
+    faBudget({
+      version: 'a',
+      practical: 'savings-proposal',
+      travel: 7800,
+      events: 2400,
+      booked: 2000,
+    }),
+    faBudget({
+      version: 'b',
+      practical: 'payment-run',
+      travel: 8200,
+      events: 1900,
+      booked: 1800,
+    }),
   ],
 }

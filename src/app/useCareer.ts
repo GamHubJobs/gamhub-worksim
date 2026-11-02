@@ -5,6 +5,7 @@
  * `src/persistence`; this hook only connects them.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { gradePractical, startingFile } from '../game/practical'
 import { loadCareers } from '../content/loader'
 import {
   caseKey,
@@ -16,6 +17,8 @@ import {
   caseContext,
   checkCases,
   gradeCase,
+  NO_AUTHORITY,
+  type Practicals,
   levelNumber,
   recordCaseResult,
   saveCaseAnswer,
@@ -620,13 +623,20 @@ export function useCareer() {
       const open = openAttempt(state.profile, assessmentId)
       const def = open ? attemptDef(open) : undefined
       const step = def?.steps.find((s) => s.id === stepId)
-      if (!def || step?.kind !== 'document')
-        throw new Error('This assessment has no such document.')
+      const task =
+        step?.kind === 'practical' ? getAssignment(step.assignmentId) : undefined
+      const file =
+        step?.kind === 'document'
+          ? deliverableFile(step.deliverable, state.profile.name)
+          : task
+            ? startingFile(task)
+            : null
+      if (!def || !file) throw new Error('This assessment has no such file.')
       const { profile, documentId } = await startAssessmentFile(
         profileId,
         assessmentId,
         stepId,
-        deliverableFile(step.deliverable, state.profile.name),
+        file,
       )
       show(profile)
       return documentId
@@ -655,6 +665,20 @@ export function useCareer() {
           handedIn.push(document)
           contents[step.id] = document.content
         }
+      }
+      // Practical work is graded in its tool first, by the task's own checks
+      // (code runs in a worker), and handed in with the assessment.
+      const practicals: Practicals = {}
+      for (const step of def.steps) {
+        if (step.kind !== 'practical') continue
+        const task = getAssignment(step.assignmentId)
+        const fileId = open.files[step.id]
+        const document = fileId ? await getDocument(fileId) : undefined
+        if (document && document.kind !== 'doc' && document.kind !== 'slides')
+          handedIn.push(document)
+        practicals[step.id] = task
+          ? await gradePractical(task, document)
+          : { fraction: 0, notes: ['This task could not be found.'] }
       }
       const submittedAt = Date.now()
       const deviceId = await getDeviceId()
@@ -687,7 +711,7 @@ export function useCareer() {
         handedIn,
         (latest) => {
           const answers = openAttempt(latest, assessmentId)?.answers ?? {}
-          result = gradeCase(def, answers, contents)
+          result = gradeCase(def, answers, contents, NO_AUTHORITY, true, practicals)
           const { current } = careerLevel(latest)
           level = {
             id: current.id,

@@ -170,6 +170,15 @@ export const CaseStepSchema = z.discriminatedUnion('kind', [
     kind: z.literal('document'),
     deliverable: DeliverableSchema,
   }),
+  /**
+   * Practical work in the career's own tool: a real task of the career, done
+   * from a fresh starting file and graded by the task's own checks (see
+   * `game/practical.ts`). Used by readiness assessments.
+   */
+  StepBase.extend({
+    kind: z.literal('practical'),
+    assignmentId: Id,
+  }),
 ])
 
 export const EvidenceSchema = z.object({

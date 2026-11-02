@@ -321,6 +321,9 @@ const DECISION_NAMES = {
 /** Documents made for the case's document steps, by step ID. */
 export type CaseDocuments = Record<string, DocContent | SlidesContent | undefined>
 
+/** The results of practical steps, graded in their tools beforehand (by step ID). */
+export type Practicals = Record<string, { fraction: number; notes: string[] }>
+
 /** What approvals are judged against: the player's limit and the budgets left. */
 export interface CaseContext {
   limit: number
@@ -370,8 +373,17 @@ function gradeStep(
   raw: unknown,
   documents: CaseDocuments,
   context: CaseContext,
+  practicals: Practicals,
 ): { fraction: number; notes: string[] } {
   switch (step.kind) {
+    case 'practical':
+      // Graded in the tool before marking (it may run the player's code).
+      return (
+        practicals[step.id] ?? {
+          fraction: 0,
+          notes: ['The practical work was not started.'],
+        }
+      )
     case 'review': {
       const marked = new Set(answerFor('review', raw) ?? [])
       const wrong = step.findings.filter((f) => marked.has(f.id) !== f.issue)
@@ -532,6 +544,7 @@ export function gradeCase(
   context: CaseContext = NO_AUTHORITY,
   /** For meeting cases: whether the player joined the meeting. */
   attended = true,
+  practicals: Practicals = {},
 ): CaseResult {
   const steps = def.steps.map((step) => {
     if (def.meeting && step.phase !== 'prepare' && !attended) {
@@ -543,7 +556,13 @@ export function gradeCase(
         notes: ['You did not attend the meeting, so this was decided without you.'],
       }
     }
-    const { fraction, notes } = gradeStep(step, answers[step.id], documents, context)
+    const { fraction, notes } = gradeStep(
+      step,
+      answers[step.id],
+      documents,
+      context,
+      practicals,
+    )
     const earned = Math.round(step.points * Math.max(0, Math.min(1, fraction)) * 10) / 10
     return { id: step.id, title: step.title, earned, points: step.points, notes }
   })

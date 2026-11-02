@@ -5,6 +5,7 @@ import { gbp, forms, assessment, report } from './shared'
 /** Level 2: campaign performance and budget moves. */
 function mktCampaign(p: {
   version: string
+  practical: string
   a: [number, number]
   b: [number, number]
   c: [number, number]
@@ -15,6 +16,7 @@ function mktCampaign(p: {
   const cpa = Math.round((spend / conversions) * 100) / 100
   const cpaB = p.b[0] / p.b[1]
   return assessment({
+    practical: p.practical,
     id: 'ready-mkt-practitioner',
     careerId: 'digital-marketing',
     level: 2,
@@ -160,6 +162,7 @@ Analyse the search campaign’s three ad groups, work out its cost per conversio
 /** Level 3: planning next quarter's budget across channels. */
 function mktPlan(p: {
   version: string
+  practical: string
   budget: number
   email: number
   search: number
@@ -169,6 +172,7 @@ function mktPlan(p: {
   const [re, rs, rso] = p.returns
   const revenue = p.email * re + p.search * rs + p.social * rso
   return assessment({
+    practical: p.practical,
     id: 'ready-mkt-senior',
     careerId: 'digital-marketing',
     level: 3,
@@ -312,12 +316,27 @@ Assess the channels’ returns and limits, work out the expected revenue of the 
 
 export const ASSESSMENTS_MARKETING: Record<string, CaseInput[]> = {
   'ready-mkt-practitioner': [
-    mktCampaign({ version: 'a', a: [1200, 48], b: [900, 12], c: [600, 30], target: 30 }),
-    mktCampaign({ version: 'b', a: [1500, 60], b: [1000, 10], c: [700, 35], target: 35 }),
+    mktCampaign({
+      version: 'a',
+      practical: 'campaign-budget',
+      a: [1200, 48],
+      b: [900, 12],
+      c: [600, 30],
+      target: 30,
+    }),
+    mktCampaign({
+      version: 'b',
+      practical: 'seo-fixes',
+      a: [1500, 60],
+      b: [1000, 10],
+      c: [700, 35],
+      target: 35,
+    }),
   ],
   'ready-mkt-senior': [
     mktPlan({
       version: 'a',
+      practical: 'funnel-analysis',
       budget: 20000,
       email: 2000,
       search: 12000,
@@ -326,6 +345,7 @@ export const ASSESSMENTS_MARKETING: Record<string, CaseInput[]> = {
     }),
     mktPlan({
       version: 'b',
+      practical: 'quarterly-campaign-report',
       budget: 25000,
       email: 3000,
       search: 15000,

@@ -116,7 +116,7 @@ working simulations of the professional software used in its field (see
 [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md).
 
 - [x] 8.1 Career-specific content loading
-- [ ] 8.2 Profession-specific readiness assessments
+- [x] 8.2 Profession-specific readiness assessments
 - [ ] 8.3 Expanded case variations and advanced cases
 - [ ] 8.4 Accessibility validation
 - [ ] 8.5 Installable progressive web app
@@ -126,6 +126,53 @@ working simulations of the professional software used in its field (see
 - [ ] 8.9 Final end-to-end regression
 
 ---
+
+## 2026-11-02 · Milestone 8.2: Profession-specific readiness assessments
+
+### Built
+
+- **A practical step** (`kind: 'practical'`) in every readiness assessment:
+  - a real task of the career, done again in its own tool from a fresh starting
+    file, without the step-by-step guide;
+  - marked by the task's own deterministic checks (`game/practical.ts`), as when
+    the task is submitted; the task's report checks are left out, because the
+    assessment marks its report separately;
+  - code runs in the existing sandboxed worker before marking.
+- **Practical tasks by career** (version a / version b, so a retake is new work):
+
+  | Career               | Level 2                                              | Level 3                                                |
+  | -------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+  | Finance & Admin      | Budget report / petty cash (Sheets)                  | Savings proposal / payment run (Sheets)                |
+  | Accounting           | Bank reconciliation / sales (Books)                  | Payroll (Books) / month-end close (Sheets)             |
+  | IT Help Desk         | Printing fault (Network) / leaver access (Directory) | Intranet outage (Network) / major incident (Help Desk) |
+  | Digital Marketing    | April ad budget (Ad Campaigns) / SEO fixes           | Funnel (Analytics) / quarterly report (Sheets)         |
+  | Data Analysis        | SQL questions / dashboard (Data Studio)              | Statistics (Data Studio) / portfolio review            |
+  | Software Development | Working-days tests / NaN bug (Code)                  | Billing report (Code) / API testing (API)              |
+
+- **Marks, the same in every career:**
+  - tool work 30, report 25, investigation 15, figure 10, decision 10, message 10;
+  - the pass mark stays at 80%, so neither the tool work (70% without it) nor the
+    report (75% without it) can be skipped.
+- **The file.** It opens in its own app (Sheets, Help Desk, Code or the tool),
+  without the task's guide. It is handed in with the assessment, and a passed
+  attempt keeps it in the portfolio.
+- **The brief.** The task's brief is shown in the step, with the player's name.
+
+### Tested
+
+- Unit, for all 24 assessment versions:
+  - the practical task is a real task of the same career, at or below the level;
+  - an untouched starting file earns under 60% of the practical marks;
+  - the model answer earns at least 90%;
+  - good work everywhere passes, while everything except the tool work fails;
+  - each version uses a different task;
+  - a missing file, or one of the wrong kind, earns nothing.
+- Browser:
+  - a full pass with real SQL typed and run in Data Studio and a report typed in
+    Docs (100%), then the promotion requirement met, the assessment with its Data
+    Studio work in the portfolio, and the progress report;
+  - in all six careers, the practical step names the right tool, and everything
+    right except the tool work and the report scores 45% and says what to do.
 
 ## 2026-11-02 · Milestone 8.1: Career-specific content loading
 

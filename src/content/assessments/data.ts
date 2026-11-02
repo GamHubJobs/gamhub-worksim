@@ -5,6 +5,7 @@ import { gbp, forms, assessment, report } from './shared'
 /** Level 2: a SQL join counting duplicates. */
 function dataDuplicates(p: {
   version: string
+  practical: string
   orders: Array<[string, string, number]>
   duplicate: string
 }) {
@@ -14,6 +15,7 @@ function dataDuplicates(p: {
     .reduce((s, o) => s + o[2], 0)
   const reported = correct + dupTotal
   return assessment({
+    practical: p.practical,
     id: 'ready-data-practitioner',
     careerId: 'data-analytics',
     level: 2,
@@ -157,6 +159,7 @@ Find out why the quarterly sales query gives too high a total, work out the corr
 /** Level 3: an A/B test read too early. */
 function dataTest(p: {
   version: string
+  practical: string
   visitors: number
   control: number
   variant: number
@@ -166,6 +169,7 @@ function dataTest(p: {
   const rv = Math.round((p.variant / p.visitors) * 1000) / 10
   const uplift = Math.round(((rv - rc) / rc) * 1000) / 10
   return assessment({
+    practical: p.practical,
     id: 'ready-data-senior',
     careerId: 'data-analytics',
     level: 3,
@@ -323,6 +327,7 @@ export const ASSESSMENTS_DATA: Record<string, CaseInput[]> = {
   'ready-data-practitioner': [
     dataDuplicates({
       version: 'a',
+      practical: 'studio-sql',
       duplicate: 'C-104',
       orders: [
         ['O-501', 'C-101', 4200],
@@ -334,6 +339,7 @@ export const ASSESSMENTS_DATA: Record<string, CaseInput[]> = {
     }),
     dataDuplicates({
       version: 'b',
+      practical: 'studio-dashboard',
       duplicate: 'C-217',
       orders: [
         ['O-811', 'C-210', 5200],
@@ -345,7 +351,21 @@ export const ASSESSMENTS_DATA: Record<string, CaseInput[]> = {
     }),
   ],
   'ready-data-senior': [
-    dataTest({ version: 'a', visitors: 4000, control: 200, variant: 236, days: 2 }),
-    dataTest({ version: 'b', visitors: 5000, control: 300, variant: 345, days: 3 }),
+    dataTest({
+      version: 'a',
+      practical: 'studio-statistics',
+      visitors: 4000,
+      control: 200,
+      variant: 236,
+      days: 2,
+    }),
+    dataTest({
+      version: 'b',
+      practical: 'portfolio-review',
+      visitors: 5000,
+      control: 300,
+      variant: 345,
+      days: 3,
+    }),
   ],
 }

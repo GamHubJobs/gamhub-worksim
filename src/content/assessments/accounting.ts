@@ -5,6 +5,7 @@ import { gbp, forms, assessment, report } from './shared'
 /** Level 2: a bank reconciliation with a keying error. */
 function accReconciliation(p: {
   version: string
+  practical: string
   bank: number
   cheque: number
   deposit: number
@@ -17,6 +18,7 @@ function accReconciliation(p: {
   const error = p.paid - p.keyed
   const ledger = adjustedBank + p.charges + error
   return assessment({
+    practical: p.practical,
     id: 'ready-acc-practitioner',
     careerId: 'accounting',
     level: 2,
@@ -157,6 +159,7 @@ Reconcile the cash book to the bank statement, work out the correct cash book ba
 /** Level 3: management accounts with a one-off cost. */
 function accVariance(p: {
   version: string
+  practical: string
   revenue: number
   cos: number
   overheads: number
@@ -168,6 +171,7 @@ function accVariance(p: {
   const gap = budgetProfit - profit
   const revenueGap = budget.revenue - p.revenue
   return assessment({
+    practical: p.practical,
     id: 'ready-acc-senior',
     careerId: 'accounting',
     level: 3,
@@ -313,6 +317,7 @@ export const ASSESSMENTS_ACCOUNTING: Record<string, CaseInput[]> = {
   'ready-acc-practitioner': [
     accReconciliation({
       version: 'a',
+      practical: 'books-bank-rec',
       bank: 18420,
       cheque: 1200,
       deposit: 950,
@@ -323,6 +328,7 @@ export const ASSESSMENTS_ACCOUNTING: Record<string, CaseInput[]> = {
     }),
     accReconciliation({
       version: 'b',
+      practical: 'books-sales-purchases',
       bank: 22310,
       cheque: 2400,
       deposit: 1150,
@@ -335,6 +341,7 @@ export const ASSESSMENTS_ACCOUNTING: Record<string, CaseInput[]> = {
   'ready-acc-senior': [
     accVariance({
       version: 'a',
+      practical: 'books-payroll',
       revenue: 228000,
       cos: 98000,
       overheads: 86000,
@@ -342,6 +349,7 @@ export const ASSESSMENTS_ACCOUNTING: Record<string, CaseInput[]> = {
     }),
     accVariance({
       version: 'b',
+      practical: 'month-end-close',
       revenue: 226000,
       cos: 97000,
       overheads: 89000,

@@ -31,6 +31,22 @@ interface Base {
   evidence: CaseInput['evidence']
   steps: CaseInput['steps']
   skills: Record<string, number>
+  /** The real task of the career done in its own tool (see `game/practical.ts`). */
+  practical: string
+}
+
+/**
+ * The marks of each part. Everything except the practical work is worth 70 and
+ * everything except the report 75, so with the 80% pass mark neither can be
+ * skipped. The same in every career, so assessments are equally demanding.
+ */
+const POINTS = {
+  practical: 30,
+  document: 25,
+  review: 15,
+  figure: 10,
+  decide: 10,
+  reply: 10,
 }
 
 export function assessment(base: Base): CaseInput {
@@ -54,8 +70,22 @@ export function assessment(base: Base): CaseInput {
     whyItMatters: base.whyItMatters,
     objectives: base.objectives,
     evidence: base.evidence,
-    steps: base.steps,
-    // High enough that the report cannot be skipped: everything else is 75 marks.
+    steps: [
+      {
+        id: 'practical',
+        kind: 'practical',
+        title: 'Do the work in the tool',
+        prompt:
+          'Do this piece of the job in its own tool, from a fresh file and without the step-by-step guide. It is marked by the same checks as the task.',
+        points: POINTS.practical,
+        assignmentId: base.practical,
+      },
+      ...base.steps.map((step) => ({
+        ...step,
+        points: POINTS[step.kind as keyof typeof POINTS] ?? step.points,
+      })),
+    ] as CaseInput['steps'],
+    // Neither the practical work nor the report can be skipped (see POINTS).
     passScore: 80,
     outcomes: {},
     replies: {

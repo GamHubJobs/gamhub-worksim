@@ -71,6 +71,10 @@ Each career has two **readiness assessments**: one at level 2 and one at level 3
 An assessment is a practical piece of work for the responsibilities of your level.
 It takes 3 hours of office time and asks you to:
 
+- **do a real piece of the job in your profession’s own tool**, from a fresh file and
+  without the step-by-step guide: for example a budget in Sheets, a bank
+  reconciliation in Books, a network fault in the network tools, an ad budget in Ad
+  Campaigns, SQL questions in Data Studio, or tests and a fix in Code;
 - investigate a situation;
 - work out a figure;
 - make a decision;
@@ -82,7 +86,21 @@ diagnoses an outage, fixes it and writes the incident report.
 
 ### Results and retakes
 
-- **You need 80% to pass.** The report counts, so it cannot be skipped.
+- **You need 80% to pass.** The marks:
+
+  | Part                  | Marks |
+  | --------------------- | ----- |
+  | The work in your tool | 30    |
+  | The report in Docs    | 25    |
+  | The investigation     | 15    |
+  | The figure            | 10    |
+  | The decision          | 10    |
+  | The message           | 10    |
+
+  Without the tool work you can reach only 70%, and without the report only 75%, so
+  both are needed. The tool work is marked by the task’s own checks, exactly as when
+  you submit the task.
+
 - **Feedback.** You see your strengths, what to work on and why, with the expected
   answer for each part.
 - **Retakes.** If you don’t pass, practise and take it again. A new attempt uses

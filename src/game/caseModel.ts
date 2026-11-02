@@ -57,6 +57,7 @@ export function modelAnswers(
         )
         break
       case 'document':
+      case 'practical':
         break
     }
   }

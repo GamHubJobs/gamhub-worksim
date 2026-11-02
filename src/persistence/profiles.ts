@@ -239,9 +239,8 @@ export async function startAssessmentFile(
   profileId: string,
   assessmentId: string,
   stepId: string,
-  file:
-    | { kind: 'doc'; title: string; content: DocContent }
-    | { kind: 'slides'; title: string; content: SlidesContent },
+  /** A report (Docs or Slides), or the starting file of a practical task in its tool. */
+  file: Omit<NewDocument, 'owner'>,
   database: WorkSimDatabase = defaultDb,
 ): Promise<{ profile: Profile; documentId: string }> {
   return database.transaction(
@@ -261,7 +260,10 @@ export async function startAssessmentFile(
       if (!open) throw new Error('This assessment is not in progress.')
       const existing = open.files[stepId]
       if (existing) return { profile: current, documentId: existing }
-      const created = await createDocument({ ...file, owner: profileId }, database)
+      const created = await createDocument(
+        { ...file, owner: profileId } as NewDocument,
+        database,
+      )
       await createVersion(created, 'original', { keep: true }, database)
       const profile = await saveProfile(
         current,

@@ -615,7 +615,28 @@ export function Desktop({
                     }
                     onOpenFile={async (id, stepId) => {
                       const documentId = await career.openAssessmentFile(id, stepId)
-                      setView({ app: 'docs', document: documentId })
+                      // Practical work opens in its own tool; the report in Docs.
+                      const open = openAttempt(profile, id)
+                      const step = open
+                        ? attemptDef(open)?.steps.find((s) => s.id === stepId)
+                        : undefined
+                      const task =
+                        step?.kind === 'practical'
+                          ? getAssignment(step.assignmentId)
+                          : undefined
+                      if (!task) setView({ app: 'docs', document: documentId })
+                      else if (task.kind === 'tool' && task.tool)
+                        setView({ app: 'tool', tool: task.tool.id, document: documentId })
+                      else
+                        setView({
+                          app:
+                            task.kind === 'tickets'
+                              ? 'helpdesk'
+                              : task.kind === 'code'
+                                ? 'code'
+                                : 'sheets',
+                          document: documentId,
+                        })
                     }}
                     onSubmit={async (id) => {
                       await career.submitAssessment(id)

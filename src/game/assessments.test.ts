@@ -48,6 +48,9 @@ function reportFor(def: Case): Record<string, DocContent> {
   return out
 }
 
+/** The practical work done in full (it is graded in its tool; see practical.test.ts). */
+const DONE = { practical: { fraction: 1, notes: [] } }
+
 const ALL = Object.entries(ASSESSMENT_VERSIONS).flatMap(([id, versions]) =>
   versions.map((def, i) => ({ id, version: VERSION_IDS[i], def })),
 )
@@ -70,6 +73,7 @@ describe('readiness assessment content', () => {
       expect(def.kind).toBe('assessment')
       expect(def.deadlineHours).toBe(3)
       expect(def.steps.map((s) => s.kind)).toEqual([
+        'practical',
         'review',
         'figure',
         'decide',
@@ -77,11 +81,21 @@ describe('readiness assessment content', () => {
         'reply',
       ])
       expect(def.steps.reduce((sum, s) => sum + s.points, 0)).toBe(100)
-      const result = gradeCase(def, modelAnswers(def, NO_AUTHORITY), reportFor(def))
+      const result = gradeCase(
+        def,
+        modelAnswers(def, NO_AUTHORITY),
+        reportFor(def),
+        NO_AUTHORITY,
+        true,
+        DONE,
+      )
       expect(result.steps.filter((s) => s.earned < s.points)).toEqual([])
       expect(result.score).toBe(100)
       // Without the report, it cannot be passed at all.
-      expect(gradeCase(def, modelAnswers(def, NO_AUTHORITY)).passed).toBe(false)
+      expect(
+        gradeCase(def, modelAnswers(def, NO_AUTHORITY), {}, NO_AUTHORITY, true, DONE)
+          .passed,
+      ).toBe(false)
     },
   )
 
@@ -151,7 +165,14 @@ describe('taking an assessment', () => {
     const retake = openAttempt(profile, id)!
     expect(retake).toMatchObject({ attempt: 2, variant: 'b' })
     const second = ASSESSMENT_VERSIONS[id][1]
-    const good = gradeCase(second, modelAnswers(second, NO_AUTHORITY), reportFor(second))
+    const good = gradeCase(
+      second,
+      modelAnswers(second, NO_AUTHORITY),
+      reportFor(second),
+      NO_AUTHORITY,
+      true,
+      DONE,
+    )
     profile = recordAssessmentResult(profile, id, good, 200)
     expect(hasPassed(profile, id)).toBe(true)
     expect(attemptsOf(profile, id).map((a) => [a.attempt, a.result?.score])).toEqual([

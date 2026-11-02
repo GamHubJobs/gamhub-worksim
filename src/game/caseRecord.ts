@@ -7,6 +7,7 @@ import { bullets, docContent, h, p } from '../apps/docs/templates'
 import type { Case, CaseStep } from '../content/cases/schema'
 import type { DocContent } from '../persistence/schemas'
 import { answerFor, type CaseResult } from './cases'
+import { getAssignment } from '../content/assignments'
 
 const DECISIONS = { approve: 'Approve', reject: 'Reject', escalate: 'Escalate' } as const
 
@@ -55,6 +56,10 @@ export function describeAnswer(step: CaseStep, raw: unknown): string[] {
     }
     case 'document':
       return [`${step.deliverable.title} (attached to this record)`]
+    case 'practical':
+      return [
+        `“${getAssignment(step.assignmentId)?.title ?? step.assignmentId}” done in the tool (attached to this record)`,
+      ]
   }
 }
 

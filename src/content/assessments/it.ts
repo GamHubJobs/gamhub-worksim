@@ -5,12 +5,14 @@ import { assessment, report } from './shared'
 /** Level 2: an outage after a change. */
 function itOutage(p: {
   version: string
+  practical: string
   change: string
   users: number
   startedAgo: number
 }) {
   const left = 240 - p.startedAgo
   return assessment({
+    practical: p.practical,
     id: 'ready-it-practitioner',
     careerId: 'it-support',
     level: 2,
@@ -154,12 +156,14 @@ Investigate why the Finance team cannot reach the shared drive, work out the tim
 /** Level 3: problem management from ticket trends. */
 function itTrends(p: {
   version: string
+  practical: string
   resets: number
   minutes: number
   printer: string
 }) {
   const hours = Math.round(((p.resets * p.minutes * 0.75) / 60) * 10) / 10
   return assessment({
+    practical: p.practical,
     id: 'ready-it-senior',
     careerId: 'it-support',
     level: 3,
@@ -300,11 +304,35 @@ Analyse last month’s tickets, estimate the time a fix would save, decide what 
 
 export const ASSESSMENTS_IT: Record<string, CaseInput[]> = {
   'ready-it-practitioner': [
-    itOutage({ version: 'a', change: 'CHG-221', users: 35, startedAgo: 90 }),
-    itOutage({ version: 'b', change: 'CHG-348', users: 28, startedAgo: 75 }),
+    itOutage({
+      version: 'a',
+      practical: 'network-printing',
+      change: 'CHG-221',
+      users: 35,
+      startedAgo: 90,
+    }),
+    itOutage({
+      version: 'b',
+      practical: 'directory-leaver',
+      change: 'CHG-348',
+      users: 28,
+      startedAgo: 75,
+    }),
   ],
   'ready-it-senior': [
-    itTrends({ version: 'a', resets: 48, minutes: 12, printer: 'PR-2F-07' }),
-    itTrends({ version: 'b', resets: 60, minutes: 10, printer: 'PR-1G-03' }),
+    itTrends({
+      version: 'a',
+      practical: 'network-intranet',
+      resets: 48,
+      minutes: 12,
+      printer: 'PR-2F-07',
+    }),
+    itTrends({
+      version: 'b',
+      practical: 'major-incident',
+      resets: 60,
+      minutes: 10,
+      printer: 'PR-1G-03',
+    }),
   ],
 }

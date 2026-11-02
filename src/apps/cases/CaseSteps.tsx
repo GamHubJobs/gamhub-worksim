@@ -2,6 +2,9 @@
 import { useState } from 'react'
 import type { CaseStep } from '../../content/cases/schema'
 import { answerFor } from '../../game/cases'
+import { getAssignment } from '../../content/assignments'
+import { toolName, toolsOf } from '../../game/portfolio'
+import { RichText } from '../../ui/RichText'
 
 const field_ = 'rounded-md border border-slate-300 bg-white px-2 py-1 text-sm'
 
@@ -12,6 +15,7 @@ export function StepForm({
   onSave: save,
   onOpenFile,
   fileOpened,
+  playerName = '',
 }: {
   step: CaseStep
   answer: unknown
@@ -19,6 +23,8 @@ export function StepForm({
   onSave: (answer: unknown) => void
   onOpenFile: () => void
   fileOpened: boolean
+  /** The player's first name, for task briefs that greet them. */
+  playerName?: string
 }) {
   // Shown at once; saved in the background.
   const [answer, setAnswer] = useState(saved)
@@ -245,6 +251,33 @@ export function StepForm({
           <span className="text-slate-500">It is handed in with the case.</span>
         </div>
       )
+    case 'practical': {
+      const task = getAssignment(step.assignmentId)
+      if (!task)
+        return <p className="text-sm text-red-700">This task could not be found.</p>
+      return (
+        <div className="space-y-2 text-sm">
+          <RichText
+            text={task.briefing.body.replaceAll('{name}', playerName)}
+            className="rounded-md bg-slate-50 p-3 text-slate-700"
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onOpenFile}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium hover:bg-slate-50 disabled:opacity-60"
+            >
+              {fileOpened ? 'Continue' : 'Start'} “{task.title}” in{' '}
+              {toolName(toolsOf(task)[0])}
+            </button>
+            <span className="text-slate-500">
+              Marked by the task’s own checks, as it is when you submit.
+            </span>
+          </div>
+        </div>
+      )
+    }
   }
 }
 
