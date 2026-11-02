@@ -117,7 +117,7 @@ working simulations of the professional software used in its field (see
 
 - [x] 8.1 Career-specific content loading
 - [x] 8.2 Profession-specific readiness assessments
-- [ ] 8.3 Expanded case variations and advanced cases
+- [x] 8.3 Expanded case variations and advanced cases
 - [ ] 8.4 Accessibility validation
 - [ ] 8.5 Installable progressive web app
 - [ ] 8.6 Security and data-integrity hardening
@@ -126,6 +126,51 @@ working simulations of the professional software used in its field (see
 - [ ] 8.9 Final end-to-end regression
 
 ---
+
+## 2026-11-02 · Milestone 8.3: Expanded case variations and advanced cases
+
+### Built
+
+- **Six more advanced cases**, one per career, from the third level:
+  - Finance & Admin: an invoice paid twice because a reference was keyed two ways;
+  - Accounting: a client wanting next year's insurance expensed now (a prepayment);
+  - IT Help Desk: a phishing email, and how far it got;
+  - Digital Marketing: a paid influencer post without “#ad”;
+  - Data Analysis: an overall rate that fell while every group improved;
+  - Software Development: a live payment key committed to the repository.
+
+  Every career now has two advanced cases.
+
+- **Twelve more variants:**
+  - all six Phase 7 advanced cases now vary their figures (so IT Help Desk and
+    Digital Marketing get figure variation too);
+  - five of the six new cases vary their figures;
+  - the sixth varies names only, because its table repeats the same numbers in
+    different rows and a value swap would mix them up.
+
+  Every career now has at least four varied cases, at least two of them in their
+  figures (25 varied cases in all).
+
+- **Consistent follow-ups.** A follow-up case (a hand-off coming back, a programme's
+  next stage) continues in the variant of the case it follows, so people and figures
+  never contradict what the player has already seen.
+- **Stability.** Variant names already released are locked by a test: a case a save
+  has received can never change.
+
+### Tested
+
+- Unit, for every variant (25):
+  - its replacements exist;
+  - it is still valid and exactly as demanding;
+  - its own answers score 100%;
+  - the original answers fail where the figures changed;
+  - the original answer appears nowhere in the varied text, so there is no
+    contradiction.
+- Unit: a follow-up inherits its case's variant; released variant names are kept; four
+  varied cases per career, two in their figures; the case balance and difficulty
+  balance between careers still hold.
+- Browser: a new advanced case in its varied version shows the varied figures and is
+  graded against them (100%).
 
 ## 2026-11-02 · Milestone 8.2: Profession-specific readiness assessments
 

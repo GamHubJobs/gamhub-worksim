@@ -164,4 +164,157 @@ Financial Controller`,
   xp: 140,
 }
 
-export const ADVANCED_DEV: CaseInput[] = [devPerformance]
+/** Software Development: a secret key pushed to the shared repository. */
+const devLeakedKey: CaseInput = {
+  id: 'adv-dev-leaked-key',
+  version: 1,
+  careerId: 'software-development',
+  kind: 'internal',
+  difficulty: 'advanced',
+  minLevel: 3,
+  title: 'A secret key in the repository',
+  summary: 'A payment provider key was committed to the shared code repository.',
+  from: { name: 'Hamid Rezaei', role: 'Developer', organisation: 'Engineering' },
+  trigger: {},
+  deadlineHours: 4,
+  email: {
+    subject: 'Oops: I think I committed our payment key',
+    body: `Hi,
+
+I’ve just noticed that my commit from yesterday includes the payment provider’s **live API key** in config.ts. I’ve deleted the line in a new commit. Is that enough?
+
+Hamid`,
+  },
+  whyItMatters:
+    'A leaked secret stays leaked: deleting it in a later commit leaves it in the history for anyone with access. The fix is to make the key useless, check whether it was used, and stop secrets reaching the code again, without making people afraid to own up.',
+  objectives: [
+    'Assess the exposure of a leaked secret',
+    'Contain it properly',
+    'Prevent it happening again, without blame',
+  ],
+  evidence: [
+    {
+      id: 'timeline',
+      title: 'Timeline',
+      table: {
+        head: ['When', 'What'],
+        rows: [
+          ['Tuesday 16:00', 'Commit with the live key pushed to the shared repository'],
+          ['Wednesday 10:00', 'Line deleted in a new commit'],
+          ['Now: Wednesday 11:00', 'The old commit is still in the history'],
+        ],
+      },
+    },
+    {
+      id: 'access',
+      title: 'Who can see the repository',
+      text: '40 people, including two contractors. The provider’s dashboard can list every request made with the key.',
+    },
+  ],
+  steps: [
+    {
+      id: 'review',
+      kind: 'review',
+      title: 'Assess the exposure',
+      prompt: 'Tick every statement that is true.',
+      points: 30,
+      findings: [
+        {
+          id: 'history',
+          text: 'The key can still be read in the repository’s history.',
+          issue: true,
+          why: 'Deleting a line in a new commit leaves the old commit, and the key, in the history.',
+        },
+        {
+          id: 'rotate',
+          text: 'The key must be replaced (rotated) at the provider, so the old one stops working.',
+          issue: true,
+          why: 'Only that makes the leaked key useless, wherever it has been copied.',
+        },
+        {
+          id: 'enough',
+          text: 'Deleting the line was enough, because the key is no longer in the latest code.',
+          issue: false,
+          why: 'Anyone with access can still read the history.',
+        },
+        {
+          id: 'blame',
+          text: 'Hamid should be disciplined so others take secrets seriously.',
+          issue: false,
+          why: 'He reported it quickly; punishing that makes the next person hide it.',
+        },
+      ],
+    },
+    {
+      id: 'exposure',
+      kind: 'figure',
+      title: 'How long it has been exposed',
+      prompt: 'For how many hours has the key been readable in the repository?',
+      points: 20,
+      answer: 19,
+      tolerance: 0.01,
+      unit: 'hours',
+      why: 'From Tuesday 16:00 to Wednesday 11:00: 19 hours.',
+    },
+    {
+      id: 'action',
+      kind: 'decide',
+      title: 'What to do',
+      prompt: 'What do you do?',
+      points: 25,
+      options: [
+        {
+          id: 'contain',
+          label:
+            'Rotate the key now, check the provider’s log for requests you don’t recognise, and add a secret scanner to the pipeline',
+          verdict: 'best',
+          why: 'The leaked key stops working, any misuse is found, and secrets are caught before they are pushed in future.',
+          effects: { indicators: { risk: -4 }, trust: { manager: 2 } },
+        },
+        {
+          id: 'history-only',
+          label: 'Rewrite the repository history to remove the old commit',
+          verdict: 'acceptable',
+          why: 'It tidies the history, but copies may already exist; without rotating the key it is still usable.',
+          effects: { indicators: { risk: 1 } },
+        },
+        {
+          id: 'nothing',
+          label: 'Leave it: the repository is private',
+          verdict: 'poor',
+          why: '40 people, including contractors, can read a live payment key.',
+          effects: { indicators: { risk: 6 } },
+        },
+      ],
+    },
+    {
+      id: 'reply',
+      kind: 'reply',
+      to: 'Hamid Rezaei, Engineering',
+      title: 'Reply to the developer',
+      prompt:
+        'Write to Hamid: why deleting the line is not enough, what you are doing, and thanks for reporting it.',
+      points: 25,
+      minWords: 45,
+      model:
+        'Hi Hamid, thanks for telling us straight away: that is exactly right. Deleting the line is not enough, because the key is still in the history. I am rotating the key now so the old one stops working, and checking the provider’s log for any requests we don’t recognise. I will also add a secret scanner to the pipeline so this is caught automatically in future. Thanks, {name}',
+      mentions: [['rotat', 'new key', 'replace'], ['history'], ['thank']],
+      avoid: [
+        {
+          terms: ['careless', 'disciplinary', 'your fault'],
+          why: 'He reported it quickly: thank him, do not blame him.',
+        },
+      ],
+    },
+  ],
+  outcomes: OUTCOMES,
+  replies: replies(
+    'Hamid',
+    'Thanks for being so decent about it. The provider’s log shows no unknown requests, and the scanner caught a test key in someone else’s branch this afternoon.',
+  ),
+  lapseLog: 'The live key stayed valid all day while it sat in the repository history.',
+  skills: { debugging: 20, 'software-design': 25 },
+  xp: 140,
+}
+
+export const ADVANCED_DEV: CaseInput[] = [devPerformance, devLeakedKey]

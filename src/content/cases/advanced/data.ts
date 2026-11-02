@@ -161,4 +161,163 @@ Gemma`,
   xp: 140,
 }
 
-export const ADVANCED_DATA: CaseInput[] = [dataBias]
+/** Data Analysis: an overall figure that hides what happens in each group. */
+const dataSegments: CaseInput = {
+  id: 'adv-data-segments',
+  version: 1,
+  careerId: 'data-analytics',
+  kind: 'internal',
+  difficulty: 'advanced',
+  minLevel: 3,
+  title: 'The new checkout looks worse',
+  summary:
+    'Overall conversion fell after a change, but the change may not be the reason.',
+  from: { name: 'Rob Turner', role: 'Product Manager', organisation: 'Digital' },
+  trigger: {},
+  deadlineHours: 5,
+  email: {
+    subject: 'New checkout: conversion down, roll back?',
+    body: `Hi,
+
+Since the new checkout went live, overall conversion has dropped from 5.0% to 4.4%. I’m minded to roll it back tomorrow. Can you confirm the numbers?
+
+Rob`,
+  },
+  whyItMatters:
+    'An overall rate can fall even when every group improves, if the mix of visitors changes. Checking the groups before acting stops a business undoing a change that works.',
+  objectives: [
+    'Compare rates within groups as well as overall',
+    'Explain a change in mix',
+    'Advise on a decision with evidence',
+  ],
+  evidence: [
+    {
+      id: 'before-after',
+      title: 'Conversion by device, two weeks before and after',
+      table: {
+        head: ['Period', 'Device', 'Visitors', 'Orders', 'Conversion'],
+        rows: [
+          ['Before', 'Desktop', '6,000', '420', '7.0%'],
+          ['Before', 'Mobile', '4,000', '80', '2.0%'],
+          ['After', 'Desktop', '4,000', '300', '7.5%'],
+          ['After', 'Mobile', '6,000', '140', '2.3%'],
+        ],
+      },
+    },
+    {
+      id: 'context',
+      title: 'Marketing note',
+      text: 'A mobile-only social campaign started the same week as the new checkout.',
+    },
+  ],
+  steps: [
+    {
+      id: 'review',
+      kind: 'review',
+      title: 'Read the numbers',
+      prompt: 'Tick every statement that is true.',
+      points: 30,
+      findings: [
+        {
+          id: 'both-up',
+          text: 'Conversion rose on both desktop and mobile after the change.',
+          issue: true,
+          why: 'Desktop went from 7.0% to 7.5% and mobile from 2.0% to 2.3%.',
+        },
+        {
+          id: 'mix',
+          text: 'More of the visitors were on mobile after the change, where conversion is lower.',
+          issue: true,
+          why: 'Mobile went from 4,000 of 10,000 visitors to 6,000, because of the mobile campaign.',
+        },
+        {
+          id: 'checkout-worse',
+          text: 'The new checkout made conversion worse.',
+          issue: false,
+          why: 'Within each device it did better; the overall fall comes from the change in mix.',
+        },
+        {
+          id: 'overall',
+          text: 'Overall conversion did fall from 5.0% to 4.4%.',
+          issue: true,
+          why: '500 orders from 10,000 visitors before; 440 from 10,000 after.',
+        },
+      ],
+    },
+    {
+      id: 'mobile',
+      kind: 'figure',
+      title: 'The mobile improvement',
+      prompt: 'By how many percentage points did mobile conversion rise?',
+      points: 20,
+      answer: 0.3,
+      tolerance: 0.05,
+      unit: 'points',
+      why: 'From 2.0% to 2.3%: up 0.3 percentage points.',
+    },
+    {
+      id: 'action',
+      kind: 'decide',
+      title: 'Your advice',
+      prompt: 'What do you advise Rob?',
+      points: 25,
+      options: [
+        {
+          id: 'keep',
+          label:
+            'Keep the new checkout: it converts better on each device; the overall fall comes from the extra mobile visitors',
+          verdict: 'best',
+          why: 'It reads the evidence correctly and avoids undoing an improvement.',
+          effects: { indicators: { risk: -2 } },
+        },
+        {
+          id: 'rollback',
+          label: 'Roll it back: overall conversion fell',
+          verdict: 'poor',
+          why: 'It would remove a change that improved conversion everywhere.',
+          effects: { indicators: { satisfaction: -2, risk: 2 } },
+        },
+        {
+          id: 'wait',
+          label: 'Wait another month before saying anything',
+          verdict: 'acceptable',
+          why: 'Cautious, but the evidence already answers the question, and Rob may roll back meanwhile.',
+          effects: { indicators: { satisfaction: -1 } },
+        },
+      ],
+    },
+    {
+      id: 'reply',
+      kind: 'reply',
+      to: 'Rob Turner, Digital',
+      title: 'Reply to the product manager',
+      prompt:
+        'Write to Rob: what the numbers show, why the overall rate fell, and your advice.',
+      points: 25,
+      minWords: 45,
+      model:
+        'Hi Rob, the overall figure is right, but it is misleading: conversion went up on both devices, desktop from 7.0% to 7.5% and mobile by 0.3 points to 2.3%. The overall rate fell because the mobile campaign brought many more mobile visitors, who convert less. I advise keeping the new checkout. Best, {name}',
+      mentions: [
+        ['mobile'],
+        ['0.3', '2.3'],
+        ['keep', 'not roll back', "don't roll back"],
+      ],
+      avoid: [
+        {
+          terms: ['you are wrong', 'misread'],
+          why: 'Rob read the overall figure correctly: explain what it hides.',
+        },
+      ],
+    },
+  ],
+  outcomes: OUTCOMES,
+  replies: replies(
+    'Rob',
+    'Glad I asked before rolling back! I’ll share your breakdown with the team, and we’re keeping the new checkout.',
+  ),
+  lapseLog: 'Rob rolled the checkout back before hearing from you.',
+  skills: { 'insight-communication': 25, 'data-analysis': 20 },
+  xp: 140,
+}
+
+export const ADVANCED_DATA: CaseInput[] = [dataBias, dataSegments]

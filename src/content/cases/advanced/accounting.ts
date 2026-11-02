@@ -165,4 +165,166 @@ Finance Director, Alder Engineering`,
   xp: 140,
 }
 
-export const ADVANCED_ACCOUNTING: CaseInput[] = [accCutoff]
+/** Accounting: a client wants a year's insurance expensed at once. */
+const accPrepayment: CaseInput = {
+  id: 'adv-acc-prepayment',
+  version: 1,
+  careerId: 'accounting',
+  kind: 'client',
+  difficulty: 'advanced',
+  minLevel: 3,
+  title: 'A year of insurance in one month',
+  summary:
+    'A client wants this year’s profit reduced by expensing next year’s insurance now.',
+  from: { name: 'Colin Barker', role: 'Owner', organisation: 'Barker Joinery' },
+  trigger: {},
+  deadlineHours: 6,
+  email: {
+    subject: 'Insurance: put it all in this year please',
+    body: `Hi,
+
+We paid our annual insurance of **£12,000** on 1 October. Please put the whole amount in this year’s accounts (year end 31 December): it will lower our tax bill.
+
+Thanks,
+
+Colin Barker
+Barker Joinery`,
+  },
+  whyItMatters:
+    'The accruals principle puts costs in the period they cover, not the one they are paid in. Moving costs between years to cut tax is not allowed; explaining that clearly, and helping with what is allowed, keeps the client safe.',
+  objectives: [
+    'Apply the accruals principle to a prepaid cost',
+    'Work out the prepayment',
+    'Explain the rule to a client and offer what is allowed',
+  ],
+  evidence: [
+    {
+      id: 'policy',
+      title: 'The insurance policy',
+      table: {
+        head: ['Detail', 'Value'],
+        rows: [
+          ['Premium paid', '£12,000 on 1 October'],
+          ['Cover', '1 October to 30 September (12 months)'],
+          ['Client’s year end', '31 December'],
+        ],
+      },
+    },
+    {
+      id: 'draft',
+      title: 'Draft accounts',
+      text: 'Profit before insurance: £86,000. The client is a small company paying corporation tax on its profits.',
+    },
+  ],
+  steps: [
+    {
+      id: 'principle',
+      kind: 'review',
+      title: 'Apply the principle',
+      prompt: 'Tick every statement that is true.',
+      points: 30,
+      findings: [
+        {
+          id: 'three-months',
+          text: 'Only the 3 months from October to December belong in this year.',
+          issue: true,
+          why: 'The cover runs for 12 months, and 3 of them fall before the year end.',
+        },
+        {
+          id: 'prepayment',
+          text: 'The cover for January to September next year is a prepayment: an asset at the year end.',
+          issue: true,
+          why: 'It is paid for but not yet used, so it is carried forward to the year it covers.',
+        },
+        {
+          id: 'paid-means-expense',
+          text: 'Because the premium was paid this year, it can all be expensed this year.',
+          issue: false,
+          why: 'When it was paid does not decide the period; what it covers does.',
+        },
+        {
+          id: 'tax-allowed',
+          text: 'Reducing tax is a good enough reason to move a cost into an earlier year.',
+          issue: false,
+          why: 'Moving costs between years to cut tax misstates the accounts.',
+        },
+      ],
+    },
+    {
+      id: 'prepaid',
+      kind: 'figure',
+      title: 'The prepayment',
+      prompt: 'How much of the premium is a prepayment at 31 December?',
+      points: 20,
+      answer: 9000,
+      tolerance: 0.5,
+      unit: '£',
+      why: '£12,000 ÷ 12 = £1,000 a month; 9 months (January to September) are still to come: £9,000.',
+    },
+    {
+      id: 'action',
+      kind: 'decide',
+      title: 'What to do',
+      prompt: 'How do you deal with the request?',
+      points: 25,
+      options: [
+        {
+          id: 'prepay',
+          label:
+            'Expense £3,000 this year, carry £9,000 forward as a prepayment, and offer to look at the tax reliefs the company is entitled to',
+          verdict: 'best',
+          why: 'The accounts are right, and the client gets real help with the tax bill.',
+          effects: { indicators: { risk: -2, discipline: 2 } },
+        },
+        {
+          id: 'expense-all',
+          label: 'Expense the whole £12,000 as asked: it is the client’s decision',
+          verdict: 'poor',
+          why: 'It misstates two years of accounts to cut tax, and the accountant shares the responsibility.',
+          effects: { indicators: { risk: 6 }, reputation: -3 },
+        },
+        {
+          id: 'prepay-only',
+          label: 'Expense £3,000 and carry £9,000 forward, without further comment',
+          verdict: 'acceptable',
+          why: 'The accounting is right, but the client is left without an explanation or any help.',
+          effects: { indicators: { satisfaction: -2 } },
+        },
+      ],
+    },
+    {
+      id: 'reply',
+      kind: 'reply',
+      to: 'Colin Barker, Barker Joinery',
+      title: 'Reply to the client',
+      prompt:
+        'Write to Colin: what you will do, why, and how you can help with the tax bill.',
+      points: 25,
+      minWords: 45,
+      model:
+        'Dear Colin, thank you. The insurance covers October to September, so only the three months to December belong in this year: £3,000. The other £9,000 is a prepayment and will be a cost next year, when the cover is used. That is the rule for every business, whenever the bill is paid. I would be glad to go through the tax reliefs you are entitled to, which can lower this year’s bill properly. Kind regards, {name}',
+      mentions: [
+        ['9,000', '9000'],
+        ['prepayment', 'next year'],
+        ['relief', 'allowance', 'tax'],
+      ],
+      avoid: [
+        {
+          terms: ['no problem', 'happy to put it all'],
+          why: 'Do not suggest the cost can be moved: it cannot.',
+        },
+      ],
+    },
+  ],
+  outcomes: OUTCOMES,
+  replies: replies(
+    'Colin',
+    'That makes sense, thanks for explaining. Let’s book a call about the reliefs: I didn’t know about half of them.',
+  ),
+  lapseLog:
+    'The client’s year-end question went unanswered and the accounts were held up.',
+  skills: { 'financial-reporting': 25, bookkeeping: 20 },
+  xp: 140,
+}
+
+export const ADVANCED_ACCOUNTING: CaseInput[] = [accCutoff, accPrepayment]

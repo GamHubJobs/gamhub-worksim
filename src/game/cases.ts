@@ -10,7 +10,7 @@
  * working hours.
  */
 import { z } from 'zod'
-import { caseFor, caseInVariant, ORIGINAL, pickVariant } from './caseVariants'
+import { caseFor, caseInVariant, ORIGINAL, variantFor } from './caseVariants'
 import { HOURS } from '../content/workday'
 import { getAssignment } from '../content/assignments'
 import { CASES, getCase } from '../content/cases'
@@ -187,7 +187,7 @@ export function arriveCase(
 ): ProfileData {
   const at = now(profile.work)
   // The save's own variant of the case (people, figures, circumstances).
-  const variant = pickVariant(profile.work.record.seed, def.id)
+  const variant = variantFor(profile, def.id)
   if (variant !== ORIGINAL) def = caseInVariant(def.id, variant) ?? def
   const progress: CaseProgress = {
     caseId: def.id,

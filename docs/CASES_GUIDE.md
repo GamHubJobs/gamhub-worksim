@@ -24,7 +24,8 @@ Many cases come in more than one version. A supplier, a client, the references, 
 figures or the circumstances may be different in your career from someone else’s. The
 answers follow your version, so remembering someone else’s answers will not help. Every
 version is exactly as demanding: the same steps, marks and pass mark. Once a case has
-arrived, its version never changes.
+arrived, its version never changes, and a follow-up to a case continues in the same
+version, so the people and figures always match what you have already seen.
 
 ### Difficulty
 
@@ -32,8 +33,8 @@ Each case shows its difficulty:
 
 - **Foundation** cases come at the first level.
 - **Intermediate** cases come at levels 2 and 3.
-- **Advanced** cases come from level 4, with one advanced customer case in every career
-  from level 3. They weigh more things against each other.
+- **Advanced** cases come from level 4, with two advanced cases in every career from
+  level 3. They weigh more things against each other.
 
 ## Working on a case
 

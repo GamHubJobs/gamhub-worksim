@@ -114,13 +114,30 @@ export function caseInVariant(caseId: string, variantId = ORIGINAL): Case | unde
 }
 
 /**
+ * The variant a case will arrive in for this save. A follow-up to an earlier
+ * case (a hand-off coming back, the next stage of a programme) continues in
+ * the earlier case's variant when it has one of the same name, so the people
+ * and figures never contradict what the player has already seen.
+ */
+export function variantFor(profile: ProfileData, caseId: string): string {
+  const def = getCase(caseId)
+  const before = def?.trigger.afterCase
+    ? profile.work.cases[def.trigger.afterCase]
+    : undefined
+  if (before) {
+    const inherited = before.variant ?? ORIGINAL
+    const own = CASE_VARIANTS[caseId] ?? []
+    if (inherited === ORIGINAL || own.some((v) => v.id === inherited)) return inherited
+  }
+  return pickVariant(profile.work.record.seed, caseId)
+}
+
+/**
  * The case as this save sees it: the variant it arrived in, or (before it
  * arrives) the one the save's seed will pick.
  */
 export function caseFor(profile: ProfileData, caseId: string): Case | undefined {
   const progress = profile.work.cases[caseId]
-  const variant = progress
-    ? (progress.variant ?? ORIGINAL)
-    : pickVariant(profile.work.record.seed, caseId)
+  const variant = progress ? (progress.variant ?? ORIGINAL) : variantFor(profile, caseId)
   return caseInVariant(caseId, variant)
 }

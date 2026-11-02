@@ -177,4 +177,162 @@ Accounts Manager, Sparkle Facility Services`,
   xp: 140,
 }
 
-export const ADVANCED_FINANCE: CaseInput[] = [faContract]
+/** Finance & Admin: an invoice paid twice, found in the payment records. */
+const faDuplicate: CaseInput = {
+  id: 'adv-fa-duplicate-payment',
+  version: 1,
+  careerId: 'office-admin-finance',
+  kind: 'client',
+  difficulty: 'advanced',
+  minLevel: 3,
+  title: 'An invoice paid twice',
+  summary:
+    'A supplier asks about an unexpected payment: one invoice was paid in two payment runs.',
+  from: { name: 'Nadine Shah', role: 'Credit Controller', organisation: 'Kestrel Print' },
+  trigger: {},
+  deadlineHours: 6,
+  email: {
+    subject: 'Payment received twice? Invoice KP-3390',
+    body: `Hello,
+
+We have received two payments of **£1,416.00** for invoice **KP-3390** (8 and 22 March). Could you confirm how you would like us to treat the second one?
+
+Kind regards,
+
+Nadine Shah
+Credit Controller, Kestrel Print`,
+  },
+  whyItMatters:
+    'Duplicate payments are one of the most common ways money leaks out of a business. Finding the cause, getting the money back the right way and stopping it happening again matters more than the single payment.',
+  objectives: [
+    'Trace a payment through the payment runs',
+    'Work out what is owed back',
+    'Fix the cause as well as the symptom',
+  ],
+  evidence: [
+    {
+      id: 'runs',
+      title: 'Payment runs in March (extract)',
+      table: {
+        head: ['Run', 'Date', 'Supplier', 'Reference', 'Amount'],
+        rows: [
+          ['PR-031', '8 March', 'Kestrel Print', 'KP-3390', '£1,416.00'],
+          ['PR-033', '22 March', 'Kestrel Print', 'KP3390', '£1,416.00'],
+          ['PR-033', '22 March', 'Kestrel Print', 'KP-3402', '£684.00'],
+        ],
+      },
+    },
+    {
+      id: 'ledger',
+      title: 'Purchase ledger note',
+      text: 'The invoice was keyed in twice: once from the post as “KP-3390” and once from the supplier’s email copy as “KP3390”. The duplicate check only compares references exactly. Invoice KP-3402 (£684.00) is still due and was paid correctly.',
+    },
+  ],
+  steps: [
+    {
+      id: 'trace',
+      kind: 'review',
+      title: 'Trace the payments',
+      prompt: 'Tick every statement that is true.',
+      points: 30,
+      findings: [
+        {
+          id: 'twice',
+          text: 'Invoice KP-3390 was paid twice, in runs PR-031 and PR-033.',
+          issue: true,
+          why: 'Both runs paid £1,416.00 against the same invoice, keyed with two different references.',
+        },
+        {
+          id: 'cause',
+          text: 'The duplicate check missed it because the reference was keyed differently.',
+          issue: true,
+          why: '“KP-3390” and “KP3390” do not match exactly, so the check let the second one through.',
+        },
+        {
+          id: 'kp3402',
+          text: 'Invoice KP-3402 was also paid twice.',
+          issue: false,
+          why: 'KP-3402 was paid once, correctly, in PR-033.',
+        },
+        {
+          id: 'supplier-error',
+          text: 'Kestrel Print invoiced us twice.',
+          issue: false,
+          why: 'They sent one invoice, by post and by email; we keyed it in twice.',
+        },
+      ],
+    },
+    {
+      id: 'owed',
+      kind: 'figure',
+      title: 'What Kestrel owes us back',
+      prompt: 'How much did we overpay Kestrel Print?',
+      points: 20,
+      answer: 1416,
+      tolerance: 0.5,
+      unit: '£',
+      why: 'One of the two £1,416.00 payments for KP-3390 was not due.',
+    },
+    {
+      id: 'action',
+      kind: 'decide',
+      title: 'What to do',
+      prompt: 'How do you resolve it?',
+      points: 25,
+      options: [
+        {
+          id: 'credit-and-fix',
+          label:
+            'Ask Kestrel to hold the £1,416 as a credit against our next invoice, cancel the duplicate entry, and ask for the duplicate check to ignore dashes and spaces',
+          verdict: 'best',
+          why: 'The money is recovered simply, the ledger is corrected, and the cause is fixed so it does not happen again.',
+          effects: { indicators: { discipline: 2, risk: -2 } },
+        },
+        {
+          id: 'refund-only',
+          label: 'Ask Kestrel for a refund of £1,416 and leave the ledger as it is',
+          verdict: 'acceptable',
+          why: 'The money comes back, but the ledger stays wrong and the same mistake can happen again.',
+          effects: { indicators: { risk: 1 } },
+        },
+        {
+          id: 'ignore',
+          label: 'Leave it: it will be picked up at year end',
+          verdict: 'poor',
+          why: 'The company’s money sits with a supplier, the accounts are wrong, and the cause is never fixed.',
+          effects: { indicators: { discipline: -3, risk: 3 } },
+        },
+      ],
+    },
+    {
+      id: 'reply',
+      kind: 'reply',
+      to: 'Nadine Shah, Kestrel Print',
+      title: 'Reply to the supplier',
+      prompt:
+        'Write to Nadine: what happened, and how you would like the second payment treated.',
+      points: 25,
+      minWords: 45,
+      model:
+        'Dear Nadine, thank you for letting us know, and sorry for the confusion. Invoice KP-3390 was keyed into our system twice, so it was paid in two payment runs. Please hold the second payment of £1,416.00 as a credit against our next invoice. We have corrected our records and changed our duplicate check so it does not happen again. Kind regards, {name}',
+      mentions: [['1,416', '1416'], ['credit'], ['twice', 'duplicate']],
+      avoid: [
+        {
+          terms: ['your mistake', 'you charged us twice'],
+          why: 'The supplier invoiced once: the mistake was ours.',
+        },
+      ],
+    },
+  ],
+  outcomes: OUTCOMES,
+  replies: replies(
+    'Nadine',
+    'Thank you for being so clear. We have put £1,416.00 on your account as a credit, and it will come off your next invoice.',
+  ),
+  lapseLog:
+    'The supplier’s question went unanswered and the overpayment stayed with them.',
+  skills: { 'finance-basics': 25, accuracy: 20 },
+  xp: 140,
+}
+
+export const ADVANCED_FINANCE: CaseInput[] = [faContract, faDuplicate]

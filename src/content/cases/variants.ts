@@ -211,4 +211,237 @@ export const CASE_VARIANTS: Record<string, CaseVariant[]> = {
       ],
     },
   ],
+  // Advanced cases (Phase 7) -------------------------------------------------
+  'adv-fa-contract-price': [
+    {
+      // A cheaper contract and cheaper deep cleans: every total and the answer change.
+      id: 'brightway',
+      text: [
+        ['Gareth Pryce', 'Owen Rees'],
+        ['Gareth', 'Owen'],
+        ['Sparkle Facility Services', 'Brightway Cleaning'],
+        ['Sparkle', 'Brightway'],
+        ['SFS-5520', 'BWC-6107'],
+        ['£450.00', '£430.00'],
+        ['£5,850.00', '£5,590.00'],
+        ['£180.00', '£150.00'],
+        ['£360.00', '£300.00'],
+        ['£6,210.00', '£5,890.00'],
+        ['£1,242.00', '£1,178.00'],
+        ['£7,452.00', '£7,068.00'],
+        ['£7,452', '£7,068'],
+        ['£420.00', '£400.00'],
+        ['£420', '£400'],
+        ['£450', '£430'],
+        ['£180', '£150'],
+        ['£360', '£300'],
+        ['£5,460', '£5,200'],
+        ['£5,820', '£5,500'],
+        ['£6,984', '£6,600'],
+        ['6,984', '6,600'],
+        ['6984', '6600'],
+      ],
+      numbers: [[6984, 6600]],
+    },
+  ],
+  'adv-acc-year-end-sale': [
+    {
+      id: 'tamar',
+      text: [
+        ['Fiona Marsh', 'Ruth Bailey'],
+        ['Fiona', 'Ruth'],
+        ['Alder Engineering', 'Tamar Fabrications'],
+        ['Calder Pumps', 'Wessex Valves'],
+        ['£48,000', '£56,000'],
+        ['£4,800', '£5,600'],
+        ['£1,260,000', '£1,245,000'],
+        ['£40,000', '£55,000'],
+        ['40,000', '55,000'],
+        ['40000', '55000'],
+      ],
+      numbers: [[40000, 55000]],
+    },
+  ],
+  'adv-it-priority-pressure': [
+    {
+      // A smaller outage that has been running longer: less time left.
+      id: 'longer-outage',
+      text: [
+        ['Paula Reid', 'Megan Lloyd'],
+        ['Paula', 'Megan'],
+        ['INC-3101', 'INC-4211'],
+        ['INC-3102', 'INC-4212'],
+        ['INC-3103', 'INC-4213'],
+        ['40 people', '25 people'],
+        ['Forty people', 'Twenty-five people'],
+        ['2.5 hours ago', '3 hours ago'],
+        ['so there are 1.5 hours left', 'so there is 1 hour left'],
+        ['1.5 hours left', '1 hour left'],
+      ],
+      exact: [['40', '25']],
+      numbers: [[1.5, 1]],
+    },
+  ],
+  'adv-mkt-attribution': [
+    {
+      // A bigger social budget with more assisted bookings: a lower true cost.
+      id: 'riverbend',
+      text: [
+        ['Victor Hale', 'Simon Ashby'],
+        ['Victor', 'Simon'],
+        ['Hollow Oak Hotels', 'Riverbend Hotels'],
+        [
+          '£5,000 ÷ (20 + 180) bookings = £25 a booking.',
+          '£6,000 ÷ (24 + 276) bookings = £20 a booking.',
+        ],
+        ['£5,000', '£6,000'],
+        ['20 bookings', '24 bookings'],
+        ['180 bookings', '276 bookings'],
+        ['180 more bookings', '276 more bookings'],
+        ['about £25 a booking', 'about £20 a booking'],
+      ],
+      exact: [
+        ['20', '24'],
+        ['180', '276'],
+        ['25', '20'],
+      ],
+      numbers: [[25, 20]],
+    },
+  ],
+  'adv-data-survey-bias': [
+    {
+      // More app users and more responses: a different response rate.
+      id: 'bigger-panel',
+      text: [
+        ['Gemma Ward', 'Laura Kent'],
+        ['Gemma', 'Laura'],
+        ['250 ÷ 2,000 = 12.5%.', '300 ÷ 2,500 = 12%.'],
+        ['2,000', '2,500'],
+        ['250 responses', '300 responses'],
+        ['250 app users', '300 app users'],
+        ['230 (92%)', '276 (92%)'],
+        ['12.5%', '12%'],
+        ['12.5', '12'],
+      ],
+      exact: [['250', '300']],
+      numbers: [[12.5, 12]],
+    },
+  ],
+  'adv-dev-slow-report': [
+    {
+      // More invoices, a faster service: the cost of one call per invoice changes.
+      id: 'more-invoices',
+      text: [
+        ['Irene Shaw', 'Carol Dent'],
+        ['Irene', 'Carol'],
+        [
+          '6,000 × 0.085 s = 510 seconds, or 8.5 minutes.',
+          '8,000 × 0.06 s = 480 seconds, or 8 minutes.',
+        ],
+        ['6,000', '8,000'],
+        ['about 85 ms per call', 'about 60 ms per call'],
+        ['85 ms', '60 ms'],
+        ['about 8.5 minutes', 'about 8 minutes'],
+      ],
+      numbers: [[510, 480]],
+    },
+  ],
+  // Advanced cases (Phase 8) -------------------------------------------------
+  'adv-fa-duplicate-payment': [
+    {
+      id: 'larkspur',
+      text: [
+        ['Nadine Shah', 'Ruth Akers'],
+        ['Nadine', 'Ruth'],
+        ['Kestrel Print', 'Larkspur Print'],
+        ['KP-3390', 'LP-4471'],
+        ['KP3390', 'LP4471'],
+        ['KP-3402', 'LP-4480'],
+        ['£1,416.00', '£1,758.00'],
+        ['£1,416', '£1,758'],
+        ['1,416', '1,758'],
+        ['1416', '1758'],
+        ['£684.00', '£912.00'],
+      ],
+      numbers: [[1416, 1758]],
+    },
+  ],
+  'adv-acc-prepayment': [
+    {
+      id: 'walsh',
+      text: [
+        ['Colin Barker', 'Peter Walsh'],
+        ['Colin', 'Peter'],
+        ['Barker Joinery', 'Walsh Kitchens'],
+        ['£12,000', '£18,000'],
+        ['£1,000 a month', '£1,500 a month'],
+        ['£9,000', '£13,500'],
+        ['9,000', '13,500'],
+        ['9000', '13500'],
+        ['£3,000', '£4,500'],
+      ],
+      numbers: [[9000, 13500]],
+    },
+  ],
+  'adv-it-phishing': [
+    {
+      id: 'bigger-mailout',
+      text: [
+        ['4 ÷ 64 = 6.25%, or 6.3% to one decimal place.', '6 ÷ 80 = 7.5%.'],
+        ['The 4 people', 'The 6 people'],
+        ['Reset the 4 passwords', 'Reset the 6 passwords'],
+        ['The 4 stolen passwords', 'The 6 stolen passwords'],
+        ['the 4 compromised accounts', 'the 6 compromised accounts'],
+        ['all 64 recipients', 'all 80 recipients'],
+      ],
+      exact: [
+        ['64', '80'],
+        ['9', '12'],
+        ['4', '6'],
+      ],
+      numbers: [[6.3, 7.5]],
+    },
+  ],
+  'adv-mkt-disclosure': [
+    {
+      id: 'willow',
+      text: [
+        ['Karen Lowe', 'Holly Dunn'],
+        ['Karen', 'Holly'],
+        ['Fernleaf Skincare', 'Willow & Moss'],
+        ['Mia', 'Zara'],
+        ['£2,400', '£3,000'],
+        ['9,600', '15,000'],
+        ['£0.25', '£0.20'],
+        ['0.25', '0.20'],
+      ],
+      numbers: [[0.25, 0.2]],
+    },
+  ],
+  'adv-data-segments': [
+    {
+      id: 'foster',
+      text: [
+        ['Rob Turner', 'Neil Foster'],
+        ['Rob', 'Neil'],
+      ],
+    },
+  ],
+  'adv-dev-leaked-key': [
+    {
+      // Pushed earlier in the day, seen by more people: a longer exposure.
+      id: 'earlier-push',
+      text: [
+        ['Hamid Rezaei', 'Tomasz Nowak'],
+        ['Hamid', 'Tomasz'],
+        [
+          'From Tuesday 16:00 to Wednesday 11:00: 19 hours.',
+          'From Tuesday 14:30 to Wednesday 11:00: 20.5 hours.',
+        ],
+        ['Tuesday 16:00', 'Tuesday 14:30'],
+        ['40 people', '55 people'],
+      ],
+      numbers: [[19, 20.5]],
+    },
+  ],
 }

@@ -165,4 +165,158 @@ Marketing Director, Hollow Oak Hotels`,
   xp: 140,
 }
 
-export const ADVANCED_MARKETING: CaseInput[] = [mktAttribution]
+/** Digital Marketing: an influencer post without disclosure. */
+const mktDisclosure: CaseInput = {
+  id: 'adv-mkt-disclosure',
+  version: 1,
+  careerId: 'digital-marketing',
+  kind: 'client',
+  difficulty: 'advanced',
+  minLevel: 3,
+  title: 'An influencer post without #ad',
+  summary:
+    'A client’s paid influencer post is doing well, but it does not say it is an advert.',
+  from: { name: 'Karen Lowe', role: 'Brand Manager', organisation: 'Fernleaf Skincare' },
+  trigger: {},
+  deadlineHours: 6,
+  email: {
+    subject: 'Influencer post: brilliant results!',
+    body: `Hi,
+
+Mia’s post about our new serum is flying: look at the numbers! Can we book her for three more posts, written the same way? It feels so much more natural without the “ad” label.
+
+Karen
+Fernleaf Skincare`,
+  },
+  whyItMatters:
+    'Paid posts must be clearly labelled as adverts. Hiding that misleads customers, risks action by the advertising regulator and damages the brand. Good marketers protect the client from the risk while keeping what works.',
+  objectives: [
+    'Spot an undisclosed advert',
+    'Measure the post’s real cost',
+    'Advise the client to keep the results and fix the risk',
+  ],
+  evidence: [
+    {
+      id: 'post',
+      title: 'The post (first week)',
+      table: {
+        head: ['Measure', 'Value'],
+        rows: [
+          ['Fee paid to the influencer', '£2,400'],
+          ['Engagements (likes, comments, shares)', '9,600'],
+          ['Label on the post', 'None'],
+        ],
+      },
+    },
+    {
+      id: 'rules',
+      title: 'Advertising rules (summary)',
+      text: 'If a brand pays for a post or controls its content, the post must be obviously identifiable as an advert, for example with “#ad” at the start.',
+    },
+  ],
+  steps: [
+    {
+      id: 'review',
+      kind: 'review',
+      title: 'Review the post',
+      prompt: 'Tick every statement that is true.',
+      points: 30,
+      findings: [
+        {
+          id: 'is-ad',
+          text: 'The post is an advert, because Fernleaf paid for it.',
+          issue: true,
+          why: 'A paid post is an advert under the rules, however natural it reads.',
+        },
+        {
+          id: 'must-label',
+          text: 'The post needs a clear label such as “#ad”.',
+          issue: true,
+          why: 'Without it, followers cannot tell they are seeing an advert.',
+        },
+        {
+          id: 'natural-ok',
+          text: 'Leaving the label off is fine if the influencer really likes the product.',
+          issue: false,
+          why: 'Payment, not opinion, makes it an advert.',
+        },
+        {
+          id: 'results-wrong',
+          text: 'The engagement numbers must be fake.',
+          issue: false,
+          why: 'There is no sign of that; the problem is the missing label, not the results.',
+        },
+      ],
+    },
+    {
+      id: 'cost',
+      kind: 'figure',
+      title: 'Cost per engagement',
+      prompt: 'What did each engagement cost?',
+      points: 20,
+      answer: 0.25,
+      tolerance: 0.005,
+      unit: '£',
+      why: '£2,400 ÷ 9,600 engagements = £0.25 each.',
+    },
+    {
+      id: 'action',
+      kind: 'decide',
+      title: 'Your advice',
+      prompt: 'What do you advise?',
+      points: 25,
+      options: [
+        {
+          id: 'label',
+          label:
+            'Ask Mia to add “#ad” to the post now, and book the three new posts with the label in the brief',
+          verdict: 'best',
+          why: 'The risk is fixed today and the partnership that works continues, honestly.',
+          effects: { indicators: { risk: -3 } },
+        },
+        {
+          id: 'as-asked',
+          label: 'Book three more posts written the same way, without the label',
+          verdict: 'poor',
+          why: 'It repeats a breach of the rules, risking a ruling against the brand and lost trust.',
+          effects: { indicators: { risk: 5 }, reputation: -2 },
+        },
+        {
+          id: 'stop',
+          label: 'Stop working with the influencer altogether',
+          verdict: 'acceptable',
+          why: 'It removes the risk, but throws away a partnership that works well when it is labelled.',
+          effects: { indicators: { satisfaction: -2 } },
+        },
+      ],
+    },
+    {
+      id: 'reply',
+      kind: 'reply',
+      to: 'Karen Lowe, Fernleaf Skincare',
+      title: 'Reply to the client',
+      prompt: 'Write to Karen: the results, the problem, and what you recommend.',
+      points: 25,
+      minWords: 45,
+      model:
+        'Hi Karen, the results are great: about £0.25 per engagement. One thing needs fixing today: because we paid for the post, the rules say it must be clearly labelled as an advert, for example with #ad at the start. I suggest we ask Mia to add it now and include it in the brief for the three new posts. Labelled posts still perform well, and it protects the brand. Best, {name}',
+      mentions: [['0.25'], ['#ad', 'label', 'advert'], ['rules', 'regulator', 'protect']],
+      avoid: [
+        {
+          terms: ['nobody checks', 'get away with'],
+          why: 'Never suggest breaking the rules is acceptable if unnoticed.',
+        },
+      ],
+    },
+  ],
+  outcomes: OUTCOMES,
+  replies: replies(
+    'Karen',
+    'I honestly didn’t know. Mia has added #ad, and the new posts are booked with it. Thanks for keeping us out of trouble.',
+  ),
+  lapseLog: 'The unlabelled post stayed up, and a customer complained to the regulator.',
+  skills: { 'content-strategy': 25, 'campaign-analytics': 20 },
+  xp: 140,
+}
+
+export const ADVANCED_MARKETING: CaseInput[] = [mktAttribution, mktDisclosure]

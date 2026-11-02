@@ -178,4 +178,160 @@ Executive Assistant to the CEO`,
   xp: 140,
 }
 
-export const ADVANCED_IT: CaseInput[] = [itPriority]
+/** IT Help Desk: a phishing email, and how far it got. */
+const itPhishing: CaseInput = {
+  id: 'adv-it-phishing',
+  version: 1,
+  careerId: 'it-support',
+  kind: 'internal',
+  difficulty: 'advanced',
+  minLevel: 3,
+  title: 'A convincing phishing email',
+  summary: 'Staff report a “password expiry” email; some people have already clicked it.',
+  from: { name: 'Dev Malhotra', role: 'Office Manager', organisation: 'Operations' },
+  trigger: {},
+  deadlineHours: 4,
+  email: {
+    subject: 'Is this password email real?',
+    body: `Hi,
+
+Several people have had an email saying their password expires today, with a link to “keep your password”. A couple of us clicked it before we noticed the address looked odd. Is it real?
+
+Dev`,
+  },
+  whyItMatters:
+    'Phishing works because it looks routine. A fast, calm response (finding who is affected, securing their accounts, warning everyone without blame) limits the damage and makes people more willing to report the next one.',
+  objectives: [
+    'Assess how far a phishing attack got',
+    'Secure the affected accounts',
+    'Warn staff clearly and without blame',
+  ],
+  evidence: [
+    {
+      id: 'mail-log',
+      title: 'Mail and sign-in logs (this morning)',
+      table: {
+        head: ['Measure', 'Value'],
+        rows: [
+          ['Recipients of the email', '64'],
+          ['People who clicked the link', '9'],
+          ['People who then entered their password', '4'],
+          ['Sign-ins from an unknown country since', '1 (account j.ellis)'],
+        ],
+      },
+    },
+    {
+      id: 'sender',
+      title: 'The email',
+      text: 'Sent from “it-support@cobaltridge-helpdesk.com” (our real address ends in cobaltridge.example). The link goes to a copy of our sign-in page.',
+    },
+  ],
+  steps: [
+    {
+      id: 'assess',
+      kind: 'review',
+      title: 'How far did it get?',
+      prompt: 'Tick every statement that is true.',
+      points: 30,
+      findings: [
+        {
+          id: 'fake',
+          text: 'The email is phishing: the sender’s domain is not ours.',
+          issue: true,
+          why: 'It imitates our help desk from a look-alike domain, and links to a fake sign-in page.',
+        },
+        {
+          id: 'four-exposed',
+          text: 'The 4 people who entered their password must be treated as compromised.',
+          issue: true,
+          why: 'Their passwords are now known to the attacker.',
+        },
+        {
+          id: 'clicks-only',
+          text: 'Everyone who clicked must have their laptop rebuilt.',
+          issue: false,
+          why: 'The page only asked for a password; clicking alone did not install anything.',
+        },
+        {
+          id: 'in-use',
+          text: 'One stolen password has already been used from outside the country.',
+          issue: true,
+          why: 'The sign-in log shows j.ellis signing in from an unknown country since the email.',
+        },
+      ],
+    },
+    {
+      id: 'share',
+      kind: 'figure',
+      title: 'How many fell for it',
+      prompt:
+        'What percentage of the recipients entered their password? (One decimal place.)',
+      points: 20,
+      answer: 6.3,
+      tolerance: 0.05,
+      unit: '%',
+      why: '4 ÷ 64 = 6.25%, or 6.3% to one decimal place.',
+    },
+    {
+      id: 'action',
+      kind: 'decide',
+      title: 'What to do first',
+      prompt: 'What do you do?',
+      points: 25,
+      options: [
+        {
+          id: 'secure',
+          label:
+            'Reset the 4 passwords and sign them out everywhere, block the sender’s domain, check j.ellis’s account activity, and warn all staff',
+          verdict: 'best',
+          why: 'It closes the attacker’s access first, stops more emails arriving, and investigates the account already used.',
+          effects: { indicators: { risk: -4 }, trust: { manager: 2 } },
+        },
+        {
+          id: 'warn-only',
+          label: 'Send everyone a warning not to click the link',
+          verdict: 'poor',
+          why: 'The 4 stolen passwords still work, and one is already in use by the attacker.',
+          effects: { indicators: { risk: 5 } },
+        },
+        {
+          id: 'reset-all',
+          label: 'Force a password reset for all 64 recipients today',
+          verdict: 'acceptable',
+          why: 'Safe, but slower and disruptive: the 4 compromised accounts need securing first, and the sender still needs blocking.',
+          effects: { indicators: { satisfaction: -2, risk: -1 } },
+        },
+      ],
+    },
+    {
+      id: 'reply',
+      kind: 'reply',
+      to: 'All staff',
+      title: 'Warn the staff',
+      prompt:
+        'Write to all staff: what the email is, what to do if they clicked, and thanks for reporting it.',
+      points: 25,
+      minWords: 45,
+      model:
+        'Hi all, thank you to everyone who reported this morning’s “password expiry” email: it is a phishing email and not from us. Please delete it. If you clicked the link and entered your password, contact the IT help desk now so we can reset it; we have already contacted the people we know about. Nobody is in trouble: reporting it quickly is exactly the right thing to do. Thanks, {name}',
+      mentions: [['phishing', 'not from us', 'fake'], ['password'], ['thank', 'report']],
+      avoid: [
+        {
+          terms: ['careless', 'should have known', 'stupid'],
+          why: 'Blame makes people hide mistakes; thank them for reporting.',
+        },
+      ],
+    },
+  ],
+  outcomes: OUTCOMES,
+  replies: replies(
+    'Dev',
+    'Thanks, that was quick. Two more people came forward after your email, and their passwords are reset too.',
+  ),
+  lapseLog:
+    'The phishing email stayed in people’s inboxes, and another password was stolen.',
+  skills: { 'incident-management': 25, 'customer-service': 20 },
+  xp: 140,
+}
+
+export const ADVANCED_IT: CaseInput[] = [itPriority, itPhishing]

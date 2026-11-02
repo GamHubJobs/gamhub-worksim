@@ -3,6 +3,7 @@ import { CAREERS } from '../content/careers'
 import { getCase } from '../content/cases'
 import { CaseSchema, type Case } from '../content/cases/schema'
 import { CASE_VARIANTS } from '../content/cases/variants'
+import { CASES } from '../content/cases'
 import { HOURS } from '../content/workday'
 import { modelAnswers } from './caseModel'
 import {
@@ -11,6 +12,7 @@ import {
   caseInVariant,
   ORIGINAL,
   pickVariant,
+  variantFor,
 } from './caseVariants'
 import { newProfileData, type ProfileData } from './career'
 import { arriveCase, caseContext, gradeCase, NO_AUTHORITY } from './cases'
@@ -99,12 +101,16 @@ describe('case variants', () => {
     },
   )
 
-  it('vary at least two cases in every career', () => {
+  it('vary at least four cases in every career, at least two of them in their figures', () => {
     for (const career of CAREERS) {
       const varied = Object.keys(CASE_VARIANTS).filter(
         (id) => getCase(id)!.careerId === career.id,
       )
-      expect(varied.length, career.id).toBeGreaterThanOrEqual(2)
+      const figures = varied.filter((id) =>
+        CASE_VARIANTS[id].some((v) => v.numbers?.length),
+      )
+      expect(varied.length, career.id).toBeGreaterThanOrEqual(4)
+      expect(figures.length, career.id).toBeGreaterThanOrEqual(2)
     }
   })
 
@@ -159,5 +165,90 @@ describe('a case arriving in a variant', () => {
     expect(arrived.work.cases[def.id]?.variant).toBeUndefined()
     expect(caseFor(arrived, def.id)).toBe(def)
     expect(caseInVariant(def.id, 'no-such-variant')).toBe(def)
+  })
+})
+
+describe('variants never contradict themselves', () => {
+  it.each(ALL.map((a) => [`${a.caseId} ~ ${a.variant.id}`, a] as const))(
+    '%s: the original answer appears nowhere in the varied text',
+    (_, { def, variant }) => {
+      const varied = texts(applyVariant(def, variant)).join('\n')
+      for (const [from, to] of variant.numbers ?? []) {
+        if (from === to) continue
+        const forms = [String(from), from.toLocaleString('en-GB')]
+        for (const form of new Set(forms)) {
+          const escaped = form.replace(/[.,]/g, (c) => `\\${c}`)
+          // The number on its own: not part of a longer number such as 1,250 or 12.5.
+          const standalone = new RegExp(`(?<![\\d.,])${escaped}(?![\\d]|[.,]\\d)`)
+          expect(varied, `“${form}” is still in the text`).not.toMatch(standalone)
+        }
+      }
+    },
+  )
+
+  it('a follow-up continues in the variant of the case it follows', () => {
+    const base = getCase('wf-fa-purchase-order')!
+    const followUp = CASES.find((c) => c.trigger.afterCase === base.id)!
+    // Temporary variants of both, with the same name.
+    CASE_VARIANTS[base.id] = [{ id: 'linked', text: [['Helen', 'Hanna']] }]
+    CASE_VARIANTS[followUp.id] = [
+      { id: 'linked', text: [['Helen', 'Hanna']] },
+      { id: 'other', text: [['Helen', 'Holly']] },
+    ]
+    try {
+      const seed = Array.from({ length: 200 }, (_, i) => i + 1).find(
+        (s) =>
+          pickVariant(s, base.id) === 'linked' &&
+          pickVariant(s, followUp.id) !== 'linked',
+      )!
+      const start = newProfileData('Alex', 1, base.careerId, seed)
+      const arrived = arriveCase(
+        { ...start, work: { ...start.work, minute: HOURS.start + 60 } },
+        base,
+        1,
+      )
+      expect(arrived.work.cases[base.id]?.variant).toBe('linked')
+      const done: ProfileData = {
+        ...arrived,
+        work: {
+          ...arrived.work,
+          cases: {
+            ...arrived.work.cases,
+            [base.id]: { ...arrived.work.cases[base.id]!, status: 'submitted' },
+          },
+        },
+      }
+      expect(variantFor(done, followUp.id)).toBe('linked')
+      expect(arriveCase(done, followUp, 2).work.cases[followUp.id]?.variant).toBe(
+        'linked',
+      )
+    } finally {
+      delete CASE_VARIANTS[base.id]
+      delete CASE_VARIANTS[followUp.id]
+    }
+  })
+
+  it('keeps every variant that saves may already hold (they are never renamed or removed)', () => {
+    const released: Record<string, string[]> = {
+      'fa-short-delivery': ['brightline'],
+      'fa-expense-query': ['train'],
+      'acc-vat-request': ['kingsway'],
+      'acc-statement-dispute': ['kestrel'],
+      'it-ticket-chaser': ['novak'],
+      'it-admin-rights': ['depot-planner'],
+      'mkt-unhappy-results': ['lang-joinery'],
+      'mkt-brief-change': ['ashdown'],
+      'data-numbers-mismatch': ['smaller-quarter'],
+      'data-extra-analysis': ['ten-regions'],
+      'dev-vague-bug': ['friday-close'],
+      'dev-feature-deadline': ['bigger-estimates'],
+      'ops-acc-payment-run': ['new-suppliers'],
+    }
+    for (const [caseId, ids] of Object.entries(released))
+      for (const id of ids)
+        expect(
+          CASE_VARIANTS[caseId]?.map((v) => v.id),
+          caseId,
+        ).toContain(id)
   })
 })
