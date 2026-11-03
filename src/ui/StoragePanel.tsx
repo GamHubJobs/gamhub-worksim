@@ -1,11 +1,19 @@
 import { offlineSupported, repairAppFiles } from '../app/pwa'
+import {
+  listSafetyCopies,
+  restoreSafetyCopy,
+  restoreWithSafetyCopy,
+} from '../persistence/safety'
+import type { SafetyCopy } from '../persistence/db'
+
+/** The largest file accepted as a backup (backups are normally a few MB). */
+export const MAX_BACKUP_BYTES = 250 * 1024 * 1024
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { downloadTextFile } from '../lib/download'
 import { formatDateTime, formatTimeAgo } from '../lib/time'
 import {
   BackupError,
   exportBackup,
-  importBackup,
   readBackupFile,
   type BackupPreview,
   type BackupStatus,
@@ -39,6 +47,13 @@ export function StoragePanel({
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<BackupPreview | null>(null)
   const [rebuilt, setRebuilt] = useState<number | null>(null)
+  const [copies, setCopies] = useState<Array<Omit<SafetyCopy, 'data'>>>([])
+  const [puttingBack, setPuttingBack] = useState<string | null>(null)
+  useEffect(() => {
+    listSafetyCopies()
+      .then(setCopies)
+      .catch(() => setCopies([]))
+  }, [])
   const fileInput = useRef<HTMLInputElement>(null)
   const dialog = useRef<HTMLDivElement>(null)
 
@@ -79,6 +94,12 @@ export function StoragePanel({
   }
 
   async function chooseFile(file: File) {
+    // A real backup is a few megabytes; a huge file is not one, and reading it
+    // could make the browser run out of memory.
+    if (file.size > MAX_BACKUP_BYTES)
+      throw new Error(
+        `This file is too large to be a GamHub WorkSim backup (${formatBytes(file.size)}).`,
+      )
     setPreview(await readBackupFile(await file.text()))
   }
 
@@ -90,7 +111,13 @@ export function StoragePanel({
       safety.fileName.replace('backup-', 'backup-before-restore-'),
       safety.text,
     )
-    await importBackup(chosen)
+    // …and keep a safety copy on this device, so the restore can be undone here.
+    await restoreWithSafetyCopy(chosen)
+    window.location.reload()
+  }
+
+  async function putBack(id: string) {
+    await restoreSafetyCopy(id)
     window.location.reload()
   }
 
@@ -266,6 +293,62 @@ export function StoragePanel({
                   ? 'Your portfolio was already complete.'
                   : `Added ${rebuilt} item${rebuilt === 1 ? '' : 's'} to your portfolio.`}
               </p>
+            )}
+          </div>
+
+          <div
+            className="space-y-2 border-t border-slate-200 pt-3"
+            data-testid="safety-copies"
+          >
+            <h3 className="font-medium">Safety copies</h3>
+            <p className="text-sm text-slate-600">
+              Before a backup is restored, or saves are upgraded to a new format, WorkSim
+              keeps a copy of all your data as it was, on this device. They are kept in
+              the same browser storage, so download backups too.
+            </p>
+            {copies.length === 0 ? (
+              <p className="text-sm text-slate-600">There are no safety copies yet.</p>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                {copies.map((copy) => (
+                  <li key={copy.id} className="flex flex-wrap items-center gap-3">
+                    <span>
+                      {copy.reason} · {formatDateTime(copy.createdAt)}
+                    </span>
+                    {puttingBack === copy.id ? (
+                      <>
+                        <span className="text-amber-900">
+                          Replace all current data with this copy?
+                        </span>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void run(() => putBack(copy.id))}
+                          className="rounded-md bg-amber-600 px-3 py-1 font-medium text-white hover:bg-amber-700 disabled:opacity-60"
+                        >
+                          Put it back
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPuttingBack(null)}
+                          className="rounded-md px-3 py-1 hover:bg-slate-100"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setPuttingBack(copy.id)}
+                        className="rounded-md border border-slate-300 px-3 py-1 font-medium hover:bg-slate-50 disabled:opacity-60"
+                      >
+                        Put back…
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
 

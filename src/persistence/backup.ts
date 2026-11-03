@@ -34,7 +34,8 @@ export const BACKUP_FORMAT = 'gamhub-worksim-backup'
 export const BACKUP_FORMAT_VERSION = 1
 
 /** Tables that are never backed up: the outbox only matters to this device's sync. */
-const EXCLUDED_TABLES = new Set(['outbox'])
+// Safety copies are copies of the data itself: never in backups, never replaced.
+const EXCLUDED_TABLES = new Set(['outbox', 'safetyCopies'])
 
 const LAST_BACKUP_KEY = 'lastBackupAt'
 const REMINDER_SNOOZED_UNTIL_KEY = 'backupReminderSnoozedUntil'

@@ -4,8 +4,21 @@
  */
 import type { Block, ExportTable } from './blocks'
 
-/** A CSV field, quoted when needed (RFC 4180). */
-function csvField(value: string): string {
+/**
+ * Text that a spreadsheet program would run as a formula (=, +, @, or - before
+ * something that is not a number) is marked as text with a leading apostrophe,
+ * so opening an export can never run anything. Numbers are left alone.
+ */
+export function neutraliseFormula(value: string): string {
+  const looksNumeric = /^-?[\d.,]+%?$/.test(value)
+  return /^[=+@\t\r]/.test(value) || (value.startsWith('-') && !looksNumeric)
+    ? `'${value}`
+    : value
+}
+
+/** A CSV field, made safe to open and quoted when needed (RFC 4180). */
+function csvField(raw: string): string {
+  const value = neutraliseFormula(raw)
   return /[",\r\n]/.test(value) || /^\s|\s$/.test(value)
     ? `"${value.replace(/"/g, '""')}"`
     : value

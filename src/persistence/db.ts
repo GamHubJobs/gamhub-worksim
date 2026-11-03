@@ -21,6 +21,16 @@ import {
 
 export const DATABASE_NAME = 'gamhub-worksim'
 
+/** A complete copy of the data, kept on this device before a risky change (see safety.ts). */
+export interface SafetyCopy {
+  id: string
+  createdAt: number
+  /** Why it was taken, in words a player understands. */
+  reason: string
+  /** A complete backup file (JSON), checked like any backup when put back. */
+  data: string
+}
+
 /**
  * Database structure, one entry per save-format version.
  *
@@ -53,10 +63,15 @@ export const DATABASE_VERSIONS = {
     portfolioItems: 'id, &key, profileId, careerId, completedAt',
     portfolioFiles: 'id, itemId',
   },
+  // Version 5: safety copies of all data, kept before a restore or an upgrade
+  // (see safety.ts). Never included in backups, never cleared by a restore.
+  5: {
+    safetyCopies: 'id, createdAt',
+  },
 } as const
 
 /** The newest database structure version this app understands. */
-export const CURRENT_DATABASE_VERSION = 4
+export const CURRENT_DATABASE_VERSION = 5
 
 export class WorkSimDatabase extends Dexie {
   meta!: EntityTable<MetaEntry, 'key'>
@@ -66,6 +81,7 @@ export class WorkSimDatabase extends Dexie {
   profiles!: EntityTable<Profile, 'id'>
   portfolioItems!: EntityTable<PortfolioItem, 'id'>
   portfolioFiles!: EntityTable<PortfolioFile, 'id'>
+  safetyCopies!: EntityTable<SafetyCopy, 'id'>
 
   constructor(name: string = DATABASE_NAME) {
     super(name)
@@ -73,6 +89,7 @@ export class WorkSimDatabase extends Dexie {
     this.version(2).stores(DATABASE_VERSIONS[2])
     this.version(3).stores(DATABASE_VERSIONS[3])
     this.version(4).stores(DATABASE_VERSIONS[4])
+    this.version(5).stores(DATABASE_VERSIONS[5])
   }
 }
 

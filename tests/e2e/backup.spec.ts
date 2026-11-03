@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { copyFile, readFile, truncate, writeFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
 import { cell, enterValue, openWorkbook, waitUntilSaved } from './helpers.ts'
 
@@ -93,4 +93,85 @@ test('the storage panel explains how work is stored', async ({ page }) => {
   await expect(panel).toContainText('saves your work automatically in this browser')
   await expect(panel).toContainText('Keep a backup')
   await expect(panel).toContainText('not downloaded a backup')
+})
+
+test('a restore keeps a safety copy on this device, and putting it back undoes the restore', async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(150_000)
+  // A backup made elsewhere: a workbook saying "from the backup".
+  const otherContext = await browser.newContext()
+  const other = await otherContext.newPage()
+  await openWorkbook(other)
+  await enterValue(other, 'A1', 'from the backup')
+  await waitUntilSaved(other)
+  // Kept outside the other browser, which deletes its downloads when it closes.
+  const backupPath = test.info().outputPath('other-backup.json')
+  await copyFile(await downloadBackup(other), backupPath)
+  await otherContext.close()
+
+  // This device has its own work.
+  await openWorkbook(page)
+  await enterValue(page, 'A1', 'my own work')
+  await waitUntilSaved(page)
+  await openStoragePanel(page)
+  await expect(page.getByTestId('safety-copies')).toContainText('no safety copies yet')
+  await page.getByTestId('backup-file-input').setInputFiles(backupPath)
+  const safetyDownload = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Replace my data with this backup' }).click()
+  await safetyDownload
+  await expect(cell(page, 'A1')).toHaveText('from the backup')
+
+  // Undo: the safety copy puts this device's own work back.
+  await openStoragePanel(page)
+  const copies = page.getByTestId('safety-copies')
+  await expect(copies).toContainText('Before restoring a backup')
+  await copies.getByRole('button', { name: 'Put back…' }).first().click()
+  await copies.getByRole('button', { name: 'Put it back' }).click()
+  await expect(cell(page, 'A1')).toHaveText('my own work')
+})
+
+test('a file far too large to be a backup is refused before it is read', async ({
+  page,
+}) => {
+  await openWorkbook(page)
+  await openStoragePanel(page)
+  // 251 MB on disk (created instantly, without writing the contents).
+  const huge = test.info().outputPath('huge.json')
+  await writeFile(huge, '')
+  await truncate(huge, 251 * 1024 * 1024)
+  await page.getByTestId('backup-file-input').setInputFiles(huge)
+  await expect(page.getByRole('alert')).toContainText(
+    'too large to be a GamHub WorkSim backup',
+  )
+})
+
+test('damaged saved data: a plain explanation, nothing changed, and a way to restore', async ({
+  page,
+}) => {
+  await openWorkbook(page)
+  // Damage the career save directly in the browser's storage.
+  await page.evaluate(`new Promise((resolve, reject) => {
+    const open = indexedDB.open('gamhub-worksim')
+    open.onsuccess = () => {
+      const store = open.result.transaction('profiles', 'readwrite').objectStore('profiles')
+      const all = store.getAll()
+      all.onsuccess = () => {
+        const profile = all.result[0]
+        profile.xp = 'lots'
+        store.put(profile).onsuccess = () => resolve(true)
+      }
+      all.onerror = reject
+    }
+  })`)
+  await page.reload()
+  const alert = page
+    .getByRole('alert')
+    .filter({ hasText: 'could not open your saved data' })
+  await expect(alert).toContainText('Part of your saved data is damaged')
+  await expect(alert).toContainText('stopped before changing anything')
+  await alert.getByRole('button', { name: 'Storage & backup' }).click()
+  await expect(page.getByTestId('storage-panel')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Restore from backup…' })).toBeVisible()
 })

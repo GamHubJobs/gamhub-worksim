@@ -40,6 +40,11 @@ interface AppProps {
   tabLock: TabLock
 }
 
+/** A message from a damaged saved record (technical; shown under “details”). */
+function isDamagedData(message: string): boolean {
+  return /is damaged or invalid/.test(message)
+}
+
 export function App({ session, tabLock }: AppProps) {
   const career = useCareer()
   const [storageOpen, setStorageOpen] = useState(false)
@@ -110,15 +115,47 @@ export function App({ session, tabLock }: AppProps) {
           className="max-w-xl rounded-lg border border-red-200 bg-red-50 p-6 text-red-800"
         >
           <p className="font-semibold">GamHub WorkSim could not open your saved data.</p>
-          <p className="mt-2 text-sm whitespace-pre-wrap">{fatalError}</p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="mt-4 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-red-900 ring-1 ring-red-300 hover:bg-red-100"
-          >
-            Try again
-          </button>
+          {isDamagedData(fatalError) ? (
+            <>
+              <p className="mt-2 text-sm">
+                Part of your saved data is damaged, so WorkSim stopped before changing
+                anything. You can restore a backup, or put back a safety copy, from
+                Storage &amp; backup.
+              </p>
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer">Technical details</summary>
+                <p className="mt-1 whitespace-pre-wrap">{fatalError}</p>
+              </details>
+            </>
+          ) : (
+            <p className="mt-2 text-sm whitespace-pre-wrap">{fatalError}</p>
+          )}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-red-900 ring-1 ring-red-300 hover:bg-red-100"
+            >
+              Try again
+            </button>
+            <button
+              type="button"
+              onClick={() => setStorageOpen(true)}
+              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-red-900 ring-1 ring-red-300 hover:bg-red-100"
+            >
+              Storage &amp; backup
+            </button>
+          </div>
         </div>
+        {storageOpen && (
+          <StoragePanel
+            health={health}
+            backupStatus={backupStatus}
+            beforeBackup={flushAll}
+            onBackupDone={refreshStorageInfo}
+            onClose={() => setStorageOpen(false)}
+          />
+        )}
       </div>
     )
   }

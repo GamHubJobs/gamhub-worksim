@@ -120,12 +120,72 @@ working simulations of the professional software used in its field (see
 - [x] 8.3 Expanded case variations and advanced cases
 - [x] 8.4 Accessibility validation
 - [x] 8.5 Installable progressive web app
-- [ ] 8.6 Security and data-integrity hardening
+- [x] 8.6 Security and data-integrity hardening
 - [ ] 8.7 Onboarding, documentation and user experience
 - [ ] 8.8 Browser compatibility and performance
 - [ ] 8.9 Final end-to-end regression
 
 ---
+
+## 2026-11-03 · Milestone 8.6: Security and data-integrity hardening
+
+### Reviewed
+
+- **Backup import:** format, version and checksum are checked, every record is
+  validated, a preview comes first, and the replacement is one transaction. Good.
+- **Saves and documents:** validated on load; migrations are versioned and tested.
+- **HTML exports:** all text is escaped and exports contain no scripts.
+- **ZIP and file names:** cleaned of path characters.
+- **The app** renders no raw HTML (`dangerouslySetInnerHTML` is not used).
+- **Cross-tab:** a tab lock means one writer at a time.
+- **Dependencies:** `npm audit` reports 0 vulnerabilities.
+- **The service worker** caches same-origin GETs only and never touches IndexedDB.
+- **Permissions:** none requested except persistent storage.
+
+### Built (the gaps found)
+
+- **Safety copies on this device** (`persistence/safety.ts`; database version 5 adds
+  `safetyCopies` and changes nothing else):
+  - a complete copy is kept before every restore, and once before saves in an older
+    format are upgraded;
+  - the newest three are kept;
+  - **Storage & backup** lists them and can put one back, which itself keeps a copy,
+    so that can be undone too;
+  - they are never in backups and never cleared by a restore.
+
+  This adds to the safety backup file that a restore already downloaded.
+
+- **Size limit.** Files over 250 MB are refused before they are read, since a real
+  backup is a few megabytes.
+- **CSV exports** mark text that a spreadsheet program would run as a formula (=, +,
+  @, or - before non-numbers) with a leading apostrophe. Numbers are unchanged.
+- **File names** avoid what Windows refuses (CON, NUL…, and trailing dots).
+- **Damaged data.** The error screen now explains in plain words that nothing was
+  changed, puts the technical details under “details”, and offers **Try again** and
+  **Storage & backup**, so a backup or safety copy can be restored without the app
+  having to open.
+- **docs/PRIVACY_AND_SECURITY.md:**
+  - where data is (this device only; nothing is sent anywhere);
+  - what protects it;
+  - honest limits: browser storage is not tamper-proof, clearing site data deletes
+    everything, backups are not encrypted, and there is no server-grade security.
+
+### Tested
+
+- Unit:
+  - a restore keeps a copy, and putting it back restores the exact earlier data;
+  - only three copies are kept, never in backups, and never removed by a restore;
+  - one copy is taken before an upgrade from an older format, and none when saves
+    are current;
+  - the database upgrade from version 4 to 5 keeps everything;
+  - formula-like CSV text is marked while numbers are untouched;
+  - file names Windows refuses are avoided.
+- Browser:
+  - restore and undo through the real Storage & backup panel;
+  - a 251 MB file is refused before it is read;
+  - a deliberately damaged save shows the plain explanation and opens Storage &
+    backup;
+  - the existing backup tests pass.
 
 ## 2026-11-03 · Milestone 8.5: Installable progressive web app
 

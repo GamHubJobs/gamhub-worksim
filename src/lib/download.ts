@@ -31,6 +31,9 @@ export function safeFileName(name: string): string {
       .replace(/[<>:"/\\|?*]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .slice(0, 80) || 'file'
+      .slice(0, 80)
+      // Windows refuses names ending in a dot or space, and names such as CON or NUL.
+      .replace(/[. ]+$/, '')
+      .replace(/^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i, '$1_$2') || 'file'
   )
 }

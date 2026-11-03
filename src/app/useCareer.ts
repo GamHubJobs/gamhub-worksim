@@ -5,6 +5,7 @@
  * `src/persistence`; this hook only connects them.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { protectBeforeUpgrade } from '../persistence/safety'
 import { gradePractical, startingFile } from '../game/practical'
 import { loadCareers } from '../content/loader'
 import {
@@ -141,7 +142,12 @@ export function useCareer() {
     // A problem here must never stop the game from opening.
     // The content of every career with a save is loaded first: the portfolio
     // and the career overview look up their tasks and cases.
-    listProfiles()
+    // Saves in an older format are upgraded as they are next saved: keep a
+    // safety copy of them as they are first. A problem here must not stop
+    // WorkSim from opening.
+    protectBeforeUpgrade()
+      .catch((error: unknown) => console.error('Safety copy failed:', error))
+      .then(() => listProfiles())
       .then((saves) => ensureContent(saves.map((p) => p.careerId)))
       .then(() =>
         backfillPortfolio().catch((error: unknown) =>
