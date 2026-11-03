@@ -1,3 +1,4 @@
+import { offlineSupported, repairAppFiles } from '../app/pwa'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { downloadTextFile } from '../lib/download'
 import { formatDateTime, formatTimeAgo } from '../lib/time'
@@ -265,6 +266,25 @@ export function StoragePanel({
                   ? 'Your portfolio was already complete.'
                   : `Added ${rebuilt} item${rebuilt === 1 ? '' : 's'} to your portfolio.`}
               </p>
+            )}
+          </div>
+
+          <div className="space-y-2 border-t border-slate-200 pt-3">
+            <h3 className="font-medium">App files</h3>
+            <p className="text-sm text-slate-600">
+              {offlineSupported()
+                ? 'WorkSim keeps a copy of its own files so it can start offline. If it behaves strangely after an update, repairing downloads them again. Your saved work is not affected.'
+                : 'This browser cannot keep WorkSim’s files for offline use, so WorkSim needs an internet connection to start. Your saved work is still kept on this device.'}
+            </p>
+            {offlineSupported() && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void run(repairAppFiles)}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
+              >
+                Repair app files
+              </button>
             )}
           </div>
 

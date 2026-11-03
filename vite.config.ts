@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vitest/config'
+import { serviceWorker } from './scripts/pwa/plugin.ts'
 
 const { version } = JSON.parse(readFileSync('./package.json', 'utf8')) as {
   version: string
@@ -9,7 +10,8 @@ const { version } = JSON.parse(readFileSync('./package.json', 'utf8')) as {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  // serviceWorker() writes dist/sw.js after a production build (offline support).
+  plugins: [react(), tailwindcss(), serviceWorker()],
   // The 3D office and the PDF exports are loaded only when needed. Pre-bundle
   // their libraries when the dev server starts, so the first use does not
   // trigger a page reload.

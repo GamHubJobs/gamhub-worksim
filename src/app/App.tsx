@@ -4,6 +4,7 @@
  * backups and saving before another tab takes over.
  */
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AppStatus } from '../ui/AppStatus'
 import { Onboarding } from '../desktop/Onboarding'
 import {
   getBackupStatus,
@@ -110,6 +111,13 @@ export function App({ session, tabLock }: AppProps) {
         >
           <p className="font-semibold">GamHub WorkSim could not open your saved data.</p>
           <p className="mt-2 text-sm whitespace-pre-wrap">{fatalError}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-red-900 ring-1 ring-red-300 hover:bg-red-100"
+          >
+            Try again
+          </button>
         </div>
       </div>
     )
@@ -117,6 +125,7 @@ export function App({ session, tabLock }: AppProps) {
 
   return (
     <AppServicesContext.Provider value={services}>
+      <AppStatus saveAll={flushAll} />
       {backupStatus?.reminderDue && career.state.status === 'ready' && (
         <div className="fixed inset-x-0 bottom-0 z-40 shadow-lg">
           <BackupReminder

@@ -119,13 +119,69 @@ working simulations of the professional software used in its field (see
 - [x] 8.2 Profession-specific readiness assessments
 - [x] 8.3 Expanded case variations and advanced cases
 - [x] 8.4 Accessibility validation
-- [ ] 8.5 Installable progressive web app
+- [x] 8.5 Installable progressive web app
 - [ ] 8.6 Security and data-integrity hardening
 - [ ] 8.7 Onboarding, documentation and user experience
 - [ ] 8.8 Browser compatibility and performance
 - [ ] 8.9 Final end-to-end regression
 
 ---
+
+## 2026-11-03 · Milestone 8.5: Installable progressive web app
+
+### Built
+
+- **A web app manifest** (`public/manifest.webmanifest`): name, standalone display,
+  theme colours, and icons rendered from SVG (192, 512, maskable 512 and an Apple
+  touch icon; `scripts/pwa/make-icons.mjs`).
+- **A hand-written service worker** (`scripts/pwa/sw-template.js`), written to
+  `dist/sw.js` by a small build plugin (`scripts/pwa/plugin.ts`). It has:
+  - the exact list of the build's files;
+  - a version that is a hash of all of them, so any change makes a new version.
+- **Caching:**
+  - every file of a version is cached at install, or the version is not installed
+    and the old one keeps working;
+  - files are served from the cache;
+  - pages come from the network first, and from the cached page offline;
+  - old versions' caches are removed when a new one takes over;
+  - IndexedDB (the saves) is never touched.
+- **Safe updates.** A new version waits. A quiet notice says it is ready, and **Update
+  now** first saves all work (the same save used before backups), then switches. If
+  saving fails, the update waits and says so.
+- **Recovery.** **Repair app files** in Storage & backup removes the service worker and
+  its caches and downloads the app again; saves are unaffected. The error screen now
+  has a **Try again** button.
+- **An offline notice** when the connection drops, saying that work is still saved on
+  this device.
+- **Registration in production builds only,** so development and the existing
+  browser tests are unchanged.
+- **docs/INSTALL_AND_OFFLINE.md** covers:
+  - how to install in each browser;
+  - what works offline and what needs a connection;
+  - that nothing is ever uploaded or synced;
+  - updates and repair.
+
+### Found and fixed through testing
+
+The service worker missed its own cached scripts. Servers can mark responses `Vary:
+Origin`, and module scripts send an Origin header that the install requests did not.
+The service worker now ignores Vary for its own versioned files.
+
+### Tested (`npm run test:pwa`: a production build in Chromium)
+
+- Installability: the manifest is linked and valid, its icons load, and the service
+  worker controls the page.
+- Offline:
+  - WorkSim starts and opens the existing save;
+  - work done offline (reading mail) is saved and survives an offline reload;
+  - back online, the offline notice goes.
+- Updates:
+  - a new version is published (the served sw.js changes) and waits;
+  - the notice appears while the office stays usable;
+  - **Update now** switches to the new version, and the career save is kept.
+- Repair: the app files are downloaded again, and the save is kept.
+- Not automated: the browser's own install prompt and launching the installed app.
+  Browsers do not allow tests to click them.
 
 ## 2026-11-03 · Milestone 8.4: Accessibility validation
 
