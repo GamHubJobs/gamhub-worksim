@@ -50,4 +50,5 @@ First-time setup for browser tests: `npx playwright install chromium`.
 - [Accessibility](docs/ACCESSIBILITY.md)
 - [Installing WorkSim and using it offline](docs/INSTALL_AND_OFFLINE.md)
 - [Privacy, security and your data](docs/PRIVACY_AND_SECURITY.md)
+- [Supported browsers](docs/BROWSERS.md)
 - [Development log](DEVELOPMENT_LOG.md): completed work, decisions and next tasks

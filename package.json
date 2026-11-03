@@ -16,7 +16,9 @@
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
     "preview": "vite preview",
     "measure:startup": "node scripts/measure-startup.mjs",
-    "test:pwa": "playwright test -c playwright.pwa.config.ts"
+    "test:pwa": "playwright test -c playwright.pwa.config.ts",
+    "test:browsers": "playwright test -c playwright.browsers.config.ts",
+    "measure:memory": "node scripts/measure-memory.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

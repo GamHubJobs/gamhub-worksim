@@ -122,10 +122,60 @@ working simulations of the professional software used in its field (see
 - [x] 8.5 Installable progressive web app
 - [x] 8.6 Security and data-integrity hardening
 - [x] 8.7 Onboarding, documentation and user experience
-- [ ] 8.8 Browser compatibility and performance
+- [x] 8.8 Browser compatibility and performance
 - [ ] 8.9 Final end-to-end regression
 
 ---
+
+## 2026-11-03 · Milestone 8.8: Browser compatibility and performance
+
+### Built
+
+- **A cross-browser suite** (`npm run test:browsers`, `playwright.browsers.config.ts`)
+  runs against a production build in **Firefox**, **WebKit** (Safari's engine) and
+  **Microsoft Edge** (the installed Edge 156). It covers:
+  - the core journey: start, office, mail, a Sheets formula, Docs, Slides, and saving
+    across a reload;
+  - backup and restore between two browser profiles, and switching career;
+  - offline start.
+- **A memory measurement** (`npm run measure:memory`): the JavaScript heap at each
+  stage of a session in Chromium.
+- **docs/BROWSERS.md:**
+  - minimum versions: Chrome and Edge 111, Firefox 128, Safari 16.4, set by the
+    styling used;
+  - what each browser capability is used for, and the fallback when it is missing;
+  - what was tested, and the known limits.
+
+### Results
+
+| Browser  | Core journey        | Backup, restore, career switch | Offline start                                               |
+| -------- | ------------------- | ------------------------------ | ----------------------------------------------------------- |
+| Chromium | passes (full suite) | passes                         | passes (`npm run test:pwa`)                                 |
+| Edge 156 | passes              | passes                         | passes                                                      |
+| Firefox  | passes              | passes                         | passes                                                      |
+| WebKit   | passes              | passes                         | not run: no service workers in Playwright WebKit on Windows |
+
+Opening a workbook again after a reload or a restore took more than 5 seconds in
+WebKit and sometimes in Firefox. It was slow, not stuck: with 30 seconds, every test
+passes. Real Safari on macOS has not been tested.
+
+Memory (Chromium, production build, after garbage collection):
+
+| Moment                             | JavaScript heap |
+| ---------------------------------- | --------------- |
+| Start screen                       | 5 MB            |
+| 3D office                          | 17 MB           |
+| After opening Sheets, Docs, Slides | 14 MB           |
+| After doing that five times more   | 15 MB           |
+
+Memory does not keep growing as apps are opened and closed.
+
+Fallbacks already in place and documented:
+
+- the office panel without WebGL;
+- simpler 3D drawing on computers without a graphics card;
+- a clear message when browser storage is blocked;
+- online-only use without service workers.
 
 ## 2026-11-03 · Milestone 8.7: Onboarding, documentation and user experience
 
