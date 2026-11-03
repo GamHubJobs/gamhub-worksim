@@ -1,7 +1,8 @@
 # Phase 8 plan: Launch Readiness and Ecosystem
 
-Status: **in progress** (authorised by the owner on 1 November 2026). Progress is recorded
-in [DEVELOPMENT_LOG.md](../DEVELOPMENT_LOG.md).
+Status: **implemented** (milestones 8.1 to 8.9, November 2026). What was built, and the
+tests, are recorded in [DEVELOPMENT_LOG.md](../DEVELOPMENT_LOG.md); players start with
+[PLAYER_HANDBOOK.md](PLAYER_HANDBOOK.md).
 
 ## Goal
 

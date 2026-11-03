@@ -272,6 +272,40 @@ The plan is in [PHASE7_PLAN.md](PHASE7_PLAN.md), the player guide is
   (`React.lazy`). `npm run measure:startup` measures a production build on a
   throttled connection.
 
+### Launch readiness (Phase 8)
+
+The plan is in [PHASE8_PLAN.md](PHASE8_PLAN.md); players start with
+[PLAYER_HANDBOOK.md](PLAYER_HANDBOOK.md).
+
+- **Career content packs.** `content/packs/<career>.ts` hold each career's tasks,
+  cases and assessments. `content/loader.ts` loads a pack once, and a failure can be
+  retried. `ASSIGNMENTS`, `CASES` and `ASSESSMENTS` are registries filled as packs
+  load.
+  - At start, the packs of every career with a save load before the desk opens.
+  - Tests load all packs in `src/test/setup.ts`.
+  - Multi-career case and assessment files are split by career, with shared helpers
+    in `shared.ts`.
+- **Practical assessment steps** (`kind: 'practical'`, `game/practical.ts`): a real
+  task of the career, started from a fresh file in its own tool and graded by the
+  task's own checks, without its report checks. They are graded before
+  `gradeCase`, through its `practicals` argument.
+- **Case variants.** A follow-up inherits its case's variant (`variantFor`).
+  Released variant names are locked by a test.
+- **Offline app.**
+  - `scripts/pwa/plugin.ts` writes `dist/sw.js` from `scripts/pwa/sw-template.js`
+    with the build's file list and a content-hash version.
+  - `app/pwa.ts` registers it (production only), reports a waiting update, applies
+    it after saving, and repairs the app files.
+  - The manifest and icons are in `public/`.
+- **Safety copies.** `persistence/safety.ts` uses database version 5, table
+  `safetyCopies`. A complete copy is kept before each restore and before saves are
+  upgraded; the newest three are kept. Never in backups, never cleared by a restore.
+- **Test suites:**
+  - `npm run test:e2e`: Chromium, development server;
+  - `npm run test:pwa`: the production build: offline, updates, console;
+  - `npm run test:browsers`: Firefox, WebKit and Edge;
+  - `npm run measure:startup` and `npm run measure:memory`: performance.
+
 ### The working life (Phase 2)
 
 All of it is stored in `profile.work` (profile format 2), so it autosaves and is
@@ -348,6 +382,10 @@ Player action (walk, coffee, lunch, meeting, choice) or computer time
    achievements and desk items, varied cases, readiness assessments, faster loading and
    accessibility (done; see [PHASE7_PLAN.md](PHASE7_PLAN.md) and
    [CAREER_GUIDE.md](CAREER_GUIDE.md))
-8. Polish
+8. Launch readiness: career content loaded on demand, practical assessments in the
+   profession tools, more case variety, accessibility validation, an installable offline
+   app, data-safety hardening, onboarding and documentation, cross-browser testing
+   (done; see [PHASE8_PLAN.md](PHASE8_PLAN.md) and
+   [PLAYER_HANDBOOK.md](PLAYER_HANDBOOK.md))
 9. Cloud accounts and sync
 10. Future: optional cosmetics, GamHub Jobs connection

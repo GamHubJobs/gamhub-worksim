@@ -177,8 +177,23 @@ export function checkAssessments(profile: ProfileData): ProfileData {
   const time = now(profile.work)
   let next = profile
   for (const attempt of profile.work.record.assessments) {
-    if (attempt.status !== 'open' || time <= attempt.due) continue
+    if (attempt.status !== 'open') continue
     const def = attemptDef(attempt)
+    // An attempt started before the assessment changed (an update) is closed
+    // without penalty: it is not marked, and a new attempt can start at once.
+    if (def && attempt.version !== def.version) {
+      next = updateOpen(next, attempt.caseId, (a) => ({ ...a, status: 'lapsed' }))
+      next = {
+        ...next,
+        work: logLine(
+          next.work,
+          `“${def.title}” changed in an update, so your attempt was closed without marking. Please start it again.`,
+          'neutral',
+        ),
+      }
+      continue
+    }
+    if (time <= attempt.due) continue
     next = updateOpen(next, attempt.caseId, (a) => ({ ...a, status: 'lapsed' }))
     next = {
       ...next,

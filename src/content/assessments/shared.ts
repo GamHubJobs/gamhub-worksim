@@ -52,7 +52,8 @@ const POINTS = {
 export function assessment(base: Base): CaseInput {
   return {
     id: base.id,
-    version: 1,
+    // 2: practical work in the profession's own tool was added (Phase 8).
+    version: 2,
     careerId: base.careerId,
     kind: 'assessment',
     difficulty: base.level >= 3 ? 'advanced' : 'intermediate',

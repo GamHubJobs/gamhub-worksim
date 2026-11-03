@@ -225,3 +225,32 @@ describe('readiness and promotion', () => {
     }
   })
 })
+
+describe('after an update changes an assessment', () => {
+  it('an attempt started on the old version is closed without marking, and can be started again', () => {
+    const base = newProfileData('Alex', 1, 'it-support')
+    let profile: ProfileData = {
+      ...base,
+      levelId: 'service-desk-analyst',
+      work: { ...base.work, minute: HOURS.start + 60 },
+    }
+    profile = startAssessment(profile, 'ready-it-practitioner', 2)
+    // As if it had been started before the practical step was added.
+    profile = {
+      ...profile,
+      work: {
+        ...profile.work,
+        record: {
+          ...profile.work.record,
+          assessments: profile.work.record.assessments.map((a) => ({ ...a, version: 1 })),
+        },
+      },
+    }
+    const checked = checkAssessments(profile)
+    const [attempt] = attemptsOf(checked, 'ready-it-practitioner')
+    expect(attempt.status).toBe('lapsed')
+    expect(attempt.result).toBeUndefined()
+    expect(checked.work.today.log.at(-1)?.text).toContain('changed in an update')
+    expect(canStart(checked, 'ready-it-practitioner', 2).ok).toBe(true)
+  })
+})

@@ -112,7 +112,7 @@ working simulations of the professional software used in its field (see
 
 **Phase 7 is complete.**
 
-**Phase 8: "Launch Readiness and Ecosystem"** (in progress). Plan:
+**Phase 8: "Launch Readiness and Ecosystem"** (complete). Plan:
 [docs/PHASE8_PLAN.md](docs/PHASE8_PLAN.md).
 
 - [x] 8.1 Career-specific content loading
@@ -123,9 +123,56 @@ working simulations of the professional software used in its field (see
 - [x] 8.6 Security and data-integrity hardening
 - [x] 8.7 Onboarding, documentation and user experience
 - [x] 8.8 Browser compatibility and performance
-- [ ] 8.9 Final end-to-end regression
+- [x] 8.9 Final end-to-end regression
+
+**Phase 8 is complete.**
 
 ---
+
+## 2026-11-03 · Milestone 8.9: Final end-to-end regression
+
+### Found and fixed
+
+- **Assessment attempts from before 8.2.** An attempt started before the practical
+  step was added would have been marked without it. Assessment content is now
+  version 2, and an attempt still open on an older version is closed without
+  marking and without penalty, with a note asking the player to start again.
+  Finished attempts keep their results.
+- **A development-only React warning** (“synchronously unmount a root”, from the 3D
+  office's labels) was checked. It does not occur in the production build, which
+  shows no console errors and no failed requests in a whole session (a new test).
+
+### Added tests
+
+- **The whole journey in one browser test** (`tests/e2e/journey.spec.ts`): new
+  player, the start screen's explanation, choosing a career, the office, a
+  colleague, mail, levels and achievements, a case, a readiness attempt, portfolio
+  evidence and a PDF export, a backup restored on a fresh profile, a second career,
+  and a reload.
+- **A save from before Phase 8** (`persistence/phase7Save.test.ts`): a Phase 7 backup
+  (database version 4, save format 4) restores with its cases, readiness result,
+  promotions and seed. A case received before variants stays in its original wording.
+  The save keeps working in the current format.
+- **No console errors in production** (`tests/pwa/console.spec.ts`).
+
+### Final results
+
+| Check                                      | Result                                                     |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| Unit tests (`npm run check`)               | 1,915 passed; formatting, lint and types clean             |
+| Browser tests, Chromium (`test:e2e`)       | 137 passed (one passed on its automatic retry, under load) |
+| Production build: offline app (`test:pwa`) | 5 passed                                                   |
+| Firefox, WebKit, Edge (`test:browsers`)    | 8 passed, 1 skipped (offline in WebKit on Windows)         |
+| Production build                           | Succeeds; main file 294 kB (94 kB compressed)              |
+| `npm audit`                                | 0 vulnerabilities                                          |
+
+Start-up (production build, throttled “fast 3G”, median of three):
+
+| Moment                                        | Phase 7 end   | Phase 8 end                                |
+| --------------------------------------------- | ------------- | ------------------------------------------ |
+| New player: start screen ready                | 484 kB, 3.9 s | 281 kB, 2.4 s                              |
+| Returning player, first visit after an update | 754 kB, 5.6 s | 589 kB, 5.9 s (measured at 8.1)            |
+| Returning player, WorkSim already cached      | 754 kB, 5.6 s | 0 kB, 2.3 s (served by the service worker) |
 
 ## 2026-11-03 · Milestone 8.8: Browser compatibility and performance
 
