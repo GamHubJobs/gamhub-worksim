@@ -29,6 +29,7 @@ import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
 import { caseFor } from '../game/caseVariants'
 import { chooseDeskItem } from '../game/desk'
+import { HelpPanel } from '../ui/HelpPanel'
 import {
   attemptDef,
   openAttempt,
@@ -136,6 +137,7 @@ export function Desktop({
   onOpenStorage,
 }: DesktopProps) {
   const [view, setViewState] = useState<View>(() => readLastView() ?? DEFAULT_VIEW)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   const setView = useCallback((next: View) => {
     setViewState(next)
@@ -301,6 +303,13 @@ export function Desktop({
           </button>
           <button
             type="button"
+            onClick={() => setHelpOpen(true)}
+            className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+          >
+            Help
+          </button>
+          <button
+            type="button"
             onClick={onOpenStorage}
             className="relative rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
           >
@@ -314,6 +323,7 @@ export function Desktop({
           </button>
         </div>
       </header>
+      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
 
       {dayOver ? (
         <DayEnd

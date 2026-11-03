@@ -121,11 +121,62 @@ working simulations of the professional software used in its field (see
 - [x] 8.4 Accessibility validation
 - [x] 8.5 Installable progressive web app
 - [x] 8.6 Security and data-integrity hardening
-- [ ] 8.7 Onboarding, documentation and user experience
+- [x] 8.7 Onboarding, documentation and user experience
 - [ ] 8.8 Browser compatibility and performance
 - [ ] 8.9 Final end-to-end regression
 
 ---
+
+## 2026-11-03 · Milestone 8.7: Onboarding, documentation and user experience
+
+### Reviewed
+
+The first-time experience. The start screen explained choosing a career well, but not:
+
+- what WorkSim is not (a job, or a qualification);
+- that progress is kept only on this device;
+- that it is free with no account;
+- that it works offline.
+
+Inside the app, help was spread across the guides in the docs folder only.
+
+### Built
+
+- **Before you start,** a short section on the start screen, closed by default so it
+  never gets in the way: a simulation, not a job or a qualification; free with no
+  account; progress saved on this device only; backups; offline and installing.
+- **Help** in the top bar: a panel of 11 short topics:
+  - what WorkSim is and is not;
+  - the office;
+  - the apps;
+  - tasks and feedback;
+  - cases;
+  - XP, levels and promotion;
+  - the portfolio and exports;
+  - saving, backups and recovery;
+  - installing and offline use;
+  - keyboard and accessibility;
+  - troubleshooting.
+
+  It opens only when asked, takes keyboard focus, closes with Escape, and returns
+  focus.
+
+- **docs/PLAYER_HANDBOOK.md,** the starting point for players, linked first in the
+  README. It covers every topic above, links each detailed guide (cases, career,
+  portfolio, privacy and security, install and offline, accessibility, browsers), and
+  has a troubleshooting table.
+- No pop-ups, tours or new notifications were added.
+
+### Tested
+
+- Unit: the help covers every subject a new player needs (from “what it is not” to
+  “repair app files”), with unique, non-empty topics.
+- Browser:
+  - the start screen's section says WorkSim gives no qualifications and keeps
+    progress on this device only;
+  - Help is reached and used with the keyboard alone (topics, Escape, focus back);
+  - the axe audit passes with Help open;
+  - the first-day test still passes.
 
 ## 2026-11-03 · Milestone 8.6: Security and data-integrity hardening
 

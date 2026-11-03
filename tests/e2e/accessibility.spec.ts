@@ -30,6 +30,9 @@ test('the main screens pass automated accessibility checks', async ({ page }) =>
   await page.getByRole('button', { name: 'Start my first day' }).click()
   await expect(page.getByTestId('office')).toBeVisible()
   problems.push(...(await audit(page, 'office')))
+  await page.getByRole('button', { name: 'Help', exact: true }).click()
+  problems.push(...(await audit(page, 'help')))
+  await page.keyboard.press('Escape')
   await page
     .getByTestId('office-panel')
     .getByRole('button', { name: /Talk to Nina/ })

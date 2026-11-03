@@ -91,6 +91,30 @@ export function Onboarding({
           ))}
         </ul>
 
+        <details className="mt-6 rounded-lg border border-slate-200 p-3 text-sm text-slate-700">
+          <summary className="cursor-pointer font-medium text-slate-900">
+            Before you start: what WorkSim is, and where your progress is kept
+          </summary>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              WorkSim is a <strong>simulation</strong> of a real workplace. It is not a
+              job, and it does not give certificates or qualifications.
+            </li>
+            <li>
+              It is free and needs no account. Your progress is saved automatically in
+              this browser, <strong>on this device only</strong>; nothing is uploaded.
+            </li>
+            <li>
+              Download a backup now and then (from Storage &amp; backup) to keep a copy or
+              move to another computer.
+            </li>
+            <li>
+              Once opened online, WorkSim also works offline, and can be installed as an
+              app. Help is in the top bar once you start.
+            </li>
+          </ul>
+        </details>
+
         <form onSubmit={(event) => void submit(event)} className="mt-8">
           <label htmlFor="player-name" className="block font-medium text-slate-800">
             Your first name

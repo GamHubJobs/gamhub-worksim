@@ -163,3 +163,30 @@ test('the spreadsheet and slide editors with the keyboard: cells are announced, 
   await expect(page.getByLabel('Slide text')).toBeFocused()
   await page.keyboard.press('Escape')
 })
+
+test('first steps: the start screen says what WorkSim is, and Help answers questions from the keyboard', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByText('Before you start').click()
+  await expect(
+    page.getByText('it does not give certificates or qualifications'),
+  ).toBeVisible()
+  await expect(page.getByText(/on this device only/)).toBeVisible()
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await expect(page.getByTestId('office')).toBeVisible()
+
+  const help = page.getByRole('button', { name: 'Help', exact: true })
+  await tabTo(page, help)
+  await page.keyboard.press('Enter')
+  const panel = page.getByTestId('help-panel')
+  await expect(panel).toBeFocused()
+  await expect(panel).toContainText('What WorkSim is (and is not)')
+  await tabTo(page, panel.getByRole('button', { name: 'Saving, backups and recovery' }))
+  await page.keyboard.press('Enter')
+  await expect(panel).toContainText('safety copy')
+  await page.keyboard.press('Escape')
+  await expect(panel).toHaveCount(0)
+  await expect(help).toBeFocused()
+})
