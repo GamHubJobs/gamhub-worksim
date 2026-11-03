@@ -85,7 +85,7 @@ export function TerminalPanel({
         data-testid="terminal-output"
       >
         {history.length === 0 && (
-          <p className="text-slate-400">
+          <p className="text-slate-300">
             Type a command, e.g. <span className="text-slate-200">git status</span> or{' '}
             <span className="text-slate-200">npm test</span>. Type help for the list.
           </p>
@@ -103,7 +103,7 @@ export function TerminalPanel({
             ))}
           </div>
         ))}
-        {busy && <div className="text-slate-400">Running the tests…</div>}
+        {busy && <div className="text-slate-300">Running the tests…</div>}
       </div>
       <form
         className="mt-1 flex items-center gap-2 font-mono text-sm"

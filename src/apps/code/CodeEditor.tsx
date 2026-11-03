@@ -190,7 +190,7 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
             className={`rounded-t px-3 py-1 text-xs font-medium ${
               panel === id
                 ? 'bg-slate-950 text-white'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-300 hover:text-slate-200'
             }`}
           >
             {name}
@@ -228,7 +228,7 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
         className="h-56 shrink-0 overflow-y-auto bg-slate-950 p-3 font-mono text-sm text-slate-100"
       >
         {!run ? (
-          <p className="text-slate-400">
+          <p className="text-slate-300">
             {content.files.some((f) => isTestFile(f.name))
               ? 'Click Run tests to run the test files (the ones ending in .test.js).'
               : 'This project has no test files yet (files ending in .test.js).'}
@@ -264,7 +264,7 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
             </ul>
             {run.logs.length > 0 && (
               <div className="mt-3 border-t border-slate-800 pt-2">
-                <p className="text-xs text-slate-400 uppercase">console.log</p>
+                <p className="text-xs text-slate-300 uppercase">console.log</p>
                 {run.logs.map((line, i) => (
                   <div key={i} className="whitespace-pre-wrap text-slate-300">
                     {line}

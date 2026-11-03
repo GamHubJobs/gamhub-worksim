@@ -31,18 +31,101 @@ page lists what is supported and how it is tested.
   - the 3D camera jumps between places instead of gliding;
   - the people in the office stay still.
 
+- **The editors.**
+  - In Sheets, the grid is a proper grid of rows and cells, and the address and value
+    of the active cell (and its formula) are announced as you move.
+  - In Slides, Tab moves to each element on a slide and selects it. Enter edits its
+    text, the arrow keys move it, and Delete removes it.
+  - The Docs page is a named, multi-line text box.
+- **Dark panels.** Text on the dark consoles of the Code and Network tools meets the
+  contrast ratio too.
+
 ## How it is tested
 
-- `tests/e2e/accessibility.spec.ts` runs the axe WCAG 2.1 A/AA checks on every main
-  screen and on the states that follow actions (a conversation, a case result,
-  assessment feedback). The test fails on any violation.
+- `tests/e2e/accessibility.spec.ts` runs the axe WCAG 2.1 A/AA checks and fails on any
+  violation. It covers:
+  - every main screen, and the states that follow actions (a conversation, a case
+    result, assessment feedback);
+  - the Sheets, Docs and Slides editors;
+  - every profession tool: Books, Help Desk, Network, Ad Campaigns, Data Studio and
+    Code.
+
+  In the editors, axe’s experimental “label in name” rule is switched off: it flags
+  toolbar buttons whose face is a symbol (“A→Z”) and slide thumbnails. Buttons with
+  visible words were changed so their names contain those words.
+
 - `tests/e2e/keyboard.spec.ts` completes a real working session with the keyboard
-  alone: start, a conversation, the office, mail and a whole case. It also checks the
-  focus ring and reduced motion.
+  alone: start, a conversation, the office, mail and a whole case. It also checks:
+  - the focus ring and reduced motion;
+  - announcements in the Sheets grid;
+  - selecting, moving and editing slide elements with the keyboard.
 
-## Known limits
+## What has and has not been tested
 
-Automated checks find only some problems. The app has not yet been tested by people
-who use screen readers or other assistive technology every day. That is recommended
-before any public release. The spreadsheet grid and the slide editor work with the
-keyboard, but they are complex widgets and would benefit most from that testing.
+**Tested (automatically, in Chromium):**
+
+- the axe checks on every main screen and editor;
+- keyboard-only workflows;
+- the focus ring;
+- reduced motion.
+
+**Not yet tested:**
+
+- **With real assistive technology.** Nobody has yet used WorkSim with a screen
+  reader, screen magnifier, voice control or switch access. Automated checks find
+  only some problems, so this testing is needed before a public release.
+- **By disabled people.** WorkSim has not been tested by disabled people who use
+  assistive technology every day.
+
+## Screen-reader testing checklist
+
+Use this checklist when assistive-technology testing becomes possible. Record the
+browser, the screen reader and their versions, and for each item: works, works with
+difficulty (say what), or does not work.
+
+### Combinations to test
+
+| Screen reader        | Browser              | System  | Priority |
+| -------------------- | -------------------- | ------- | -------- |
+| NVDA (free)          | Firefox, then Chrome | Windows | High     |
+| JAWS                 | Chrome or Edge       | Windows | High     |
+| Narrator (built in)  | Edge                 | Windows | Medium   |
+| VoiceOver (built in) | Safari               | macOS   | Medium   |
+| Orca (free)          | Firefox              | Linux   | Low      |
+
+Also test with the browser zoomed to 200%, and with Windows High Contrast (Contrast
+themes) turned on.
+
+### Tasks
+
+1. **Start.** Find and fill the name field (the hint is read with it), choose a
+   career with the arrow keys, and start the first day.
+2. **The office.** Hear where you are and what you can do. Go to your desk using
+   the Places menu. Talk to a colleague: the conversation is read when it opens,
+   choices can be made, and Escape returns you to where you were.
+3. **Mail.** Move through the inbox, open a message, and hear its sender, subject and
+   text.
+4. **Tasks.** Open a task and read its steps and hints.
+5. **Sheets.** Move around the grid with the arrow keys: the cell address and its
+   contents are read as you move. Type a value and a formula, and hear the result.
+6. **Docs.** Write a heading and a paragraph, and use the toolbar from the keyboard.
+7. **Slides.** Tab to a text box on a slide (it is selected as it gets focus). Press
+   Enter to edit it, Escape to finish, and use the arrow keys to move it.
+8. **A profession tool,** for example Books or Data Studio: complete one action.
+9. **Cases.** Read the evidence tables, tick findings, choose an option, type a
+   figure and a reply, submit, and hear the result announced.
+10. **Readiness.** Start an assessment, open its practical file, return, and submit.
+11. **Portfolio.** Find an item, open its evidence, and download a PDF.
+12. **Saving.** Hear the save status change after typing. Open Storage & backup and
+    make a backup.
+
+### Known limits to check carefully
+
+- **The 3D office** is a picture only. Everything in it can be done from the panel
+  beside it, which is what screen-reader users should use.
+- **Charts** in Sheets and Slides have titles, but their data is not described.
+  Check whether the data table next to each chart is enough.
+- **Slide layout.** Element positions are not announced as you move them with the
+  arrow keys.
+- **Code editor.** Code is typed into a standard text area. Line numbers are not
+  announced.

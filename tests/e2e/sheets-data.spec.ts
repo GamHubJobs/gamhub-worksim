@@ -120,7 +120,9 @@ test('a chart and a table from Sheets go into a report in Docs', async ({ page }
   await picker.getByRole('button', { name: /Practice Workbook/ }).click()
   await expect(body.getByRole('img', { name: /Spending by category/ })).toBeVisible()
 
-  await toolbar(page).getByRole('button', { name: 'Insert table from Sheets' }).click()
+  await toolbar(page)
+    .getByRole('button', { name: 'Data: insert a table from Sheets' })
+    .click()
   await expect(picker.getByTestId('table-preview')).toContainText('Training')
   await picker.getByRole('button', { name: 'Insert table' }).click()
   await expect(body.locator('table')).toContainText('Travel')

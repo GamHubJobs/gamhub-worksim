@@ -3,11 +3,12 @@ import { expect, test, type Page } from '@playwright/test'
 import { openApp } from './helpers.ts'
 
 /** Runs the automated WCAG 2.1 A/AA checks on what is on screen now. */
-async function audit(page: Page, screen: string) {
+async function audit(page: Page, screen: string, skipRules: string[] = []) {
   // Wait until the app has finished loading.
   await expect(page.getByText('Opening…', { exact: true })).toHaveCount(0)
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .disableRules(skipRules)
     .analyze()
   const problems = results.violations.map(
     (v) =>
@@ -74,3 +75,62 @@ test('the main screens pass automated accessibility checks', async ({ page }) =>
   problems.push(...(await audit(page, 'sheets')))
   expect(problems.join('\n')).toBe('')
 })
+
+/**
+ * In the editors, axe's experimental “label in name” rule flags toolbar buttons
+ * whose visible face is a symbol (“.0←”, “1. ≡”, “A→Z”) and slide thumbnails
+ * (whose visible text is the slide itself). WCAG 2.5.3 does not count symbols
+ * as text labels; buttons with visible words were fixed to match their names.
+ */
+const EDITOR_SKIP = ['label-content-name-mismatch']
+
+test('the editors pass automated accessibility checks', async ({ page }) => {
+  test.setTimeout(240_000)
+  const problems: string[] = []
+  await page.goto('/')
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await openApp(page, 'Sheets')
+  await page.getByRole('button', { name: /Practice Workbook/ }).click()
+  await expect(page.getByRole('grid')).toBeVisible()
+  problems.push(...(await audit(page, 'sheets workbook', EDITOR_SKIP)))
+  await openApp(page, 'Docs')
+  await page.getByRole('button', { name: /Blank document/ }).click()
+  await expect(page.getByTestId('doc-body')).toBeVisible()
+  problems.push(...(await audit(page, 'docs document', EDITOR_SKIP)))
+  await openApp(page, 'Slides')
+  await page.getByRole('button', { name: /Monthly business review/ }).click()
+  await expect(page.getByTestId('slide-canvas')).toBeVisible()
+  problems.push(...(await audit(page, 'slides deck', EDITOR_SKIP)))
+  expect(problems.join('\n')).toBe('')
+})
+
+const TOOLS: Array<[career: RegExp, task: string, title: RegExp, shown: string]> = [
+  [/Accounting/, 'books-journals', /./, 'Books'],
+  [/IT Help Desk/, 'triage-queue', /./, 'Help Desk'],
+  [/IT Help Desk/, 'network-printing', /./, 'Network'],
+  [/Digital Marketing/, 'campaign-budget', /./, 'Ad Campaigns'],
+  [/Data Analysis/, 'studio-sql', /./, 'Data Studio'],
+  [/Software Development/, 'invoice-bug', /./, 'Code'],
+]
+
+for (const [career, task, , shown] of TOOLS) {
+  test(`the ${shown} tool passes automated accessibility checks (${task})`, async ({
+    page,
+  }) => {
+    test.setTimeout(150_000)
+    await page.goto('/')
+    await page.getByRole('radio', { name: career }).check()
+    await page.getByLabel('Your first name').fill('Alex')
+    await page.getByRole('button', { name: 'Start my first day' }).click()
+    await openApp(page, 'Tasks')
+    await page.evaluate(`window.__worksim.skipTo('${task}')`)
+    await page
+      .getByTestId('task-detail')
+      .getByRole('button', { name: 'Start task' })
+      .click()
+    await expect(page.getByTestId('task-detail')).toHaveCount(0)
+    const problems = await audit(page, shown)
+    expect(problems.join('\n')).toBe('')
+  })
+}

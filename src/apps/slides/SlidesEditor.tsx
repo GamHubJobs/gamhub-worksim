@@ -403,7 +403,7 @@ export function SlidesEditor({
               startEditing(element)
             }}
           >
-            T Text
+            T Text box
           </ToolButton>
           <MenuButton
             label="Shape"
@@ -640,7 +640,10 @@ export function SlidesEditor({
                     : 'ring-slate-200 hover:ring-slate-400'
                 }`}
               >
-                <SlideView slide={s} theme={content.theme} width={160} />
+                {/* A picture of the slide: the button is named "Slide N". */}
+                <span aria-hidden="true" className="block">
+                  <SlideView slide={s} theme={content.theme} width={160} />
+                </span>
               </button>
             </div>
           ))}
@@ -718,11 +721,19 @@ export function SlidesEditor({
                       key={element.id}
                       style={{ ...boxStyle(element), cursor: 'move' }}
                       data-testid={`element-${element.type}`}
-                      aria-label={
+                      // Keyboard users Tab to an element to select it, then press
+                      // Enter to edit its text, the arrow keys to move it, or Delete.
+                      role="button"
+                      tabIndex={0}
+                      onFocus={() => {
+                        if (!editingId) setSelectedId(element.id)
+                      }}
+                      aria-pressed={selectedId === element.id}
+                      aria-label={`${
                         element.type === 'text'
                           ? `Text: ${element.text.slice(0, 40) || 'empty'}`
                           : element.type
-                      }
+                      }. Press Enter to edit, arrow keys to move, Delete to remove.`}
                       onPointerDown={(event) => pointerStart(event, element, null)}
                       onDoubleClick={(event) => {
                         event.stopPropagation()
@@ -874,7 +885,8 @@ function ToolButton({
         pressed ? 'bg-blue-100 text-blue-900' : 'text-slate-700 hover:bg-slate-100'
       } disabled:opacity-40`}
     >
-      {children}
+      {/* An icon or symbol: the button is named by its label. */}
+      <span aria-hidden="true">{children}</span>
     </button>
   )
 }
@@ -898,7 +910,7 @@ function SmallButton({
       onClick={onClick}
       className="rounded border border-slate-200 bg-white px-1.5 py-1 text-slate-700 hover:bg-slate-100 disabled:opacity-40"
     >
-      {children}
+      <span aria-hidden="true">{children}</span>
     </button>
   )
 }

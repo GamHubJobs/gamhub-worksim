@@ -118,7 +118,7 @@ working simulations of the professional software used in its field (see
 - [x] 8.1 Career-specific content loading
 - [x] 8.2 Profession-specific readiness assessments
 - [x] 8.3 Expanded case variations and advanced cases
-- [ ] 8.4 Accessibility validation
+- [x] 8.4 Accessibility validation
 - [ ] 8.5 Installable progressive web app
 - [ ] 8.6 Security and data-integrity hardening
 - [ ] 8.7 Onboarding, documentation and user experience
@@ -126,6 +126,46 @@ working simulations of the professional software used in its field (see
 - [ ] 8.9 Final end-to-end regression
 
 ---
+
+## 2026-11-03 · Milestone 8.4: Accessibility validation
+
+### Built
+
+- **The audit reaches further.** axe now also checks:
+  - the Sheets, Docs and Slides editors with a file open;
+  - every profession tool: Books, Help Desk, Network, Ad Campaigns, Data Studio and
+    Code.
+- **What the wider audit found, and was fixed:**
+  - Grey text on the dark consoles of Code and Network was below the contrast ratio.
+    Phase 7's darker greys had made it worse on dark backgrounds; those panels now
+    use lighter text.
+  - The Sheets grid wrapped a plain table. It now has explicit row groups, rows,
+    column headers, row headers and cells.
+  - The sheet tab list contained the “add a sheet” button, which now sits outside it.
+  - Three buttons showed words that were not in their names (“Clear format”,
+    “Data”, “T Text”). Their text or names now match.
+  - The Docs page had no accessible name. It is now “Document text”, multi-line.
+  - Symbol faces of toolbar buttons and the slide pictures inside thumbnails are
+    hidden from screen readers; the buttons keep their names.
+- **Keyboard and screen readers in the editors:**
+  - Sheets announces the active cell's address, value and formula as the selection
+    moves.
+  - Slides: Tab moves to each element and selects it; Enter edits, the arrow keys
+    move, Delete removes.
+- **docs/ACCESSIBILITY.md** now has:
+  - an honest record of what has and has not been tested: no testing with real
+    assistive technology or by disabled users has taken place;
+  - a screen-reader test checklist with the combinations to use (NVDA, JAWS,
+    Narrator, VoiceOver, Orca) and twelve tasks;
+  - the known limits.
+
+### Tested
+
+- Browser: the axe audit passes on every main screen, the three editors and the six
+  profession tools.
+- Browser: keyboard-only work in Sheets (each move is announced, including formulas)
+  and Slides (Tab selects, the arrows move, Enter edits).
+- Browser: the existing Sheets, Docs, Slides and multi-app tests still pass.
 
 ## 2026-11-02 · Milestone 8.3: Expanded case variations and advanced cases
 

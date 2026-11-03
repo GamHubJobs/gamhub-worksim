@@ -215,6 +215,15 @@ export function SheetEditor({
   const selection = useMemo(() => rangeBetween(active, corner), [active, corner])
   const activeAddress = toAddress(active)
   const activeCell = sheet.cells[activeAddress]
+  // What a screen reader hears as the selection moves: the address and what is shown.
+  const activeShown = displayValue(
+    calculator.getValue(sheet.id, activeAddress),
+    activeCell?.input ?? '',
+    activeCell?.format,
+  )
+  const cellAnnouncement = `${activeAddress}: ${activeShown.text || 'empty'}${
+    activeCell?.input?.startsWith('=') ? `, formula ${activeCell.input}` : ''
+  }`
   const activeValue = calculator.getValue(sheet.id, activeAddress)
   const editingHere = editing?.sheetId === sheet.id ? editing : null
   const activeValidation = validationFor(sheet, activeAddress)
@@ -1042,6 +1051,9 @@ export function SheetEditor({
           {inputProblem} Press Escape to cancel.
         </div>
       )}
+      <p className="sr-only" aria-live="polite" data-testid="cell-announcer">
+        {cellAnnouncement}
+      </p>
       <div className="flex min-h-0 flex-1">
         <div
           ref={gridRef}
@@ -1057,8 +1069,10 @@ export function SheetEditor({
           data-testid="sheet-grid"
         >
           <div className="relative" style={{ width: totalWidth }}>
+            {/* Laid out as a table, read as the grid of rows and cells around it. */}
             <table
               ref={tableRef}
+              role="presentation"
               className="border-separate border-spacing-0 text-sm select-none"
               style={{ tableLayout: 'fixed', width: totalWidth }}
               onMouseDown={onGridMouseDown}
@@ -1071,12 +1085,17 @@ export function SheetEditor({
                   <col key={column} style={{ width: widths[column] }} />
                 ))}
               </colgroup>
-              <thead>
-                <tr>
-                  <th className="sticky top-0 left-0 z-20 h-7 border-r border-b border-slate-300 bg-slate-100" />
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th
+                    role="columnheader"
+                    aria-label="Row numbers"
+                    className="sticky top-0 left-0 z-20 h-7 border-r border-b border-slate-300 bg-slate-100"
+                  />
                   {columns.map((column) => (
                     <th
                       key={column}
+                      role="columnheader"
                       className={`sticky top-0 z-10 h-7 border-r border-b border-slate-300 font-medium ${
                         column >= selection.left && column <= selection.right
                           ? 'bg-blue-100 text-blue-900'
@@ -1098,7 +1117,7 @@ export function SheetEditor({
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {rows.map((row) => (
                   <Row
                     key={row}
@@ -1315,8 +1334,9 @@ const Row = memo(function Row({
   editor,
 }: RowProps) {
   return (
-    <tr>
+    <tr role="row">
       <th
+        role="rowheader"
         className={`sticky left-0 z-10 h-7 border-r border-b border-slate-300 font-medium ${
           selected ? 'bg-blue-100 text-blue-900' : 'bg-slate-100 text-slate-600'
         }`}

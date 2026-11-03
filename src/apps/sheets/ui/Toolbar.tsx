@@ -68,7 +68,8 @@ export function ToolButton({
         pressed ? 'bg-blue-100 text-blue-900' : 'text-slate-700 hover:bg-slate-100'
       }`}
     >
-      {children}
+      {/* An icon or symbol: the button is named by its label. */}
+      <span aria-hidden="true">{children}</span>
     </button>
   )
 }
@@ -263,7 +264,7 @@ export function Toolbar({
         disabled={disabled}
         onClick={() => onFormat({ type: 'clear' })}
       >
-        <span className="text-xs">Clear format</span>
+        <span className="text-xs">Clear formatting</span>
       </ToolButton>
       {dataTools && (
         <>

@@ -55,6 +55,10 @@ export function DocEditor({
     content: content.body,
     editable: !readOnly,
     immediatelyRender: true,
+    // The page is a text box screen readers name and announce as multi-line.
+    editorProps: {
+      attributes: { 'aria-label': 'Document text', 'aria-multiline': 'true' },
+    },
     onUpdate: ({ editor }) => {
       onChangeRef.current?.({
         ...latest.current,
@@ -184,7 +188,8 @@ function ToolbarButton({
         active ? 'bg-blue-100 text-blue-900' : 'text-slate-700 hover:bg-slate-100'
       } disabled:opacity-40`}
     >
-      {children}
+      {/* An icon or symbol: the button is named by its label. */}
+      <span aria-hidden="true">{children}</span>
     </button>
   )
 }
@@ -420,7 +425,7 @@ function Toolbar({
             Chart
           </ToolbarButton>
           <ToolbarButton
-            label="Insert table from Sheets"
+            label="Data: insert a table from Sheets"
             onClick={() => onPickFromSheets('table')}
           >
             Data

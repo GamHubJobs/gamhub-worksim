@@ -183,7 +183,7 @@ function Console({
         data-testid="console-output"
       >
         {state.console.length === 0 && (
-          <p className="text-slate-400">
+          <p className="text-slate-300">
             Type a command, e.g. <span className="text-slate-200">ping print-01</span>, or{' '}
             <span className="text-slate-200">help</span>.
           </p>

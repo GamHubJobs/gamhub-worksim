@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import { openApp } from './helpers.ts'
 
 /** Presses Tab until the control has focus, as a keyboard user would. */
 async function tabTo(page: Page, target: Locator, limit = 80) {
@@ -118,4 +119,47 @@ test('players who ask for less motion get no animations', async ({ page }) => {
   await expect(page.getByTestId('office-panel').getByRole('heading')).toHaveText(
     'Your desk',
   )
+})
+
+test('the spreadsheet and slide editors with the keyboard: cells are announced, slide elements can be selected and moved', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  await page.goto('/')
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+
+  // Sheets: moving with the arrow keys announces each cell.
+  await openApp(page, 'Sheets')
+  await page.getByRole('button', { name: /Practice Workbook/ }).click()
+  const grid = page.getByRole('grid')
+  await grid.focus()
+  await page.keyboard.type('1250')
+  await page.keyboard.press('Enter')
+  await page.keyboard.type('=A1*2')
+  await page.keyboard.press('Enter')
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByTestId('cell-announcer')).toHaveText('A2: 2500, formula =A1*2')
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByTestId('cell-announcer')).toHaveText('B2: empty')
+
+  // Slides: Tab selects an element; the arrow keys move it; Enter edits it.
+  await openApp(page, 'Slides')
+  await page.getByRole('button', { name: /Monthly business review/ }).click()
+  const canvas = page.getByTestId('slide-canvas')
+  const title = canvas.getByRole('button', { name: /^Text: \[Month\] business review/ })
+  await tabTo(page, title)
+  await expect(title).toHaveAttribute('aria-pressed', 'true')
+  const left = await title.evaluate(
+    (el) => (el as unknown as { style: { left: string } }).style.left,
+  )
+  await page.keyboard.press('Shift+ArrowRight')
+  await expect
+    .poll(() =>
+      title.evaluate((el) => (el as unknown as { style: { left: string } }).style.left),
+    )
+    .not.toBe(left)
+  await page.keyboard.press('Enter')
+  await expect(page.getByLabel('Slide text')).toBeFocused()
+  await page.keyboard.press('Escape')
 })
