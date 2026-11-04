@@ -106,6 +106,9 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/apps/tools/`                     | Shared tool screens: start page, tool window, guide               |
 | `src/desktop/`                        | Onboarding, the office/computer switch, the top bar in the office |
 | `src/desktop/windows/`                | The Windows-style desktop: windows, taskbar, Start, icons, menu   |
+| `src/ai/`                             | WorkSim AI: engines, context, settings, limits, built-in guide    |
+| `src/apps/ai/`                        | The WorkSim AI app, the toolbar menu, the context hub             |
+| `scripts/ai-bridge/`                  | The AI bridge: a local server holding cloud API keys              |
 | `src/office/`                         | The 3D office (loaded on demand) and its 2D fallback floor plan   |
 | `src/workday/`                        | Office clock, "Your day" panel, end-of-day screen                 |
 | `src/app/`                            | Start-up, tab hand-over, shared services, the career hook         |
@@ -130,6 +133,32 @@ only a shell: the apps inside the windows are the same components as before.
 - **Persistence.** The window layout and desktop settings (wallpaper, icon size, icon
   places) are kept per save in LocalStorage, validated on reading and ignored if
   damaged. They are preferences, not game data, and are not in backups.
+
+### WorkSim AI
+
+See [AI_PLAN.md](AI_PLAN.md) for the plan and principles.
+
+- **One service, three engines** (`src/ai/service.ts`): the built-in guide (default;
+  deterministic, offline, labelled as not an AI model), a model on this computer
+  (OpenAI-compatible API, e.g. Ollama), and the AI bridge for Anthropic, OpenAI and
+  Google. Consent, a daily limit, a time limit and an explained fallback to the
+  built-in guide. Every answer carries its source.
+- **No keys in the app.** Cloud keys live only in the bridge (`npm run ai-bridge`,
+  `.env.local`), which listens on 127.0.0.1, answers only pages served from this
+  computer, caps request size and requests per day, and never logs content. The app
+  only ever calls addresses on this computer.
+- **Context, minimal and visible.** Apps offer context through the hub
+  (`useAiContext`), read only when WorkSim AI needs it; `workContext.ts` adds the open
+  email, task or case and the player's role. `context.ts` caps each item and the
+  total, and replaces the player's name. Structured data for the built-in guide never
+  leaves the device. The player can untick items and preview exactly what is sent.
+- **Proposals**: formulas and rewritten text are shown for review and applied by the
+  app (`useAiApply`) only when the player presses Apply.
+- **AI competencies** (`src/game/aiUse.ts`): evidence in `work.record.ai` (additive
+  field with defaults; no save format change): prompt scores of the player's own
+  questions, checked model answers, heeded privacy warnings, reviewed proposals. The
+  levels come from ratios, never from volume. The AI cases (`content/cases/ai`) are
+  ordinary cases for every career, graded by the case engine.
 
 ### How a submission is graded
 

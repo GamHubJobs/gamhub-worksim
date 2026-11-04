@@ -127,7 +127,7 @@ working simulations of the professional software used in its field (see
 
 **Phase 8 is complete.**
 
-**WorkSim AI** (in progress). Plan: [docs/AI_PLAN.md](docs/AI_PLAN.md).
+**WorkSim AI** (complete). Plan: [docs/AI_PLAN.md](docs/AI_PLAN.md).
 
 - [x] AI.1 Architecture audit
 - [x] AI.2 AI infrastructure (engines, context, settings, limits, the bridge)
@@ -135,13 +135,47 @@ working simulations of the professional software used in its field (see
 - [x] AI.4 AI inside Mail, Sheets, Docs, Slides, Tasks, Code and Help Desk
 - [x] AI.5 Workplace AI: colleagues and feedback
 - [x] AI.6 AI competency and career readiness
-- [ ] AI.7 Quality assurance
+- [x] AI.7 Quality assurance
 
 **Workplace realism upgrade** (complete):
 
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · AI.7: quality assurance
+
+All checks were run on the final code of the milestone:
+
+- **Regression**: 2,030 unit tests; 152 Chromium browser tests, all passing first
+  time (26 minutes); 5 production-build tests, including a whole session with no
+  console errors and no failed requests, offline start, updates and repair; Firefox,
+  WebKit and Edge: 8 passed, 1 skipped (as before).
+- **Saves**: older saves load with an empty AI record (unit test); the window and
+  settings data stay in LocalStorage, outside game data.
+- **AI engines**: the built-in guide, the local engine and the bridge are tested with
+  simulated providers (unit and browser tests); no test calls a real provider. The
+  bridge was also started for real: it answers WorkSim's origin, refuses others (403),
+  and explains that no key is set up, without logging what was asked.
+- **Offline**: the production-build offline tests pass; WorkSim AI's built-in guide
+  works offline, and a model that cannot be reached falls back to it with the reason.
+- **Performance**: start screen 281 kB; JavaScript memory 5 MB at the start screen and
+  17 MB in the office (unchanged); the WorkSim AI app loads only when opened.
+- **Security**: `npm audit` reports 0 vulnerabilities; no new dependencies were added
+  in this milestone.
+- **Accessibility**: the automated WCAG checks pass on WorkSim AI and its settings.
+
+### Known limitations
+
+- The built-in guide answers specific requests only; open questions need a model.
+  It never pretends otherwise.
+- Prompt scoring and sensitive-data detection are rule-based: they teach the habits
+  and can miss unusual cases.
+- Conversations are not saved (privacy by default); AI competencies are.
+- Real cloud providers have not been called in testing (no paid keys were used); the
+  request formats follow each provider's documented API.
 
 ---
 
