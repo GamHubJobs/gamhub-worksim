@@ -128,7 +128,7 @@ export function DayEnd({
             onClick={onNextDay}
             className="rounded-lg bg-blue-700 px-5 py-2.5 font-medium text-white hover:bg-blue-800"
           >
-            Start {weekdayName(next)} morning
+            Go home
           </button>
         </div>
       </div>

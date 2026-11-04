@@ -53,8 +53,10 @@ import {
 } from '../game/cases'
 import { modelAnswers } from '../game/caseModel'
 import { getCase } from '../content/cases'
-import { passTime, startNextDay } from '../game/workday'
+import { passTime } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
+import { HomeView } from '../home/HomeView'
+import { doHomeAction, goHome, goToBed, leaveForWork, lifePhase } from '../game/life'
 import { Icon, type IconName } from '../ui/Icon'
 import { DayEnd } from '../workday/DayEnd'
 import { useWorkClock } from '../workday/useWorkClock'
@@ -475,7 +477,9 @@ export function Desktop({
         <span className="text-sm text-slate-500">{COMPANY.name}</span>
       </div>
       <div className="flex items-center gap-4">
-        <WorkClock profile={profile} running={atComputer} onTimePassed={onTimePassed} />
+        {!dayOver && (
+          <WorkClock profile={profile} running={atComputer} onTimePassed={onTimePassed} />
+        )}
         <button
           type="button"
           onClick={() => setView({ app: 'career' })}
@@ -529,11 +533,16 @@ export function Desktop({
       <div className="flex h-screen flex-col bg-slate-100" data-testid="desktop">
         {header}
         {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
-        {dayOver ? (
-          <DayEnd
+        {dayOver && lifePhase(profile) === 'work' ? (
+          // The day's summary, then home.
+          <DayEnd profile={profile} onNextDay={() => void act(goHome)} />
+        ) : dayOver ? (
+          <HomeView
             profile={profile}
-            onNextDay={() => {
-              void act(startNextDay)
+            onAction={(id) => void act((p) => doHomeAction(p, id))}
+            onBed={() => void act(goToBed)}
+            onLeave={(commute) => {
+              void act((p) => leaveForWork(p, commute))
               setView({ app: 'office', spot: 'reception' })
             }}
           />

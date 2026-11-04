@@ -1,0 +1,316 @@
+/**
+ * Life outside work, as pure functions like the rest of the game rules: going
+ * home after the working day, what the player does at home (and what it costs),
+ * sleep, money, and the journey to work, with the consequences of all of it
+ * showing up the next working day.
+ *
+ * The working day itself is unchanged: life starts when it ends (`work.dayOver`)
+ * and hands back to it when the player arrives at the office (`startNextDay`).
+ */
+import {
+  ALARM,
+  COMMUTES,
+  HOME_ACTIONS,
+  LATEST_BEDTIME,
+  NEED_DECAY,
+  SLEEP_NEEDED,
+  WEEKLY_PAY,
+  WEEKLY_RENT,
+  formatMoney,
+  type CommuteId,
+  type HomeAction,
+  type NeedId,
+} from '../content/life'
+import { HOURS } from '../content/workday'
+import type { Life, WorkState } from '../persistence/schemas'
+import type { ProfileData } from './career'
+import { levelNumber } from './cases'
+import { formatTime, nextWorkday, weekdayIndex, weekNumber, weekdayName } from './clock'
+import { changeReputation } from './relationships'
+import { log, startNextDay } from './workday'
+
+const clamp = (n: number, low = 0, high = 100) => Math.min(high, Math.max(low, n))
+
+function withLife(profile: ProfileData, life: Life, work = profile.work): ProfileData {
+  return { ...profile, work: { ...work, life } }
+}
+
+function decayed(needs: Life['needs'], minutes: number): Life['needs'] {
+  const hours = minutes / 60
+  const out = { ...needs }
+  for (const id of Object.keys(NEED_DECAY) as NeedId[])
+    out[id] = clamp(Math.round(needs[id] - NEED_DECAY[id] * hours))
+  return out
+}
+
+function withWellbeing(work: WorkState, energy = 0, stress = 0): WorkState {
+  if (!energy && !stress) return work
+  return {
+    ...work,
+    wellbeing: {
+      ...work.wellbeing,
+      energy: clamp(work.wellbeing.energy + energy),
+      stress: clamp(work.wellbeing.stress + stress),
+    },
+  }
+}
+
+function spend(life: Life, day: number, amount: number, text: string): Life {
+  if (!amount) return life
+  return {
+    ...life,
+    money: life.money - amount,
+    ledger: [...life.ledger, { day, text, amount: -amount }].slice(-60),
+  }
+}
+
+function earn(life: Life, day: number, amount: number, text: string): Life {
+  return {
+    ...life,
+    money: life.money + amount,
+    ledger: [...life.ledger, { day, text, amount }].slice(-60),
+  }
+}
+
+const note = (life: Life, text: string): Life => ({
+  ...life,
+  log: [...life.log, `${formatTime(life.minute)}  ${text}`].slice(-30),
+})
+
+export const commuteOf = (id: CommuteId) => COMMUTES.find((c) => c.id === id)!
+
+/** Where the player's day is now: at the office, or at home in the evening or morning. */
+export function lifePhase(profile: ProfileData): Life['phase'] {
+  return profile.work.dayOver ? profile.work.life.phase : 'work'
+}
+
+// ---------------------------------------------------------------------------
+// After work
+// ---------------------------------------------------------------------------
+
+/**
+ * Travels home at the end of the working day: the day's effect on needs, the
+ * fare home, and pay on Fridays.
+ */
+export function goHome(profile: ProfileData): ProfileData {
+  const { work } = profile
+  if (!work.dayOver || work.life.phase !== 'work') return profile
+  const commute = commuteOf(work.life.commute)
+  const worked = Math.max(0, work.minute - HOURS.arrival)
+  const lunch = work.history.at(-1)?.lunch ?? work.today.lunch
+  let needs = decayed(work.life.needs, worked)
+  // Lunch at work feeds you; the working day is company, if not much fun.
+  needs = {
+    ...needs,
+    hunger: clamp(needs.hunger + (lunch ? 40 : 0)),
+    social: clamp(work.life.needs.social - (worked / 60) * 0.5),
+  }
+  let life: Life = {
+    ...work.life,
+    phase: 'evening',
+    minute: Math.round(work.minute + commute.minutes),
+    needs,
+    log: [],
+  }
+  life = spend(life, work.day, commute.cost, `${commute.name} home`)
+  life = note(life, `Home from work (${commute.name.toLowerCase()})`)
+  // Pay day: Friday, once a week.
+  const week = weekNumber(work.day)
+  if (weekdayIndex(work.day) === 4 && life.paidWeek < week) {
+    const level = Math.min(WEEKLY_PAY.length, levelNumber(profile)) - 1
+    life = earn(life, work.day, WEEKLY_PAY[level], `Pay for week ${week}`)
+    life = { ...life, paidWeek: week }
+    life = note(life, `Paid ${formatMoney(WEEKLY_PAY[level])} for the week`)
+  }
+  return withLife(profile, life)
+}
+
+// ---------------------------------------------------------------------------
+// At home
+// ---------------------------------------------------------------------------
+
+export function getHomeAction(id: string): HomeAction | undefined {
+  return HOME_ACTIONS.find((a) => a.id === id)
+}
+
+/** Whether an action can be done now, and if not, why (shown to the player). */
+export function canDo(profile: ProfileData, action: HomeAction): string | null {
+  const life = profile.work.life
+  const phase = lifePhase(profile)
+  if (phase === 'work') return 'You are at work.'
+  if (!action.phases.includes(phase))
+    return phase === 'morning'
+      ? 'Not now: it is the morning.'
+      : 'Not now: it is the evening.'
+  if (action.until !== undefined && life.minute + action.minutes > action.until)
+    return `Too late for that (until ${formatTime(action.until)}).`
+  if (phase === 'evening' && life.minute + action.minutes > LATEST_BEDTIME)
+    return 'It is very late: time for bed.'
+  if (action.cost && life.money < action.cost)
+    return `You cannot afford it (${formatMoney(action.cost)}).`
+  if (action.food && action.food > 0 && life.food < action.food)
+    return 'There is no food in the fridge: order groceries or a takeaway.'
+  if (action.marks && life.ready[action.marks] && phase === 'morning')
+    return 'Already done this morning.'
+  return null
+}
+
+export function doHomeAction(profile: ProfileData, id: string): ProfileData {
+  const action = getHomeAction(id)
+  if (!action || canDo(profile, action)) return profile
+  const work = profile.work
+  let life = work.life
+  const needs = decayed(life.needs, action.minutes)
+  for (const [need, change] of Object.entries(action.needs ?? {}) as Array<
+    [NeedId, number]
+  >)
+    needs[need] = clamp(needs[need] + change)
+  life = {
+    ...life,
+    minute: life.minute + action.minutes,
+    needs,
+    food: Math.max(0, life.food - (action.food ?? 0)),
+    ready: action.marks ? { ...life.ready, [action.marks]: true } : life.ready,
+  }
+  life = spend(life, work.day, action.cost ?? 0, action.label)
+  life = note(life, action.done)
+  // An hour at home costs a little energy, as a day does.
+  const energy = (action.energy ?? 0) - (action.minutes / 60) * 2
+  return withLife(
+    profile,
+    life,
+    withWellbeing(work, Math.round(energy), action.stress ?? 0),
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Night and morning
+// ---------------------------------------------------------------------------
+
+/** Hours of sleep from a bedtime (home-clock minutes) to the alarm. */
+export function sleepHours(bedtime: number): number {
+  return (24 * 60 + ALARM - bedtime) / 60
+}
+
+/** Goes to bed: the night passes, the alarm rings, and rent is due on Mondays. */
+export function goToBed(profile: ProfileData): ProfileData {
+  if (lifePhase(profile) !== 'evening') return profile
+  const work = profile.work
+  const next = nextWorkday(work.day)
+  const weekend = next - work.day > 1
+  let life: Life = note(work.life, 'Went to bed')
+  const bedtime = life.minute
+  // The night (and a weekend, if there is one) changes needs.
+  let needs = decayed(life.needs, 8 * 60)
+  needs = { ...needs, hunger: clamp(needs.hunger - 10) }
+  if (weekend)
+    needs = {
+      hunger: 70,
+      hygiene: 80,
+      social: clamp(needs.social + 40),
+      fun: clamp(needs.fun + 45),
+    }
+  life = {
+    ...life,
+    phase: 'morning',
+    minute: ALARM,
+    bedtime,
+    needs,
+    ready: { ate: false, showered: false, dressed: false },
+    log: [],
+  }
+  life = note(
+    life,
+    weekend
+      ? `${weekdayName(next)} morning after the weekend`
+      : `Woke up after ${sleepHours(bedtime).toFixed(1)} hours’ sleep`,
+  )
+  if (weekdayIndex(next) === 0 && life.rentWeek < weekNumber(next)) {
+    life = spend(life, next, WEEKLY_RENT, `Rent for week ${weekNumber(next)}`)
+    life = { ...life, rentWeek: weekNumber(next) }
+    life = note(life, `Paid ${formatMoney(WEEKLY_RENT)} rent`)
+  }
+  return withLife(profile, life)
+}
+
+export interface Arrival {
+  minute: number
+  late: number
+}
+
+/** When the player would arrive at the office, leaving now with this commute. */
+export function arrivalFor(profile: ProfileData, commute: CommuteId): Arrival {
+  const minute = profile.work.life.minute + commuteOf(commute).minutes
+  return { minute, late: Math.max(0, minute - HOURS.start) }
+}
+
+/**
+ * Leaves for work: the next working day starts when the player arrives, and
+ * how they spent the evening and morning shows in how it begins.
+ */
+export function leaveForWork(profile: ProfileData, commuteId: CommuteId): ProfileData {
+  if (lifePhase(profile) !== 'morning') return profile
+  const commute = commuteOf(commuteId)
+  if (profile.work.life.money < commute.cost) return profile
+  const { minute, late } = arrivalFor(profile, commuteId)
+  const before = profile.work.life
+  const started = startNextDay(profile)
+  let work = started.work
+  let life: Life = { ...before, phase: 'work', commute: commuteId }
+  life = spend(life, work.day, commute.cost, `${commute.name} to work`)
+
+  // The time they walk in.
+  work = { ...work, minute: Math.max(HOURS.arrival, minute) }
+  if (late > 0) {
+    work = changeReputation(work, late > 15 ? -2 : -1)
+    work = log(work, `Arrived ${late} minutes late`, 'bad')
+  }
+
+  // How rested and ready they are.
+  let energy = commute.energy
+  let stress = 0
+  const sleep = before.bedtime === null ? SLEEP_NEEDED : sleepHours(before.bedtime)
+  const weekend = work.day - profile.work.day > 1
+  if (!weekend && sleep < SLEEP_NEEDED) {
+    energy -= Math.round((SLEEP_NEEDED - sleep) * 7)
+    work = log(work, `Only ${sleep.toFixed(1)} hours’ sleep last night`, 'bad')
+  }
+  if (!before.ready.ate || before.needs.hunger < 30) {
+    energy -= 12
+    stress += 4
+    work = log(work, 'Started the day hungry', 'bad')
+  }
+  if (!before.ready.showered && before.needs.hygiene < 50) {
+    work = changeReputation(work, -1)
+    work = log(work, 'Came in without a shower', 'bad')
+  }
+  if (!before.ready.dressed) {
+    work = changeReputation(work, -2)
+    work = log(work, 'Came to work in yesterday’s clothes', 'bad')
+  }
+  if (before.needs.social < 25 && before.needs.fun < 25) {
+    work = {
+      ...work,
+      wellbeing: { ...work.wellbeing, engagement: clamp(work.wellbeing.engagement - 10) },
+    }
+    work = log(work, 'Feeling flat: you need time for yourself and your friends', 'bad')
+  }
+  if (life.money < 0) {
+    stress += 8
+    work = log(work, 'Worried about money: your account is overdrawn', 'bad')
+  }
+  work = withWellbeing(work, energy, stress)
+  return { ...started, work: { ...work, life } }
+}
+
+/** What the player should know about their needs right now. */
+export function needWarnings(life: Life): string[] {
+  const warnings: string[] = []
+  if (life.needs.hunger < 30) warnings.push('You are hungry.')
+  if (life.needs.hygiene < 40) warnings.push('You need a shower.')
+  if (life.needs.social < 30) warnings.push('You miss your friends.')
+  if (life.needs.fun < 30) warnings.push('You need some fun.')
+  if (life.money < 0) warnings.push('Your account is overdrawn.')
+  else if (life.food === 0) warnings.push('The fridge is empty.')
+  return warnings
+}

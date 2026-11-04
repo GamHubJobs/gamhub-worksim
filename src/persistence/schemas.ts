@@ -788,6 +788,59 @@ export const CareerRecordSchema = z.object({
     .prefault({}),
 })
 
+/** Needs outside work (0–100, high is good): see content/life.ts. */
+export const NeedsSchema = z.object({
+  hunger: PercentSchema.default(80),
+  hygiene: PercentSchema.default(85),
+  social: PercentSchema.default(70),
+  fun: PercentSchema.default(70),
+})
+
+/**
+ * Life outside work (added without a format change: older saves start it on
+ * their next evening). While at work it rests; after work the evening and the
+ * morning run on the home clock.
+ */
+export const LifeSchema = z.object({
+  /** Where the player's day is: at work, at home in the evening, or the morning. */
+  phase: z.enum(['work', 'evening', 'morning']).default('work'),
+  /** The home clock, in minutes since midnight (past 24:00 late at night). */
+  minute: z.number().int().nonnegative().default(0),
+  needs: NeedsSchema.prefault({}),
+  /** Money, in pence; can go below zero. */
+  money: z.number().int().default(30000),
+  /** Meals in the fridge. */
+  food: z.number().int().nonnegative().default(4),
+  /** This morning's routine. */
+  ready: z
+    .object({
+      ate: z.boolean().default(false),
+      showered: z.boolean().default(false),
+      dressed: z.boolean().default(false),
+    })
+    .prefault({}),
+  /** When the player went to bed last night (home-clock minutes), if they did. */
+  bedtime: z.number().int().nonnegative().nullable().default(null),
+  /** The last way they travelled to work. */
+  commute: z.enum(['walk', 'bus', 'taxi']).default('bus'),
+  /** Money in and out, newest last (the last 60). */
+  ledger: z
+    .array(
+      z.object({
+        day: z.number().int().min(1),
+        text: z.string(),
+        amount: z.number().int(),
+      }),
+    )
+    .max(60)
+    .default([]),
+  /** Week numbers already paid and charged rent (so nothing happens twice). */
+  paidWeek: z.number().int().nonnegative().default(0),
+  rentWeek: z.number().int().nonnegative().default(0),
+  /** What happened at home this evening and morning, for the panel. */
+  log: z.array(z.string()).max(30).default([]),
+})
+
 export const WorkStateSchema = z.object({
   day: z.number().int().min(1),
   minute: OfficeMinuteSchema,
@@ -821,6 +874,8 @@ export const WorkStateSchema = z.object({
   }),
   /** The career record (added in profile format 4). */
   record: CareerRecordSchema.prefault({}),
+  /** Life outside work (see LifeSchema). */
+  life: LifeSchema.prefault({}),
 })
 
 /** Current format of player profiles; raise it (with an upgrade) when the shape changes. */
@@ -969,6 +1024,7 @@ export type ConditionalFormat = z.infer<typeof ConditionalFormatSchema>
 export type DataValidation = z.infer<typeof DataValidationSchema>
 export type SheetFilter = z.infer<typeof SheetFilterSchema>
 export type Sheet = z.infer<typeof SheetSchema>
+export type Life = z.infer<typeof LifeSchema>
 export type SheetContent = z.infer<typeof SheetContentSchema>
 export type SheetDocument = z.infer<typeof SheetDocumentSchema>
 export type ChartSpec = z.infer<typeof ChartSpecSchema>

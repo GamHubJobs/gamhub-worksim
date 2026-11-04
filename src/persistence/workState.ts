@@ -2,7 +2,13 @@
  * The working-life state a career starts with. Kept here (not in the game
  * rules) because upgrading older saves needs it too.
  */
-import { CareerRecordSchema, type Today, type Wellbeing, type WorkState } from './schemas'
+import {
+  CareerRecordSchema,
+  LifeSchema,
+  type Today,
+  type Wellbeing,
+  type WorkState,
+} from './schemas'
 import { STARTING_INDICATORS } from '../content/organisation'
 
 /** 8:50 am: new days start a few minutes before work. */
@@ -51,6 +57,7 @@ export function startingWorkState(seed = 0): WorkState {
       seed,
       ai: CareerRecordSchema.shape.ai.parse(undefined),
     },
+    life: LifeSchema.parse({}),
   }
 }
 

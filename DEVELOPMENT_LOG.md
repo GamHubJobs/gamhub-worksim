@@ -127,6 +127,16 @@ working simulations of the professional software used in its field (see
 
 **Phase 8 is complete.**
 
+**WorkSim Life** (in progress). Plan: [docs/LIFE_PLAN.md](docs/LIFE_PLAN.md).
+
+- [x] L1 Needs, home routines, sleep, the commute, money
+- [ ] L2 The home: a 3D flat, furniture, upgrades
+- [ ] L3 Social life: friends, a phone, invitations
+- [ ] L4 The city: a walkable district, third-person, enterable places
+- [ ] L5 Getting around: walking, bus, bike, car
+- [ ] L6 Career life: applications, salary negotiation, a side business
+- [ ] L7 AI in daily life
+
 **WorkSim AI** (complete). Plan: [docs/AI_PLAN.md](docs/AI_PLAN.md).
 
 - [x] AI.1 Architecture audit
@@ -142,6 +152,51 @@ working simulations of the professional software used in its field (see
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · L1: needs, home routines, sleep, the commute and money
+
+The first step from a working day to a whole life. The office day is unchanged: life
+starts when it ends and hands back when the player arrives at work.
+
+### Built
+
+- **Life data** in the working state (`work.life`, additive with defaults: saves from
+  before simply start it on their next evening; tested): the phase (work, evening,
+  morning), a home clock, needs, money, meals in the fridge, the morning routine,
+  bedtime, the last commute, a statement of the last 60 payments, and the evening's
+  log.
+- **Rules** (`src/game/life.ts`, content in `src/content/life.ts`):
+  - _Going home_: the working day lowers needs (lunch at work feeds you), the fare is
+    paid, and on Fridays the week's pay arrives (by career level, once a week).
+  - _Home actions_: eleven, each in a room, taking time, perhaps costing money or
+    food, changing needs, energy and stress, with clear reasons when they cannot be
+    done (the wrong time of day, too late, cannot afford it, an empty fridge).
+  - _Sleep_: the alarm rings at 7:00; hours of sleep come from the bedtime. A weekend
+    restores social and fun. Rent is taken on Monday mornings, once a week.
+  - _Leaving for work_: walk, bus or taxi, each with a time, a cost and the arrival
+    time shown; the next working day starts when the player walks in. Late arrival
+    costs reputation; too little sleep, no breakfast, no shower, yesterday's clothes,
+    neglected friends and fun, or an overdrawn account each show at work (energy,
+    stress, engagement, reputation) and in the day log.
+- **Home** (`src/home/HomeView.tsx`): the evening and the morning in the flat, room by
+  room, with the needs, money, fridge, statement and the evening's log. The end-of-day
+  summary now leads home.
+- Help and handbook: _Life outside work_.
+
+### Tests
+
+- 8 new unit tests (`src/game/life.test.ts`): older saves, going home, Friday pay
+  (once), actions and their limits, a good evening and morning (no problems at work), a
+  late night and a rushed morning (late, short of sleep, hungry, yesterday's clothes),
+  and Monday rent (once).
+- Results: 2,038 unit tests; 153 Chromium browser tests, all passing first time; 5
+  production-build tests; Firefox, WebKit and Edge 8 passed, 1 skipped. Start screen
+  281 kB.
+- New `life.spec.ts`: Friday pay, an evening out, an accessibility check of the home
+  screen, home kept after a reload, Monday rent and a rushed morning showing at work.
+  The working-day test now goes home, cooks, sleeps, gets ready and takes the bus.
 
 ---
 

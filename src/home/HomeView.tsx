@@ -1,0 +1,304 @@
+/**
+ * Home: the evening after work and the morning before it. The player moves
+ * between the rooms of their flat and chooses what to do; each choice takes
+ * time and may cost money, and how they look after themselves shows at work
+ * the next day.
+ */
+import { useState } from 'react'
+import {
+  COMMUTES,
+  HOME_ACTIONS,
+  NEEDS,
+  ROOMS,
+  formatMoney,
+  type CommuteId,
+  type RoomId,
+} from '../content/life'
+import { HOURS } from '../content/workday'
+import { formatTime, nextWorkday, weekdayName } from '../game/clock'
+import { arrivalFor, canDo, lifePhase, needWarnings, sleepHours } from '../game/life'
+import type { Profile } from '../persistence/schemas'
+
+export function HomeView({
+  profile,
+  onAction,
+  onBed,
+  onLeave,
+}: {
+  profile: Profile
+  onAction: (id: string) => void
+  onBed: () => void
+  onLeave: (commute: CommuteId) => void
+}) {
+  const life = profile.work.life
+  const phase = lifePhase(profile)
+  const [room, setRoom] = useState<RoomId>(phase === 'morning' ? 'bedroom' : 'living')
+  const current = ROOMS.find((r) => r.id === room)!
+  const actions = HOME_ACTIONS.filter(
+    (a) => a.room === room && a.phases.includes(phase === 'work' ? 'evening' : phase),
+  )
+  const day = phase === 'morning' ? nextWorkday(profile.work.day) : profile.work.day
+  const warnings = needWarnings(life)
+
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f1ec]" data-testid="home">
+      <div className="mx-auto grid max-w-5xl gap-5 p-5 lg:grid-cols-[1fr_20rem]">
+        <section aria-label="Your flat" className="space-y-4">
+          <header className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <p className="text-xs font-medium tracking-wide text-amber-800 uppercase">
+              {phase === 'morning' ? 'Morning' : 'Evening'} at home
+            </p>
+            <h1 className="text-xl font-semibold text-slate-900" data-testid="home-clock">
+              {weekdayName(day)}, {formatTime(life.minute)}
+            </h1>
+            <p className="text-sm text-slate-600">
+              {phase === 'morning'
+                ? `Work starts at ${formatTime(HOURS.start)}. Eat, shower and get dressed, then leave in time.`
+                : 'Your time: eat, rest, see friends. Go to bed in good time for tomorrow.'}
+            </p>
+          </header>
+
+          <nav aria-label="Rooms" className="flex flex-wrap gap-2">
+            {ROOMS.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                aria-current={r.id === room ? 'location' : undefined}
+                onClick={() => setRoom(r.id)}
+                className={`rounded-full px-3.5 py-1.5 text-sm ${
+                  r.id === room
+                    ? 'bg-amber-700 text-white'
+                    : 'bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-amber-50'
+                }`}
+              >
+                {r.name}
+              </button>
+            ))}
+          </nav>
+
+          <div
+            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+            data-testid="home-room"
+          >
+            <h2 className="font-semibold text-slate-900">{current.name}</h2>
+            <p className="text-sm text-slate-600">{current.description}</p>
+            <ul className="mt-3 space-y-2">
+              {actions.map((action) => {
+                const blocked = canDo(profile, action)
+                return (
+                  <li key={action.id}>
+                    <button
+                      type="button"
+                      disabled={!!blocked}
+                      onClick={() => onAction(action.id)}
+                      title={blocked ?? undefined}
+                      className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-55"
+                    >
+                      <span>
+                        <span className="font-medium text-slate-900">{action.label}</span>
+                        {blocked && (
+                          <span className="block text-xs text-slate-500">{blocked}</span>
+                        )}
+                      </span>
+                      <span className="shrink-0 text-xs text-slate-500">
+                        {action.minutes} min
+                        {action.cost ? ` · ${formatMoney(action.cost)}` : ''}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+              {room === 'bedroom' && phase === 'evening' && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={onBed}
+                    className="flex w-full items-center justify-between rounded-lg bg-indigo-700 px-3 py-2 text-left text-sm font-medium text-white hover:bg-indigo-800"
+                  >
+                    Go to bed
+                    <span className="text-xs font-normal text-indigo-100">
+                      {sleepHours(life.minute).toFixed(1)} hours before the alarm
+                    </span>
+                  </button>
+                </li>
+              )}
+              {room !== 'bedroom' && phase === 'evening' && actions.length === 0 && (
+                <li className="text-sm text-slate-500">
+                  Nothing to do here this evening.
+                </li>
+              )}
+            </ul>
+
+            {room === 'door' && phase === 'morning' && (
+              <div className="mt-4 border-t border-slate-100 pt-3" data-testid="commute">
+                <h3 className="text-sm font-semibold text-slate-900">Leave for work</h3>
+                <ul className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {COMMUTES.map((c) => {
+                    const arrival = arrivalFor(profile, c.id)
+                    const broke = life.money < c.cost
+                    return (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          disabled={broke}
+                          onClick={() => onLeave(c.id)}
+                          className="w-full rounded-lg border border-slate-200 p-3 text-left text-sm hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50"
+                        >
+                          <span className="block font-medium text-slate-900">
+                            {c.name}
+                            {c.cost ? ` · ${formatMoney(c.cost)}` : ' · free'}
+                          </span>
+                          <span className="block text-xs text-slate-600">
+                            {c.description}
+                          </span>
+                          <span
+                            className={`mt-1 block text-xs font-medium ${
+                              arrival.late ? 'text-red-700' : 'text-emerald-700'
+                            }`}
+                          >
+                            Arrive {formatTime(arrival.minute)}
+                            {arrival.late ? ` (${arrival.late} min late)` : ''}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+                {!(life.ready.ate && life.ready.showered && life.ready.dressed) && (
+                  <p className="mt-2 text-xs text-amber-800">
+                    Not ready yet:{' '}
+                    {[
+                      !life.ready.ate && 'breakfast',
+                      !life.ready.showered && 'a shower',
+                      !life.ready.dressed && 'work clothes',
+                    ]
+                      .filter(Boolean)
+                      .join(', ')}
+                    . It will show at work.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <aside className="space-y-4" aria-label="How you are">
+          <section
+            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+            data-testid="needs"
+          >
+            <h2 className="font-semibold text-slate-900">How you are</h2>
+            <ul className="mt-2 space-y-2">
+              {NEEDS.map((need) => {
+                const value = life.needs[need.id]
+                return (
+                  <li key={need.id}>
+                    <div className="flex justify-between text-xs text-slate-600">
+                      <span>{need.name}</span>
+                      <span>{value}</span>
+                    </div>
+                    <div
+                      role="meter"
+                      aria-label={need.name}
+                      aria-valuenow={value}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-slate-200"
+                    >
+                      <div
+                        className={`h-full rounded-full ${
+                          value < 30
+                            ? 'bg-red-500'
+                            : value < 55
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${value}%` }}
+                      />
+                    </div>
+                  </li>
+                )
+              })}
+              <li className="flex justify-between text-xs text-slate-600">
+                <span>Energy</span>
+                <span>{Math.round(profile.work.wellbeing.energy)}</span>
+              </li>
+              <li className="flex justify-between text-xs text-slate-600">
+                <span>Stress</span>
+                <span>{Math.round(profile.work.wellbeing.stress)}</span>
+              </li>
+            </ul>
+            {warnings.length > 0 && (
+              <ul
+                className="mt-3 space-y-0.5 text-xs text-amber-800"
+                aria-label="Things to look after"
+              >
+                {warnings.map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section
+            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+            data-testid="money"
+          >
+            <h2 className="font-semibold text-slate-900">Money</h2>
+            <p
+              className={`text-2xl font-semibold ${life.money < 0 ? 'text-red-700' : 'text-slate-900'}`}
+              data-testid="balance"
+            >
+              {formatMoney(life.money)}
+            </p>
+            <p className="text-xs text-slate-500">
+              {life.food} meal{life.food === 1 ? '' : 's'} in the fridge · paid on
+              Fridays, rent on Mondays
+            </p>
+            {life.ledger.length > 0 && (
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer text-slate-600">Statement</summary>
+                <ul className="mt-1 space-y-0.5">
+                  {life.ledger
+                    .slice(-12)
+                    .reverse()
+                    .map((entry, i) => (
+                      <li key={i} className="flex justify-between gap-2">
+                        <span className="text-slate-600">
+                          {weekdayName(entry.day).slice(0, 3)} · {entry.text}
+                        </span>
+                        <span
+                          className={
+                            entry.amount < 0 ? 'text-slate-700' : 'text-emerald-700'
+                          }
+                        >
+                          {entry.amount > 0 ? '+' : ''}
+                          {formatMoney(entry.amount)}
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              </details>
+            )}
+          </section>
+
+          {life.log.length > 0 && (
+            <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+              <h2 className="font-semibold text-slate-900">
+                {phase === 'morning' ? 'This morning' : 'This evening'}
+              </h2>
+              <ul
+                className="mt-1 space-y-0.5 text-xs text-slate-600"
+                data-testid="home-log"
+              >
+                {life.log.map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </aside>
+      </div>
+    </div>
+  )
+}

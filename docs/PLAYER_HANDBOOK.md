@@ -47,6 +47,26 @@ You arrive at reception in a 3D office.
 - The day runs in office time. Meetings, breaks and lunch matter, and so does going
   home on time: your energy and stress change with how you work.
 
+## Life outside work
+
+After work you go home. The end-of-day summary still comes first; **Go home** takes
+you to your flat.
+
+- **Rooms**: kitchen, bathroom, bedroom, living room and the front door. Each lists what
+  you can do there, how long it takes and what it costs: cook, order a takeaway or
+  groceries, shower, read, watch a series, call a friend, go for a run, meet friends in
+  town, and go to bed.
+- **Needs**: hunger, hygiene, social and fun (high is good), with your energy and
+  stress. They fall as time passes; what you do raises them.
+- **Sleep**: the alarm rings at 7:00. Going to bed late means less sleep, and less
+  energy at work.
+- **The morning**: have breakfast, a shower and get dressed, then leave from the front
+  door: walk (free, 40 minutes), bus (£2.50, 25 minutes) or taxi (£14, 12 minutes).
+  Each shows when you would arrive. Late, hungry, unwashed or in yesterday's clothes:
+  it shows at work (energy, stress, reputation), in your day log.
+- **Money**: you are paid on Fridays (more as you are promoted) and rent is taken on
+  Mondays. The statement lists everything in and out. Going overdrawn is stressful.
+
 ## Your computer
 
 Your work computer has a desktop like a Windows 10 PC.

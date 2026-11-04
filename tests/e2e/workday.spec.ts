@@ -79,7 +79,24 @@ test('a working day: stand-up, lunch, going home and the next morning', async ({
   const end = page.getByTestId('day-end')
   await expect(end).toContainText('Time to go home')
   await expect(end).toContainText('Left early')
-  await end.getByRole('button', { name: 'Start Tuesday morning' }).click()
+  await end.getByRole('button', { name: 'Go home' }).click()
+
+  // The evening and the morning at home, then the bus to work.
+  const home = page.getByTestId('home')
+  await expect(home).toContainText('Evening at home')
+  const rooms = home.getByRole('navigation', { name: 'Rooms' })
+  await rooms.getByRole('button', { name: 'Kitchen' }).click()
+  await home.getByRole('button', { name: /Cook dinner/ }).click()
+  await rooms.getByRole('button', { name: 'Bedroom' }).click()
+  await home.getByRole('button', { name: /Go to bed/ }).click()
+  await expect(home).toContainText('Morning at home')
+  await home.getByRole('button', { name: /Get dressed for work/ }).click()
+  await rooms.getByRole('button', { name: 'Bathroom' }).click()
+  await home.getByRole('button', { name: /Have a shower/ }).click()
+  await rooms.getByRole('button', { name: 'Kitchen' }).click()
+  await home.getByRole('button', { name: /Make breakfast/ }).click()
+  await rooms.getByRole('button', { name: 'Front door' }).click()
+  await home.getByTestId('commute').getByRole('button', { name: /^Bus/ }).click()
 
   // Tuesday: back at reception, and the day is remembered after a reload.
   await expect(panel(page).getByRole('heading')).toHaveText('Reception')
