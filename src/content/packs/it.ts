@@ -3,6 +3,7 @@
  * assessments. Loaded only when a save of this career is opened (see `loader.ts`).
  */
 import type { CareerPack } from '../loader'
+import { aiCases } from '../cases/ai'
 import { directoryJoiner } from '../assignments/it/directoryJoiner'
 import { directoryLeaver } from '../assignments/it/directoryLeaver'
 import { majorIncident } from '../assignments/it/majorIncident'
@@ -42,6 +43,7 @@ export const PACK: CareerPack = {
     outageTriage,
   ],
   cases: [
+    ...aiCases('it-support'),
     ...IT_CASES,
     ...OPERATIONS_IT,
     ...WORKFLOW_IT,

@@ -37,6 +37,14 @@ export const SKILLS: Skill[] = [
   },
 ]
 
+/** A skill every career shares: using AI tools well and responsibly. */
+SKILLS.push({
+  id: 'ai-use',
+  name: 'Using AI at work',
+  description:
+    'Prompting well, checking AI answers before relying on them, and keeping personal and confidential data out of AI tools.',
+})
+
 /** Skills of the later careers. */
 SKILLS.push(
   {
@@ -169,6 +177,7 @@ export const CAREERS: Career[] = [
       'presentation',
       'accuracy',
       'finance-basics',
+      'ai-use',
     ],
     apps: ['sheets', 'docs', 'slides'],
     levels: [
@@ -211,6 +220,7 @@ CAREERS.push({
     'financial-reporting',
     'formulas',
     'accuracy',
+    'ai-use',
   ],
   apps: ['sheets', 'docs'],
   tools: [
@@ -269,6 +279,7 @@ CAREERS.push({
     'incident-management',
     'technical-writing',
     'accuracy',
+    'ai-use',
   ],
   apps: ['helpdesk', 'docs', 'slides'],
   tools: [
@@ -319,6 +330,7 @@ CAREERS.push({
     'content-strategy',
     'data-analysis',
     'presentation',
+    'ai-use',
   ],
   apps: ['sheets', 'docs', 'slides'],
   tools: [
@@ -371,6 +383,7 @@ CAREERS.push({
     'data-visualisation',
     'insight-communication',
     'formulas',
+    'ai-use',
   ],
   apps: ['sheets', 'docs', 'slides'],
   tools: [
@@ -423,6 +436,7 @@ CAREERS.push({
     'software-testing',
     'software-design',
     'technical-writing',
+    'ai-use',
   ],
   apps: ['code', 'docs'],
   tools: [{ tool: 'api', fromLevel: 'software-developer' }],

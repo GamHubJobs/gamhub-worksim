@@ -9,6 +9,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useAppServices } from '../app/services'
 import type { ContextItem, Proposal } from '../ai/types'
 import { workContext } from '../ai/workContext'
+import { recordAiUse } from '../game/aiUse'
 import { AiHubContext, type AiHub, type AiQuestion } from '../apps/ai/hub'
 import type { Career } from '../app/useCareer'
 import { openPracticeFile } from '../persistence/toolPractice'
@@ -810,6 +811,7 @@ export function Desktop({
             workApp={workWindow?.key ?? null}
             canApply={(app, kind) => !!appliers.current[app]?.kinds.includes(kind)}
             onApply={(app, proposal) => appliers.current[app]?.apply(proposal) ?? false}
+            onRecord={(event) => void act((p) => recordAiUse(p, event))}
           />
         )
       case 'career':

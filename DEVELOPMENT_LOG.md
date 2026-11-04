@@ -133,8 +133,8 @@ working simulations of the professional software used in its field (see
 - [x] AI.2 AI infrastructure (engines, context, settings, limits, the bridge)
 - [x] AI.3 The WorkSim AI desktop app
 - [x] AI.4 AI inside Mail, Sheets, Docs, Slides, Tasks, Code and Help Desk
-- [ ] AI.5 Workplace AI: colleagues and feedback
-- [ ] AI.6 AI competency and career readiness
+- [x] AI.5 Workplace AI: colleagues and feedback
+- [x] AI.6 AI competency and career readiness
 - [ ] AI.7 Quality assurance
 
 **Workplace realism upgrade** (complete):
@@ -142,6 +142,56 @@ working simulations of the professional software used in its field (see
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · AI.5–AI.6: AI at work, and AI competencies
+
+### Built
+
+- **The manager's AI policy** (`src/game/aiUse.ts`): the first time the player asks
+  WorkSim AI something, their manager emails the company's expectations (responsible
+  for what you send; check every figure; no personal or confidential data in AI tools;
+  only the approved tool; say when AI helped).
+- **Three AI cases for every career** (`src/content/cases/ai/`), from the manager on
+  days 2, 3 and 4, each after the last, graded by the existing case engine:
+  - _Check an AI summary before it goes to the board_: spot a wrong claim and an
+    invented figure against the data, check a figure yourself, decide what to do
+    before sharing AI-assisted work, and explain it.
+  - _What can go into an AI tool?_: apply the company AI policy to five files, choose
+    how to get AI help with a customer complaint safely (anonymised, approved tool),
+    and advise a colleague.
+  - _Write a prompt that works_: choose the best prompt, say what a vague one lacks
+    (context, format, audience), and write an example prompt.
+    The manager replies by result, and outcomes change trust, reputation and risk like
+    other cases. A new skill every career shares, **Using AI at work**, gains from them.
+- **Using AI well, while working**: in Learning mode, a **prompt tip** under a vague
+  question (task, context, constraints, detail); a pause before a question that seems
+  to contain personal or secret data (an email address, phone number, card or bank
+  details, a password, a National Insurance number), with _Edit my question_ or _Send
+  anyway_; _I have checked this answer_ under an AI model's answer.
+- **AI competencies** in the Career app (_Using AI at work_): Prompting, Checking AI
+  answers, Protecting data and Reviewing AI changes, each Not shown yet, Developing,
+  Competent or Strong, with the evidence behind it. They come from the quality of
+  prompts (the player's own words only; menu questions do not count), the share of
+  AI answers checked, warnings heeded, and proposed changes reviewed. Asking more
+  questions raises none of them.
+- **Save format**: a new `ai` section in the career record, with defaults, so saves
+  from before it load unchanged (tested); no format change.
+
+### Tests
+
+- 8 new unit tests (`src/game/aiUse.test.ts`): prompt scoring, sensitive data
+  detection (and no false alarms on ordinary questions), the empty record for older
+  saves, the policy sent once, only typed prompts scored, and competencies from
+  evidence rather than use. The content tests now also check the 18 AI cases (each
+  model answer passes its own grading).
+- Results: 2,030 unit tests; 152 Chromium browser tests, all passing first time; 5
+  production-build tests; Firefox, WebKit and Edge 8 passed, 1 skipped. Start screen
+  281 kB; JavaScript memory 17 MB in the office (unchanged).
+- New `ai-skills.spec.ts` (2 tests): a prompt tip, the personal-data pause and
+  editing the question, the policy email, the AI skills panel; and an AI case solved
+  and graded at 100%.
 
 ---
 

@@ -3,6 +3,7 @@
  * assessments. Loaded only when a save of this career is opened (see `loader.ts`).
  */
 import type { CareerPack } from '../loader'
+import { aiCases } from '../cases/ai'
 import { abTest } from '../assignments/marketing/abTest'
 import { campaignBudget } from '../assignments/marketing/campaignBudget'
 import { funnelAnalysis } from '../assignments/marketing/funnelAnalysis'
@@ -42,6 +43,7 @@ export const PACK: CareerPack = {
     launchPlan,
   ],
   cases: [
+    ...aiCases('digital-marketing'),
     ...MARKETING_CASES,
     ...OPERATIONS_MARKETING,
     ...WORKFLOW_MARKETING,

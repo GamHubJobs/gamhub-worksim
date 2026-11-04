@@ -3,6 +3,7 @@
  * assessments. Loaded only when a save of this career is opened (see `loader.ts`).
  */
 import type { CareerPack } from '../loader'
+import { aiCases } from '../cases/ai'
 import { cleanCustomers } from '../assignments/data/cleanCustomers'
 import {
   churnClean,
@@ -42,6 +43,7 @@ export const PACK: CareerPack = {
     surveyAnalysis,
   ],
   cases: [
+    ...aiCases('data-analytics'),
     ...DATA_CASES,
     ...OPERATIONS_DATA,
     ...WORKFLOW_DATA,

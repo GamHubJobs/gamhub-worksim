@@ -23,6 +23,7 @@ import {
 } from '../../ai/types'
 import { Icon } from '../../ui/Icon'
 import { AiSettingsPanel } from './AiSettingsPanel'
+import { reviewPrompt, sensitiveIn, type AiEvent } from '../../game/aiUse'
 import type { AiQuestion } from './hub'
 import { RichText } from './RichText'
 
@@ -37,6 +38,10 @@ interface Turn {
   from: string | null
   /** What became of a proposed change. */
   outcome?: 'applied' | 'dismissed' | 'failed'
+  /** Prompt tips for the player's own question (Learning mode). */
+  tips?: string[]
+  /** The player marked the AI-model answer as checked. */
+  checked?: boolean
 }
 
 /** Conversations last while WorkSim is open (they are not saved). */
@@ -85,6 +90,7 @@ export function AiApp({
   workApp,
   canApply,
   onApply,
+  onRecord,
 }: {
   profileId: string
   playerName: string
@@ -97,6 +103,8 @@ export function AiApp({
   workApp: string | null
   canApply: (app: string, kind: Proposal['kind']) => boolean
   onApply: (app: string, proposal: Proposal) => boolean
+  /** Records evidence of how the player uses AI (see game/aiUse.ts). */
+  onRecord: (event: AiEvent) => void
 }) {
   const context = readContext()
   const [settings, setSettings] = useState<AiSettings>(readAiSettings)
@@ -106,6 +114,13 @@ export function AiApp({
   const [left, setLeft] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState<AbortController | null>(null)
   const [preview, setPreview] = useState(false)
+  const [warning, setWarning] = useState<{
+    text: string
+    kinds: string[]
+    action?: string
+    items: ContextItem[]
+    from: string | null
+  } | null>(null)
   const end = useRef<HTMLDivElement>(null)
   const nextId = useRef(turns.length + 1)
 
@@ -130,14 +145,40 @@ export function AiApp({
     action?: string,
     items: ContextItem[] = shared,
     from: string | null = workApp,
+    confirmed = false,
   ) {
     const question = text.trim()
     if (!question || busy) return
+    // Personal or secret information: a pause to take it out first.
+    const sensitive = sensitiveIn(question)
+    if (sensitive.length && !confirmed) {
+      setWarning({ text: question, kinds: sensitive, action, items, from })
+      return
+    }
     const id = nextId.current++
     const built = buildContext(items, playerName)
+    // Only the player's own words are scored (menu questions are WorkSim's).
+    const typed = action === undefined
+    const review = reviewPrompt(question, built.items.length)
+    onRecord({
+      kind: 'question',
+      score: review.score,
+      model: usingModel,
+      learning: settings.mode === 'learning',
+      typed,
+    })
     setTurns((t) => [
       ...t,
-      { id, question, shared: built.items.map((i) => i.label), from },
+      {
+        id,
+        question,
+        shared: built.items.map((i) => i.label),
+        from,
+        tips:
+          typed && settings.mode === 'learning' && review.score <= 2
+            ? review.tips.slice(0, 2)
+            : undefined,
+      },
     ])
     setDraft('')
     const history: AiMessage[] = turns
@@ -294,6 +335,16 @@ export function AiApp({
                   <div className="ml-auto w-fit max-w-[85%] rounded-lg bg-[#dbeafe] px-3 py-2 text-sm text-slate-900">
                     {turn.question}
                   </div>
+                  {turn.tips && (
+                    <aside
+                      className="ml-auto w-fit max-w-[85%] border-l-2 border-[#3b5bdb] bg-white px-3 py-1.5 text-xs text-slate-600"
+                      aria-label="Prompt tip"
+                      data-testid="ai-prompt-tip"
+                    >
+                      <span className="font-semibold text-slate-700">Prompt tip: </span>
+                      {turn.tips.join(' ')}
+                    </aside>
+                  )}
                   {turn.answer ? (
                     <article
                       className="max-w-[92%] rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm"
@@ -313,6 +364,7 @@ export function AiApp({
                             outcome={turn.outcome}
                             onApply={() => {
                               const ok = onApply(turn.from!, turn.answer!.proposal!)
+                              if (ok) onRecord({ kind: 'proposal', outcome: 'applied' })
                               setTurns((t) =>
                                 t.map((x) =>
                                   x.id === turn.id
@@ -321,13 +373,14 @@ export function AiApp({
                                 ),
                               )
                             }}
-                            onDismiss={() =>
+                            onDismiss={() => {
+                              onRecord({ kind: 'proposal', outcome: 'dismissed' })
                               setTurns((t) =>
                                 t.map((x) =>
                                   x.id === turn.id ? { ...x, outcome: 'dismissed' } : x,
                                 ),
                               )
-                            }
+                            }}
                           />
                         )}
                       <p
@@ -339,6 +392,27 @@ export function AiApp({
                           : 'Built-in guide: WorkSim’s own rules, not an AI model.'}
                         {turn.shared.length > 0 && ` Shared: ${turn.shared.join(', ')}.`}
                       </p>
+                      {turn.answer.source.model &&
+                        (turn.checked ? (
+                          <p className="mt-1 text-[11px] font-medium text-emerald-700">
+                            You checked this answer.
+                          </p>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onRecord({ kind: 'verified' })
+                              setTurns((t) =>
+                                t.map((x) =>
+                                  x.id === turn.id ? { ...x, checked: true } : x,
+                                ),
+                              )
+                            }}
+                            className="mt-1 text-[11px] text-[#1f6fbf] underline"
+                          >
+                            I have checked this answer against the facts
+                          </button>
+                        ))}
                     </article>
                   ) : turn.error ? (
                     <p className="text-xs text-slate-500">{turn.error}</p>
@@ -362,6 +436,47 @@ export function AiApp({
           )}
           <div ref={end} />
         </div>
+
+        {warning && (
+          <div
+            role="alertdialog"
+            aria-label="Personal or secret information"
+            className="border-t border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            data-testid="ai-privacy-warning"
+          >
+            <p>
+              Your question seems to include{' '}
+              <strong>{warning.kinds.join(' and ')}</strong>. Leave personal and secret
+              information out of AI tools unless it is really needed, even approved ones
+              {usingModel ? ': this question would be sent to the AI model.' : '.'}
+            </p>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onRecord({ kind: 'privacy', heeded: true })
+                  setDraft(warning.text)
+                  setWarning(null)
+                }}
+                className="bg-[#1f6fbf] px-3 py-1 text-xs font-medium text-white hover:bg-[#185a9d]"
+              >
+                Edit my question
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onRecord({ kind: 'privacy', heeded: false })
+                  const w = warning
+                  setWarning(null)
+                  void ask(w.text, w.action, w.items, w.from, true)
+                }}
+                className="border border-amber-400 bg-white px-3 py-1 text-xs hover:bg-amber-100"
+              >
+                Send anyway
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Composer */}
         <form

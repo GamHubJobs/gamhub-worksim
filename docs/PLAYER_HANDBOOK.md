@@ -117,6 +117,21 @@ prompts.
   first, with **Apply** and **Dismiss**. Nothing in your work changes until you apply
   it, and you can undo it in the app afterwards. In Learning mode, formula help is a
   hint, so you write the formula yourself.
+- **Learning to use AI well.** WorkSim AI gives a **prompt tip** in Learning mode when a
+  question is vague, and pauses if a question seems to contain personal or secret
+  information (an email address, a phone number, a password…): **Edit my question** to
+  take it out. Under an AI model's answer, **I have checked this answer** records that
+  you verified it.
+- **Your manager's expectations.** The first time you use WorkSim AI, your manager sends
+  the company's AI policy: you are responsible for what you send, keep personal and
+  confidential data out, use only the approved tool, and check every figure.
+- **AI cases.** From day 2, three cases from your manager practise AI at work: checking
+  an AI-written summary against the data, deciding what may go into an AI tool, and
+  writing a prompt that works. They are graded like every case.
+- **AI skills.** The Career app's **Using AI at work** panel shows your prompting,
+  checking AI answers, protecting data and reviewing AI changes, from evidence. Asking
+  more questions does not raise them. The AI cases add to the **Using AI at work**
+  skill, which every career has.
 - **Limits.** A daily limit (40 requests by default, on this computer) and a time limit
   on each request. The bridge has its own daily limit too.
 

@@ -759,6 +759,33 @@ export const CareerRecordSchema = z.object({
   desk: z.record(z.string(), z.string()).default({}),
   /** Chooses this save's variant of each case (0 = the original wording). */
   seed: z.number().int().nonnegative().default(0),
+  /**
+   * How the player uses WorkSim AI (see game/aiUse.ts): evidence for the AI
+   * competencies, never a count to reward. Added without a format change: older
+   * saves start empty.
+   */
+  ai: z
+    .object({
+      questions: z.number().int().nonnegative().default(0),
+      /** Prompt scores (0–4) of the latest questions. */
+      promptScores: z.array(z.number().int().min(0).max(4)).default([]),
+      /** Answers written by an AI model, and how many the player marked as checked. */
+      modelAnswers: z.number().int().nonnegative().default(0),
+      verified: z.number().int().nonnegative().default(0),
+      proposals: z
+        .object({
+          applied: z.number().int().nonnegative().default(0),
+          dismissed: z.number().int().nonnegative().default(0),
+        })
+        .prefault({}),
+      /** Warnings about personal or secret data in a prompt, and how often heeded. */
+      privacyWarnings: z.number().int().nonnegative().default(0),
+      privacyHeeded: z.number().int().nonnegative().default(0),
+      /** Questions asked in Learning mode. */
+      learning: z.number().int().nonnegative().default(0),
+      firstUsedDay: z.number().int().min(1).nullable().default(null),
+    })
+    .prefault({}),
 })
 
 export const WorkStateSchema = z.object({

@@ -3,6 +3,7 @@
  * assessments. Loaded only when a save of this career is opened (see `loader.ts`).
  */
 import type { CareerPack } from '../loader'
+import { aiCases } from '../cases/ai'
 import { bankReconciliation } from '../assignments/accounting/bankReconciliation'
 import { booksBankRec } from '../assignments/accounting/booksBankRec'
 import { booksJournals } from '../assignments/accounting/booksJournals'
@@ -44,6 +45,7 @@ export const PACK: CareerPack = {
     quarterCloseVariances,
   ],
   cases: [
+    ...aiCases('accounting'),
     ...ACCOUNTING_CASES,
     ...OPERATIONS_ACCOUNTING,
     ...WORKFLOW_ACCOUNTING,

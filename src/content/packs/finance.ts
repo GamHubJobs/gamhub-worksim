@@ -3,6 +3,7 @@
  * assessments. Loaded only when a save of this career is opened (see `loader.ts`).
  */
 import type { CareerPack } from '../loader'
+import { aiCases } from '../cases/ai'
 import { budgetReport } from '../assignments/budgetReport'
 import { expenseSummary } from '../assignments/expenseSummary'
 import { invoiceCheck } from '../assignments/invoiceCheck'
@@ -42,6 +43,7 @@ export const PACK: CareerPack = {
     suppliesOrder,
   ],
   cases: [
+    ...aiCases('office-admin-finance'),
     ...FINANCE_CASES,
     ...OPERATIONS_FINANCE,
     ...WORKFLOW_FINANCE,

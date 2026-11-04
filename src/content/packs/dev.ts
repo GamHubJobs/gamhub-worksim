@@ -3,6 +3,7 @@
  * assessments. Loaded only when a save of this career is opened (see `loader.ts`).
  */
 import type { CareerPack } from '../loader'
+import { aiCases } from '../cases/ai'
 import { apiTesting } from '../assignments/dev/apiTesting'
 import { billingReport } from '../assignments/dev/billingReport'
 import { debugNaN } from '../assignments/dev/debugNaN'
@@ -40,6 +41,7 @@ export const PACK: CareerPack = {
     mileageTests,
   ],
   cases: [
+    ...aiCases('software-development'),
     ...DEV_CASES,
     ...OPERATIONS_DEV,
     ...WORKFLOW_DEV,

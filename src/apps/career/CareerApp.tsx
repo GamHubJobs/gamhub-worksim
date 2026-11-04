@@ -32,6 +32,7 @@ import {
 import { DESK_SLOTS, type DeskSlot } from '../../content/desk'
 import { deskLayout, isUnlocked, itemsFor, unlockText } from '../../game/desk'
 import { useEffect, useRef, type ReactNode } from 'react'
+import { aiCompetencies, AI_LEVEL_NAMES } from '../../game/aiUse'
 
 function ProgressBar({
   value,
@@ -493,6 +494,8 @@ export function CareerApp({
           </ul>
         </section>
 
+        <AiSkills profile={profile} />
+
         <PortfolioSection
           profile={profile}
           onOpenFile={onOpenFile}
@@ -673,5 +676,56 @@ function Requirement({
       <span className={met ? 'text-slate-500' : 'text-slate-800'}>{text}</span>
       {children}
     </li>
+  )
+}
+
+/**
+ * How well the player uses AI at work, from evidence (prompt quality, checking
+ * answers, protecting data, reviewing changes): never how often they use it.
+ */
+function AiSkills({ profile }: { profile: Profile }) {
+  const competencies = aiCompetencies(profile)
+  return (
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-6"
+      data-testid="ai-skills"
+      aria-labelledby="ai-skills-title"
+    >
+      <h2 id="ai-skills-title" className="font-semibold text-slate-900">
+        Using AI at work
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">
+        From how you use WorkSim AI and the AI cases. Asking more questions does not raise
+        these: asking well, checking answers and protecting data do.
+      </p>
+      <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+        {competencies.map((c) => (
+          <li
+            key={c.id}
+            className="rounded-lg border border-slate-200 p-3"
+            data-testid={`ai-skill-${c.id}`}
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-medium text-slate-800">{c.name}</span>
+              <span
+                className={`text-xs font-medium ${
+                  c.level === 'strong'
+                    ? 'text-emerald-700'
+                    : c.level === 'competent'
+                      ? 'text-blue-700'
+                      : c.level === 'developing'
+                        ? 'text-amber-700'
+                        : 'text-slate-500'
+                }`}
+              >
+                {AI_LEVEL_NAMES[c.level]}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500">{c.description}</p>
+            <p className="mt-1 text-xs text-slate-700">{c.evidence}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
