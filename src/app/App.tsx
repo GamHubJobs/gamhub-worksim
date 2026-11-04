@@ -99,9 +99,10 @@ export function App({ session, tabLock }: AppProps) {
         flushers.current.add(flush)
         return () => flushers.current.delete(flush)
       },
+      saveAll: flushAll,
       onSaved,
     }),
-    [session, onSaved],
+    [session, onSaved, flushAll],
   )
 
   const storageWarning =

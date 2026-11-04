@@ -77,6 +77,7 @@ Next start → journal newer than saved document? → recovered and saved
 | `workbench.ts`          | The practice workbook                                          |
 | `profiles.ts`           | Player profile (career, rewards, mail); start and submit tasks |
 | `lastView.ts`           | Which app/workbook was open, to return there after a reload    |
+| `desktop/windows/`      | Window layout and desktop settings, per save (LocalStorage)    |
 | `portfolio.ts`          | Portfolio items and frozen file copies; presentation changes   |
 | `portfolioBackfill.ts`  | Adds earlier passed work to the portfolio (safe to re-run)     |
 | `employability.ts`      | The player’s own words for the employability profile           |
@@ -103,10 +104,32 @@ Next start → journal newer than saved document? → recovered and saved
 | `src/game/code/`                      | Code runner, code grading, and the Web Worker that runs them      |
 | `src/tools/`                          | Professional tools framework and the tools (Books, …): see below  |
 | `src/apps/tools/`                     | Shared tool screens: start page, tool window, guide               |
-| `src/desktop/`                        | Onboarding and the simulated desktop (dock, top bar, navigation)  |
+| `src/desktop/`                        | Onboarding, the office/computer switch, the top bar in the office |
+| `src/desktop/windows/`                | The Windows-style desktop: windows, taskbar, Start, icons, menu   |
 | `src/office/`                         | The 3D office (loaded on demand) and its 2D fallback floor plan   |
 | `src/workday/`                        | Office clock, "Your day" panel, end-of-day screen                 |
 | `src/app/`                            | Start-up, tab hand-over, shared services, the career hook         |
+
+### The work computer's desktop
+
+The computer is a desktop in the style of Windows 10 (`src/desktop/windows/`). It is
+only a shell: the apps inside the windows are the same components as before.
+
+- **Window manager** (`windowManager.ts`): pure functions over a list of windows
+  (position, size, minimised, maximised, stacking order). Each app has at most one
+  window, keyed by the app (or `tool:<id>` for each professional tool), and the
+  window holds the app's `View`, so opening an app that is already open brings its
+  window forward and shows what was asked for, as switching apps did before.
+- **`Desktop.tsx`** keeps one `view` for where the player is (office or computer) and
+  the window list. `setView` from any app opens or updates the right window; the
+  taskbar, Start and the desktop icons focus a window as it was left.
+- **Saving.** A window that closes (or a document replaced in it) saves on the way
+  out, as before. Because several files can now be open at once, Mail, case and
+  assessment submissions first call `saveAll` (the same flush used before backups),
+  so a file still open in another window is saved before it is sent or marked.
+- **Persistence.** The window layout and desktop settings (wallpaper, icon size, icon
+  places) are kept per save in LocalStorage, validated on reading and ignored if
+  damaged. They are preferences, not game data, and are not in backups.
 
 ### How a submission is graded
 

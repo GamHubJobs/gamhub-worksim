@@ -6,6 +6,7 @@ import {
   sitAtComputer,
   startCareerIfNeeded,
   waitUntilSaved,
+  activeWindow,
 } from './helpers.ts'
 
 const apps = (page: Page) => page.getByRole('navigation', { name: 'Apps' })
@@ -146,7 +147,7 @@ test('a report task: analyse in Sheets, write in Docs, present in Slides, hand i
   const results = page.getByTestId('submission-results')
   await expect(results).toBeVisible({ timeout: 15_000 })
   await expect(results.getByTestId('score')).toHaveText('100%')
-  await expect(page.getByTestId('check-results')).toContainText(
+  await expect(activeWindow(page).getByTestId('check-results')).toContainText(
     'Key figures in the report',
   )
 
@@ -211,7 +212,9 @@ test('handing in without the report explains what is missing', async ({ page }) 
   await compose.getByRole('button', { name: 'Send' }).click()
   const results = page.getByTestId('submission-results')
   await expect(results).toBeVisible({ timeout: 15_000 })
-  await expect(page.getByTestId('check-results')).toContainText('No report was attached')
+  await expect(activeWindow(page).getByTestId('check-results')).toContainText(
+    'No report was attached',
+  )
 
   // The sent email is kept, with what was attached.
   await page.keyboard.press('Escape')

@@ -73,10 +73,8 @@ test('offline: WorkSim starts, opens the save, keeps working and saving, and com
     .getByTestId('office-panel')
     .getByRole('button', { name: /Use your computer/ })
     .click()
-  await page
-    .getByRole('navigation', { name: 'Apps' })
-    .getByRole('button', { name: /^Mail/ })
-    .click()
+  // The computer opens with Mail in front.
+  await expect(page.getByTestId('window-mail')).toBeVisible({ timeout: 60_000 })
   await page.getByRole('button', { name: /Welcome to Cobalt Ridge/ }).click()
   await expect(page.getByTestId('mail-message')).toContainText('Welcome')
   await page.reload()

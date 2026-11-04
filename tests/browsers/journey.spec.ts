@@ -23,11 +23,20 @@ async function toComputer(page: Page) {
   })
 }
 
-const app = (page: Page, name: string) =>
-  page
+/** Opens an app in its own window, closing the others first (one app at a time). */
+async function app(page: Page, name: string) {
+  const close = page.locator(
+    '[data-window] [data-testid="window-title-bar"] button[aria-label^="Close "]',
+  )
+  for (let n = await close.count(); n > 0; n = await close.count()) {
+    await close.first().dispatchEvent('click')
+    await expect(close).toHaveCount(n - 1)
+  }
+  await page
     .getByRole('navigation', { name: 'Apps' })
     .getByRole('button', { name: new RegExp(`^${name}`) })
     .click()
+}
 
 async function waitUntilSaved(page: Page) {
   await expect(page.getByTestId('save-indicator')).toHaveAttribute(

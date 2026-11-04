@@ -47,6 +47,31 @@ You arrive at reception in a 3D office.
 - The day runs in office time. Meetings, breaks and lunch matter, and so does going
   home on time: your energy and stress change with how you work.
 
+## Your computer
+
+Your work computer has a desktop like a Windows 10 PC.
+
+- **Desktop icons** down the left and right: double-click one (or select it and press
+  Enter) to open the app. Drag an icon to move it; WorkSim remembers where you put it.
+- **Right-click the desktop** for the menu: icon size (**View**), **Sort by** name,
+  **Refresh**, **New** (a document, presentation or practice workbook, depending on
+  your career), **Display settings** and **Personalize** (background and icon size).
+- **Each app opens in a window.** Drag the title bar to move it and the edges to
+  resize it; use the buttons at the top right to minimise, maximise (or double-click
+  the title bar) and close. Several apps can be open at once; the one you click comes
+  to the front.
+- **The taskbar** along the bottom: **Start** (every app, A–Z, and settings), **Type
+  here to search**, a button per app (a line under it when it is open, a red number
+  for new items), and **Leave desk**. Clicking the button of the window in front
+  minimises it; clicking again brings it back.
+- **The right-hand end of the taskbar** shows you and your XP, the network, your
+  energy as a battery, **Help** (?), **Storage & backup**, and the office clock: click
+  the clock for your day. The thin strip at the far right is **Show desktop**.
+- **Notifications** (a meeting starting, a case arriving) appear in the bottom-right
+  corner.
+
+Windows stay as you left them when you leave your desk, and after you close WorkSim.
+
 ## The apps
 
 | App          | What it is for                                                                         |

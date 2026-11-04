@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { cell, openApp, sitAtComputer } from './helpers.ts'
+import { cell, openApp, sitAtComputer, activeWindow } from './helpers.ts'
 
 /** Types a value into a cell and confirms it with Enter. */
 async function type(page: Page, address: string, value: string) {
@@ -109,7 +109,7 @@ test('typed-in results are caught and explained', async ({ page }) => {
   // Calculate in your head and type the result: looks right, but is not a formula.
   await type(page, 'E2', '149.94')
   await submit(page)
-  await expect(page.getByTestId('check-results')).toContainText(
+  await expect(activeWindow(page).getByTestId('check-results')).toContainText(
     'E2 has the right number, but it was typed in',
   )
 })

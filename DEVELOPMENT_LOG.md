@@ -127,6 +127,92 @@ working simulations of the professional software used in its field (see
 
 **Phase 8 is complete.**
 
+**Workplace realism upgrade** (in progress):
+
+- [x] A. The work computer as a Windows 10-style desktop
+- [ ] B. More realistic 3D people
+- [ ] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · Upgrade A: the work computer as a Windows 10-style desktop
+
+The computer is no longer a browser-style page with a dock: it is a desktop
+in the style of Windows 10, around the same apps. This is a change of shell only:
+saves, progression, grading and the apps themselves are unchanged.
+
+### Built
+
+- **Desktop** (`src/desktop/windows/DesktopSurface.tsx`): original blue wallpaper
+  art (three backgrounds, drawn as SVG, no download), shortcut icons down the left
+  (apps and tools) and right (Career, Readiness, Portfolio, handbook, Storage).
+  Double-click or Enter opens; icons can be dragged to any free grid cell and keep
+  their place. Recycle Bin opens a window of its own.
+- **Right-click menu**: View (small, medium, large icons), Sort by (name, default
+  arrangement), Refresh, New (a blank document, a presentation or the practice
+  workbook, depending on the career's apps), Display settings and Personalize, which
+  open a Settings window (background, icon size, reset icons).
+- **Windows** (`AppWindowFrame.tsx`, `windowManager.ts`): every app in its own window
+  with a title bar, minimise, maximise/restore (or double-click the title bar) and
+  close, drag to move, resize from the edges, focus and stacking. One window per
+  app (each professional tool is its own app); several open at once. Small screens
+  open windows maximised. A window coming to the front takes the keyboard focus.
+- **Taskbar** (`Taskbar.tsx`): Start (WorkSim's own mark), "Type here to search" with
+  results, app buttons with the open-app line and red counts (locked tools say when
+  they unlock), Leave desk, and the tray: the employee and XP, network (online or
+  offline), volume, energy as a battery, notifications, Help, Storage & backup, the
+  office clock (opens "Your day" upwards) and Show desktop.
+- **Start menu** (`StartMenu.tsx`): the employee, settings, storage and leave desk on
+  the rail; every app A–Z; tiles for the main apps with their counts.
+- **Notifications** pop up in the corner for 15 seconds, then wait in the
+  notification centre (the bell) until dismissed or no longer relevant.
+- **Persistence**: window layout and desktop settings per save in LocalStorage,
+  validated on reading (damaged values are ignored). Not game data, not in backups.
+  Leaving the desk and coming back, or reloading, restores the windows.
+
+### Key decisions
+
+- **Windows 10 look, WorkSim's own identity.** The layout, colours and behaviour
+  follow Windows 10; the wallpaper, Start mark and app names are WorkSim's own, so
+  nothing copies Microsoft's artwork or trademarks.
+- **No rebuild.** `Desktop.tsx` routes the same `View` as before: `setView` from any
+  app now opens or updates that app's window instead of replacing the screen. The
+  per-app rendering moved unchanged into `renderApp(view)`.
+- **Saving with several files open.** Mail sending, case submission and assessment
+  submission first call the new `saveAll` service (the flush used before backups),
+  so a file still open in another window is saved before it is sent or marked.
+  Closing a window saves as leaving an app did before.
+- **The office keeps its top bar**; the computer uses the taskbar instead.
+
+### Bugs found and fixed
+
+- Tasks kept "Start task" disabled ("Opening…") after opening the work, because it
+  used to disappear at that moment; with windows it stays open behind. Fixed (and the
+  same pattern in the tools' start page).
+
+### Tests
+
+- Unit: 14 new (window manager: one window per app, cascade, focus, taskbar
+  click cycle, maximise, minimise all, move/resize limits, fitting a smaller screen,
+  persistence and damaged data; icon layout and settings). 1,929 in total.
+- Browser: new `desktop.spec.ts` (7 tests: Mail opens in a window; several apps and
+  taskbar switching; minimise, maximise, restore, drag, resize, close, layout kept
+  after reload; icons by double-click and keyboard, icon dragging kept after reload;
+  right-click menu, New document, Personalize; Start and search; leaving the desk).
+  Existing tests updated for windows: `openApp` closes other windows first (one app
+  at a time, as before), `showApp` brings an app forward without minimising it, and
+  lookups that can now match two windows use the window in front.
+- Results: 144 Chromium browser tests pass (2 needed a retry under load and pass
+  alone), 5 production-build tests, 8 Firefox/WebKit/Edge (1 skipped, as before),
+  and the automated accessibility checks on every screen. Start screen 280 kB.
+
+### Known limitations
+
+- Windows snap (dragging to a screen edge), keyboard window switching (Alt+Tab) and
+  several windows of the same app are not included.
+- The Recycle Bin is always empty: WorkSim deletes files at once and keeps versions
+  and backups instead.
+
 ---
 
 ## 2026-11-03 · Milestone 8.9: Final end-to-end regression

@@ -166,6 +166,8 @@ function TaskDetail({
       await onOpenWorkbook(assignment.id)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      // Tasks stays open in its own window behind the work it opened.
       setOpening(false)
     }
   }

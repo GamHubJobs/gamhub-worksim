@@ -9,6 +9,11 @@ export interface AppServices {
    * before another tab takes over. Returns a function to unregister.
    */
   registerFlush: (flush: () => Promise<boolean>) => () => void
+  /**
+   * Saves pending work in every open window now (e.g. before Mail sends a file
+   * that is still open in another window). True if everything saved.
+   */
+  saveAll: () => Promise<boolean>
   /** Called after the first successful save, to ask for persistent storage. */
   onSaved: () => void
 }

@@ -1,7 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { cell, enterValue, openApp, waitUntilSaved } from './helpers.ts'
-
-const apps = (page: Page) => page.getByRole('navigation', { name: 'Apps' })
+import { cell, enterValue, openApp, waitUntilSaved, showApp } from './helpers.ts'
 
 /** A passing score. (Full marks for the model work are proven in the unit tests.) */
 const PASSED = /^(7[0-9]|8[0-9]|9[0-9]|100)%$/
@@ -33,9 +31,7 @@ async function postJournal(
 
 /** Opens a task from the Tasks app and starts (or continues) it. */
 async function startStage(page: Page, title: RegExp) {
-  await apps(page)
-    .getByRole('button', { name: /^Tasks/ })
-    .click()
+  await showApp(page, 'Tasks')
   await page
     .getByRole('list', { name: 'Tasks' })
     .getByRole('button', { name: title })
@@ -133,9 +129,7 @@ test('an integrated project: three stages in three apps become one portfolio ite
   await addChart(page, 'A1', 'D3', 'Income and costs by month')
   await waitUntilSaved(page)
 
-  await apps(page)
-    .getByRole('button', { name: /^Tasks/ })
-    .click()
+  await showApp(page, 'Tasks')
   await page
     .getByTestId('task-files')
     .getByRole('button', { name: /Q1 board report/ })
@@ -166,9 +160,7 @@ test('an integrated project: three stages in three apps become one portfolio ite
   )
   await waitUntilSaved(page)
 
-  await apps(page)
-    .getByRole('button', { name: /^Tasks/ })
-    .click()
+  await showApp(page, 'Tasks')
   await page
     .getByTestId('task-files')
     .getByRole('button', { name: /Reply to Daniel/ })
@@ -183,9 +175,7 @@ test('an integrated project: three stages in three apps become one portfolio ite
   await results.getByRole('button', { name: 'Close' }).click()
 
   // The project is now one piece of work in the portfolio, linked to its stages.
-  await apps(page)
-    .getByRole('button', { name: /^Portfolio/ })
-    .click()
+  await showApp(page, 'Portfolio')
   const project = page
     .getByTestId('portfolio-card')
     .filter({ hasText: 'Close the quarter for the board' })

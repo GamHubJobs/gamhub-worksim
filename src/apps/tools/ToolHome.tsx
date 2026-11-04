@@ -119,6 +119,7 @@ export function ToolHome({
                   await onOpenPractice()
                 } catch (e) {
                   setError(e instanceof Error ? e.message : String(e))
+                } finally {
                   setOpening(false)
                 }
               }}

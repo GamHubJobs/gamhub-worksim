@@ -42,7 +42,25 @@ export async function sitAtComputer(page: Page) {
   })
 }
 
-/** Opens a dock app such as "Mail" or "Sheets". */
+/**
+ * Closes every window on the work computer (minimised ones too), as the
+ * player would with each window's close button.
+ */
+export async function closeAllWindows(page: Page) {
+  const close = page.locator(
+    '[data-window] [data-testid="window-title-bar"] button[aria-label^="Close "]',
+  )
+  for (let n = await close.count(); n > 0; n = await close.count()) {
+    // A minimised window's button is hidden, but it can still be pressed.
+    await close.first().dispatchEvent('click')
+    await expect(close).toHaveCount(n - 1)
+  }
+}
+
+/**
+ * Opens a taskbar app such as "Mail" or "Sheets", in a window of its own:
+ * other windows are closed first, so each test sees one app at a time.
+ */
 export async function openApp(
   page: Page,
   name:
@@ -57,6 +75,7 @@ export async function openApp(
     | 'Cases',
 ) {
   await sitAtComputer(page)
+  await closeAllWindows(page)
   await page
     .getByRole('navigation', { name: 'Apps' })
     .getByRole('button', { name: new RegExp(`^${name}`) })
@@ -109,9 +128,27 @@ export async function crashTab(page: Page) {
   })
 }
 
-/** Waits until the save indicator reports that everything is saved. */
+/**
+ * Brings an app's window to the front (opening it if needed), without
+ * closing other windows. Its taskbar button would minimise it if it were
+ * already in front, so it is only pressed when it is not.
+ */
+export async function showApp(page: Page, name: string) {
+  const button = page
+    .getByRole('navigation', { name: 'Apps' })
+    .getByRole('button', { name: new RegExp(`^${name}`) })
+  if ((await button.getAttribute('aria-current')) !== 'page') await button.click()
+  await expect(button).toHaveAttribute('aria-current', 'page')
+}
+
+/** The window in front on the work computer (several apps can be open at once). */
+export function activeWindow(page: Page) {
+  return page.locator('[data-window][data-active="true"]')
+}
+
+/** Waits until the save indicator (in the window in front) reports that everything is saved. */
 export async function waitUntilSaved(page: Page) {
-  await expect(page.getByTestId('save-indicator')).toHaveAttribute(
+  await expect(activeWindow(page).getByTestId('save-indicator')).toHaveAttribute(
     'data-state',
     'saved',
     {
@@ -129,6 +166,7 @@ export async function openMainFileInPortfolio(page: Page, title: string | RegExp
     .getByTestId('submission-results')
     .getByRole('button', { name: /^(Close|Back to )/ })
     .click()
+  await closeAllWindows(page)
   await page
     .getByRole('navigation', { name: 'Apps' })
     .getByRole('button', { name: /^Portfolio/ })

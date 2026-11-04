@@ -72,10 +72,13 @@ export function WorkdayBar({
   profile,
   pendingMinutes,
   status,
+  variant = 'header',
 }: {
   profile: Profile
   pendingMinutes: number
   status: ClockStatus
+  /** 'taskbar': the clock at the end of the computer's taskbar, opening upwards. */
+  variant?: 'header' | 'taskbar'
 }) {
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
@@ -104,6 +107,40 @@ export function WorkdayBar({
       : status === 'paused'
         ? 'Clock paused: you seem to be away'
         : 'Time moves when you do things'
+
+  if (variant === 'taskbar')
+    return (
+      <div className="relative flex" ref={root}>
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          className={`flex flex-col items-center justify-center px-2.5 text-[11px] leading-tight text-white hover:bg-white/10 ${
+            open ? 'bg-white/10' : ''
+          }`}
+          data-testid="workday-bar"
+          title={statusText}
+        >
+          <span className="flex items-center gap-1">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                status === 'running'
+                  ? 'bg-emerald-400'
+                  : status === 'paused'
+                    ? 'bg-amber-400'
+                    : 'bg-white/40'
+              }`}
+              aria-hidden
+            />
+            <span data-testid="office-clock">{formatTime(minute)}</span>
+          </span>
+          <span>
+            {weekdayName(work.day)}, week {weekNumber(work.day)}
+          </span>
+        </button>
+        {open && <DayPanel profile={profile} statusText={statusText} above />}
+      </div>
+    )
 
   return (
     <div className="relative" ref={root}>
@@ -153,7 +190,15 @@ export function WorkdayBar({
   )
 }
 
-function DayPanel({ profile, statusText }: { profile: Profile; statusText: string }) {
+function DayPanel({
+  profile,
+  statusText,
+  above = false,
+}: {
+  profile: Profile
+  statusText: string
+  above?: boolean
+}) {
   const { work } = profile
   const lunch = lunchAvailability(work)
   const deadlines = Object.entries(work.deadlines)
@@ -163,7 +208,7 @@ function DayPanel({ profile, statusText }: { profile: Profile; statusText: strin
 
   return (
     <section
-      className="absolute top-full right-0 z-40 mt-2 max-h-[80vh] w-[22rem] overflow-y-auto rounded-xl bg-white p-4 shadow-2xl ring-1 ring-slate-200"
+      className={`absolute right-0 z-40 max-h-[80vh] ${above ? 'bottom-full mb-1 rounded-none text-left' : 'top-full mt-2 rounded-xl'} w-[22rem] overflow-y-auto bg-white p-4 shadow-2xl ring-1 ring-slate-200`}
       aria-label="Your day"
       data-testid="day-panel"
     >

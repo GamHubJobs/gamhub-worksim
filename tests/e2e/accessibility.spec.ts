@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { openApp } from './helpers.ts'
+import { openApp, activeWindow } from './helpers.ts'
 
 /** Runs the automated WCAG 2.1 A/AA checks on what is on screen now. */
 async function audit(page: Page, screen: string, skipRules: string[] = []) {
@@ -132,7 +132,12 @@ for (const [career, task, , shown] of TOOLS) {
       .getByTestId('task-detail')
       .getByRole('button', { name: 'Start task' })
       .click()
-    await expect(page.getByTestId('task-detail')).toHaveCount(0)
+    // The tool opens in its own window, in front of Tasks.
+    await expect(activeWindow(page).getByTestId('task-detail')).toHaveCount(0)
+    await expect(activeWindow(page)).toHaveAttribute(
+      'data-testid',
+      /window-tool:|window-code|window-helpdesk/,
+    )
     const problems = await audit(page, shown)
     expect(problems.join('\n')).toBe('')
   })
