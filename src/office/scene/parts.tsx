@@ -1,18 +1,12 @@
 /**
- * Building blocks for the office: furniture, plants and people, made from
+ * Building blocks for the office: furniture and plants (people are in people.tsx), made from
  * simple shapes. No downloaded models, so the office loads instantly and runs
  * on ordinary computers.
  */
 import { RoundedBox } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
-import { useRef, type ReactNode } from 'react'
-import type { Group } from 'three'
+import type { ReactNode } from 'react'
 import type { Vector } from '../../content/office'
 import { COLORS } from './colors'
-import { prefersReducedMotion } from '../../ui/motion'
-
-/** With reduced motion, people sit still. */
-const STILL = prefersReducedMotion()
 
 interface Placed {
   position?: Vector
@@ -209,135 +203,6 @@ export function Sofa({
           radius={0.06}
         />
       ))}
-    </Place>
-  )
-}
-
-const SKIN = ['#f1c7a5', '#c68a62', '#8d5a3b', '#e8b48f']
-const HAIR = ['#2b1d16', '#6b4226', '#111827', '#c08a3e', '#3f3f46']
-
-export interface PersonLook {
-  shirt: string
-  skin?: number
-  hair?: number
-  /** Long hair falls to the shoulders. */
-  longHair?: boolean
-}
-
-/**
- * A stylised person, standing or sitting, with a gentle idle movement so the
- * office feels alive. `phase` keeps different people out of step.
- */
-export function Person({
-  position,
-  rotation,
-  look,
-  seated = false,
-  phase = 0,
-  typing = false,
-}: Placed & { look: PersonLook; seated?: boolean; phase?: number; typing?: boolean }) {
-  const body = useRef<Group>(null)
-  const head = useRef<Group>(null)
-  const arms = useRef<Group>(null)
-
-  useFrame(({ clock }) => {
-    if (STILL) return
-    const t = clock.elapsedTime + phase
-    if (body.current) body.current.position.y = Math.sin(t * 1.6) * 0.008
-    if (head.current) head.current.rotation.y = Math.sin(t * 0.35) * 0.25
-    if (arms.current && typing)
-      arms.current.position.y = Math.abs(Math.sin(t * 9)) * 0.012
-  })
-
-  const skin = SKIN[(look.skin ?? 0) % SKIN.length]
-  const hair = HAIR[(look.hair ?? 0) % HAIR.length]
-  const hipY = seated ? 0.52 : 0.9
-
-  return (
-    <Place position={position} rotation={rotation}>
-      {/* Legs */}
-      {[-0.09, 0.09].map((x) =>
-        seated ? (
-          <group key={x}>
-            <Box
-              size={[0.13, 0.13, 0.45]}
-              position={[x, 0.5, -0.2]}
-              color="#334155"
-              radius={0.04}
-            />
-            <Box
-              size={[0.12, 0.45, 0.13]}
-              position={[x, 0.24, -0.42]}
-              color="#334155"
-              radius={0.04}
-            />
-          </group>
-        ) : (
-          <Box
-            key={x}
-            size={[0.13, 0.85, 0.14]}
-            position={[x, 0.43, 0]}
-            color="#334155"
-            radius={0.04}
-          />
-        ),
-      )}
-      <group ref={body}>
-        {/* Torso */}
-        <mesh position={[0, hipY + 0.3, 0]}>
-          <capsuleGeometry args={[0.19, 0.32, 6, 12]} />
-          <meshStandardMaterial color={look.shirt} roughness={0.85} />
-        </mesh>
-        {/* Arms */}
-        <group ref={arms}>
-          {[-0.25, 0.25].map((x) =>
-            seated || typing ? (
-              <Box
-                key={x}
-                size={[0.1, 0.1, 0.4]}
-                position={[x, hipY + 0.22, -0.2]}
-                color={look.shirt}
-                radius={0.04}
-              />
-            ) : (
-              <mesh
-                key={x}
-                position={[x, hipY + 0.22, 0]}
-                rotation={[0, 0, x > 0 ? 0.08 : -0.08]}
-              >
-                <capsuleGeometry args={[0.055, 0.45, 4, 8]} />
-                <meshStandardMaterial color={look.shirt} roughness={0.85} />
-              </mesh>
-            ),
-          )}
-        </group>
-        {/* Head */}
-        <group ref={head} position={[0, hipY + 0.78, 0]}>
-          <mesh>
-            <sphereGeometry args={[0.14, 20, 16]} />
-            <meshStandardMaterial color={skin} roughness={0.7} />
-          </mesh>
-          {/* Eyes */}
-          {[-0.045, 0.045].map((x) => (
-            <mesh key={x} position={[x, 0.0, -0.13]}>
-              <sphereGeometry args={[0.016, 8, 6]} />
-              <meshStandardMaterial color="#1e293b" />
-            </mesh>
-          ))}
-          <mesh position={[0, 0.04, 0.02]} scale={[1.05, 0.85, 1.05]}>
-            <sphereGeometry args={[0.145, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
-            <meshStandardMaterial color={hair} roughness={0.9} />
-          </mesh>
-          {look.longHair && (
-            <Box
-              size={[0.28, 0.24, 0.1]}
-              position={[0, -0.06, 0.1]}
-              color={hair}
-              radius={0.04}
-            />
-          )}
-        </group>
-      </group>
     </Place>
   )
 }

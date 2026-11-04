@@ -130,8 +130,43 @@ working simulations of the professional software used in its field (see
 **Workplace realism upgrade** (in progress):
 
 - [x] A. The work computer as a Windows 10-style desktop
-- [ ] B. More realistic 3D people
+- [x] B. More realistic 3D people
 - [ ] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · Upgrade B: more realistic 3D people
+
+### Built
+
+- **A jointed body** (`src/office/scene/people.tsx`): hips, knees, shoulders, elbows,
+  spine and neck, with realistic proportions, hands with thumbs and shoes with soles.
+- **Faces**: eyes (whites and irises) that blink, brows, nose, ears, and a mouth
+  that rests in a smile or a neutral line and moves while talking. Optional glasses
+  and beards.
+- **Hair**: nine styles (short, cropped, side parting, long, bob, bun, ponytail,
+  curly, bald) in seven colours. Eight skin tones; slim, average and broad builds;
+  heights from about 0.96 to 1.05.
+- **Clothes**: shirts with collars, blouses, polos with buttons, sweaters, blazers and
+  cardigans over a shirt, ties; long, short or rolled sleeves; trousers and shoes.
+  Every colleague now has their own look.
+- **Movement**: breathing and weight shift; typing with both hands on the keyboard;
+  looking at the screen, around the room and, now and then, at the player when close;
+  a colleague who walks a route behind the desks, stops, looks around and turns.
+  The person the player talks to (Nina, the manager, the senior colleague, Tom) faces
+  the player, talks and gestures. Every change of pose is smoothed.
+- **Fixed**: the manager's office description showed "{managerFull}" instead of the
+  name, and assumed the manager's pronoun.
+
+### Key decisions
+
+- **Still no downloaded models.** People are built from simple shapes; all of them
+  share one set of geometries and a small cache of materials.
+- **Reduced motion**: people hold a natural pose and nothing moves.
+- **Software 3D** (computers without a graphics card): people are drawn without
+  their smallest details (ears, brows, nose, collars, buttons, thumbs). Without
+  this, browser tests that draw the office in software ran several times slower.
+- Memory in the office is unchanged (17 MB of JavaScript memory).
 
 ---
 

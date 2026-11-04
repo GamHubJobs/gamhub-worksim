@@ -35,7 +35,7 @@ export const SPOTS: Spot[] = [
   {
     id: 'manager',
     name: '{manager}’s office',
-    description: '{managerFull}, your manager. Her door is always open.',
+    description: '{managerFull}, your manager. The door is always open.',
     camera: { position: [7.0, 2.65, -1.55], target: [8.5, 0.95, -5.0] },
     marker: [7.4, 0.02, -2.3],
   },

@@ -289,6 +289,7 @@ export function OfficeView({
                   .join(',')}
                 onGo={sceneGo}
                 onInteract={sceneInteract}
+                talkingTo={dialogue?.speaker ?? null}
               />
             </Suspense>
           </SceneBoundary>
@@ -307,7 +308,7 @@ export function OfficeView({
           You are at
         </p>
         <h1 className="text-lg font-semibold text-slate-900">{fill(current.name)}</h1>
-        <p className="mt-1 text-sm text-slate-600">{current.description}</p>
+        <p className="mt-1 text-sm text-slate-600">{fill(current.description)}</p>
 
         {meetingNow && (
           <div

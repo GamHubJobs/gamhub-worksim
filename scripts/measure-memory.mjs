@@ -44,11 +44,18 @@ try {
     const used = metrics.find((m) => m.name === 'JSHeapUsedSize').value
     return Math.round(used / 1024 / 1024)
   }
-  const app = (name) =>
-    page
+  // Opens an app on its own: the other windows are closed first, so each
+  // round really closes and reopens the editors.
+  const app = async (name) => {
+    const close = page.locator(
+      '[data-window] [data-testid="window-title-bar"] button[aria-label^="Close "]',
+    )
+    while ((await close.count()) > 0) await close.first().dispatchEvent('click')
+    await page
       .getByRole('navigation', { name: 'Apps' })
       .getByRole('button', { name: new RegExp(`^${name}`) })
       .click()
+  }
 
   const results = {}
   await page.goto(URL)

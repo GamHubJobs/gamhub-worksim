@@ -26,7 +26,118 @@ import { prefersReducedMotion } from '../../ui/motion'
 /** With reduced motion, the camera jumps between places and nothing moves by itself. */
 const STILL = prefersReducedMotion()
 import { getDeskItem, type DeskItem } from '../../content/desk'
-import { Box, Desk, OfficeChair, Person, Place, Plant, Sofa } from './parts'
+import { Box, Desk, OfficeChair, Place, Plant, Sofa } from './parts'
+import { PeopleDetail, Person, Walker, type PersonLook } from './people'
+
+/**
+ * The people of the office, each with their own look. Who sits where is fixed;
+ * names change with the department, so the looks are kept generic.
+ */
+const LOOKS = {
+  reception: {
+    skin: 4,
+    hair: 'long',
+    hairColor: 0,
+    outfit: 'blouse',
+    top: '#9f1239',
+    trousers: '#1f2937',
+    smile: true,
+  },
+  senior: {
+    skin: 5,
+    hair: 'short',
+    hairColor: 1,
+    outfit: 'shirt',
+    top: '#0f766e',
+    sleeves: 'rolled',
+    trousers: '#334155',
+    glasses: true,
+  },
+  backLeft: {
+    skin: 1,
+    hair: 'bob',
+    hairColor: 2,
+    outfit: 'cardigan',
+    top: '#6d28d9',
+    under: '#f1f5f9',
+    trousers: '#27272a',
+    height: 0.96,
+    build: 'slim',
+  },
+  backMiddle: {
+    skin: 6,
+    hair: 'curly',
+    hairColor: 0,
+    outfit: 'sweater',
+    top: '#a16207',
+    trousers: '#3f3f46',
+    build: 'broad',
+    smile: true,
+  },
+  backRight: {
+    skin: 0,
+    hair: 'side',
+    hairColor: 4,
+    outfit: 'shirt',
+    top: '#dbeafe',
+    tie: '#1e3a8a',
+    trousers: '#1e293b',
+    glasses: true,
+    height: 1.04,
+  },
+  filing: {
+    skin: 3,
+    hair: 'crop',
+    hairColor: 5,
+    outfit: 'polo',
+    top: '#15803d',
+    trousers: '#57534e',
+    beard: true,
+    build: 'broad',
+  },
+  manager: {
+    skin: 2,
+    hair: 'bun',
+    hairColor: 1,
+    outfit: 'blazer',
+    top: '#1e293b',
+    under: '#f8fafc',
+    trousers: '#1e293b',
+    smile: true,
+  },
+  facilities: {
+    skin: 0,
+    hair: 'short',
+    hairColor: 3,
+    outfit: 'shirt',
+    top: '#b45309',
+    sleeves: 'rolled',
+    trousers: '#44403c',
+    beard: true,
+    build: 'broad',
+    height: 1.05,
+    smile: true,
+  },
+  lunch: {
+    skin: 7,
+    hair: 'ponytail',
+    hairColor: 0,
+    outfit: 'sweater',
+    top: '#4338ca',
+    trousers: '#1f2937',
+    smile: true,
+  },
+  walker: {
+    skin: 5,
+    hair: 'long',
+    hairColor: 3,
+    outfit: 'blazer',
+    top: '#7f1d1d',
+    under: '#e0f2fe',
+    trousers: '#262626',
+    height: 0.97,
+  },
+} satisfies Record<string, PersonLook>
 
 export interface OfficeSceneProps {
   spot: SpotId
@@ -37,6 +148,8 @@ export interface OfficeSceneProps {
   desk: string
   onGo: (spot: SpotId) => void
   onInteract: (interaction: InteractionId) => void
+  /** Who the player is talking to (a colleague ID), so they face the player and talk. */
+  talkingTo?: string | null
 }
 
 /**
@@ -81,15 +194,18 @@ function OfficeScene(props: OfficeSceneProps) {
       <directionalLight position={[6, 12, 8]} intensity={1.5} />
       <directionalLight position={[-8, 6, -4]} intensity={0.35} color="#cfe3ff" />
       <CameraRig spot={props.spot} />
-      <Building playerName={props.playerName} />
-      <Reception onInteract={props.onInteract} />
-      <Workspace
-        computerAlert={props.computerAlert}
-        desk={props.desk}
-        onInteract={props.onInteract}
-      />
-      <ManagerOffice onInteract={props.onInteract} />
-      <BreakRoom onInteract={props.onInteract} />
+      <PeopleDetail low={lowPower}>
+        <Building playerName={props.playerName} />
+        <Reception onInteract={props.onInteract} talkingTo={props.talkingTo} />
+        <Workspace
+          computerAlert={props.computerAlert}
+          desk={props.desk}
+          onInteract={props.onInteract}
+          talkingTo={props.talkingTo}
+        />
+        <ManagerOffice onInteract={props.onInteract} talkingTo={props.talkingTo} />
+        <BreakRoom onInteract={props.onInteract} talkingTo={props.talkingTo} />
+      </PeopleDetail>
       {SPOTS.map((s) => (
         <Marker
           key={s.id}
@@ -401,9 +517,9 @@ function Clock({ position }: { position: Vector }) {
 // Areas
 // ---------------------------------------------------------------------------
 
-type Interact = { onInteract: (id: InteractionId) => void }
+type Interact = { onInteract: (id: InteractionId) => void; talkingTo?: string | null }
 
-function Reception({ onInteract }: Interact) {
+function Reception({ onInteract, talkingTo }: Interact) {
   return (
     <group>
       {/* Feature wall with the company name */}
@@ -444,7 +560,8 @@ function Reception({ onInteract }: Interact) {
         <Person
           position={[-6.2, 0, 3.4]}
           rotation={Math.PI}
-          look={{ shirt: '#be123c', skin: 1, hair: 0, longHair: true }}
+          look={LOOKS.reception}
+          talking={talkingTo === 'reception'}
           phase={1.3}
         />
       </Interactive>
@@ -552,6 +669,7 @@ function Workspace({
   computerAlert,
   desk,
   onInteract,
+  talkingTo,
 }: Interact & { computerAlert: boolean; desk: string }) {
   const items = desk
     .split(',')
@@ -598,16 +716,17 @@ function Workspace({
                 >
                   <Person
                     position={[x, 0, 1.65]}
-                    look={{ shirt, skin: i + 2, hair: i + 1 }}
+                    look={LOOKS.senior}
                     seated
-                    typing
+                    typing={talkingTo !== 'senior'}
+                    talking={talkingTo === 'senior'}
                     phase={i * 2.1}
                   />
                 </Interactive>
               ) : (
                 <Person
                   position={[x, 0, 1.65]}
-                  look={{ shirt, skin: i + 2, hair: i + 1 }}
+                  look={{ ...LOOKS.senior, top: shirt, skin: i + 2 }}
                   seated
                   typing
                   phase={i * 2.1}
@@ -616,14 +735,14 @@ function Workspace({
           </group>
         ),
       )}
-      {back.map(([x, shirt], i) => (
+      {back.map(([x], i) => (
         <group key={x}>
           <Desk position={[x, 0, -0.45]} rotation={Math.PI} />
           <OfficeChair position={[x, 0, -1.1]} rotation={Math.PI} />
           <Person
             position={[x, 0, -1.0]}
             rotation={Math.PI}
-            look={{ shirt, skin: i, hair: i + 2, longHair: i === 1 }}
+            look={[LOOKS.backLeft, LOOKS.backMiddle, LOOKS.backRight][i]}
             seated
             typing={i !== 2}
             phase={i * 1.7 + 0.5}
@@ -683,11 +802,20 @@ function Workspace({
       <Person
         position={[4.3, 0, -0.85]}
         rotation={Math.PI}
-        look={{ shirt: '#15803d', skin: 2, hair: 4 }}
+        look={LOOKS.filing}
         phase={3.3}
       />
       <Plant position={[-2.6, 0, -1.6]} />
       <Plant position={[4.4, 0, 3.6]} scale={1.2} />
+      {/* A colleague walking through the office, behind the back row of desks */}
+      <Walker
+        path={[
+          [-2.0, 0, -2.3],
+          [3.5, 0, -2.3],
+        ]}
+        look={LOOKS.walker}
+        phase={0.9}
+      />
     </group>
   )
 }
@@ -707,7 +835,7 @@ function AlertBubble({ position }: { position: Vector }) {
   )
 }
 
-function ManagerOffice({ onInteract }: Interact) {
+function ManagerOffice({ onInteract, talkingTo }: Interact) {
   return (
     <group>
       {/* Glass walls with a door opening */}
@@ -754,8 +882,9 @@ function ManagerOffice({ onInteract }: Interact) {
         <Person
           position={[8.4, 0, -5.1]}
           rotation={Math.PI}
-          look={{ shirt: '#0f766e', skin: 2, hair: 2, longHair: true }}
+          look={LOOKS.manager}
           seated
+          talking={talkingTo === 'manager'}
           phase={0.7}
         />
       </Interactive>
@@ -802,7 +931,7 @@ function ManagerOffice({ onInteract }: Interact) {
   )
 }
 
-function BreakRoom({ onInteract }: Interact) {
+function BreakRoom({ onInteract, talkingTo }: Interact) {
   return (
     <group>
       {/* Half-height divider to the workspace */}
@@ -846,7 +975,8 @@ function BreakRoom({ onInteract }: Interact) {
         <Person
           position={[-8.4, 0, -6.2]}
           rotation={Math.PI + 0.5}
-          look={{ shirt: '#b45309', skin: 0, hair: 3 }}
+          look={LOOKS.facilities}
+          talking={talkingTo === 'facilities'}
           phase={2.4}
         />
       </Interactive>
@@ -880,12 +1010,7 @@ function BreakRoom({ onInteract }: Interact) {
           color="#f59e0b"
         />
       ))}
-      <Person
-        position={[-7.4, 0, -2.6]}
-        look={{ shirt: '#4338ca', skin: 3, hair: 1 }}
-        seated
-        phase={4.1}
-      />
+      <Person position={[-7.4, 0, -2.6]} look={LOOKS.lunch} seated phase={4.1} />
       {/* Notice board */}
       <Interactive
         id="noticeboard"
