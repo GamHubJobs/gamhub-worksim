@@ -127,11 +127,75 @@ working simulations of the professional software used in its field (see
 
 **Phase 8 is complete.**
 
+**WorkSim AI** (in progress). Plan: [docs/AI_PLAN.md](docs/AI_PLAN.md).
+
+- [x] AI.1 Architecture audit
+- [x] AI.2 AI infrastructure (engines, context, settings, limits, the bridge)
+- [ ] AI.3 The WorkSim AI desktop app
+- [ ] AI.4 AI inside Mail, Sheets, Docs, Slides, Tasks, Code and Help Desk
+- [ ] AI.5 Workplace AI: colleagues and feedback
+- [ ] AI.6 AI competency and career readiness
+- [ ] AI.7 Quality assurance
+
 **Workplace realism upgrade** (complete):
 
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · AI.1–AI.2: audit and AI infrastructure
+
+### Audit findings
+
+- WorkSim is local-first with **no server and no network requests**, and the privacy
+  page promises that nothing is sent anywhere. Real AI therefore has to be opt-in,
+  off by default, limited to the minimum context, and visible before it is sent.
+- The window manager, taskbar, Start, search and desktop icons all come from one
+  list of apps, so a new app fits in without changes to the shell.
+- Saves grow by adding fields with defaults; no format change is needed for AI data.
+- Every app already knows what the player is looking at (the selected email, cells,
+  document, ticket, code file, and the task's brief, steps and hints), which is the
+  context the assistant needs.
+- Baseline (this morning, on the code of upgrade C): 1,929 unit tests, 144 Chromium,
+  5 production-build and 8 cross-browser tests (1 skipped).
+
+### Built (`src/ai/`, `scripts/ai-bridge/`)
+
+- **Three engines behind one service.** The **built-in guide** (default; offline,
+  free, deterministic, always labelled "not an AI model") explains formulas with the
+  spreadsheet's own parser and function descriptions, explains cell errors,
+  summarises text, lists action items with their timing, outlines replies, plans a
+  task from its own steps and hints (one step at a time in Learning mode), reviews
+  writing style and teaches prompting. A **local model** (any OpenAI-compatible
+  server on this computer, such as Ollama) and the **AI bridge** (cloud providers)
+  are used only with the player's consent.
+- **The AI bridge** (`npm run ai-bridge`): a small server on the player's own
+  computer that holds the API keys (from `.env.local`, which git ignores) and
+  passes requests to Anthropic, OpenAI or Google. It listens only on this computer,
+  answers only pages served from this computer, validates and caps request size,
+  has a daily limit and a timeout, explains failures in plain words, and never logs
+  what is asked or answered. Only Anthropic has a default model
+  (`claude-haiku-5-5`); OpenAI and Google need their model named, so the bridge
+  never guesses.
+- **Context**: each request carries only the items the app offers, each capped
+  (4,000 characters, 9,000 in total), with the player's name replaced by "the
+  employee". Structured data for the built-in guide never leaves the device.
+- **Modes**: Learning, Professional and Expert change the instructions models get
+  (and the built-in guide's answers), not how much work is done for the player.
+- **Service**: consent, a daily request limit per device (default 40), a 45-second
+  time limit, and a fallback to the built-in guide that says why.
+
+### Tests
+
+- 28 new unit tests: context limits and name removal, settings validation (only
+  addresses on this computer), consent, usage counting, the built-in guide's answers
+  in each mode, the local engine, timeouts, limits, fallback, and the bridge (origin
+  checks, each provider's request format, errors, the daily limit, keys never in a
+  reply). No test calls a real AI provider. 1,957 unit tests in total; the
+  production build passes. The app does not use the AI code yet, so browser tests
+  are run with the next stage.
 
 ---
 
