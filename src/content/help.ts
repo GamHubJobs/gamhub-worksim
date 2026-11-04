@@ -44,6 +44,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       'After work, **Go home**: the evening is yours. Each room of your flat lists what you can do, how long it takes and what it costs. Your **needs** (hunger, hygiene, social, fun) fall as time passes; looking after them helps you at work.',
       'Go to bed in good time: the alarm rings at 7:00. In the morning, eat, shower and get dressed, then leave from the **Front door** by foot, bus or taxi. Arriving late, hungry or in yesterday’s clothes shows at work.',
       'You are paid on Fridays and pay rent on Mondays; the **Statement** lists your money in and out.',
+      'In **Your home**, the **Furniture shop** sells pieces that unlock activities (a games console, a study desk), improve them (a good bed, a fitted kitchen) or make home nicer. **Move home** for more space and a shorter commute, at a higher rent.',
     ],
   },
   {

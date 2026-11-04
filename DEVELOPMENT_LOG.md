@@ -130,7 +130,7 @@ working simulations of the professional software used in its field (see
 **WorkSim Life** (in progress). Plan: [docs/LIFE_PLAN.md](docs/LIFE_PLAN.md).
 
 - [x] L1 Needs, home routines, sleep, the commute, money
-- [ ] L2 The home: a 3D flat, furniture, upgrades
+- [x] L2 The home: a 3D flat, furniture, upgrades
 - [ ] L3 Social life: friends, a phone, invitations
 - [ ] L4 The city: a walkable district, third-person, enterable places
 - [ ] L5 Getting around: walking, bus, bike, car
@@ -152,6 +152,56 @@ working simulations of the professional software used in its field (see
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · L2: the home in 3D, furniture and moving
+
+### Built
+
+- **Homes and furniture** (`src/content/home.ts`): three homes (a studio, a
+  one-bedroom flat 10 minutes nearer work, a terraced house 18 minutes nearer), each
+  with a rent, a move-in cost, a size, rooms and a place for each kind of furniture;
+  seventeen pieces in fifteen slots, each with a price, colours and what it does.
+- **Rules** (`src/game/home.ts`): buying (the old piece in that place is sold
+  second-hand at 40%), selling, recolouring, and moving (the furniture comes along; the
+  new rent applies from the next Monday's rent). Furniture now matters in life
+  (`life.ts`):
+  - four new activities that need furniture: a proper coffee (energy), studying (skill
+    XP to the career skill the player has least of), video games and yoga;
+  - activities improved by furniture (series with a sofa and television, meals with a
+    fitted kitchen, reading with a bookshelf);
+  - a good bed gives more energy in the morning;
+  - homely pieces (plants, a lamp, a rug, a sofa) slow how fast fun falls in the
+    evening;
+  - the rent and every commute's length come from the home.
+- **The home in 3D** (`src/home/scene/`): the flat seen from above with low walls,
+  every piece of furniture in the colour chosen, the player in the room they are in
+  (in work clothes once dressed), evening or morning light, and the camera gliding
+  between rooms. Built like the office (simple shapes; software 3D draws once a second
+  at a lower resolution; reduced motion keeps it still), loaded only at home, and
+  hidden without WebGL: the panels work on their own.
+- **Furniture shop and Move home** (`src/home/HomeShop.tsx`), from _Your home_: prices,
+  what each piece does, colours, what the old piece sells for, and why something cannot
+  be bought or moved to (the money needed, already owned).
+- **Save data**: `life.home` (the home and the furniture by slot), additive with the
+  starting studio and its basics as defaults.
+- **Fixed**: the social need could show a fraction after a working day.
+
+### Tests
+
+- 7 new unit tests (`src/game/home.test.ts`): the starting home, furniture enabling
+  activities (and saying what is missing), better activities, studying for skill XP,
+  trading in, selling and recolouring, limits, and moving (cost, rent, a shorter
+  commute, furniture kept).
+- Results: 2,045 unit tests; 154 Chromium browser tests passed (2 needed a retry under
+  load: the office arrival test, and the Sheets sorting test, which types a whole table
+  and now allows 2 minutes); 5 production-build tests; Firefox, WebKit and Edge 8
+  passed, 1 skipped. Start screen 283 kB; JavaScript memory unchanged (17 MB after
+  using the apps).
+- `life.spec.ts`: a new test buys a games console in a chosen colour, plays, moves to
+  the flat and finds the home and the furniture kept after a reload; the 3D home is
+  checked to be drawn.
 
 ---
 

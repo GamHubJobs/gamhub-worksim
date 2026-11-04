@@ -57,6 +57,7 @@ import { passTime } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
 import { HomeView } from '../home/HomeView'
 import { doHomeAction, goHome, goToBed, leaveForWork, lifePhase } from '../game/life'
+import { buyFurniture, moveHome, recolour, sellFurniture } from '../game/home'
 import { Icon, type IconName } from '../ui/Icon'
 import { DayEnd } from '../workday/DayEnd'
 import { useWorkClock } from '../workday/useWorkClock'
@@ -545,6 +546,10 @@ export function Desktop({
               void act((p) => leaveForWork(p, commute))
               setView({ app: 'office', spot: 'reception' })
             }}
+            onBuy={(item, colour) => void act((p) => buyFurniture(p, item, colour))}
+            onSell={(slot) => void act((p) => sellFurniture(p, slot))}
+            onRecolour={(slot, colour) => void act((p) => recolour(p, slot, colour))}
+            onMove={(home) => void act((p) => moveHome(p, home))}
           />
         ) : (
           <OfficeView

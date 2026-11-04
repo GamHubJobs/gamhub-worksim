@@ -18,6 +18,8 @@ async function enterTable(page: Page) {
 }
 
 test('sorting, filtering and a live chart', async ({ page }) => {
+  // Typing a whole table cell by cell takes a while when many tests run at once.
+  test.setTimeout(120_000)
   await openWorkbook(page)
   await enterTable(page)
 

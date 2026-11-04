@@ -4,7 +4,11 @@
  * time and may cost money, and how they look after themselves shows at work
  * the next day.
  */
-import { useState } from 'react'
+import { Component, lazy, Suspense, useState, type ReactNode } from 'react'
+import { getHome, type HomeId, type SlotId } from '../content/home'
+import { homeOf } from '../game/home'
+import { supportsWebGL } from '../office/webgl'
+import { HomeShop } from './HomeShop'
 import {
   COMMUTES,
   HOME_ACTIONS,
@@ -19,17 +23,43 @@ import { formatTime, nextWorkday, weekdayName } from '../game/clock'
 import { arrivalFor, canDo, lifePhase, needWarnings, sleepHours } from '../game/life'
 import type { Profile } from '../persistence/schemas'
 
+const HomeScene = lazy(() => import('./scene/HomeScene'))
+
+/** Shows nothing instead of the 3D home if it fails: the panels still work. */
+class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch(error: unknown) {
+    console.warn('The 3D home could not be shown.', error)
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
+
 export function HomeView({
   profile,
   onAction,
   onBed,
   onLeave,
+  onBuy,
+  onSell,
+  onRecolour,
+  onMove,
 }: {
   profile: Profile
   onAction: (id: string) => void
   onBed: () => void
   onLeave: (commute: CommuteId) => void
+  onBuy: (item: string, colour: number) => void
+  onSell: (slot: SlotId) => void
+  onRecolour: (slot: SlotId, colour: number) => void
+  onMove: (home: HomeId) => void
 }) {
+  const [webgl] = useState(supportsWebGL)
+  const [shop, setShop] = useState<'shop' | 'move' | null>(null)
   const life = profile.work.life
   const phase = lifePhase(profile)
   const [room, setRoom] = useState<RoomId>(phase === 'morning' ? 'bedroom' : 'living')
@@ -58,131 +88,207 @@ export function HomeView({
             </p>
           </header>
 
-          <nav aria-label="Rooms" className="flex flex-wrap gap-2">
-            {ROOMS.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                aria-current={r.id === room ? 'location' : undefined}
-                onClick={() => setRoom(r.id)}
-                className={`rounded-full px-3.5 py-1.5 text-sm ${
-                  r.id === room
-                    ? 'bg-amber-700 text-white'
-                    : 'bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-amber-50'
-                }`}
-              >
-                {r.name}
-              </button>
-            ))}
-          </nav>
+          {webgl && (
+            <div
+              className="h-72 overflow-hidden rounded-xl bg-slate-200 shadow-sm ring-1 ring-slate-200"
+              data-testid="home-3d"
+              aria-hidden
+            >
+              <SceneBoundary>
+                <Suspense
+                  fallback={
+                    <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                      Opening the door…
+                    </div>
+                  }
+                >
+                  <HomeScene
+                    homeId={life.home.id}
+                    furniture={JSON.stringify(life.home.furniture)}
+                    room={room}
+                    phase={phase === 'morning' ? 'morning' : 'evening'}
+                    dressed={phase === 'morning' && life.ready.dressed}
+                  />
+                </Suspense>
+              </SceneBoundary>
+            </div>
+          )}
 
-          <div
-            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
-            data-testid="home-room"
-          >
-            <h2 className="font-semibold text-slate-900">{current.name}</h2>
-            <p className="text-sm text-slate-600">{current.description}</p>
-            <ul className="mt-3 space-y-2">
-              {actions.map((action) => {
-                const blocked = canDo(profile, action)
-                return (
-                  <li key={action.id}>
-                    <button
-                      type="button"
-                      disabled={!!blocked}
-                      onClick={() => onAction(action.id)}
-                      title={blocked ?? undefined}
-                      className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-55"
-                    >
-                      <span>
-                        <span className="font-medium text-slate-900">{action.label}</span>
-                        {blocked && (
-                          <span className="block text-xs text-slate-500">{blocked}</span>
-                        )}
-                      </span>
-                      <span className="shrink-0 text-xs text-slate-500">
-                        {action.minutes} min
-                        {action.cost ? ` · ${formatMoney(action.cost)}` : ''}
-                      </span>
-                    </button>
-                  </li>
-                )
-              })}
-              {room === 'bedroom' && phase === 'evening' && (
-                <li>
+          {shop ? (
+            <HomeShop
+              profile={profile}
+              tab={shop}
+              onTab={setShop}
+              onBuy={onBuy}
+              onSell={onSell}
+              onRecolour={onRecolour}
+              onMove={onMove}
+              onClose={() => setShop(null)}
+            />
+          ) : (
+            <>
+              <nav aria-label="Rooms" className="flex flex-wrap gap-2">
+                {ROOMS.map((r) => (
                   <button
+                    key={r.id}
                     type="button"
-                    onClick={onBed}
-                    className="flex w-full items-center justify-between rounded-lg bg-indigo-700 px-3 py-2 text-left text-sm font-medium text-white hover:bg-indigo-800"
+                    aria-current={r.id === room ? 'location' : undefined}
+                    onClick={() => setRoom(r.id)}
+                    className={`rounded-full px-3.5 py-1.5 text-sm ${
+                      r.id === room
+                        ? 'bg-amber-700 text-white'
+                        : 'bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-amber-50'
+                    }`}
                   >
-                    Go to bed
-                    <span className="text-xs font-normal text-indigo-100">
-                      {sleepHours(life.minute).toFixed(1)} hours before the alarm
-                    </span>
+                    {r.name}
                   </button>
-                </li>
-              )}
-              {room !== 'bedroom' && phase === 'evening' && actions.length === 0 && (
-                <li className="text-sm text-slate-500">
-                  Nothing to do here this evening.
-                </li>
-              )}
-            </ul>
+                ))}
+              </nav>
 
-            {room === 'door' && phase === 'morning' && (
-              <div className="mt-4 border-t border-slate-100 pt-3" data-testid="commute">
-                <h3 className="text-sm font-semibold text-slate-900">Leave for work</h3>
-                <ul className="mt-2 grid gap-2 sm:grid-cols-3">
-                  {COMMUTES.map((c) => {
-                    const arrival = arrivalFor(profile, c.id)
-                    const broke = life.money < c.cost
+              <div
+                className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+                data-testid="home-room"
+              >
+                <h2 className="font-semibold text-slate-900">{current.name}</h2>
+                <p className="text-sm text-slate-600">{current.description}</p>
+                <ul className="mt-3 space-y-2">
+                  {actions.map((action) => {
+                    const blocked = canDo(profile, action)
                     return (
-                      <li key={c.id}>
+                      <li key={action.id}>
                         <button
                           type="button"
-                          disabled={broke}
-                          onClick={() => onLeave(c.id)}
-                          className="w-full rounded-lg border border-slate-200 p-3 text-left text-sm hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50"
+                          disabled={!!blocked}
+                          onClick={() => onAction(action.id)}
+                          title={blocked ?? undefined}
+                          className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-55"
                         >
-                          <span className="block font-medium text-slate-900">
-                            {c.name}
-                            {c.cost ? ` · ${formatMoney(c.cost)}` : ' · free'}
+                          <span>
+                            <span className="font-medium text-slate-900">
+                              {action.label}
+                            </span>
+                            {blocked && (
+                              <span className="block text-xs text-slate-500">
+                                {blocked}
+                              </span>
+                            )}
                           </span>
-                          <span className="block text-xs text-slate-600">
-                            {c.description}
-                          </span>
-                          <span
-                            className={`mt-1 block text-xs font-medium ${
-                              arrival.late ? 'text-red-700' : 'text-emerald-700'
-                            }`}
-                          >
-                            Arrive {formatTime(arrival.minute)}
-                            {arrival.late ? ` (${arrival.late} min late)` : ''}
+                          <span className="shrink-0 text-xs text-slate-500">
+                            {action.minutes} min
+                            {action.cost ? ` · ${formatMoney(action.cost)}` : ''}
                           </span>
                         </button>
                       </li>
                     )
                   })}
+                  {room === 'bedroom' && phase === 'evening' && (
+                    <li>
+                      <button
+                        type="button"
+                        onClick={onBed}
+                        className="flex w-full items-center justify-between rounded-lg bg-indigo-700 px-3 py-2 text-left text-sm font-medium text-white hover:bg-indigo-800"
+                      >
+                        Go to bed
+                        <span className="text-xs font-normal text-indigo-100">
+                          {sleepHours(life.minute).toFixed(1)} hours before the alarm
+                        </span>
+                      </button>
+                    </li>
+                  )}
+                  {room !== 'bedroom' && phase === 'evening' && actions.length === 0 && (
+                    <li className="text-sm text-slate-500">
+                      Nothing to do here this evening.
+                    </li>
+                  )}
                 </ul>
-                {!(life.ready.ate && life.ready.showered && life.ready.dressed) && (
-                  <p className="mt-2 text-xs text-amber-800">
-                    Not ready yet:{' '}
-                    {[
-                      !life.ready.ate && 'breakfast',
-                      !life.ready.showered && 'a shower',
-                      !life.ready.dressed && 'work clothes',
-                    ]
-                      .filter(Boolean)
-                      .join(', ')}
-                    . It will show at work.
-                  </p>
+
+                {room === 'door' && phase === 'morning' && (
+                  <div
+                    className="mt-4 border-t border-slate-100 pt-3"
+                    data-testid="commute"
+                  >
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      Leave for work
+                    </h3>
+                    <ul className="mt-2 grid gap-2 sm:grid-cols-3">
+                      {COMMUTES.map((c) => {
+                        const arrival = arrivalFor(profile, c.id)
+                        const broke = life.money < c.cost
+                        return (
+                          <li key={c.id}>
+                            <button
+                              type="button"
+                              disabled={broke}
+                              onClick={() => onLeave(c.id)}
+                              className="w-full rounded-lg border border-slate-200 p-3 text-left text-sm hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50"
+                            >
+                              <span className="block font-medium text-slate-900">
+                                {c.name}
+                                {c.cost ? ` · ${formatMoney(c.cost)}` : ' · free'}
+                              </span>
+                              <span className="block text-xs text-slate-600">
+                                {c.description}
+                              </span>
+                              <span
+                                className={`mt-1 block text-xs font-medium ${
+                                  arrival.late ? 'text-red-700' : 'text-emerald-700'
+                                }`}
+                              >
+                                Arrive {formatTime(arrival.minute)}
+                                {arrival.late ? ` (${arrival.late} min late)` : ''}
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                    {!(life.ready.ate && life.ready.showered && life.ready.dressed) && (
+                      <p className="mt-2 text-xs text-amber-800">
+                        Not ready yet:{' '}
+                        {[
+                          !life.ready.ate && 'breakfast',
+                          !life.ready.showered && 'a shower',
+                          !life.ready.dressed && 'work clothes',
+                        ]
+                          .filter(Boolean)
+                          .join(', ')}
+                        . It will show at work.
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </section>
 
         <aside className="space-y-4" aria-label="How you are">
+          <section
+            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+            data-testid="your-home"
+          >
+            <h2 className="font-semibold text-slate-900">Your home</h2>
+            <p className="text-sm text-slate-700">{homeOf(life).name}</p>
+            <p className="text-xs text-slate-500">
+              Rent {formatMoney(getHome(life.home.id).rent)} a week
+            </p>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShop('shop')}
+                className="rounded-md border border-slate-300 px-2.5 py-1 text-sm hover:bg-amber-50"
+              >
+                Furniture shop
+              </button>
+              <button
+                type="button"
+                onClick={() => setShop('move')}
+                className="rounded-md border border-slate-300 px-2.5 py-1 text-sm hover:bg-amber-50"
+              >
+                Move home
+              </button>
+            </div>
+          </section>
           <section
             className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
             data-testid="needs"
@@ -190,7 +296,7 @@ export function HomeView({
             <h2 className="font-semibold text-slate-900">How you are</h2>
             <ul className="mt-2 space-y-2">
               {NEEDS.map((need) => {
-                const value = life.needs[need.id]
+                const value = Math.round(life.needs[need.id])
                 return (
                   <li key={need.id}>
                     <div className="flex justify-between text-xs text-slate-600">

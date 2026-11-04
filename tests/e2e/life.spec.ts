@@ -83,3 +83,43 @@ test('Friday: paid, an evening out, a late night, and a rushed Monday morning', 
   await expect(log).toContainText('Started the day hungry')
   await expect(log).toContainText('Came to work in yesterday’s clothes')
 })
+
+test('furniture: buy, recolour and use it; and move to a flat nearer work', async ({
+  page,
+}) => {
+  await endTheDay(page, 5)
+  await expect(home(page).getByTestId('home-3d').locator('canvas')).toBeVisible({
+    timeout: 30_000,
+  })
+  await room(page, 'Living room')
+  await expect(
+    home(page).getByRole('button', { name: /Play video games/ }),
+  ).toBeDisabled()
+  await expect(home(page)).toContainText('You need a games console (in the shop)')
+
+  await home(page).getByRole('button', { name: 'Furniture shop' }).click()
+  const shop = home(page).getByTestId('home-shop')
+  const console = shop.getByTestId('shop-console')
+  await console.getByRole('radio', { name: 'Colour 2' }).click()
+  await console.getByRole('button', { name: 'Buy' }).click()
+  await expect(console).toContainText('You have this')
+  await expect(home(page).getByTestId('balance')).toHaveText('£377.50')
+  await shop.getByRole('button', { name: 'Back to the flat' }).click()
+  await room(page, 'Living room')
+  await home(page)
+    .getByRole('button', { name: /Play video games/ })
+    .click()
+  await expect(home(page).getByTestId('home-log')).toContainText('Played video games')
+
+  // Moving: the flat is nearer work, and the furniture comes too.
+  await home(page).getByRole('button', { name: 'Move home' }).click()
+  await shop.getByTestId('home-flat').getByRole('button', { name: 'Move here' }).click()
+  await expect(shop.getByTestId('home-flat')).toContainText('You live here')
+  await expect(home(page).getByTestId('your-home')).toContainText('Harbour Road')
+  await page.reload()
+  await expect(home(page).getByTestId('your-home')).toContainText('Harbour Road', {
+    timeout: 30_000,
+  })
+  await home(page).getByRole('button', { name: 'Furniture shop' }).click()
+  await expect(shop.getByTestId('shop-console')).toContainText('You have this')
+})

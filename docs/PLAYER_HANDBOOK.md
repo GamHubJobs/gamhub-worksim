@@ -64,6 +64,18 @@ you to your flat.
   door: walk (free, 40 minutes), bus (£2.50, 25 minutes) or taxi (£14, 12 minutes).
   Each shows when you would arrive. Late, hungry, unwashed or in yesterday's clothes:
   it shows at work (energy, stress, reputation), in your day log.
+- **Your home in 3D**: the view above the rooms shows your flat and its furniture,
+  and follows you from room to room.
+- **Furniture** (**Furniture shop** in _Your home_): each piece says what it does. Some
+  make activities possible (a games console, a study desk for skill XP, a coffee
+  machine for morning energy, an exercise mat for yoga), some make them better (a
+  sofa and television for series, a fitted kitchen for meals, a good bed for sleep), and
+  some make home nicer to come back to (plants, a lamp, a rug: fun falls more slowly).
+  Pick a colour before buying, or change it later. A new piece for a place sells the
+  old one second-hand.
+- **Moving home** (**Move home**): a one-bedroom flat or a terraced house, each nearer
+  work (a shorter commute) and with a higher rent, and a one-off cost to move in. Your
+  furniture comes with you.
 - **Money**: you are paid on Fridays (more as you are promoted) and rent is taken on
   Mondays. The statement lists everything in and out. Going overdrawn is stressful.
 

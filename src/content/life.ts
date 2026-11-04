@@ -58,6 +58,10 @@ export interface HomeAction {
   until?: number
   /** One line shown in the day's log. */
   done: string
+  /** Needs a piece of furniture that enables it (see content/home.ts). */
+  needsItem?: boolean
+  /** Skill XP added to the career skill the player has least of (studying). */
+  skillXp?: number
 }
 
 const HOUR = 60
@@ -160,6 +164,54 @@ export const HOME_ACTIONS: HomeAction[] = [
     stress: -5,
     until: 23 * HOUR,
     done: 'Called a friend',
+  },
+  {
+    id: 'coffee',
+    room: 'kitchen',
+    label: 'Make a proper coffee',
+    phases: ['morning'],
+    minutes: 5,
+    energy: 8,
+    needsItem: true,
+    done: 'Made a coffee',
+  },
+  {
+    id: 'study',
+    room: 'living',
+    label: 'Study for work (an hour)',
+    phases: ['evening'],
+    minutes: 60,
+    needs: { fun: -5 },
+    stress: 2,
+    energy: -3,
+    needsItem: true,
+    skillXp: 15,
+    until: 23 * HOUR,
+    done: 'Studied for an hour',
+  },
+  {
+    id: 'games',
+    room: 'living',
+    label: 'Play video games',
+    phases: ['evening'],
+    minutes: 90,
+    needs: { fun: 35, social: 5 },
+    stress: -6,
+    energy: -4,
+    needsItem: true,
+    done: 'Played video games',
+  },
+  {
+    id: 'yoga',
+    room: 'bedroom',
+    label: 'Stretch and do yoga',
+    phases: ['evening', 'morning'],
+    minutes: 25,
+    needs: { fun: 5 },
+    stress: -12,
+    energy: 3,
+    needsItem: true,
+    done: 'Did some yoga',
   },
   {
     id: 'run',

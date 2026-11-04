@@ -839,6 +839,27 @@ export const LifeSchema = z.object({
   rentWeek: z.number().int().nonnegative().default(0),
   /** What happened at home this evening and morning, for the panel. */
   log: z.array(z.string()).max(30).default([]),
+  /** Where the player lives and what is in it (see content/home.ts). */
+  home: z
+    .object({
+      id: z.enum(['studio', 'flat', 'house']).default('studio'),
+      /** By slot: the furniture item and which of its colours. */
+      furniture: z
+        .record(
+          z.string(),
+          z.object({
+            item: z.string(),
+            colour: z.number().int().nonnegative().default(0),
+          }),
+        )
+        .default({
+          bed: { item: 'bed-basic', colour: 0 },
+          kitchen: { item: 'kitchen-basic', colour: 0 },
+          shower: { item: 'shower-basic', colour: 0 },
+          table: { item: 'table-small', colour: 0 },
+        }),
+    })
+    .prefault({}),
 })
 
 export const WorkStateSchema = z.object({
