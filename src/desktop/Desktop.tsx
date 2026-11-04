@@ -58,6 +58,7 @@ import { OfficeView } from '../office/OfficeView'
 import { HomeView } from '../home/HomeView'
 import { doHomeAction, goHome, goToBed, leaveForWork, lifePhase } from '../game/life'
 import { buyFurniture, moveHome, recolour, sellFurniture } from '../game/home'
+import { contactFriend, goOut, markRead as readMessages, respond } from '../game/social'
 import { Icon, type IconName } from '../ui/Icon'
 import { DayEnd } from '../workday/DayEnd'
 import { useWorkClock } from '../workday/useWorkClock'
@@ -550,6 +551,10 @@ export function Desktop({
             onSell={(slot) => void act((p) => sellFurniture(p, slot))}
             onRecolour={(slot, colour) => void act((p) => recolour(p, slot, colour))}
             onMove={(home) => void act((p) => moveHome(p, home))}
+            onRespond={(id, accept) => void act((p) => respond(p, id, accept))}
+            onGoOut={(id) => void act((p) => goOut(p, id))}
+            onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}
+            onRead={(friend) => void act((p) => readMessages(p, friend))}
           />
         ) : (
           <OfficeView

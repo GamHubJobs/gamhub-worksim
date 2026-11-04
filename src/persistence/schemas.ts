@@ -839,6 +839,45 @@ export const LifeSchema = z.object({
   rentWeek: z.number().int().nonnegative().default(0),
   /** What happened at home this evening and morning, for the panel. */
   log: z.array(z.string()).max(30).default([]),
+  /** Friends outside work, and the phone (see content/friends.ts and game/social.ts). */
+  social: z
+    .object({
+      /** By friend ID; friends not yet listed start at the starting friendship. */
+      friends: z
+        .record(
+          z.string(),
+          z.object({
+            friendship: PercentSchema,
+            /** The last day the player was in touch. */
+            lastDay: z.number().int().min(1),
+          }),
+        )
+        .default({}),
+      /** Messages on the phone, newest last (the last 40). */
+      messages: z
+        .array(
+          z.object({
+            id: z.string(),
+            /** A friend ID, or 'me' for the player's own replies. */
+            from: z.string(),
+            to: z.string().optional(),
+            day: z.number().int().min(1),
+            minute: z.number().int().nonnegative(),
+            text: z.string(),
+            read: z.boolean().default(false),
+            /** An invitation, and what became of it. */
+            invite: z
+              .object({
+                kind: z.enum(['dinner', 'film', 'run', 'quiz', 'drinks', 'game']),
+                status: z.enum(['open', 'accepted', 'declined', 'done', 'missed']),
+              })
+              .optional(),
+          }),
+        )
+        .max(40)
+        .default([]),
+    })
+    .prefault({}),
   /** Where the player lives and what is in it (see content/home.ts). */
   home: z
     .object({

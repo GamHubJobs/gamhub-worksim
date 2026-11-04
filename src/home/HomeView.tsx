@@ -9,6 +9,8 @@ import { getHome, type HomeId, type SlotId } from '../content/home'
 import { homeOf } from '../game/home'
 import { supportsWebGL } from '../office/webgl'
 import { HomeShop } from './HomeShop'
+import { Phone } from './Phone'
+import { canGo, plansTonight, unreadCount, type Contact } from '../game/social'
 import {
   COMMUTES,
   HOME_ACTIONS,
@@ -48,6 +50,10 @@ export function HomeView({
   onSell,
   onRecolour,
   onMove,
+  onRespond,
+  onGoOut,
+  onContact,
+  onRead,
 }: {
   profile: Profile
   onAction: (id: string) => void
@@ -57,9 +63,13 @@ export function HomeView({
   onSell: (slot: SlotId) => void
   onRecolour: (slot: SlotId, colour: number) => void
   onMove: (home: HomeId) => void
+  onRespond: (messageId: string, accept: boolean) => void
+  onGoOut: (messageId: string) => void
+  onContact: (friendId: string, how: Contact) => void
+  onRead: (friendId: string) => void
 }) {
   const [webgl] = useState(supportsWebGL)
-  const [shop, setShop] = useState<'shop' | 'move' | null>(null)
+  const [shop, setShop] = useState<'shop' | 'move' | 'phone' | null>(null)
   const life = profile.work.life
   const phase = lifePhase(profile)
   const [room, setRoom] = useState<RoomId>(phase === 'morning' ? 'bedroom' : 'living')
@@ -114,7 +124,15 @@ export function HomeView({
             </div>
           )}
 
-          {shop ? (
+          {shop === 'phone' ? (
+            <Phone
+              profile={profile}
+              onRespond={onRespond}
+              onContact={onContact}
+              onRead={onRead}
+              onClose={() => setShop(null)}
+            />
+          ) : shop ? (
             <HomeShop
               profile={profile}
               tab={shop}
@@ -202,6 +220,44 @@ export function HomeView({
                   )}
                 </ul>
 
+                {room === 'door' &&
+                  phase === 'evening' &&
+                  plansTonight(profile).length > 0 && (
+                    <ul
+                      className="mt-3 space-y-2 border-t border-slate-100 pt-3"
+                      data-testid="plans"
+                    >
+                      {plansTonight(profile).map(({ message, plan, friend }) => {
+                        const blocked = canGo(profile, message.id)
+                        return (
+                          <li key={message.id}>
+                            <button
+                              type="button"
+                              disabled={!!blocked}
+                              onClick={() => onGoOut(message.id)}
+                              className="flex w-full items-center justify-between gap-3 rounded-lg bg-amber-700 px-3 py-2 text-left text-sm font-medium text-white hover:bg-amber-800 disabled:opacity-50"
+                            >
+                              <span>
+                                Go: {plan.title.toLowerCase()} with{' '}
+                                {friend.name.split(' ')[0]}
+                                {blocked && (
+                                  <span className="block text-xs font-normal text-amber-100">
+                                    {blocked}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="shrink-0 text-xs font-normal text-amber-100">
+                                {formatTime(plan.at)} ·{' '}
+                                {Math.round(plan.minutes / 6) / 10} h
+                                {plan.cost ? ` · ${formatMoney(plan.cost)}` : ''}
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+
                 {room === 'door' && phase === 'morning' && (
                   <div
                     className="mt-4 border-t border-slate-100 pt-3"
@@ -263,6 +319,29 @@ export function HomeView({
         </section>
 
         <aside className="space-y-4" aria-label="How you are">
+          <section
+            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+            data-testid="phone-summary"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-semibold text-slate-900">Phone</h2>
+              {unreadCount(life) > 0 && (
+                <span className="rounded-full bg-red-600 px-2 text-xs font-semibold text-white">
+                  {unreadCount(life)} new
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">
+              Messages and calls with your friends.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShop('phone')}
+              className="mt-2 rounded-md border border-slate-300 px-2.5 py-1 text-sm hover:bg-amber-50"
+            >
+              Open your phone
+            </button>
+          </section>
           <section
             className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
             data-testid="your-home"

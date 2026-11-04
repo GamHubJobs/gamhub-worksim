@@ -123,3 +123,42 @@ test('furniture: buy, recolour and use it; and move to a flat nearer work', asyn
   await home(page).getByRole('button', { name: 'Furniture shop' }).click()
   await expect(shop.getByTestId('shop-console')).toContainText('You have this')
 })
+
+test('friends: an invitation accepted and kept, and a call', async ({ page }) => {
+  await endTheDay(page, 5)
+  await expect(home(page).getByTestId('phone-summary')).toContainText('1 new')
+  await home(page).getByRole('button', { name: 'Open your phone' }).click()
+  const phone = home(page).getByTestId('phone')
+  const thread = phone.getByTestId('phone-thread')
+  await expect(thread).toContainText('Leo Martins')
+  await expect(thread).toContainText('Quick drink at the Kettle & Crown')
+  await thread.getByTestId('invitation').getByRole('button', { name: 'Accept' }).click()
+  await expect(thread).toContainText('I’d love to!')
+  await expect(thread.getByTestId('invitation')).toContainText('You said yes')
+  const audit = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+  expect(audit.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
+
+  // A call to another friend.
+  await phone
+    .getByRole('list', { name: 'Friends' })
+    .getByRole('button', { name: /Dan/ })
+    .click()
+  await thread.getByRole('button', { name: /^Call/ }).click()
+  await expect(
+    thread.getByRole('meter', { name: /Friendship with Dan/ }),
+  ).toHaveAttribute('aria-valuenow', '55')
+  await phone.getByRole('button', { name: 'Back to the flat' }).click()
+
+  // Out for the drink, from the front door.
+  await room(page, 'Front door')
+  await home(page)
+    .getByTestId('plans')
+    .getByRole('button', { name: /Go: a drink at the kettle & crown with Leo/ })
+    .click()
+  await expect(home(page).getByTestId('home-log')).toContainText(
+    'A drink at the Kettle & Crown with Leo',
+  )
+  await expect(home(page).getByTestId('plans')).toHaveCount(0)
+})

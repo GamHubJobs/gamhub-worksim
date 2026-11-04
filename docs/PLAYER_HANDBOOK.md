@@ -76,6 +76,15 @@ you to your flat.
 - **Moving home** (**Move home**): a one-bedroom flat or a terraced house, each nearer
   work (a shorter commute) and with a higher rent, and a one-off cost to move in. Your
   furniture comes with you.
+- **Friends and your phone** (**Open your phone**): Leo (from university), Aisha (your
+  neighbour), Dan (the running club) and Mei (the book club). Each friendship grows when
+  you make time for them and fades if you do not keep in touch for a few days.
+  - **Invitations** arrive on most evenings, from the friend you have seen least:
+    dinner, the cinema, a run, a quiz night, a drink, an online game. **Accept** and go
+    from the **Front door** at the time; **Decline** politely (it costs a little); an
+    invitation you ignore is missed, and a promise you do not keep hurts most.
+  - **Get in touch**: send a message, call, or invite someone round for dinner (you need
+    two meals in the fridge and a table).
 - **Money**: you are paid on Fridays (more as you are promoted) and rent is taken on
   Mondays. The statement lists everything in and out. Going overdrawn is stressful.
 

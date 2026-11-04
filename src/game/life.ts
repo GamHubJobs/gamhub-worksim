@@ -12,7 +12,6 @@ import {
   COMMUTES,
   HOME_ACTIONS,
   LATEST_BEDTIME,
-  NEED_DECAY,
   SLEEP_NEEDED,
   WEEKLY_PAY,
   formatMoney,
@@ -21,61 +20,15 @@ import {
   type NeedId,
 } from '../content/life'
 import { HOURS } from '../content/workday'
-import type { Life, WorkState } from '../persistence/schemas'
+import type { Life } from '../persistence/schemas'
 import { careerLevel, type ProfileData } from './career'
 import { bonusFor, comfort, enablerOf, enables, homeOf, sleepBonus } from './home'
 import { levelNumber } from './cases'
 import { formatTime, nextWorkday, weekdayIndex, weekNumber, weekdayName } from './clock'
 import { changeReputation } from './relationships'
 import { log, startNextDay } from './workday'
-
-const clamp = (n: number, low = 0, high = 100) => Math.min(high, Math.max(low, n))
-
-function withLife(profile: ProfileData, life: Life, work = profile.work): ProfileData {
-  return { ...profile, work: { ...work, life } }
-}
-
-function decayed(needs: Life['needs'], minutes: number): Life['needs'] {
-  const hours = minutes / 60
-  const out = { ...needs }
-  for (const id of Object.keys(NEED_DECAY) as NeedId[])
-    out[id] = clamp(Math.round(needs[id] - NEED_DECAY[id] * hours))
-  return out
-}
-
-function withWellbeing(work: WorkState, energy = 0, stress = 0): WorkState {
-  if (!energy && !stress) return work
-  return {
-    ...work,
-    wellbeing: {
-      ...work.wellbeing,
-      energy: clamp(work.wellbeing.energy + energy),
-      stress: clamp(work.wellbeing.stress + stress),
-    },
-  }
-}
-
-function spend(life: Life, day: number, amount: number, text: string): Life {
-  if (!amount) return life
-  return {
-    ...life,
-    money: life.money - amount,
-    ledger: [...life.ledger, { day, text, amount: -amount }].slice(-60),
-  }
-}
-
-function earn(life: Life, day: number, amount: number, text: string): Life {
-  return {
-    ...life,
-    money: life.money + amount,
-    ledger: [...life.ledger, { day, text, amount }].slice(-60),
-  }
-}
-
-const note = (life: Life, text: string): Life => ({
-  ...life,
-  log: [...life.log, `${formatTime(life.minute)}  ${text}`].slice(-30),
-})
+import { afterNight, eveningMessages } from './social'
+import { clamp, decayed, earn, note, spend, withLife, withWellbeing } from './lifeTime'
 
 export const commuteOf = (id: CommuteId) => COMMUTES.find((c) => c.id === id)!
 
@@ -119,6 +72,8 @@ export function goHome(profile: ProfileData): ProfileData {
   }
   life = spend(life, work.day, commute.cost, `${commute.name} home`)
   life = note(life, `Home from work (${commute.name.toLowerCase()})`)
+  // Friends get in touch in the evening.
+  life = eveningMessages(life, work.day)
   // Pay day: Friday, once a week.
   const week = weekNumber(work.day)
   if (weekdayIndex(work.day) === 4 && life.paidWeek < week) {
@@ -228,7 +183,7 @@ export function goToBed(profile: ProfileData): ProfileData {
   const work = profile.work
   const next = nextWorkday(work.day)
   const weekend = next - work.day > 1
-  let life: Life = note(work.life, 'Went to bed')
+  let life: Life = note(afterNight(work.life, work.day), 'Went to bed')
   const bedtime = life.minute
   // The night (and a weekend, if there is one) changes needs.
   let needs = decayed(life.needs, 8 * 60)

@@ -131,7 +131,7 @@ working simulations of the professional software used in its field (see
 
 - [x] L1 Needs, home routines, sleep, the commute, money
 - [x] L2 The home: a 3D flat, furniture, upgrades
-- [ ] L3 Social life: friends, a phone, invitations
+- [x] L3 Social life: friends, a phone, invitations
 - [ ] L4 The city: a walkable district, third-person, enterable places
 - [ ] L5 Getting around: walking, bus, bike, car
 - [ ] L6 Career life: applications, salary negotiation, a side business
@@ -152,6 +152,54 @@ working simulations of the professional software used in its field (see
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · L3: friends, the phone and invitations
+
+### Built
+
+- **Four friends outside work** (`src/content/friends.ts`), each with how the player
+  knows them and what they like doing, and six kinds of plan (dinner at their place,
+  the cinema, a run, a quiz night, a drink, an online game), each with a time, a
+  length, a cost and what it does for needs, energy and stress.
+- **Rules** (`src/game/social.ts`, deterministic):
+  - _Invitations_: on two evenings in three, when the player gets home, the friend they
+    have been in touch with least invites them to something they like (an online game
+    only if they own a console).
+  - _Answers_: accept (a promise), or decline politely (a small cost). Accepted plans
+    are joined from the front door, from their start time until half an hour after;
+    going raises the friendship and needs, and costs the time and money.
+  - _Overnight_: an ignored invitation is missed (friendship −4); a broken promise costs
+    more (−8, and the friend asks if everything is OK). Friendships fade a little each
+    night after three days without contact.
+  - _Getting in touch_: a message (5 minutes, with a reply), a call (30 minutes), or
+    dinner at home (2 hours, two meals from the fridge, needs a table), each until a
+    sensible hour.
+  - Friendship levels: drifting apart, acquaintance, friend, good friend, close friend.
+- **The phone** (`src/home/Phone.tsx`): friends with their friendship level and a
+  meter, unread counts, a conversation with each, invitations with Accept and Decline
+  and what became of them, and the ways to get in touch (with the reason when one is
+  not possible). _Your home_ shows new messages; tonight's plans appear at the front
+  door with their time and cost.
+- **Shared steps of life at home** moved to `src/game/lifeTime.ts` (needs over time,
+  money, the evening log, energy and stress), used by the home, furniture and social
+  rules.
+- **Save data**: `life.social` (friendships and the last 40 messages), additive.
+- **Fixed while testing**: the player's own message bubbles had too little contrast
+  (found by the automated accessibility check).
+
+### Tests
+
+- 7 new unit tests (`src/game/social.test.ts`): invitations on two evenings in three,
+  accepting and going, declining and broken promises, ignored invitations, messages,
+  calls and dinner at home, limits, and fading friendships and their names.
+- Results: 2,052 unit tests; 155 Chromium browser tests passed (the office arrival test
+  needed a retry: its walks between places now allow 15 seconds, like the other office
+  tests); 5 production-build tests; Firefox, WebKit and Edge 8 passed, 1 skipped. Start
+  screen 283 kB.
+- `life.spec.ts`: a new test accepts Leo's invitation, checks the phone with the
+  automated accessibility rules, calls Dan, and goes out from the front door.
 
 ---
 
