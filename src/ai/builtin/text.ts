@@ -46,9 +46,13 @@ export function actionItems(text: string): Array<{ text: string; when: string | 
   const listed = lines
     .filter((l) => /^([-*•]|\d+[.)])\s+/.test(l))
     .map((l) => l.replace(/^([-*•]|\d+[.)])\s+/, ''))
-  const asked = sentences(text.replace(/^([-*•]|\d+[.)])\s+.*$/gm, '')).filter(
-    (s) => REQUEST.test(s) && !SIGN_OFF.test(s),
-  )
+  // Sentences are found line by line, leaving list items out; a line ending in
+  // a colon only introduces a list.
+  const asked = text
+    .replace(/^([-*•]|\d+[.)])\s+.*$/gm, '')
+    .split('\n')
+    .flatMap((line) => sentences(line))
+    .filter((s) => REQUEST.test(s) && !SIGN_OFF.test(s) && !s.endsWith(':'))
   const items = [...asked, ...listed]
   const seen = new Set<string>()
   return items

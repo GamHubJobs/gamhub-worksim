@@ -7,8 +7,10 @@ WorkSim does to keep your data safe, and its honest limits.
 
 - **All your progress is stored in your browser, on this device:** careers, tasks,
   cases, files, portfolio and settings. It uses the browser’s own storage (IndexedDB).
-- **Nothing is sent anywhere.** WorkSim has no server, no account, no analytics and no
-  tracking. It makes no network requests with your data, online or offline.
+- **Nothing is sent anywhere, unless you turn on an AI model.** WorkSim has no server, no
+  account, no analytics and no tracking. It makes no network requests with your data,
+  online or offline. The one exception is WorkSim AI, and only when you choose it (see
+  below).
 - **The only copies are those on this device,** plus the backup files and exports
   you choose to download.
 
@@ -65,3 +67,24 @@ WorkSim does to keep your data safe, and its honest limits.
   storage).
 - **Private browsing.** In a private or incognito window, the browser deletes
   WorkSim’s storage when the window closes.
+
+## WorkSim AI
+
+- **Off by default.** WorkSim AI's built-in guide runs entirely on this device and
+  sends nothing.
+- **Your choice and your consent.** You can turn on a model running on your computer,
+  or a cloud model (Anthropic, OpenAI or Google) through the WorkSim AI bridge. Nothing
+  is sent until you tick the consent box for that destination; choosing another
+  destination asks again.
+- **Only the minimum.** Each question carries only the context listed in WorkSim AI's
+  Context panel (for example the email or task you have open, and your role), with
+  your name replaced by "the employee". You can untick any item, and see exactly what
+  will be sent. Nothing else from your save is sent.
+- **API keys never reach WorkSim.** Cloud keys live in the bridge, a small server you
+  run on your own computer, in a `.env.local` file (which git ignores). The bridge
+  only accepts requests from WorkSim running on this computer, has a daily limit, and
+  never logs what is asked or answered.
+- **The provider's terms apply** to anything sent to a cloud model, including how it
+  is stored and charged.
+- **Settings stay on this device** and are not in backups. Conversations are not
+  saved: they last until WorkSim is closed.

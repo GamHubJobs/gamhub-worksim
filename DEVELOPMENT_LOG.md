@@ -131,7 +131,7 @@ working simulations of the professional software used in its field (see
 
 - [x] AI.1 Architecture audit
 - [x] AI.2 AI infrastructure (engines, context, settings, limits, the bridge)
-- [ ] AI.3 The WorkSim AI desktop app
+- [x] AI.3 The WorkSim AI desktop app
 - [ ] AI.4 AI inside Mail, Sheets, Docs, Slides, Tasks, Code and Help Desk
 - [ ] AI.5 Workplace AI: colleagues and feedback
 - [ ] AI.6 AI competency and career readiness
@@ -142,6 +142,59 @@ working simulations of the professional software used in its field (see
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · AI.3: the WorkSim AI desktop app
+
+### Built
+
+- **WorkSim AI** (`src/apps/ai/`), a desktop app like the others: desktop icon,
+  taskbar, Start (with a tile), search, its own window, kept across reloads. Loaded
+  only when opened.
+- **Conversation** with suggestions that fit what is open, a composer (Enter to send,
+  Stop while waiting), answers with lists, bold, code and formula blocks (rendered as
+  elements, never as HTML), and an activity indicator.
+- **Every answer is labelled**: "Built-in guide: WorkSim's own rules, not an AI
+  model", or "Written by an AI model (provider · model). Check facts and figures before
+  you use it", with what was shared. When a model cannot answer, the reason is shown
+  and the built-in guide answers.
+- **Context panel**: what WorkSim AI knows for the next question, built from the
+  window the player was last working in (`src/ai/workContext.ts`): the email open in
+  Mail, the task open in Tasks (or the current or next task), the case open in Cases,
+  the app, and the player's role. Each item can be unticked; the player's name is
+  shown as removed, exactly as it is sent.
+- **Modes**: Learning, Professional and Expert, with their meaning shown.
+- **Settings**: who answers (built-in guide, a model on this computer, or a cloud model
+  through the bridge), with what each costs; a consent box naming exactly where
+  questions go (asked again whenever the destination changes); local model and bridge
+  details; Check the connection; the daily limit and today's use. "Show what will be
+  sent" previews the exact context.
+- **Context hub** (`src/apps/ai/hub.ts`) for the apps to offer context and send
+  questions (used in AI.4).
+- Help and docs: an in-app help topic, a handbook section (including setting up Ollama
+  and the bridge), and the privacy page now describes the one exception to "nothing
+  is sent anywhere".
+
+### Fixed while testing
+
+- The context panel showed the email with the player's name (it was removed before
+  sending, but the panel should show exactly what is shared).
+- The task was missing from the context until it had been started.
+- Requests introduced by "Could you please:" were run together with the next sentence.
+
+### Tests
+
+- New `ai.spec.ts` (3 tests): answers from the open email and task in Learning and
+  Professional modes, unticking context; nothing sent without consent, then the
+  (simulated) bridge with labelled answers, the preview, and the fallback when the
+  bridge stops; opening from the desktop and search, and settings kept after reload.
+  The main accessibility test now also checks WorkSim AI and its settings.
+- Results: 1,957 unit tests; 147 Chromium browser tests passed, with
+  `colleagues.spec.ts` failing under the full suite's load and passing alone (its
+  walks around the office now allow 15 seconds, like the other office tests); 5
+  production-build tests (no console errors, no failed requests); Firefox, WebKit and
+  Edge 8 passed, 1 skipped. Start screen 281 kB.
 
 ---
 

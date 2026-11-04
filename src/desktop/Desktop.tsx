@@ -5,8 +5,11 @@
  * can be moved, resized, minimised and maximised. The apps inside the windows
  * are the same WorkSim apps as before.
  */
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAppServices } from '../app/services'
+import type { ContextItem } from '../ai/types'
+import { workContext } from '../ai/workContext'
+import { AiHubContext, type AiHub, type AiQuestion } from '../apps/ai/hub'
 import type { Career } from '../app/useCareer'
 import { openPracticeFile } from '../persistence/toolPractice'
 import { careerTools } from '../tools/registry'
@@ -136,6 +139,7 @@ const WorkbookWindow = lazy(() =>
 const TasksApp = lazy(() =>
   import('../apps/tasks/TasksApp').then((m) => ({ default: m.TasksApp })),
 )
+const AiApp = lazy(() => import('../apps/ai/AiApp').then((m) => ({ default: m.AiApp })))
 const ReadinessApp = lazy(() =>
   import('../apps/readiness/ReadinessApp').then((m) => ({ default: m.ReadinessApp })),
 )
@@ -155,6 +159,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'mail', label: 'Mail', icon: 'mail' },
     { id: 'tasks', label: 'Tasks', icon: 'tasks' },
     { id: 'cases', label: 'Cases', icon: 'cases' },
+    { id: 'ai', label: 'WorkSim AI', icon: 'ai' },
     { id: 'sheets', label: 'Sheets', icon: 'sheets' },
     { id: 'docs', label: 'Docs', icon: 'docs' },
     { id: 'slides', label: 'Slides', icon: 'slides' },
@@ -170,6 +175,7 @@ const APP_COLORS: Record<string, string> = {
   mail: '#0063b1',
   tasks: '#2564cf',
   cases: '#4a5a8c',
+  ai: '#3b5bdb',
   sheets: '#1e7145',
   docs: '#2b579a',
   slides: '#b7472a',
@@ -215,6 +221,37 @@ export function Desktop({
   // The toast clock only starts once the player is at the computer to see it.
   const notifications = useNotifications(profile, view.app !== 'office')
 
+  // WorkSim AI: context offered by the open apps, and questions sent from them.
+  const [offered, setOffered] = useState<Record<string, ContextItem[]>>({})
+  const [aiQuestion, setAiQuestion] = useState<(AiQuestion & { id: number }) | null>(null)
+  const questionId = useRef(0)
+  const aiHub = useMemo<AiHub>(
+    () => ({
+      offer: (app, items) =>
+        setOffered((current) => {
+          if (!items) {
+            if (!(app in current)) return current
+            const next = { ...current }
+            delete next[app]
+            return next
+          }
+          return { ...current, [app]: items }
+        }),
+      ask: (_from, question) => {
+        questionId.current += 1
+        setAiQuestion({ ...question, id: questionId.current })
+        setViewRef.current({ app: 'ai' })
+      },
+    }),
+    [],
+  )
+  const takeQuestion = useCallback(
+    (id: number) => setAiQuestion((q) => (q?.id === id ? null : q)),
+    [],
+  )
+
+  // setView is declared below; the hub reaches it through this ref.
+  const setViewRef = useRef<(view: View) => void>(() => {})
   const areaRef = useRef(area)
   useEffect(() => {
     areaRef.current = area
@@ -226,6 +263,10 @@ export function Desktop({
     writeLastView(next)
     if (next.app !== 'office') setDesk((d) => openWindow(d, next, areaRef.current))
   }, [])
+
+  useEffect(() => {
+    setViewRef.current = setView
+  }, [setView])
 
   /** Opens an app as Start and the desktop icons do: as it was, if it is open. */
   const launch = useCallback((next: View) => {
@@ -389,6 +430,7 @@ export function Desktop({
         app.id === 'mail' ||
         app.id === 'tasks' ||
         app.id === 'cases' ||
+        app.id === 'ai' ||
         (careerApps as string[]).includes(app.id),
     ).map((app) => ({
       key: app.id as string,
@@ -750,6 +792,19 @@ export function Desktop({
             }
           />
         )
+      case 'ai':
+        return (
+          <AiApp
+            profileId={profile.id}
+            playerName={profile.name}
+            context={[
+              ...(workWindow ? (offered[workWindow.key] ?? []) : []),
+              ...workContext(profile, workWindow?.view ?? null),
+            ]}
+            question={aiQuestion}
+            onQuestionTaken={takeQuestion}
+          />
+        )
       case 'career':
         return (
           <CareerApp
@@ -797,6 +852,14 @@ export function Desktop({
         return null
     }
   }
+
+  /** The window the player was last working in, not counting WorkSim AI itself. */
+  const workWindow = desk.windows
+    .filter((w) => w.view && w.key !== 'ai')
+    .reduce<AppWindow | undefined>(
+      (best, w) => (!best || w.z > best.z ? w : best),
+      undefined,
+    )
 
   function windowMeta(win: AppWindow): { title: string; icon: IconName } {
     if (win.system === 'settings') return { title: 'Settings', icon: 'settings' }
@@ -919,63 +982,65 @@ export function Desktop({
       data-testid="desktop"
     >
       {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
-      <DesktopSurface
-        icons={desktopIcons}
-        settings={settings}
-        onSettings={updateSettings}
-        newItems={newItems}
-        onDisplaySettings={() => openSystem('settings')}
-        onPersonalize={() => openSystem('settings')}
-        onArea={onArea}
-        overlay={
-          <Notices
-            notices={notifications.centreOpen ? notifications.all : notifications.fresh}
-            centre={notifications.centreOpen}
-            onDismiss={notifications.dismiss}
-            onClose={notifications.closeCentre}
-            onAct={(notice) => {
-              notifications.closeCentre()
-              const { action } = notice
-              if ('caseId' in action) setView({ app: 'cases', item: action.caseId })
-              else setView({ app: 'office', spot: action.spot, event: action.event })
-            }}
-          />
-        }
-      >
-        {desk.windows.map((win) => {
-          const meta = windowMeta(win)
-          const key = win.key
-          return (
-            <AppWindowFrame
-              key={key}
-              window={win}
-              title={meta.title}
-              icon={meta.icon}
-              active={focused?.key === key}
-              onFocus={() => setDesk((d) => focusWindow(d, key))}
-              onMinimize={() => setDesk((d) => minimizeWindow(d, key))}
-              onToggleMaximize={() => setDesk((d) => toggleMaximize(d, key))}
-              onClose={() => setDesk((d) => closeWindow(d, key))}
-              onMove={(x, y) => setDesk((d) => moveWindow(d, key, x, y, area))}
-              onResize={(w, h) => setDesk((d) => resizeWindow(d, key, w, h, area))}
-            >
-              <Suspense fallback={<AppLoading />}>
-                {win.system === 'settings' ? (
-                  <SettingsWindow
-                    settings={settings}
-                    onSettings={updateSettings}
-                    screen={area}
-                  />
-                ) : win.system === 'recycle-bin' ? (
-                  <RecycleBinWindow />
-                ) : win.view ? (
-                  renderApp(win.view)
-                ) : null}
-              </Suspense>
-            </AppWindowFrame>
-          )
-        })}
-      </DesktopSurface>
+      <AiHubContext.Provider value={aiHub}>
+        <DesktopSurface
+          icons={desktopIcons}
+          settings={settings}
+          onSettings={updateSettings}
+          newItems={newItems}
+          onDisplaySettings={() => openSystem('settings')}
+          onPersonalize={() => openSystem('settings')}
+          onArea={onArea}
+          overlay={
+            <Notices
+              notices={notifications.centreOpen ? notifications.all : notifications.fresh}
+              centre={notifications.centreOpen}
+              onDismiss={notifications.dismiss}
+              onClose={notifications.closeCentre}
+              onAct={(notice) => {
+                notifications.closeCentre()
+                const { action } = notice
+                if ('caseId' in action) setView({ app: 'cases', item: action.caseId })
+                else setView({ app: 'office', spot: action.spot, event: action.event })
+              }}
+            />
+          }
+        >
+          {desk.windows.map((win) => {
+            const meta = windowMeta(win)
+            const key = win.key
+            return (
+              <AppWindowFrame
+                key={key}
+                window={win}
+                title={meta.title}
+                icon={meta.icon}
+                active={focused?.key === key}
+                onFocus={() => setDesk((d) => focusWindow(d, key))}
+                onMinimize={() => setDesk((d) => minimizeWindow(d, key))}
+                onToggleMaximize={() => setDesk((d) => toggleMaximize(d, key))}
+                onClose={() => setDesk((d) => closeWindow(d, key))}
+                onMove={(x, y) => setDesk((d) => moveWindow(d, key, x, y, area))}
+                onResize={(w, h) => setDesk((d) => resizeWindow(d, key, w, h, area))}
+              >
+                <Suspense fallback={<AppLoading />}>
+                  {win.system === 'settings' ? (
+                    <SettingsWindow
+                      settings={settings}
+                      onSettings={updateSettings}
+                      screen={area}
+                    />
+                  ) : win.system === 'recycle-bin' ? (
+                    <RecycleBinWindow />
+                  ) : win.view ? (
+                    renderApp(win.view)
+                  ) : null}
+                </Suspense>
+              </AppWindowFrame>
+            )
+          })}
+        </DesktopSurface>
+      </AiHubContext.Provider>
 
       <Taskbar
         apps={launchables}

@@ -38,6 +38,15 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    id: 'ai',
+    title: 'WorkSim AI, your assistant',
+    text: [
+      '**WorkSim AI** (on the desktop, the taskbar and Start) helps with the work you have open: it can plan a task with you, explain a formula, summarise an email, list what it asks for and outline a reply. Choose **Learning**, **Professional** or **Expert** for how much it explains.',
+      'By default it uses WorkSim’s **built-in guide**: free, offline, and **not an AI model**, so it answers specific questions only. In **Settings** you can turn on a real AI model: one running on your computer (such as Ollama, free), or a cloud model through the WorkSim AI bridge with your own API key (the provider charges you).',
+      'Nothing is sent to a model until you agree. The **Context** panel shows what will be shared; untick anything you do not want to share. Your name is taken out first. Every answer says what wrote it: check AI answers before you rely on them.',
+    ],
+  },
+  {
     id: 'tasks',
     title: 'Tasks and feedback',
     text: [

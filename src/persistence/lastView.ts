@@ -24,6 +24,7 @@ export const ViewSchema = z.object({
     'portfolio',
     'cases',
     'readiness',
+    'ai',
   ]),
   /** For 'tool': which professional tool (e.g. "books"). */
   tool: z.string().optional(),

@@ -72,6 +72,37 @@ Your work computer has a desktop like a Windows 10 PC.
 
 Windows stay as you left them when you leave your desk, and after you close WorkSim.
 
+## WorkSim AI
+
+**WorkSim AI** is the assistant on your work computer (desktop icon, taskbar, Start,
+search). It helps with what you have open: plan a task, explain a formula, summarise an
+email, list what it asks for, outline a reply, review your writing, and write better
+prompts.
+
+- **Modes.** **Learning** explains and gives one step at a time; **Professional** gives
+  practical guidance and reviews; **Expert** explains trade-offs and leaves the decision
+  to you. The mode changes how much is explained, not how much is done for you.
+- **Context.** The panel on the right lists what WorkSim AI knows for the next question
+  (the email or task you have open, your role). Untick anything you do not want to
+  share. Your name is never shared.
+- **Who answers.** Every answer says what wrote it.
+  - **Built-in guide** (the default): WorkSim's own rules. Free, offline, **not an AI
+    model**, so it answers specific questions only.
+  - **A model on your computer**: free. Install [Ollama](https://ollama.com), download a
+    model (for example `ollama pull llama3.2`), start it so WorkSim may use it
+    (`OLLAMA_ORIGINS=http://localhost:5173 ollama serve`, using WorkSim's address),
+    then choose it in WorkSim AI's Settings with the model's name.
+  - **A cloud model through the WorkSim AI bridge**: uses your own API key, and the
+    provider charges your account per request. Put the key in a file called
+    `.env.local` next to `package.json` (for example `ANTHROPIC_API_KEY=...`; OpenAI
+    and Google also need `OPENAI_MODEL` or `GEMINI_MODEL`), run `npm run ai-bridge`,
+    and choose the provider in Settings. The key stays in the bridge.
+- **Consent.** Nothing is sent to a model until you tick the consent box in Settings.
+  **Show what will be sent** shows the exact context. If the model cannot answer, WorkSim
+  says why and the built-in guide answers instead.
+- **Limits.** A daily limit (40 requests by default, on this computer) and a time limit
+  on each request. The bridge has its own daily limit too.
+
 ## The apps
 
 | App          | What it is for                                                                         |

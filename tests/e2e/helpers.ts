@@ -72,7 +72,8 @@ export async function openApp(
     | 'Career'
     | 'Readiness'
     | 'Portfolio'
-    | 'Cases',
+    | 'Cases'
+    | 'WorkSim AI',
 ) {
   await sitAtComputer(page)
   await closeAllWindows(page)

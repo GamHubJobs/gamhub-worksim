@@ -9,7 +9,8 @@ async function goTo(page: Page, place: string) {
     .getByRole('navigation', { name: 'Places' })
     .getByRole('button', { name: place })
     .click()
-  await expect(panel(page).getByRole('heading')).toHaveText(place)
+  // Walking redraws the 3D office, which can be slow when many tests run at once.
+  await expect(panel(page).getByRole('heading')).toHaveText(place, { timeout: 15_000 })
 }
 
 test('getting to know colleagues builds trust, shown in the Career app', async ({

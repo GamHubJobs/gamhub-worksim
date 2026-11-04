@@ -39,7 +39,7 @@ export function StartMenu({
     action()
   }
   const sorted = [...apps].sort((a, b) => a.label.localeCompare(b.label))
-  const tiles = ['mail', 'tasks', 'cases', 'sheets', 'docs', 'career']
+  const tiles = ['mail', 'tasks', 'ai', 'cases', 'sheets', 'docs']
     .map((key) => apps.find((a) => a.key === key))
     .filter((a): a is LaunchableApp => !!a && !a.lockedUntil)
 
