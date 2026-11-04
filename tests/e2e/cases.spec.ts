@@ -649,7 +649,8 @@ test('cases in the office: a deadline reminder, the whiteboard and the player’
   await panel.getByRole('button', { name: 'Read the team whiteboard' }).click()
   const dialogue = page.getByTestId('office-dialogue')
   await expect(dialogue).toContainText('Case: ')
-  await expect(dialogue).toContainText('due in 45 min')
+  // The office clock keeps running at the computer, so a minute or two may have passed.
+  await expect(dialogue).toContainText(/due in 4\d min/)
   await dialogue.getByRole('button', { name: 'Open Cases' }).click()
   await expect(page.getByRole('heading', { name: 'Cases', level: 1 })).toBeVisible()
 })

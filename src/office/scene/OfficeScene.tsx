@@ -6,10 +6,16 @@
  * (reception, your desk, the manager's office, the break room). Clicking a glowing
  * floor marker or an object moves there.
  */
-import { ContactShadows, Html, useCursor } from '@react-three/drei'
+import {
+  ContactShadows,
+  Environment,
+  Html,
+  Lightformer,
+  useCursor,
+} from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Vector3, type Group, type Mesh, type WebGLRenderer } from 'three'
+import { Vector3, type Group, type Material, type Mesh, type WebGLRenderer } from 'three'
 import { COMPANY } from '../../content/company'
 import { activeDepartment, fill } from '../../content/departments'
 import {
@@ -26,7 +32,8 @@ import { prefersReducedMotion } from '../../ui/motion'
 /** With reduced motion, the camera jumps between places and nothing moves by itself. */
 const STILL = prefersReducedMotion()
 import { getDeskItem, type DeskItem } from '../../content/desk'
-import { Box, Desk, OfficeChair, Place, Plant, Sofa } from './parts'
+import { Desk, Floor, OfficeChair } from './furniture'
+import { Box, Place, Plant, Sofa } from './parts'
 import { PeopleDetail, Person, Walker, type PersonLook } from './people'
 
 /**
@@ -182,6 +189,7 @@ function OfficeScene(props: OfficeSceneProps) {
       // Software 3D draws at a lower resolution: much faster, slightly softer.
       dpr={lowPower ? 0.6 : [1, 1.5]}
       frameloop="demand"
+      shadows={!lowPower}
       camera={{ position: start.position, fov: 45, near: 0.1, far: 80 }}
       gl={{ antialias: true, powerPreference: 'default' }}
       onCreated={({ gl }) => setLowPower(isSoftwareRenderer(gl))}
@@ -190,9 +198,7 @@ function OfficeScene(props: OfficeSceneProps) {
       {/* Still scenes only redraw now and then, to keep the wall clock right. */}
       <Ticker fps={STILL ? 1 / 30 : lowPower ? 3 : 30} />
       <color attach="background" args={['#e6edf3']} />
-      <hemisphereLight args={['#ffffff', '#b8a990', 1.4]} />
-      <directionalLight position={[6, 12, 8]} intensity={1.5} />
-      <directionalLight position={[-8, 6, -4]} intensity={0.35} color="#cfe3ff" />
+      <Lighting lowPower={lowPower} />
       <CameraRig spot={props.spot} />
       <PeopleDetail low={lowPower}>
         <Building playerName={props.playerName} />
@@ -219,7 +225,7 @@ function OfficeScene(props: OfficeSceneProps) {
         <ContactShadows
           position={[0, 0.011, 0]}
           scale={30}
-          opacity={0.35}
+          opacity={0.3}
           blur={2.4}
           far={3}
           resolution={1024}
@@ -227,6 +233,90 @@ function OfficeScene(props: OfficeSceneProps) {
         />
       )}
     </Canvas>
+  )
+}
+
+/**
+ * Daylight from the windows and the ceiling: a soft sky light, a sun that
+ * casts real shadows, and an environment (drawn in the scene, not downloaded)
+ * that gives screens, steel and the floor their reflections. Computers that
+ * draw 3D in software get the plain lights only.
+ *
+ * Shadows are redrawn once a second rather than every frame: the furniture
+ * never moves and the people only a little, so this costs very little.
+ */
+function Lighting({ lowPower }: { lowPower: boolean }) {
+  const get = useThree((state) => state.get)
+  useEffect(() => {
+    if (lowPower) return
+    const { gl, scene } = get()
+    gl.shadowMap.autoUpdate = false
+    const refresh = () => {
+      scene.traverse((object) => {
+        const mesh = object as Mesh
+        if (!mesh.isMesh) return
+        const material = mesh.material as Material | Material[]
+        const solid = !Array.isArray(material) && !material.transparent
+        mesh.receiveShadow = solid
+        mesh.castShadow = solid && !mesh.userData.floor
+      })
+      gl.shadowMap.needsUpdate = true
+    }
+    refresh()
+    const timer = window.setInterval(refresh, 1000)
+    return () => {
+      window.clearInterval(timer)
+      gl.shadowMap.autoUpdate = true
+    }
+  }, [get, lowPower])
+
+  return (
+    <>
+      <hemisphereLight args={['#ffffff', '#b8a990', lowPower ? 1.4 : 0.85]} />
+      <directionalLight
+        position={[6, 12, 8]}
+        intensity={lowPower ? 1.5 : 1.9}
+        color="#fff8ee"
+        castShadow={!lowPower}
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-14}
+        shadow-camera-right={14}
+        shadow-camera-top={12}
+        shadow-camera-bottom={-12}
+        shadow-camera-near={1}
+        shadow-camera-far={40}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.025}
+      />
+      <directionalLight position={[-8, 6, -4]} intensity={0.35} color="#cfe3ff" />
+      {!lowPower && (
+        <Environment resolution={128} frames={1} environmentIntensity={0.55}>
+          {/* The ceiling's light panels and the windows */}
+          <Lightformer
+            form="rect"
+            intensity={2.2}
+            color="#fff7ed"
+            position={[0, 6, 0]}
+            rotation-x={Math.PI / 2}
+            scale={[18, 12, 1]}
+          />
+          <Lightformer
+            form="rect"
+            intensity={1.6}
+            color="#dbeafe"
+            position={[0, 2, -12]}
+            scale={[24, 3, 1]}
+          />
+          <Lightformer
+            form="rect"
+            intensity={0.7}
+            position={[0, 2, 12]}
+            rotation-y={Math.PI}
+            scale={[24, 3, 1]}
+          />
+        </Environment>
+      )}
+    </>
   )
 }
 
@@ -386,15 +476,9 @@ const WALL_HEIGHT = 2.9
 function Building({ playerName }: { playerName: string }) {
   return (
     <group>
-      {/* Floors: wood, with carpet in the workspace */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0.5]}>
-        <planeGeometry args={[24, 17]} />
-        <meshStandardMaterial color={COLORS.floor} roughness={0.9} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0.8, 0.005, 0.6]}>
-        <planeGeometry args={[8.6, 6.4]} />
-        <meshStandardMaterial color={COLORS.carpet} roughness={1} />
-      </mesh>
+      {/* Floors: wooden planks, with carpet tiles in the workspace */}
+      <Floor kind="wood" position={[0, 0, 0.5]} size={[24, 17]} />
+      <Floor kind="carpet" position={[0.8, 0.005, 0.6]} size={[8.6, 6.4]} />
       {/* Back wall with large windows and a city skyline */}
       <Box
         size={[24, WALL_HEIGHT, 0.2]}

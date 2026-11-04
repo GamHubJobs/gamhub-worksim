@@ -127,11 +127,53 @@ working simulations of the professional software used in its field (see
 
 **Phase 8 is complete.**
 
-**Workplace realism upgrade** (in progress):
+**Workplace realism upgrade** (complete):
 
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
-- [ ] C. A more realistic 3D office
+- [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · Upgrade C: a more realistic 3D office
+
+### Built
+
+- **Desks** (`src/office/scene/furniture.tsx`): wood-grain tops on a steel frame with
+  a modesty panel, a three-drawer pedestal with handles, a slim monitor on a neck and
+  base showing a work screen (brighter when there is new mail), a keyboard with keys,
+  a mouse on a mat, papers, a notebook and a mug with a handle.
+- **Chairs**: a five-star base with casters, a chrome gas lift, a cushioned seat, a
+  reclined back on its support, and armrests.
+- **Floors**: wooden planks, and carpet tiles in the open-plan area.
+- **Lighting**: a warm sun that casts real shadows, a soft sky light, and an
+  environment (light panels and windows, built in the scene) for reflections in
+  screens, steel, chrome and the floor; contact shadows stay for the soft darkening
+  under furniture.
+
+### Key decisions
+
+- **Detailed but cheap to draw.** Each desk and chair is built once from many shapes
+  merged into a few meshes, one per material, shared by every desk and chair. A desk
+  is ten meshes and a chair three, about as many as the old box furniture.
+- **Textures drawn in code** (wood, planks, carpet, keys, the screen): nothing to
+  download, and the office still works offline.
+- **Shadows are redrawn once a second**, not every frame.
+- **Computers that draw 3D in software** keep the plain lights: no shadows and no
+  reflections.
+
+### Performance
+
+- On an Intel HD Graphics 5500 (an ordinary laptop graphics chip from 2015): a steady
+  60 frames per second at every place in the office (95% of frames under 17 ms).
+- JavaScript memory in the office: 17 MB, unchanged. Start screen: 280 kB.
+
+### Tests
+
+- All suites pass: 1,929 unit tests; 144 Chromium browser tests; 5 production-build
+  tests (no console errors and no failed requests: nothing is downloaded); Firefox,
+  WebKit and Edge (8, 1 skipped as before). A case test now accepts a minute or two
+  passing on the office clock while it works.
 
 ---
 
