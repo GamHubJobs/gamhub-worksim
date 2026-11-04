@@ -100,6 +100,23 @@ prompts.
 - **Consent.** Nothing is sent to a model until you tick the consent box in Settings.
   **Show what will be sent** shows the exact context. If the model cannot answer, WorkSim
   says why and the built-in guide answers instead.
+- **Inside the apps.** Each app has a **WorkSim AI** button in its toolbar with what it
+  can do there:
+  - **Mail**: summarise an email, list what it asks you to do, outline a reply; review
+    your draft, or improve its wording.
+  - **Tasks**: how to approach the task, and which step to do first.
+  - **Sheets**: explain a formula or an error, suggest a formula for the selected cell,
+    and analyse the selected data (totals, unusual values, trends, which chart to use).
+  - **Docs**: review your writing, summarise, suggest a report structure, rewrite the
+    selected text.
+  - **Slides**: review the presentation, suggest an outline, help with speaker notes.
+  - **Code**: explain the code and the failing tests, and which tests to write.
+  - **Help Desk**: summarise the ticket, suggest a resolution from the knowledge base,
+    help with the reply.
+- **Proposed changes.** When WorkSim AI suggests a formula or rewritten text, it shows it
+  first, with **Apply** and **Dismiss**. Nothing in your work changes until you apply
+  it, and you can undo it in the app afterwards. In Learning mode, formula help is a
+  hint, so you write the formula yourself.
 - **Limits.** A daily limit (40 requests by default, on this computer) and a time limit
   on each request. The bridge has its own daily limit too.
 

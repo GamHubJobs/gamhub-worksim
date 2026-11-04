@@ -7,7 +7,7 @@
  */
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAppServices } from '../app/services'
-import type { ContextItem } from '../ai/types'
+import type { ContextItem, Proposal } from '../ai/types'
 import { workContext } from '../ai/workContext'
 import { AiHubContext, type AiHub, type AiQuestion } from '../apps/ai/hub'
 import type { Career } from '../app/useCareer'
@@ -222,24 +222,28 @@ export function Desktop({
   const notifications = useNotifications(profile, view.app !== 'office')
 
   // WorkSim AI: context offered by the open apps, and questions sent from them.
-  const [offered, setOffered] = useState<Record<string, ContextItem[]>>({})
-  const [aiQuestion, setAiQuestion] = useState<(AiQuestion & { id: number }) | null>(null)
+  const offered = useRef<Record<string, () => ContextItem[]>>({})
+  const [aiQuestion, setAiQuestion] = useState<
+    (AiQuestion & { id: number; from: string }) | null
+  >(null)
   const questionId = useRef(0)
+  // Apps that accept changes WorkSim AI proposes (applied only when the player says so).
+  const appliers = useRef<
+    Record<string, { kinds: Proposal['kind'][]; apply: (proposal: Proposal) => boolean }>
+  >({})
   const aiHub = useMemo<AiHub>(
     () => ({
-      offer: (app, items) =>
-        setOffered((current) => {
-          if (!items) {
-            if (!(app in current)) return current
-            const next = { ...current }
-            delete next[app]
-            return next
-          }
-          return { ...current, [app]: items }
-        }),
-      ask: (_from, question) => {
+      offer: (app, items) => {
+        if (items) offered.current[app] = items
+        else delete offered.current[app]
+      },
+      accept: (app, apply) => {
+        if (apply) appliers.current[app] = apply
+        else delete appliers.current[app]
+      },
+      ask: (from, question) => {
         questionId.current += 1
-        setAiQuestion({ ...question, id: questionId.current })
+        setAiQuestion({ ...question, id: questionId.current, from })
         setViewRef.current({ app: 'ai' })
       },
     }),
@@ -797,12 +801,15 @@ export function Desktop({
           <AiApp
             profileId={profile.id}
             playerName={profile.name}
-            context={[
-              ...(workWindow ? (offered[workWindow.key] ?? []) : []),
+            readContext={() => [
+              ...(workWindow ? (offered.current[workWindow.key]?.() ?? []) : []),
               ...workContext(profile, workWindow?.view ?? null),
             ]}
             question={aiQuestion}
             onQuestionTaken={takeQuestion}
+            workApp={workWindow?.key ?? null}
+            canApply={(app, kind) => !!appliers.current[app]?.kinds.includes(kind)}
+            onApply={(app, proposal) => appliers.current[app]?.apply(proposal) ?? false}
           />
         )
       case 'career':

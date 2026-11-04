@@ -4,6 +4,8 @@
  * finished work hands it in.
  */
 import { useEffect, useState } from 'react'
+import { AskAiMenu } from '../ai/AskAiMenu'
+import { useAiApply } from '../ai/hub'
 import type { SubmissionResult } from '../../app/useCareer'
 import { getAssignment } from '../../content/assignments'
 import { COMPANY } from '../../content/company'
@@ -250,15 +252,25 @@ function MessageView({
     <article className="mx-auto max-w-3xl p-6" data-testid="mail-message">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-xl font-semibold text-slate-900">{mail.subject}</h2>
-        {!sent && mail.from !== 'hr' && (
-          <button
-            type="button"
-            onClick={onReply}
-            className="flex shrink-0 items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            <Icon name="send" className="h-4 w-4" /> Reply
-          </button>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          <AskAiMenu
+            app="mail"
+            actions={[
+              { label: 'Summarise this email', action: 'summarise' },
+              { label: 'What does it ask me to do?', action: 'action-items' },
+              ...(!sent ? [{ label: 'Help me reply', action: 'reply' }] : []),
+            ]}
+          />
+          {!sent && mail.from !== 'hr' && (
+            <button
+              type="button"
+              onClick={onReply}
+              className="flex shrink-0 items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <Icon name="send" className="h-4 w-4" /> Reply
+            </button>
+          )}
+        </div>
       </div>
       <div className="mt-4 flex items-center gap-3">
         {sender ? <Avatar personId={sender.id} /> : <Avatar personId={recipient.id} />}
@@ -394,6 +406,22 @@ function Compose({
       : [],
   )
   const [picking, setPicking] = useState(false)
+  // WorkSim AI can propose better wording; it replaces the draft only when applied.
+  useAiApply('mail', ['text'], (proposal) => {
+    if (proposal.kind !== 'text') return false
+    setBody(proposal.text)
+    return true
+  })
+  const draftContext = () => [
+    { kind: 'selection' as const, label: 'Your draft reply', text: body },
+    {
+      kind: 'email' as const,
+      label: `Email: ${replyTo.subject}`,
+      text: `Subject: ${replyTo.subject}
+
+${replyTo.body}`,
+    },
+  ]
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -437,7 +465,21 @@ function Compose({
         void send()
       }}
     >
-      <h2 className="text-xl font-semibold text-slate-900">Reply</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold text-slate-900">Reply</h2>
+        <AskAiMenu
+          app="mail"
+          actions={[
+            { label: 'Review my draft', action: 'review', items: draftContext },
+            {
+              label: 'Improve the wording',
+              question: 'Improve the wording of my draft reply',
+              action: 'improve-draft',
+              items: draftContext,
+            },
+          ]}
+        />
+      </div>
       <dl className="space-y-1 text-sm">
         <div className="flex gap-2">
           <dt className="w-16 text-slate-500">To</dt>

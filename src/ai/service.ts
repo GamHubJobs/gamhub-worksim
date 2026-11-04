@@ -24,6 +24,22 @@ export function engineFor(settings: AiSettings, fetcher: typeof fetch = fetch): 
   }
 }
 
+/**
+ * A model's answer to a rewrite or formula request, as a change the player
+ * can review and apply. Never applied here.
+ */
+export function withProposal(answer: AiAnswer, request: AiRequest): AiAnswer {
+  if (request.action === 'rewrite' || request.action === 'improve-draft')
+    return { ...answer, proposal: { kind: 'text', text: answer.text.trim() } }
+  if (request.action === 'suggest-formula') {
+    const cell = request.context.items.find((i) => i.kind === 'formula')?.data?.address
+    const formula = answer.text.match(/^\s*`?(=[^`\n]+)`?\s*$/m)?.[1]?.trim()
+    if (typeof cell === 'string' && formula)
+      return { ...answer, proposal: { kind: 'formula', cell, formula } }
+  }
+  return answer
+}
+
 export interface AskOptions {
   signal?: AbortSignal
   fetcher?: typeof fetch
@@ -56,7 +72,7 @@ export async function askAi(
   options.signal?.addEventListener('abort', stop)
   try {
     countRequest(options.now, options.storage)
-    return await engine.answer(request, controller.signal)
+    return withProposal(await engine.answer(request, controller.signal), request)
   } catch (error) {
     if (options.signal?.aborted) throw new EngineError('Stopped.', 'timeout')
     const reason =

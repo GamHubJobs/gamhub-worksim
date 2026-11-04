@@ -14,6 +14,9 @@ import {
   type TicketStatus,
 } from '../../persistence/schemas'
 import { PRIORITY_INFO, STATUS_NAMES } from './labels'
+import { AskAiMenu } from '../ai/AskAiMenu'
+import { useAiContext } from '../ai/hub'
+import { ticketAiContext } from './aiContext'
 
 interface TicketsEditorProps {
   content: TicketsContent
@@ -44,6 +47,12 @@ export function TicketsEditor({
   const [showKb, setShowKb] = useState(content.knowledge.length > 0)
   const ticket = content.tickets.find((t) => t.id === selectedId) ?? content.tickets[0]
   const shown = content.tickets.filter((t) => filter === 'all' || t.status === filter)
+
+  // WorkSim AI sees the open ticket and the knowledge base articles that match it.
+  useAiContext(
+    'helpdesk',
+    editable && ticket ? () => ticketAiContext(ticket, content.knowledge) : null,
+  )
 
   const change = (changes: Partial<Ticket>) => {
     if (editable && ticket)
@@ -118,7 +127,29 @@ export function TicketsEditor({
         {ticket ? (
           <article className="mx-auto max-w-3xl space-y-4" data-testid="ticket">
             <header className="rounded-lg border border-slate-200 bg-white p-4">
-              <p className="font-mono text-xs text-slate-500">{ticket.id}</p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-mono text-xs text-slate-500">{ticket.id}</p>
+                {editable && (
+                  <AskAiMenu
+                    app="helpdesk"
+                    compact
+                    actions={[
+                      { label: 'Summarise this ticket', action: 'summarise' },
+                      {
+                        label: 'Suggest how to resolve it',
+                        question: 'How should I resolve this ticket?',
+                        action: 'resolve-ticket',
+                      },
+                      {
+                        label: 'Help me reply to the user',
+                        question:
+                          'Help me write a reply to the user who raised this ticket',
+                        action: 'reply',
+                      },
+                    ]}
+                  />
+                )}
+              </div>
               <h2 className="text-lg font-semibold text-slate-900">{ticket.subject}</h2>
               <p className="text-sm text-slate-600">
                 From <strong>{ticket.from}</strong> ({ticket.department}) at{' '}

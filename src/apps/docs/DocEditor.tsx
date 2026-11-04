@@ -8,6 +8,9 @@ import type { ChartSpec, DocContent, RichNode } from '../../persistence/schemas'
 import type { PickerMode } from '../shared/SheetsPicker'
 import { table } from './templates'
 import { docExtensions, FONT_SIZES } from './editor'
+import { AskAiMenu } from '../ai/AskAiMenu'
+import { useAiApply, useAiContext } from '../ai/hub'
+import type { ContextItem } from '../../ai/types'
 import { countWords, outline } from './text'
 
 const PAGE_WIDTH = { a4: 794, letter: 816 } as const
@@ -70,6 +73,34 @@ export function DocEditor({
   const setPage = (page: Partial<DocContent['page']>) =>
     onChange?.({ ...content, page: { ...content.page, ...page } })
 
+  // WorkSim AI sees the selection and the document, and may propose a rewrite
+  // of the selection, which replaces it only when the player applies it.
+  useAiContext(
+    'docs',
+    !readOnly && editor
+      ? () => {
+          const { from, to } = editor.state.selection
+          const selected = editor.state.doc.textBetween(from, to, '\n').trim()
+          const items: ContextItem[] = []
+          if (selected)
+            items.push({ kind: 'selection', label: 'Selected text', text: selected })
+          items.push({
+            kind: 'document',
+            label: 'The document',
+            text: editor.getText({ blockSeparator: '\n\n' }),
+            data: { headings: outline(latest.current.body).map((h) => h.text) },
+          })
+          return items
+        }
+      : null,
+  )
+  useAiApply('docs', readOnly ? null : ['text'], (proposal) => {
+    if (proposal.kind !== 'text' || !editor) return false
+    const { from, to } = editor.state.selection
+    editor.chain().focus().insertContentAt({ from, to }, proposal.text).run()
+    return true
+  })
+
   const width = PAGE_WIDTH[content.page.size]
   const margin = PAGE_MARGIN[content.page.margins]
   const headings = outline(content.body)
@@ -78,34 +109,58 @@ export function DocEditor({
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="doc-editor">
       {!readOnly && editor && (
-        <Toolbar
-          editor={editor}
-          page={content.page}
-          onPage={setPage}
-          onPickFromSheets={
-            onPickFromSheets
-              ? (mode) =>
-                  onPickFromSheets(mode, {
-                    chart: (chart) =>
-                      editor
-                        .chain()
-                        .focus()
-                        .insertContent([
-                          { type: 'chart', attrs: { spec: chart } },
-                          // Continue typing below it, so the next insert does not replace it.
-                          { type: 'paragraph' },
-                        ])
-                        .run(),
-                    table: (rows) =>
-                      editor
-                        .chain()
-                        .focus()
-                        .insertContent([table(rows), { type: 'paragraph' }])
-                        .run(),
-                  })
-              : undefined
-          }
-        />
+        <div className="flex items-start border-b border-slate-200 bg-white">
+          <div className="min-w-0 flex-1 [&>*]:border-b-0">
+            <Toolbar
+              editor={editor}
+              page={content.page}
+              onPage={setPage}
+              onPickFromSheets={
+                onPickFromSheets
+                  ? (mode) =>
+                      onPickFromSheets(mode, {
+                        chart: (chart) =>
+                          editor
+                            .chain()
+                            .focus()
+                            .insertContent([
+                              { type: 'chart', attrs: { spec: chart } },
+                              // Continue typing below it, so the next insert does not replace it.
+                              { type: 'paragraph' },
+                            ])
+                            .run(),
+                        table: (rows) =>
+                          editor
+                            .chain()
+                            .focus()
+                            .insertContent([table(rows), { type: 'paragraph' }])
+                            .run(),
+                      })
+                  : undefined
+              }
+            />
+          </div>
+          <div className="shrink-0 p-1.5">
+            <AskAiMenu
+              app="docs"
+              compact
+              actions={[
+                { label: 'Review my writing', action: 'review' },
+                { label: 'Summarise the document', action: 'summarise' },
+                {
+                  label: 'Suggest a structure for my report',
+                  question: 'Suggest a structure for my report',
+                  action: 'structure',
+                },
+                {
+                  label: 'Rewrite the selected text professionally',
+                  question: 'Rewrite the selected text in a professional tone',
+                  action: 'rewrite',
+                },
+              ]}
+            />
+          </div>
+        </div>
       )}
       <div className="flex min-h-0 flex-1">
         <nav

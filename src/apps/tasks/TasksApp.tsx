@@ -1,5 +1,6 @@
 /** Tasks: the assignments of the player's career, their status and results. */
 import { useState } from 'react'
+import { AskAiMenu } from '../ai/AskAiMenu'
 import { getTool } from '../../tools/registry'
 import { getSkill } from '../../content/careers'
 import { getPerson } from '../../content/departments'
@@ -175,9 +176,23 @@ function TaskDetail({
   return (
     <article className="mx-auto max-w-3xl space-y-5 p-6" data-testid="task-detail">
       <header className="space-y-2">
-        <p className="text-sm text-slate-500">
-          Task {assignment.order} · from {manager.name}, {manager.role}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm text-slate-500">
+            Task {assignment.order} · from {manager.name}, {manager.role}
+          </p>
+          <AskAiMenu
+            app="tasks"
+            actions={[
+              { label: 'How should I approach this task?', action: 'approach' },
+              {
+                label: 'Which step should I do first?',
+                question: 'Which step should I do first, and why?',
+                action: 'approach',
+              },
+              { label: 'Tips for asking AI about this task', action: 'prompting' },
+            ]}
+          />
+        </div>
         <h2 className="text-2xl font-bold text-slate-900">{assignment.title}</h2>
         <p className="text-slate-700">{assignment.summary}</p>
         <div className="flex flex-wrap gap-3 text-sm text-slate-600">

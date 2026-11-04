@@ -14,7 +14,13 @@ import {
   writeAiSettings,
   type AiSettings,
 } from '../../ai/settings'
-import { AI_MODES, type AiAnswer, type AiMessage, type ContextItem } from '../../ai/types'
+import {
+  AI_MODES,
+  type AiAnswer,
+  type AiMessage,
+  type ContextItem,
+  type Proposal,
+} from '../../ai/types'
 import { Icon } from '../../ui/Icon'
 import { AiSettingsPanel } from './AiSettingsPanel'
 import type { AiQuestion } from './hub'
@@ -27,6 +33,10 @@ interface Turn {
   error?: string
   /** What was shared with this question (labels only, for the record). */
   shared: string[]
+  /** The app the question was about, which may accept a proposed change. */
+  from: string | null
+  /** What became of a proposed change. */
+  outcome?: 'applied' | 'dismissed' | 'failed'
 }
 
 /** Conversations last while WorkSim is open (they are not saved). */
@@ -69,18 +79,26 @@ function suggestions(items: ContextItem[]): Array<{ text: string; action?: strin
 export function AiApp({
   profileId,
   playerName,
-  context,
+  readContext,
   question,
   onQuestionTaken,
+  workApp,
+  canApply,
+  onApply,
 }: {
   profileId: string
   playerName: string
-  /** What the player is working on, most relevant first. */
-  context: ContextItem[]
+  /** What the player is working on, most relevant first (read when drawn). */
+  readContext: () => ContextItem[]
   /** A question sent from another app, to ask straight away. */
-  question: (AiQuestion & { id: number }) | null
+  question: (AiQuestion & { id: number; from: string }) | null
   onQuestionTaken: (id: number) => void
+  /** The window the player was working in (where proposed changes go). */
+  workApp: string | null
+  canApply: (app: string, kind: Proposal['kind']) => boolean
+  onApply: (app: string, proposal: Proposal) => boolean
 }) {
+  const context = readContext()
   const [settings, setSettings] = useState<AiSettings>(readAiSettings)
   const [showSettings, setShowSettings] = useState(false)
   const [turns, setTurns] = useState<Turn[]>(() => conversations.get(profileId) ?? [])
@@ -107,12 +125,20 @@ export function AiApp({
     writeAiSettings(next)
   }
 
-  async function ask(text: string, action?: string, items: ContextItem[] = shared) {
+  async function ask(
+    text: string,
+    action?: string,
+    items: ContextItem[] = shared,
+    from: string | null = workApp,
+  ) {
     const question = text.trim()
     if (!question || busy) return
     const id = nextId.current++
     const built = buildContext(items, playerName)
-    setTurns((t) => [...t, { id, question, shared: built.items.map((i) => i.label) }])
+    setTurns((t) => [
+      ...t,
+      { id, question, shared: built.items.map((i) => i.label), from },
+    ])
     setDraft('')
     const history: AiMessage[] = turns
       .filter((t) => t.answer)
@@ -151,10 +177,18 @@ export function AiApp({
   useEffect(() => {
     askRef.current = ask
   })
+  // Each question is asked once, even if this runs twice (as React does in development).
+  const taken = useRef(new Set<number>())
   useEffect(() => {
-    if (!question || busy) return
+    if (!question || busy || taken.current.has(question.id)) return
+    taken.current.add(question.id)
     onQuestionTaken(question.id)
-    void askRef.current(question.text, question.action, question.items ?? shared)
+    void askRef.current(
+      question.text,
+      question.action,
+      question.items ?? shared,
+      question.from,
+    )
   }, [question, busy, onQuestionTaken, shared])
 
   if (showSettings)
@@ -271,6 +305,31 @@ export function AiApp({
                         </p>
                       )}
                       <RichText text={turn.answer.text} />
+                      {turn.answer.proposal &&
+                        turn.from &&
+                        canApply(turn.from, turn.answer.proposal.kind) && (
+                          <ProposalCard
+                            proposal={turn.answer.proposal}
+                            outcome={turn.outcome}
+                            onApply={() => {
+                              const ok = onApply(turn.from!, turn.answer!.proposal!)
+                              setTurns((t) =>
+                                t.map((x) =>
+                                  x.id === turn.id
+                                    ? { ...x, outcome: ok ? 'applied' : 'failed' }
+                                    : x,
+                                ),
+                              )
+                            }}
+                            onDismiss={() =>
+                              setTurns((t) =>
+                                t.map((x) =>
+                                  x.id === turn.id ? { ...x, outcome: 'dismissed' } : x,
+                                ),
+                              )
+                            }
+                          />
+                        )}
                       <p
                         className="mt-3 border-t border-slate-100 pt-2 text-[11px] text-slate-500"
                         data-testid="ai-source"
@@ -422,5 +481,64 @@ export function AiApp({
         </ul>
       </aside>
     </div>
+  )
+}
+
+/** A change WorkSim AI proposes: shown in full, applied only when the player says so. */
+function ProposalCard({
+  proposal,
+  outcome,
+  onApply,
+  onDismiss,
+}: {
+  proposal: Proposal
+  outcome: Turn['outcome']
+  onApply: () => void
+  onDismiss: () => void
+}) {
+  return (
+    <section
+      className="mt-3 border border-[#3b5bdb]/40 bg-[#f5f7ff] p-3"
+      aria-label="Proposed change"
+      data-testid="ai-proposal"
+    >
+      <p className="text-xs font-semibold text-slate-700">
+        {proposal.kind === 'formula'
+          ? `Proposed formula for cell ${proposal.cell}`
+          : 'Proposed text, to replace the original'}
+      </p>
+      <pre className="mt-1.5 max-h-48 overflow-auto bg-white p-2 font-mono text-xs whitespace-pre-wrap text-slate-800">
+        {proposal.kind === 'formula' ? proposal.formula : proposal.text}
+      </pre>
+      {outcome ? (
+        <p role="status" className="mt-2 text-xs text-slate-600">
+          {outcome === 'applied'
+            ? 'Applied. Check the result, and undo it there if it is not right.'
+            : outcome === 'dismissed'
+              ? 'Not applied.'
+              : 'It could not be applied (the app may have moved on or be read-only).'}
+        </p>
+      ) : (
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onApply}
+            className="bg-[#1f6fbf] px-3 py-1 text-xs font-medium text-white hover:bg-[#185a9d]"
+          >
+            Apply
+          </button>
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="border border-slate-300 bg-white px-3 py-1 text-xs hover:bg-slate-50"
+          >
+            Dismiss
+          </button>
+          <span className="text-[11px] text-slate-500">
+            Review it first: you are responsible for it.
+          </span>
+        </div>
+      )}
+    </section>
   )
 }

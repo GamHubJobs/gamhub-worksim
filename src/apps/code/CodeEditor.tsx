@@ -9,6 +9,9 @@ import { runProjectTests } from '../../game/code/runInWorker'
 import type { RunResult } from '../../game/code/runner'
 import { isTestFile } from '../../game/code/runner'
 import type { CodeContent } from '../../persistence/schemas'
+import type { ContextItem } from '../../ai/types'
+import { AskAiMenu } from '../ai/AskAiMenu'
+import { useAiContext } from '../ai/hub'
 
 interface CodeEditorProps {
   content: CodeContent
@@ -29,6 +32,36 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
   const file = content.files.find((f) => f.name === active) ?? content.files[0]
   const editable = !readOnly && !!onUpdate && !file?.readOnly
   const lines = (file?.text ?? '').split('\n').length
+
+  // WorkSim AI sees the open file and the last test run (not the whole project).
+  useAiContext(
+    'code',
+    canEdit && file
+      ? () => {
+          const items: ContextItem[] = [
+            { kind: 'code', label: `File: ${file.name}`, text: file.text },
+          ]
+          if (run) {
+            const failed = run.tests.filter((t) => !t.passed)
+            const problems = run.error
+              ? [run.error]
+              : failed.map((t) => `"${t.name}": ${t.message}`)
+            items.push({
+              kind: 'tests',
+              label: 'Last test run',
+              text: run.error
+                ? `The tests could not run: ${run.error}`
+                : [
+                    `${run.tests.length - failed.length} of ${run.tests.length} tests pass.`,
+                    ...problems.map((p) => `Fails: ${p}`),
+                  ].join('\n'),
+              data: { failed: problems },
+            })
+          }
+          return items
+        }
+      : null,
+  )
 
   function setText(text: string) {
     if (!file) return
@@ -117,15 +150,32 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
                 </span>
               )}
             </span>
-            <button
-              type="button"
-              onClick={() => void runTests()}
-              disabled={running}
-              data-testid="run-tests"
-              className="rounded-md bg-emerald-700 px-3 py-1 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
-            >
-              {running ? 'Running…' : 'Run tests'}
-            </button>
+            <span className="flex items-center gap-2">
+              {canEdit && (
+                <AskAiMenu
+                  app="code"
+                  compact
+                  actions={[
+                    { label: 'Explain this code', action: 'explain-code' },
+                    {
+                      label: 'Help me debug the failing tests',
+                      question: 'Help me debug the failing tests',
+                      action: 'explain-code',
+                    },
+                    { label: 'Which tests should I write?', action: 'write-tests' },
+                  ]}
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => void runTests()}
+                disabled={running}
+                data-testid="run-tests"
+                className="rounded-md bg-emerald-700 px-3 py-1 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
+              >
+                {running ? 'Running…' : 'Run tests'}
+              </button>
+            </span>
           </div>
           <div className="flex min-h-0 flex-1 overflow-hidden font-mono text-sm leading-6">
             <div

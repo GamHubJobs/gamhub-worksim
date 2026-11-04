@@ -12,7 +12,9 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: `http://localhost:${PORT}`,
+    // One address for every browser (Firefox does not always find "localhost" when the
+    // server listens on IPv6 only).
+    baseURL: `http://127.0.0.1:${PORT}`,
     trace: 'retain-on-failure',
   },
   projects: [
@@ -21,8 +23,8 @@ export default defineConfig({
     { name: 'edge', use: { ...devices['Desktop Edge'], channel: 'msedge' } },
   ],
   webServer: {
-    command: `npm run build && npx vite preview --port ${PORT} --strictPort`,
-    url: `http://localhost:${PORT}`,
+    command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
+    url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: false,
     timeout: 240_000,
     env: { VITE_CASE_SEED: '0' },

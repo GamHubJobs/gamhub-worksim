@@ -164,8 +164,9 @@ export interface OfficeSceneProps {
  * get fewer frames per second and no soft shadows, so the rest of the app
  * stays responsive.
  */
-function isSoftwareRenderer(gl: WebGLRenderer): boolean {
-  const context = gl.getContext()
+function isSoftwareContext(
+  context: WebGLRenderingContext | WebGL2RenderingContext,
+): boolean {
   const info = context.getExtension('WEBGL_debug_renderer_info')
   const renderer = String(
     info
@@ -173,6 +174,10 @@ function isSoftwareRenderer(gl: WebGLRenderer): boolean {
       : context.getParameter(context.RENDERER),
   )
   return /swiftshader|llvmpipe|software|basic render/i.test(renderer)
+}
+
+function isSoftwareRenderer(gl: WebGLRenderer): boolean {
+  return isSoftwareContext(gl.getContext())
 }
 
 /**
@@ -184,21 +189,33 @@ export default memo(OfficeScene)
 function OfficeScene(props: OfficeSceneProps) {
   const start = getSpot(props.spot).camera
   const [lowPower, setLowPower] = useState(false)
+  // Shadows, reflections and contact shadows are costly to build: they wait until
+  // the graphics have been checked, so a computer without a graphics card never
+  // has to build them first.
+  const [checked, setChecked] = useState(false)
+  const full = checked && !lowPower
   return (
     <Canvas
       // Software 3D draws at a lower resolution: much faster, slightly softer.
-      dpr={lowPower ? 0.6 : [1, 1.5]}
+      dpr={lowPower ? 0.5 : [1, 1.5]}
       frameloop="demand"
-      shadows={!lowPower}
+      shadows={full}
       camera={{ position: start.position, fov: 45, near: 0.1, far: 80 }}
       gl={{ antialias: true, powerPreference: 'default' }}
-      onCreated={({ gl }) => setLowPower(isSoftwareRenderer(gl))}
+      onCreated={({ gl }) => {
+        setLowPower(isSoftwareRenderer(gl))
+        setChecked(true)
+      }}
       data-lowpower={lowPower}
     >
-      {/* Still scenes only redraw now and then, to keep the wall clock right. */}
-      <Ticker fps={STILL ? 1 / 30 : lowPower ? 3 : 30} />
+      {/* Still scenes only redraw now and then, to keep the wall clock right. In software
+          3D a frame takes about a quarter of a second, so the gentle movement is
+          drawn once a second, leaving the computer free for the apps; anything that
+          changes (the camera moving, a conversation) is still drawn at once. */}
+      <Ticker fps={STILL ? 1 / 30 : lowPower ? 1 : 30} />
       <color attach="background" args={['#e6edf3']} />
-      <Lighting lowPower={lowPower} />
+      <Lighting lowPower={!full} />
+      {full && !STILL && <SlowWatch onSlow={() => setLowPower(true)} />}
       <CameraRig spot={props.spot} />
       <PeopleDetail low={lowPower}>
         <Building playerName={props.playerName} />
@@ -221,7 +238,7 @@ function OfficeScene(props: OfficeSceneProps) {
           onClick={() => props.onGo(s.id)}
         />
       ))}
-      {!lowPower && (
+      {full && (
         <ContactShadows
           position={[0, 0.011, 0]}
           scale={30}
@@ -318,6 +335,29 @@ function Lighting({ lowPower }: { lowPower: boolean }) {
       )}
     </>
   )
+}
+
+/**
+ * Some browsers hide which graphics the computer has (Firefox and Safari do,
+ * for privacy), so a computer drawing 3D in software is not always
+ * recognised. This watches the first frames instead: if the office draws at
+ * fewer than about seven frames a second, it switches to the simpler office.
+ */
+function SlowWatch({ onSlow }: { onSlow: () => void }) {
+  const samples = useRef<number[]>([])
+  const done = useRef(false)
+  useFrame((_, delta) => {
+    if (done.current) return
+    // A hidden tab pauses drawing: those gaps say nothing about speed.
+    if (document.visibilityState !== 'visible' || delta > 2) return
+    samples.current.push(delta)
+    // The first frames include building shaders: they do not count.
+    if (samples.current.length < 28) return
+    done.current = true
+    const sorted = samples.current.slice(6).sort((a, b) => a - b)
+    if (sorted[Math.floor(sorted.length / 2)] > 0.15) onSlow()
+  })
+  return null
 }
 
 /**

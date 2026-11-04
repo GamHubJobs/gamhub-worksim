@@ -77,6 +77,9 @@ import {
   validationFor,
   type ConditionalStyle,
 } from '../features'
+import { AskAiMenu } from '../../ai/AskAiMenu'
+import { useAiApply, useAiContext } from '../../ai/hub'
+import { sheetAiContext } from '../aiContext'
 import { FILL_CLASSES, REFERENCE_COLORS, TEXT_CLASSES } from './cellStyles'
 import { DataPanel, type DataPanelMode } from './DataPanel'
 import { FormulaBar } from './FormulaBar'
@@ -897,6 +900,19 @@ export function SheetEditor({
   /** The table to sort, filter or chart: the selection, or the data around the cursor. */
   const dataRange = useMemo(() => dataRegion(sheet, selection), [sheet, selection])
 
+  // WorkSim AI sees the active cell and the table, and may propose a formula,
+  // which is written only when the player applies it.
+  useAiContext(
+    'sheets',
+    editable ? () => sheetAiContext(sheet, calculator, active, dataRange) : null,
+  )
+  useAiApply('sheets', editable ? ['formula'] : null, (proposal) => {
+    if (proposal.kind !== 'formula' || !editable || !parseAddress(proposal.cell))
+      return false
+    update((latest) => setCellInput(latest, sheet.id, proposal.cell, proposal.formula))
+    return true
+  })
+
   function sort(direction: 'asc' | 'desc') {
     commit()
     const region = dataRange
@@ -1009,6 +1025,28 @@ export function SheetEditor({
             >
               <span className="text-xs">Rules</span>
             </ToolButton>
+            {editable && (
+              <AskAiMenu
+                app="sheets"
+                compact
+                actions={[
+                  {
+                    label: 'Explain the formula in this cell',
+                    action: 'explain-formula',
+                  },
+                  {
+                    label: 'Why is this formula not working?',
+                    action: 'explain-formula',
+                  },
+                  { label: 'Suggest a formula for this cell', action: 'suggest-formula' },
+                  {
+                    label: 'Analyse the selected data',
+                    question: 'Analyse the selected data and recommend a chart',
+                    action: 'analyse-data',
+                  },
+                ]}
+              />
+            )}
           </>
         }
       />

@@ -35,6 +35,7 @@ import {
   moveSlide,
   removeElement,
   reorderElement,
+  slideText,
   slideTextColor,
   textBox,
   THEMES,
@@ -42,6 +43,8 @@ import {
   updateSlide,
 } from './model'
 import { SlideView } from './SlideView'
+import { AskAiMenu } from '../ai/AskAiMenu'
+import { useAiContext } from '../ai/hub'
 
 type Box = { x: number; y: number; w: number; h: number }
 type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
@@ -124,6 +127,32 @@ export function SlidesEditor({
   const [menu, setMenu] = useState<'new' | 'layout' | 'shape' | 'theme' | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
+  // WorkSim AI sees the slides' text (for reviews, outlines and speaker notes).
+  useAiContext(
+    'slides',
+    editable
+      ? () => {
+          const slides = content.slides.map((slide) => {
+            const text = slideText(slide)
+            return {
+              title: text.split('\n')[0] ?? '',
+              text,
+              words: text.split(/\s+/).filter(Boolean).length,
+            }
+          })
+          return [
+            {
+              kind: 'slides' as const,
+              label: 'The presentation',
+              text: slides
+                .map((s, i) => `Slide ${i + 1}:\n${s.text || '(empty)'}`)
+                .join('\n\n'),
+              data: { slides: slides.map(({ title, words }) => ({ title, words })) },
+            },
+          ]
+        }
+      : null,
+  )
   const fileRef = useRef<HTMLInputElement>(null)
   const [canvasWidth, setCanvasWidth] = useState(800)
 
@@ -609,6 +638,26 @@ export function SlidesEditor({
               ▶ Present
             </button>
           )}
+          <span className={onPresent ? '' : 'ml-auto'}>
+            <AskAiMenu
+              app="slides"
+              compact
+              actions={[
+                {
+                  label: 'Review my presentation',
+                  question: 'Review my presentation',
+                  action: 'review-slides',
+                },
+                {
+                  label: 'Suggest an outline',
+                  question: 'Suggest a presentation outline',
+                  action: 'outline',
+                },
+                { label: 'Help me write speaker notes', action: 'speaker-notes' },
+                { label: 'Summarise the presentation', action: 'summarise' },
+              ]}
+            />
+          </span>
         </div>
       )}
       {imageError && (

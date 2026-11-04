@@ -9,6 +9,18 @@ import { itemOf } from '../context'
 import type { AiAnswer, AiMode, AiRequest, ContextItem, Engine } from '../types'
 import { explainError, explainFormula } from './formula'
 import { actionItems, reviewWriting, summarise } from './text'
+import {
+  analyseData,
+  explainCode,
+  OUTLINE,
+  reportStructure,
+  resolveTicket,
+  reviewSlides,
+  rewriteHelp,
+  speakerNotes,
+  suggestFormula,
+  TESTS_HELP,
+} from './work'
 
 const SOURCE = { engine: 'builtin', label: 'Built-in guide', model: false } as const
 
@@ -20,9 +32,40 @@ type Intent =
   | 'approach'
   | 'review'
   | 'prompting'
+  | 'analyse-data'
+  | 'suggest-formula'
+  | 'rewrite'
+  | 'improve-draft'
+  | 'structure'
+  | 'outline'
+  | 'review-slides'
+  | 'speaker-notes'
+  | 'explain-code'
+  | 'write-tests'
+  | 'resolve-ticket'
   | 'other'
 
 const INTENTS: Array<[Intent, RegExp]> = [
+  [
+    'analyse-data',
+    /\b(analy[sz]e|trend|outlier|unusual values?|which chart|recommend a chart|averages?)\b/i,
+  ],
+  ['suggest-formula', /\b(suggest|write|give me|what) (a |the )?formula\b/i],
+  ['rewrite', /\b(rewrite|reword|rephrase|make (this|it) (more )?professional)\b/i],
+  ['improve-draft', /\bimprove (my|the) (draft|reply|email)\b/i],
+  [
+    'structure',
+    /\b(structure|sections?|headings?) (of|for) (a|the|my) (report|document)\b/i,
+  ],
+  ['outline', /\b(outline|slides? (for|about)|presentation (outline|plan))\b/i],
+  ['speaker-notes', /(speaker notes|what (should|do) i say)/i],
+  ['review-slides', /\breview (my|the|this) (slides|presentation|deck)\b/i],
+  ['write-tests', /\b(write|suggest|generate|which) (some |more )?tests?\b/i],
+  [
+    'explain-code',
+    /\b(explain (this|the|my) code|debug|failing tests?|why (does|is) (my|the|this) (code|test))\b/i,
+  ],
+  ['resolve-ticket', /\b(ticket|resolve|troubleshoot|resolution|escalat)\w*/i],
   [
     'explain-formula',
     /\b(formula|function|#[A-Z/]+[!?]?|not working|error in (the )?cell)\b/i,
@@ -204,6 +247,10 @@ function otherAnswer(request: AiRequest): string {
     kinds.has('document') || kinds.has('selection')
       ? '**summarise** or **review** the writing'
       : '',
+    kinds.has('cells') ? '**analyse** the selected data and recommend a chart' : '',
+    kinds.has('slides') ? '**review** the slides or suggest an **outline**' : '',
+    kinds.has('code') ? '**explain the code** and its failing tests' : '',
+    kinds.has('ticket') ? '**summarise** the ticket and suggest a **resolution**' : '',
     kinds.has('assignment') || kinds.has('case')
       ? 'help you **plan your approach** to the task'
       : '',
@@ -215,20 +262,46 @@ function otherAnswer(request: AiRequest): string {
 export function builtinAnswer(request: AiRequest): AiAnswer {
   const { context, mode } = request
   const intent = intentOf(request)
+  if (intent === 'suggest-formula') {
+    const { text, proposal } = suggestFormula(itemOf(context, 'formula'), mode)
+    return { text, source: SOURCE, ...(proposal ? { proposal } : {}) }
+  }
   const text = (() => {
     switch (intent) {
+      case 'analyse-data':
+        return analyseData(itemOf(context, 'cells'), mode)
+      case 'rewrite':
+        return rewriteHelp(itemOf(context, 'selection') ?? itemOf(context, 'document'))
+      case 'improve-draft':
+        return reviewAnswer(itemOf(context, 'selection'), mode)
+      case 'structure':
+        return reportStructure(itemOf(context, 'document'))
+      case 'outline':
+        return OUTLINE
+      case 'speaker-notes':
+        return speakerNotes(itemOf(context, 'slides'), mode)
+      case 'review-slides':
+        return reviewSlides(itemOf(context, 'slides'), mode)
+      case 'explain-code':
+        return explainCode(itemOf(context, 'code'), itemOf(context, 'tests'), mode)
+      case 'write-tests':
+        return TESTS_HELP
+      case 'resolve-ticket':
+        return resolveTicket(itemOf(context, 'ticket'), mode)
       case 'explain-formula':
         return formulaAnswer(itemOf(context, 'formula') ?? itemOf(context, 'cells'), mode)
       case 'summarise':
         return summaryAnswer(
           itemOf(context, 'selection') ??
             itemOf(context, 'email') ??
-            itemOf(context, 'document'),
+            itemOf(context, 'ticket') ??
+            itemOf(context, 'document') ??
+            itemOf(context, 'slides'),
         )
       case 'action-items':
         return actionAnswer(itemOf(context, 'email') ?? itemOf(context, 'document'))
       case 'reply':
-        return replyAnswer(itemOf(context, 'email'), mode)
+        return replyAnswer(itemOf(context, 'email') ?? itemOf(context, 'ticket'), mode)
       case 'approach':
         return approachAnswer(
           itemOf(context, 'assignment') ?? itemOf(context, 'case'),

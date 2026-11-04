@@ -42,8 +42,10 @@ test('only the chosen career’s content loads; a failed download can be tried a
     .getByTestId('career-data-analytics')
     .getByRole('button', { name: 'Start this career' })
     .click()
+  // The office is drawn again for the new career, which takes a moment in software 3D.
   await expect(page.getByTestId('office-panel').getByRole('heading')).toHaveText(
     'Reception',
+    { timeout: 15_000 },
   )
   await sitAtComputer(page)
   await openApp(page, 'Tasks')

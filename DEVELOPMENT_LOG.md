@@ -132,7 +132,7 @@ working simulations of the professional software used in its field (see
 - [x] AI.1 Architecture audit
 - [x] AI.2 AI infrastructure (engines, context, settings, limits, the bridge)
 - [x] AI.3 The WorkSim AI desktop app
-- [ ] AI.4 AI inside Mail, Sheets, Docs, Slides, Tasks, Code and Help Desk
+- [x] AI.4 AI inside Mail, Sheets, Docs, Slides, Tasks, Code and Help Desk
 - [ ] AI.5 Workplace AI: colleagues and feedback
 - [ ] AI.6 AI competency and career readiness
 - [ ] AI.7 Quality assurance
@@ -142,6 +142,74 @@ working simulations of the professional software used in its field (see
 - [x] A. The work computer as a Windows 10-style desktop
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
+
+---
+
+## 2026-11-04 · AI.4: WorkSim AI inside the apps
+
+### Built
+
+- **A WorkSim AI menu in each app's toolbar** (`src/apps/ai/AskAiMenu.tsx`), with what
+  it can do there; choosing an item opens WorkSim AI with the question asked. Hidden
+  where WorkSim AI is not available (files shown read-only in the Portfolio).
+  - Mail: summarise, what it asks for, help me reply; in the reply: review my draft,
+    improve the wording.
+  - Tasks: how to approach the task, which step first, prompting tips.
+  - Sheets: explain the formula, why it is not working, suggest a formula, analyse the
+    selected data.
+  - Docs: review, summarise, suggest a report structure, rewrite the selection.
+  - Slides: review the presentation, outline, speaker notes, summary.
+  - Code: explain the code, debug the failing tests, which tests to write.
+  - Help Desk: summarise the ticket, suggest a resolution, help with the reply.
+- **Context from each app**, read only when WorkSim AI needs it (so typing never
+  redraws the desktop): the active cell, its error and the numbers next to it, and the
+  table around it (up to 30 rows by 8 columns); the selected text and the document;
+  the slides' text; the open code file and the last test run; the open ticket with the
+  knowledge base articles that share its key words.
+- **Proposed changes, reviewed before they are applied**: a formula for a cell, or
+  text to replace the selection (or the email draft). WorkSim AI shows the change in
+  full with Apply and Dismiss; the app applies it only then, as an ordinary edit that
+  can be undone. Models are told exactly what such an action needs back.
+- **The built-in guide** now also analyses data (totals, averages, largest and smallest
+  with their labels, values more than two standard deviations away, the trend between
+  the halves, and a chart recommendation), suggests a SUM formula (a hint only in
+  Learning mode), outlines report structures and checks for missing sections, reviews
+  slides (titles, crowding, an ending), helps with speaker notes, explains code and
+  the first failing test, and matches tickets to knowledge base articles. For
+  rewriting it explains how, as it is not an AI model.
+
+### Fixed while testing
+
+- A question sent from an app was asked twice when WorkSim AI opened for it (React
+  runs effects twice in development). Each question is now asked once.
+- **The office was too heavy on computers without a graphics card.** A frame of the
+  upgraded office takes about a quarter of a second in software 3D, and it was drawn
+  three times a second, so the page had little time left for clicks (browser tests in
+  the office took minutes, or timed out). Software 3D now draws the gentle movement
+  once a second (anything that changes is still drawn at once) at a slightly lower
+  resolution, and shadows, reflections and contact shadows are only built after the
+  graphics have been checked, never on a computer that draws in software.
+- **Browsers that hide the graphics hardware.** Firefox and Safari report generic
+  graphics names for privacy, so software 3D was not recognised there and the
+  full-quality office was built (Firefox tests timed out). The office now also watches
+  its first frames: below about seven frames a second it switches to the simpler
+  office (ignoring time when the tab is hidden).
+- The cross-browser tests now use 127.0.0.1: Firefox sometimes could not reach
+  "localhost" when the test server listened on IPv6 only.
+
+### Tests
+
+- 11 new unit tests (`src/ai/apps.test.ts`): the Sheets context and analysis, formula
+  suggestions by mode, proposals from model answers, per-action instructions, ticket
+  matching, slide reviews and code help.
+- Results: 1,968 unit tests; 150 Chromium browser tests, all passing (in 27 minutes,
+  down from 40); 5 production-build tests (passed 10 of 10 on a repeat run; one
+  intermittent failure in an earlier run); Firefox, WebKit and Edge 8 passed, 1 skipped.
+  Start screen 281 kB.
+- New `ai-apps.spec.ts` (3 tests): Mail and Tasks; Sheets (an error explained, a
+  formula suggested as a hint in Learning mode, proposed in Professional mode,
+  applied only on Apply, and data analysed); Docs (a simulated model's rewrite of the
+  selection applied only after review). Code and Help Desk are covered by unit tests.
 
 ---
 
