@@ -43,14 +43,16 @@ import {
   weeklyPay,
 } from '../game/careerLife'
 import { RATING_NAMES } from '../game/reviews'
+import { LifeAssistant } from './LifeAssistant'
 
 type Act = (change: (profile: ProfileData) => ProfileData) => Promise<unknown>
-type Tab = 'jobs' | 'pay' | 'business'
+type Tab = 'jobs' | 'pay' | 'business' | 'ai'
 
 const TABS: Array<[Tab, string]> = [
   ['jobs', 'Jobs'],
   ['pay', 'Pay'],
   ['business', 'Side business'],
+  ['ai', 'WorkSim AI'],
 ]
 
 const STAGE: Record<string, string> = {
@@ -112,6 +114,7 @@ export function CareerPanel({
         {tab === 'jobs' && <Jobs profile={profile} onAct={onAct} />}
         {tab === 'pay' && <Pay profile={profile} onAct={onAct} />}
         {tab === 'business' && <Business profile={profile} onAct={onAct} />}
+        {tab === 'ai' && <LifeAssistant profile={profile} />}
       </div>
     </section>
   )

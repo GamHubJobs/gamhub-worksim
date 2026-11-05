@@ -323,14 +323,15 @@ export function HomeView({
               Open your phone
             </button>
           </section>
-          {phase === 'evening' && (
+          {(phase === 'evening' || phase === 'morning') && (
             <section
               className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
               data-testid="laptop-summary"
             >
               <h2 className="font-semibold text-slate-900">Laptop</h2>
               <p className="text-xs text-slate-500">
-                Job adverts, asking for a rise and a side business.
+                Jobs, pay, a side business, and WorkSim AI for your money, your day and
+                what to learn.
               </p>
               <button
                 type="button"

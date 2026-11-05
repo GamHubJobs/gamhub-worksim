@@ -85,3 +85,40 @@ test('the laptop: a job application, a side business and a pay talk', async ({
   await expect(laptop(page).getByTestId('pay-answer')).toContainText('not now')
   expect(errors).toEqual([])
 })
+
+test('WorkSim AI at home: budget, plan and learning from the built-in guide', async ({
+  page,
+}) => {
+  const requests: string[] = []
+  page.on('request', (r) => {
+    if (
+      !r.url().startsWith('http://localhost') &&
+      !r.url().startsWith('http://127.0.0.1')
+    )
+      requests.push(r.url())
+  })
+  await goHomeOn(page, 1)
+  await home(page).getByRole('button', { name: 'Open your laptop' }).click()
+  await laptop(page).getByRole('button', { name: 'WorkSim AI' }).click()
+  const ai = page.getByTestId('life-ai')
+  await expect(ai).toContainText('not an AI model')
+
+  await ai.getByRole('button', { name: 'Check my budget' }).click()
+  await expect(ai.getByTestId('life-ai-answer').last()).toContainText(
+    'Your budget this week',
+  )
+  await expect(ai.getByTestId('life-ai-source').last()).toHaveText(
+    'Built-in guide: WorkSim’s own rules, not an AI model.',
+  )
+  await ai.getByRole('button', { name: 'Plan my evening' }).click()
+  await expect(ai.getByTestId('life-ai-answer').last()).toContainText('Be in bed by')
+  await ai.getByLabel('Ask WorkSim AI').fill('How do I get promoted?')
+  await ai.getByRole('button', { name: 'Ask', exact: true }).click()
+  await expect(ai.getByTestId('life-ai-answer').last()).toContainText('For promotion to')
+
+  // What it is given: no name, and nothing has left the computer.
+  await ai.getByRole('button', { name: /what WorkSim AI is given/ }).click()
+  await expect(ai.getByTestId('life-ai-shared')).toContainText('Balance:')
+  await expect(ai.getByTestId('life-ai-shared')).not.toContainText('Sam')
+  expect(requests).toEqual([])
+})

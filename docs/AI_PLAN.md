@@ -62,6 +62,14 @@ src/ai/service.ts ── consent, daily limit, timeout, one request at a time,
 7. Quality assurance: regression, saves, engines, offline, performance, browsers,
    production build.
 
+## After the plan: WorkSim AI at home
+
+WorkSim Life stage L7 brings the same assistant to the laptop at home, for budgeting,
+planning the evening or morning, and what to learn next. Same engines, consent,
+limits and labels; three new context kinds (`budget`, `plan`, `learning`) built from
+the save, answered by the built-in guide unless a model is on. See
+[LIFE_PLAN.md](LIFE_PLAN.md).
+
 ## Costs
 
 | Engine           | Cost                                                            |

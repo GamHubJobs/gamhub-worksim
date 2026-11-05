@@ -43,6 +43,9 @@ type Intent =
   | 'explain-code'
   | 'write-tests'
   | 'resolve-ticket'
+  | 'budget'
+  | 'plan-day'
+  | 'learn-next'
   | 'other'
 
 const INTENTS: Array<[Intent, RegExp]> = [
@@ -58,7 +61,7 @@ const INTENTS: Array<[Intent, RegExp]> = [
     /\b(structure|sections?|headings?) (of|for) (a|the|my) (report|document)\b/i,
   ],
   ['outline', /\b(outline|slides? (for|about)|presentation (outline|plan))\b/i],
-  ['speaker-notes', /(speaker notes|what (should|do) i say)/i],
+  ['speaker-notes', /\b(speaker notes|what (should|do) i say)\b/i],
   ['review-slides', /\breview (my|the|this) (slides|presentation|deck)\b/i],
   ['write-tests', /\b(write|suggest|generate|which) (some |more )?tests?\b/i],
   [
@@ -84,10 +87,37 @@ const INTENTS: Array<[Intent, RegExp]> = [
   ['prompting', /\b(prompt|ask (you|ai)|context engineering|how to use ai)\b/i],
 ]
 
+/**
+ * Questions about life at home, answered only when the home's context is
+ * there (the laptop's WorkSim AI tab gives it).
+ */
+const LIFE_INTENTS: Array<[Intent, ContextItem['kind'], RegExp]> = [
+  [
+    'budget',
+    'budget',
+    /\b(budget|money|afford|spend|spent|save|saving|savings|rent|overdrawn|bills?)\b/i,
+  ],
+  [
+    'learn-next',
+    'learning',
+    /\b(learn|study|skills?|promot\w*|career|get better|improve at|next job)\b/i,
+  ],
+  [
+    'plan-day',
+    'plan',
+    /\b(plan|tonight|this evening|this morning|what should i do|schedule|bed|sleep|routine)\b/i,
+  ],
+]
+
 export function intentOf(request: AiRequest): Intent {
-  if (request.action && INTENTS.some(([intent]) => intent === request.action))
+  const actions = [...INTENTS.map(([i]) => i), ...LIFE_INTENTS.map(([i]) => i)]
+  if (request.action && actions.includes(request.action as Intent))
     return request.action as Intent
   const last = [...request.messages].reverse().find((m) => m.role === 'user')?.text ?? ''
+  const life = LIFE_INTENTS.find(
+    ([, kind, pattern]) => itemOf(request.context, kind) && pattern.test(last),
+  )
+  if (life) return life[0]
   return INTENTS.find(([, pattern]) => pattern.test(last))?.[0] ?? 'other'
 }
 
@@ -259,6 +289,18 @@ function otherAnswer(request: AiRequest): string {
   return `I am WorkSim's built-in guide, not an AI model, so I can only help with specific things. Right now I can:\n\n${list(offers)}\n\nFor open questions, turn on an AI model in WorkSim AI settings (a local model, or a cloud model through the AI bridge).`
 }
 
+/** Advice worked out from the save by WorkSim's rules (see game/lifeAdvice.ts). */
+function lifeAnswer(item: ContextItem | undefined, title: string): string {
+  const advice = strings(item?.data?.advice)
+  if (!item || !advice.length)
+    return 'Open your laptop at home in the evening or morning and ask again: I need your day, money and career to go on.'
+  return `**${title}**
+
+${list(advice)}
+
+Worked out by WorkSim's rules from your save, not by an AI model.`
+}
+
 export function builtinAnswer(request: AiRequest): AiAnswer {
   const { context, mode } = request
   const intent = intentOf(request)
@@ -314,6 +356,12 @@ export function builtinAnswer(request: AiRequest): AiAnswer {
             itemOf(context, 'email'),
           mode,
         )
+      case 'budget':
+        return lifeAnswer(itemOf(context, 'budget'), 'Your budget this week')
+      case 'plan-day':
+        return lifeAnswer(itemOf(context, 'plan'), 'A plan')
+      case 'learn-next':
+        return lifeAnswer(itemOf(context, 'learning'), 'What to learn next')
       case 'prompting':
         return PROMPTING
       case 'other':

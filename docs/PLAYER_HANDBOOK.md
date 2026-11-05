@@ -136,6 +136,17 @@ you to your flat.
     (£60) or bike tune-ups (£45, needs your own bike). Each evening's work pays, more
     for every three sessions as regulars come. Starting one declares it to your
     employer. More than three evenings a week on top of work is tiring.
+  - **WorkSim AI** (evenings and mornings): help with daily life. **Check my budget**
+    sorts the week's money (pay, rent, travel, food, the car, the side business), says
+    what is due and suggests savings (for example, taxis that the bus would have
+    covered). **Plan my evening** puts your lowest needs first and gives the time to
+    be in bed for 8 hours' sleep; in the morning it lists what is left to do and when
+    to leave. **What should I learn next?** names your least practised skills, what
+    the next promotion still needs and what employers would want first. You can also
+    type a question. It uses the same engines as WorkSim AI at work: the built-in
+    guide (WorkSim's own rules, not an AI model, offline and free) unless you have
+    turned on a model there. Every answer says what wrote it, and **Show what WorkSim
+    AI is given** lists what would be sent (never your name).
 
 - **Money**: you are paid on Fridays (more as you are promoted) and rent is taken on
   Mondays. The statement lists everything in and out. Going overdrawn is stressful.

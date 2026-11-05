@@ -127,7 +127,7 @@ working simulations of the professional software used in its field (see
 
 **Phase 8 is complete.**
 
-**WorkSim Life** (in progress). Plan: [docs/LIFE_PLAN.md](docs/LIFE_PLAN.md).
+**WorkSim Life** (complete). Plan: [docs/LIFE_PLAN.md](docs/LIFE_PLAN.md).
 
 - [x] L1 Needs, home routines, sleep, the commute, money
 - [x] L2 The home: a 3D flat, furniture, upgrades
@@ -135,7 +135,7 @@ working simulations of the professional software used in its field (see
 - [x] L4 The city: a walkable district, third-person, enterable places
 - [x] L5 Getting around: walking, bus, bike, car
 - [x] L6 Career life: applications, salary negotiation, a side business
-- [ ] L7 AI in daily life
+- [x] L7 AI in daily life
 
 **WorkSim AI** (complete). Plan: [docs/AI_PLAN.md](docs/AI_PLAN.md).
 
@@ -154,6 +154,42 @@ working simulations of the professional software used in its field (see
 - [x] C. A more realistic 3D office
 
 ---
+
+## 2026-11-05 · L7: WorkSim AI in daily life
+
+### Built
+
+- **WorkSim AI on the laptop** at home (`src/home/LifeAssistant.tsx`), in the evening
+  and now also the morning: **Check my budget**, **Plan my evening** (or morning),
+  **What should I learn next?**, and a question box, with **Show what WorkSim AI is
+  given** and the source of every answer.
+- **Context from the save** (`src/game/lifeAdvice.ts`): the week's statement by
+  category with what is due and savings tips; a plan from the lowest needs, the fridge,
+  any interview, and bedtime for 8 hours (or, in the morning, what is left and when to
+  leave for the bus); learning advice from the weakest skills, promotion requirements
+  and the first job-advert gap. Summaries for models carry no name.
+- **Engines**: the existing service. The built-in guide (the default) answers the
+  three new intents from the save and says it is not an AI model; typed questions are
+  recognised only when the home's context is there, so questions at work are
+  unaffected. Models, if the player turned one on, get a task rule for each. No AI
+  call happens unless the player asks.
+- **Fixed** a bug from AI.4: the built-in guide's "speaker notes" pattern contained
+  backspace characters where `\b` was meant, so typed requests for speaker notes were
+  never recognised (the menu action still worked). The same slip briefly affected the
+  new patterns while writing this stage; there are none left in the project.
+- No save changes.
+
+### Tests
+
+- 8 new unit tests (`src/game/lifeAdvice.test.ts`): statement categories, budget
+  advice (overdraft, taxis), the evening and morning plans, learning advice, what a
+  model is given (no name, small), the built-in answers and their label, and intents
+  only with the home's context. 1 more in `src/ai/ai.test.ts` for typed speaker-notes
+  requests.
+- 1 new browser test (`tests/e2e/careerLife.spec.ts`): the three quick questions and a
+  typed one answered by the built-in guide, what is shared (no name), and no request
+  leaving the computer.
+- Results: 2,082 unit tests; 161 Chromium browser tests passed; 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 283 kB.
 
 ## 2026-11-05 · L6: career life
 

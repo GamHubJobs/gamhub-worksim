@@ -28,6 +28,12 @@ const ACTION_RULES: Record<string, string | ((mode: AiMode) => string)> = {
       : 'Task: suggest one formula for the selected cell. Put the formula alone on the first line, starting with =, then explain it in two or three sentences.',
   'analyse-data':
     'Task: analyse the selected data: totals, averages, the largest and smallest values, unusual values, and any trend. Recommend a chart type and say why. Use only the figures given.',
+  budget:
+    'Task: at home, help the player with their weekly budget in the game: where the money went, what is due before pay day, and two or three practical ways to stay on track. Use only the figures given; amounts are in pounds.',
+  'plan-day':
+    'Task: at home, suggest a short plan for the rest of the evening (or the morning before work) from the needs, time and wellbeing given, keeping a full night of sleep and getting to work on time.',
+  'learn-next':
+    'Task: suggest what the player should learn or practise next for their career, from the skills, level and review given, with one small step for this week.',
   'resolve-ticket':
     'Task: suggest how to resolve the ticket: likely causes, the checks to make in order, and when to escalate. Refer to the knowledge base articles given, if any.',
 }

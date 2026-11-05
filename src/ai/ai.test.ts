@@ -244,6 +244,13 @@ describe('built-in guide', () => {
     expect(intentOf(request('What is the meaning of life?'))).toBe('other')
     expect(answer.text).toContain('not an AI model')
   })
+
+  it('recognises a typed request for speaker notes', () => {
+    expect(intentOf(request('Can you write speaker notes for these slides?'))).toBe(
+      'speaker-notes',
+    )
+    expect(intentOf(request('What should I say on this slide?'))).toBe('speaker-notes')
+  })
 })
 
 describe('engines and the service', () => {

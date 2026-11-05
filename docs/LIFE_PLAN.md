@@ -106,3 +106,22 @@ documented and committed before the next.
 - **A side business**: three to choose from, a setup cost, an evening session that
   pays more as regulars come, and stress for more than three evenings a week.
 - All deterministic: no AI, no randomness. Saved in `life.career` (additive).
+
+## L7 in detail
+
+- **WorkSim AI at home**: a fourth tab on the laptop (evenings and mornings), with
+  three quick questions (budget, plan, learning) and a question box
+  (`src/home/LifeAssistant.tsx`).
+- **Context** (`src/game/lifeAdvice.ts`): three new context items, `budget`, `plan`
+  and `learning`. Each has a short plain summary (what a model would receive, with
+  the player's name redacted as everywhere) and advice worked out from the save with
+  deterministic rules (the statement by category, what is due, the lowest needs and
+  the best action for each, bedtime for a full night, the weakest skills, promotion
+  requirements and the first job-advert gap).
+- **Engines**: the same service as at work (`src/ai/service.ts`): the built-in guide
+  by default, a model only if the player has turned one on and agreed, with the daily
+  limit, time limit and fallback. The built-in guide answers the new intents from the
+  advice and says it is not an AI model; models get a task rule for each
+  (`src/ai/prompt.ts`). Ordinary play makes no AI calls: the tab is used only when the
+  player asks.
+- No save changes.
