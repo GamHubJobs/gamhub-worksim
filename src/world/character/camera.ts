@@ -68,6 +68,35 @@ export function cameraAt(
   boxes: Box[],
   ceiling = Infinity,
 ): [number, number, number] {
+  // In a tight spot the camera rises to look down rather than squash up against
+  // the character (rooms without a ceiling, like the cutaway home).
+  // Under a ceiling, rising does not help: the camera just comes in closer.
+  if (Number.isFinite(ceiling)) return place(target, orbit, boxes, ceiling).at
+  const near = Math.min(1.5, orbit.distance)
+  let best: { at: [number, number, number]; clear: number } | null = null
+  for (let pitch = orbit.pitch; pitch <= 1.35; pitch += 0.12) {
+    const { at, clear } = place(target, { ...orbit, pitch }, boxes, ceiling)
+    if (!best || clear > best.clear) best = { at, clear }
+    if (clear >= near) return at
+  }
+  return best!.at
+}
+
+/** How far the camera can be from the target, at this orbit, before something is in the way. */
+export function clearance(
+  target: [number, number, number],
+  orbit: Orbit,
+  boxes: Box[],
+): number {
+  return place(target, orbit, boxes, Infinity).clear
+}
+
+function place(
+  target: [number, number, number],
+  orbit: Orbit,
+  boxes: Box[],
+  ceiling: number,
+): { at: [number, number, number]; clear: number } {
   const { yaw, pitch, distance } = orbit
   const back: [number, number, number] = [
     target[0] + Math.sin(yaw) * Math.cos(pitch) * distance,
@@ -83,6 +112,8 @@ export function cameraAt(
     target[1] + (back[1] - target[1]) * pull,
     target[2] + (back[2] - target[2]) * pull,
   ]
+  // A ceiling caps the height (and then the camera cannot rise past it).
+  const capped = out[1] > ceiling - 0.15
   out[1] = Math.min(out[1], ceiling - 0.15)
-  return out
+  return { at: out, clear: capped ? pull * distance * 0.6 : pull * distance }
 }

@@ -9,7 +9,8 @@ export default defineConfig({
   // Tests run against the development server, where React is several times slower
   // than in the built app (extra debugging checks), and the 3D office is drawn
   // without a graphics card. Generous limits avoid false failures.
-  timeout: 60_000,
+  // Activities are played out in 3D, so journeys through a day take a while.
+  timeout: 120_000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   // One retry absorbs the occasional overload on slower computers; tests that only

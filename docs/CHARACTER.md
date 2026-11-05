@@ -70,24 +70,30 @@ src/world/
   a tap, splashes, steam, sizzling, sweat, bubbles, breath, dust and exhaust; effects
   can follow a hand (steam from a cup being drunk). Water leaves a wet patch that dries.
   Fewer particles on low graphics; nothing is drawn once an effect has ended.
+- **The home** is laid out from its size, rooms and the furniture owned
+  (`src/home/scene/homeLayout.ts`), so every home and whatever has been bought works:
+  each activity happens at the piece of furniture it needs. In tight spots without a
+  ceiling (the cutaway flat) the camera rises to look down; during an activity it picks
+  the first clear angle.
+- **Until the 3D view is ready**, the lists do things straight away.
 - **Performance**: only the place the player is in is loaded; the view draws at full
   speed only while something changes (moving, acting, the camera settling) and a few
   times a second otherwise.
 
 ## What each place offers
 
-| Place          | Activities (each completes the place's game action)                                                                                                                                                       |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Forge Fitness  | Bench press (sit, lie back, grip, 5 reps, rack, sit up); dumbbell curls; squats; treadmill; exercise bike; the class (warm-up, mobility, squats, cool-down); a shower (water, splashes, steam, wet floor) |
-| Kettle & Crumb | Coffee and cake, breakfast, dinner: order at the counter with a card, collect, carry to a table, sit, eat or drink                                                                                        |
-| Daily Basket   | A week's shopping: take a basket, four aisles picking products, pay at the checkout; a ready meal from the fridge                                                                                         |
-| Millpond Park  | A walk round the pond, a run of the loop, sitting on a bench                                                                                                                                              |
-| Cog & Kerb     | Choose a bike and pay; sell a bike back; look over the car, sign the lease, take the keys; hand it back                                                                                                   |
+| Place          | Activities (each completes the place's game action)                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Forge Fitness  | Bench press (sit, lie back, grip, 5 reps, rack, sit up); dumbbell curls; squats; treadmill; exercise bike; the class (warm-up, mobility, squats, cool-down); a shower (water, splashes, steam, wet floor)                                                                                                                                                                                                                                                        |
+| Kettle & Crumb | Coffee and cake, breakfast, dinner: order at the counter with a card, collect, carry to a table, sit, eat or drink                                                                                                                                                                                                                                                                                                                                               |
+| Daily Basket   | A week's shopping: take a basket, four aisles picking products, pay at the checkout; a ready meal from the fridge                                                                                                                                                                                                                                                                                                                                                |
+| Millpond Park  | A walk round the pond, a run of the loop, sitting on a bench                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Cog & Kerb     | Choose a bike and pay; sell a bike back; look over the car, sign the lease, take the keys; hand it back                                                                                                                                                                                                                                                                                                                                                          |
+| Home           | Cook at the hob (sizzle and steam) and eat at the table; breakfast; coffee from the machine; a takeaway (order on the phone, collect at the door, eat); brush teeth and wash at the basin (the tap runs), then shower (water, splashes, steam, a wet floor); get dressed; read, watch a series (the TV lights up), call a friend or play games on the sofa; study at the desk; yoga; a run or out with friends; bed (sit, lie down, fall asleep); the front door |
 
 ## Still to do
 
-- Home (sleeping, cooking with steam and sizzle, the shower and basin, the sofa and TV),
-  the street (walking with these controls; the bike and the car with F) and the office
+- The street (walking with these controls; the bike and the car with F) and the office
   (sitting at the desk and typing, the manager's office, meetings).
 - Weather (rain), a screen to change the keys, and screenshots of every interaction.
 

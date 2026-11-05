@@ -21,6 +21,7 @@ import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { CommuteChoices } from './CommuteChoices'
 import { Phone } from './Phone'
 import { CareerPanel } from './CareerPanel'
+import { WalkView } from '../world/WalkView'
 import type { Doing } from '../city/scene/interiors/kit'
 import { audio } from '../audio/manager'
 import type { ProfileData } from '../game/career'
@@ -41,13 +42,17 @@ import type { Profile } from '../persistence/schemas'
 const HomeScene = lazy(() => import('./scene/HomeScene'))
 
 /** Shows nothing instead of the 3D home if it fails: the panels still work. */
-class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+class SceneBoundary extends Component<
+  { children: ReactNode; onFail?: () => void },
+  { failed: boolean }
+> {
   state = { failed: false }
   static getDerivedStateFromError() {
     return { failed: true }
   }
   componentDidCatch(error: unknown) {
     console.warn('The 3D home could not be shown.', error)
+    this.props.onFail?.()
   }
   render() {
     return this.state.failed ? null : this.props.children
@@ -125,15 +130,35 @@ export function HomeView({
   const doingsKey = JSON.stringify(doings)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stableDoings = useMemo(() => doings, [doingsKey])
-  const doThing = useCallback(
+  // With 3D, the character does things in the flat (the game action when they
+  // finish); without it, straight away.
+  const [sceneFailed, setSceneFailed] = useState(false)
+  // Until the 3D view is ready, things are done straight away.
+  const [ready, setReady] = useState(false)
+  const walkable = webgl && !sceneFailed && ready
+  const [request, setRequest] = useState<{ id: string; nonce: number } | null>(null)
+  const commit = useCallback(
     (id: string) => {
       if (id === 'bed') return onBed()
       if (id === 'go-out') return onGoOutside()
-      const action = HOME_ACTIONS.find((a) => a.id === id)
-      if (action) setRoom(action.room)
       onAction(id)
     },
     [onAction, onBed, onGoOutside],
+  )
+  const doThing = useCallback(
+    (id: string) => {
+      const action = HOME_ACTIONS.find((a) => a.id === id)
+      if (action) setRoom(action.room)
+      if (walkable) setRequest((r) => ({ id, nonce: (r?.nonce ?? 0) + 1 }))
+      else commit(id)
+    },
+    [walkable, commit],
+  )
+  const onActivityDone = useCallback(
+    (action: string | null, completed: boolean) => {
+      if (completed && action) commit(action)
+    },
+    [commit],
   )
 
   return (
@@ -154,32 +179,39 @@ export function HomeView({
             </p>
           </header>
 
-          {webgl && (
-            <div
-              className="h-96 overflow-hidden rounded-xl bg-slate-200 shadow-sm ring-1 ring-slate-200"
-              data-testid="home-3d"
-              aria-hidden
+          {webgl && !sceneFailed && (
+            <WalkView
+              className="h-[28rem] bg-slate-200"
+              testId="home-3d"
+              label="Your home in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to. Everything here is also in the lists below."
             >
-              <SceneBoundary>
-                <Suspense
-                  fallback={
-                    <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                      Opening the door…
-                    </div>
-                  }
-                >
-                  <HomeScene
-                    homeId={life.home.id}
-                    furniture={JSON.stringify(life.home.furniture)}
-                    room={room}
-                    phase={phase === 'morning' ? 'morning' : 'evening'}
-                    dressed={phase === 'morning' && life.ready.dressed}
-                    doings={stableDoings}
-                    onAct={doThing}
-                  />
-                </Suspense>
-              </SceneBoundary>
-            </div>
+              {(api) => (
+                <SceneBoundary onFail={() => setSceneFailed(true)}>
+                  <Suspense
+                    fallback={
+                      <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                        Opening the door…
+                      </div>
+                    }
+                  >
+                    <HomeScene
+                      homeId={life.home.id}
+                      furniture={JSON.stringify(life.home.furniture)}
+                      phase={phase === 'morning' ? 'morning' : 'evening'}
+                      dressed={phase === 'morning' && life.ready.dressed}
+                      doings={stableDoings}
+                      controls={api.controls}
+                      request={request}
+                      onRequest={doThing}
+                      onPrompt={api.onPrompt}
+                      onProgress={api.onProgress}
+                      onDone={onActivityDone}
+                      onReady={() => setReady(true)}
+                    />
+                  </Suspense>
+                </SceneBoundary>
+              )}
+            </WalkView>
           )}
 
           {shop === 'career' ? (
@@ -249,7 +281,7 @@ export function HomeView({
                         <button
                           type="button"
                           disabled={!!blocked}
-                          onClick={() => onAction(action.id)}
+                          onClick={() => doThing(action.id)}
                           title={blocked ?? undefined}
                           className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-amber-400 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-55"
                         >
@@ -275,7 +307,7 @@ export function HomeView({
                     <li>
                       <button
                         type="button"
-                        onClick={onBed}
+                        onClick={() => doThing('bed')}
                         className="flex w-full items-center justify-between rounded-lg bg-indigo-700 px-3 py-2 text-left text-sm font-medium text-white hover:bg-indigo-800"
                       >
                         Go to bed
@@ -295,7 +327,7 @@ export function HomeView({
                       <button
                         type="button"
                         disabled={!!canGoOut(profile)}
-                        onClick={onGoOutside}
+                        onClick={() => doThing('go-out')}
                         className="flex w-full items-center justify-between gap-3 rounded-lg bg-emerald-700 px-3 py-2 text-left text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
                       >
                         Go out into the neighbourhood

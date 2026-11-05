@@ -167,6 +167,34 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-05 · Character 2: the home
+
+### Built
+
+- **The flat is walkable** (`src/home/scene/HomeScene.tsx`) with the same character,
+  controls and camera as the places, and every home action is performed
+  (`src/home/scene/homeLayout.ts`, laid out from the home and the furniture owned):
+  cooking with sizzle and steam then eating at the table, breakfast, coffee, a
+  takeaway, washing at the basin and the shower (tap, water, splashes, steam, wet
+  floor), dressing, reading, the TV (its screen lights up), calls and games on the sofa,
+  studying, yoga, going for a run or out, and bed (sit, lie down, fall asleep). The
+  front door opens to go out.
+- **Camera**: rises to look down in tight spots without a ceiling; during an activity
+  it chooses the first clear angle (it had been put behind the kitchen wall).
+- **Until a 3D view is ready**, the lists act straight away (a list button had waited
+  for a view still loading).
+- Water drops made bigger (they could not be seen from above).
+
+### Tests
+
+- Browser tests: the start-up helper turns on the development-only speed-up for every
+  test, kept across a reload; the time limit is now 120 s (journeys through a day play
+  their activities). Hotspot tests confirm the activity started (or the view changed)
+  and click again if not.
+- Checked in slow-motion screenshots: cooking at the hob and eating, the shower with
+  water, lying in bed.
+- Results: 2,112 unit tests; 166 Chromium browser tests passed (1 skipped: the opt-in location screenshots); 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
+
 ## 2026-11-05 · Character 1: third-person control and physical activities in the places
 
 ### Built

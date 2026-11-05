@@ -8,12 +8,17 @@ export function cell(page: Page, address: string) {
 export async function startCareerIfNeeded(page: Page, name = 'Alex') {
   const onboarding = page.getByTestId('onboarding')
   const desktop = page.getByTestId('desktop')
-  await expect(onboarding.or(desktop)).toBeVisible()
+  await expect(onboarding.or(desktop)).toBeVisible({ timeout: 20_000 })
   if (await onboarding.isVisible()) {
     await page.getByLabel('Your first name').fill(name)
     await page.getByRole('button', { name: 'Start my first day' }).click()
-    await expect(desktop).toBeVisible()
+    await expect(desktop).toBeVisible({ timeout: 20_000 })
   }
+  // Activities played in 3D (walking over, doing them) go faster in tests
+  // (development builds only; the built app ignores this).
+  await page.evaluate(
+    "window.__worksimSpeed = 12; sessionStorage.setItem('worksim.testSpeed', '12')",
+  )
 }
 
 /** If the player is walking around the office, goes to their desk and uses the computer. */

@@ -70,6 +70,8 @@ export interface InteriorSceneProps {
   onProgress: (progress: { label: string; progress: number } | null) => void
   /** An activity finished: `completed` false if it was stopped part way. */
   onDone: (action: string | null, completed: boolean) => void
+  /** The 3D view is ready: activities can be handed to it. */
+  onReady?: () => void
   dressed: boolean
 }
 
@@ -170,6 +172,7 @@ function InteriorScene(props: InteriorSceneProps) {
               look={look}
               surface={layout.surface}
               now={now}
+              onReady={props.onReady}
               hands={hands}
             />
             <ActivityEffects activities={activities} />

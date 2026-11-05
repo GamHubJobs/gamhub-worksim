@@ -76,12 +76,16 @@ async function clickHotspot(page: Page, id: string, testId = 'city-3d') {
     await page.mouse.move(box.x + spot.x, box.y + spot.y)
     await page.waitForTimeout(300)
     await page.mouse.click(box.x + spot.x, box.y + spot.y)
+    // Started: the progress shows, or it was so quick the view has already gone (out the door).
     const started = await view
       .getByTestId('activity')
+      // (At home, going out swaps the flat for the street.)
+      .or(testId === 'home-3d' ? page.getByTestId('city') : view.getByTestId('activity'))
+      .first()
       .waitFor({ timeout: 4000 })
       .then(() => true)
       .catch(() => false)
-    if (started || testId !== 'city-3d') return
+    if (started) return
   }
 }
 

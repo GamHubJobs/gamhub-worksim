@@ -21,7 +21,7 @@ import {
 import type { Group } from 'three'
 import { audio, type Surface } from '../audio/manager'
 import { Person, type Motion, type PersonLook } from '../office/scene/people'
-import { cameraAt, clampOrbit, type Orbit } from './character/camera'
+import { cameraAt, clampOrbit, clearance, type Orbit } from './character/camera'
 import {
   body as makeBody,
   nearest,
@@ -94,6 +94,8 @@ export interface PlayerRigProps {
   /** The activity finished (completed) or was stopped part way. */
   onDone: (a: Activity, completed: boolean) => void
   look: PersonLook
+  /** Called once the player is in the room and can do things. */
+  onReady?: () => void
   /** What the floor is, for footsteps. */
   surface?: Surface
   now: RefObject<ActivityNow>
@@ -109,6 +111,8 @@ type Mode =
       t: number
       /** The stage whose spot the character has reached, and where that is. */
       placed: number
+      /** The camera's way round for this spot (chosen once it is reached). */
+      view?: number
       at: { x: number; z: number; heading: number; y?: number }
     }
 
@@ -117,8 +121,11 @@ const EYE = 1.5
 /** In development only, browser tests can play activities faster. */
 function speedUp(): number {
   if (!import.meta.env.DEV) return 1
-  const v = (window as unknown as { __worksimSpeed?: number }).__worksimSpeed
-  return typeof v === 'number' && v > 0 ? v : 1
+  // Set by tests on the page, and kept across a reload in this tab.
+  const set = (window as unknown as { __worksimSpeed?: number }).__worksimSpeed
+  const kept = Number(window.sessionStorage?.getItem('worksim.testSpeed'))
+  const v = typeof set === 'number' ? set : kept
+  return v > 0 ? v : 1
 }
 
 /** When a stage starts, in seconds from the start of the activity. */
@@ -214,6 +221,10 @@ export function PlayerRig(props: PlayerRigProps) {
     // Only a new request (nonce) starts something.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request?.nonce])
+
+  useEffect(() => {
+    latest.current.onReady?.()
+  }, [])
 
   // Leaving the place mid-activity gives nothing.
   useEffect(
@@ -326,6 +337,7 @@ export function PlayerRig(props: PlayerRigProps) {
           if (r.arrived) {
             m.placed = current.index
             m.at = next
+            m.view = undefined
             motion.current = { walking: false }
           }
           state.current = s
@@ -358,9 +370,11 @@ export function PlayerRig(props: PlayerRigProps) {
           lastProgress.current = pct
           latest.current.onProgress({ label: labelAt(a, m.t), progress: now0.progress })
         }
-        // During an activity the camera eases round to watch from the side.
+        // During an activity the camera eases round to watch, from the front and
+        // side if that view is clear, else from a side or over the shoulder.
         if (!turned) {
-          const want = a.anchor.heading + Math.PI + 0.7
+          if (m.view === undefined) m.view = viewFor(m.at, a.anchor.y ?? 0)
+          const want = m.view
           o.yaw = turnTowards(o.yaw, want, dt * 1.2)
           o.distance += (3.2 - o.distance) * Math.min(1, dt * 1.5)
           o.pitch += (0.42 - o.pitch) * Math.min(1, dt * 1.5)
@@ -413,6 +427,22 @@ export function PlayerRig(props: PlayerRigProps) {
       controls.current.held.size > 0
     )
       invalidate()
+  }
+
+  /** The first camera angle round a spot with a clear view of the character. */
+  function viewFor(at: { x: number; z: number; heading: number }, lift: number): number {
+    const h = at.heading
+    const eye: [number, number, number] = [at.x, 1.2 + lift, at.z]
+    for (const yaw of [
+      h + Math.PI + 0.7,
+      h + Math.PI - 0.7,
+      h + 1.3,
+      h - 1.3,
+      h + 0.5,
+      h,
+    ])
+      if (clearance(eye, { yaw, pitch: 0.42, distance: 3.2 }, boxes) >= 2.4) return yaw
+    return h + 0.4
   }
 
   const stride = useRef(0)

@@ -424,7 +424,8 @@ function sleepFrame(t: number): RigFrame {
   return {
     ...STAND,
     pitch: Math.PI / 2,
-    y: 0.12,
+    // On a mattress about 0.55 m up: the hips just above it.
+    y: -0.22,
     roll: 0.25,
     shoulderL: [0.2, 0, -0.15],
     shoulderR: [0.2, 0, 0.15],

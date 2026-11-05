@@ -133,7 +133,10 @@ export function CityView({
   // Inside a place with a 3D interior, things are done there by the character
   // (the game action when they finish); without 3D, straight away.
   const [interiorFailed, setInteriorFailed] = useState(false)
-  const walkable = webgl && !interiorFailed && !outside && INTERIORS.has(here.id)
+  // Which place's 3D view is ready to take activities (until then, the list acts at once).
+  const [readyIn, setReadyIn] = useState<PlaceId | null>(null)
+  const walkable =
+    webgl && !interiorFailed && !outside && INTERIORS.has(here.id) && readyIn === here.id
   // What was asked for, in which place (a new place starts with nothing asked).
   const [request, setRequest] = useState<{
     id: string
@@ -251,7 +254,7 @@ export function CityView({
             </p>
           </header>
 
-          {walkable ? (
+          {webgl && !interiorFailed && !outside && INTERIORS.has(here.id) ? (
             <WalkView
               key={here.id}
               className="h-[28rem] bg-stone-800"
@@ -279,6 +282,7 @@ export function CityView({
                       onPrompt={api.onPrompt}
                       onProgress={api.onProgress}
                       onDone={onActivityDone}
+                      onReady={() => setReadyIn(here.id)}
                       dressed={phase === 'morning' && life.ready.dressed}
                     />
                   </Suspense>
