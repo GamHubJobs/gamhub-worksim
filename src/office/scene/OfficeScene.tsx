@@ -14,7 +14,15 @@ import {
   useCursor,
 } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { Vector3, type Group, type Material, type Mesh, type WebGLRenderer } from 'three'
 import { COMPANY } from '../../content/company'
 import { activeDepartment, fill } from '../../content/departments'
@@ -28,6 +36,15 @@ import {
 } from '../../content/office'
 import { COLORS } from './colors'
 import { prefersReducedMotion } from '../../ui/motion'
+import { PLAYER } from '../../city/scene/interiors/kit'
+import {
+  PlayerRig,
+  type ActivityNow,
+  type Controls,
+  type Hands,
+  type Prompt,
+} from '../../world/PlayerRig'
+import { OFFICE_BOXES, officeActivities, spotAt, standIn } from './officeLayout'
 
 /** With reduced motion, the camera jumps between places and nothing moves by itself. */
 const STILL = prefersReducedMotion()
@@ -158,6 +175,20 @@ export interface OfficeSceneProps {
   onInteract: (interaction: InteractionId) => void
   /** Who the player is talking to (a colleague ID), so they face the player and talk. */
   talkingTo?: string | null
+  /** Walking the office in third person (instead of the camera moving between areas). */
+  walk?: OfficeWalk
+}
+
+export interface OfficeWalk {
+  controls: RefObject<Controls>
+  request: { id: string; nonce: number } | null
+  onPrompt: (prompt: Prompt | null) => void
+  onProgress: (progress: { label: string; progress: number } | null) => void
+  /** An activity finished (`completed` false if it was stopped part way). */
+  onDone: (action: string | null, completed: boolean) => void
+  onReady: () => void
+  /** The player walked into another area. */
+  onArea: (spot: SpotId) => void
 }
 
 /**
@@ -185,7 +216,24 @@ function isSoftwareRenderer(gl: WebGLRenderer): boolean {
  * Only redrawn when what it shows changes (where the player stands, the mail
  * alert), not on every change to the career, such as the clock moving.
  */
-export default memo(OfficeScene)
+export default memo(OfficeScene, sameProps)
+
+/** The same scene if every prop is the same, comparing the walking settings by their contents. */
+function sameProps(a: OfficeSceneProps, b: OfficeSceneProps): boolean {
+  for (const key of Object.keys({ ...a, ...b }) as Array<keyof OfficeSceneProps>) {
+    if (key === 'walk') {
+      const x = a.walk
+      const y = b.walk
+      if (!x || !y) {
+        if (x !== y) return false
+        continue
+      }
+      for (const k of Object.keys({ ...x, ...y }) as Array<keyof OfficeWalk>)
+        if (!Object.is(x[k], y[k])) return false
+    } else if (!Object.is(a[key], b[key])) return false
+  }
+  return true
+}
 
 function OfficeScene(props: OfficeSceneProps) {
   const start = getSpot(props.spot).camera
@@ -220,7 +268,11 @@ function OfficeScene(props: OfficeSceneProps) {
       <color attach="background" args={['#e6edf3']} />
       <Lighting lowPower={!full} />
       {full && !STILL && <SlowWatch onSlow={() => setLowPower(true)} />}
-      <CameraRig spot={props.spot} />
+      {props.walk ? (
+        <OfficeWalker walk={props.walk} spot={props.spot} low={lowPower} />
+      ) : (
+        <CameraRig spot={props.spot} />
+      )}
       <PeopleDetail low={lowPower}>
         <Building playerName={props.playerName} />
         <Reception onInteract={props.onInteract} talkingTo={props.talkingTo} />
@@ -401,6 +453,62 @@ function CameraRig({ spot }: { spot: SpotId }) {
     }
   })
   return null
+}
+
+/** The player in the office: walks about, and does things in person. */
+function OfficeWalker({
+  walk,
+  spot,
+  low,
+}: {
+  walk: OfficeWalk
+  spot: SpotId
+  low: boolean
+}) {
+  const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
+  const hands = useRef<Hands>({ left: null, right: null })
+  const [start] = useState(() => standIn(spot))
+  const [activities] = useState(officeActivities)
+  const area = useRef<SpotId>(spot)
+  const onArea = walk.onArea
+  // A new area counts once the player has been in it for a moment (so standing on
+  // a boundary does not flip between two, each costing office time).
+  const entering = useRef<{ spot: SpotId; since: number } | null>(null)
+  useFrame((_, dt) => {
+    if (now.current.x === 0 && now.current.z === 0) return
+    const here = spotAt(now.current.x, now.current.z)
+    if (here === area.current) {
+      entering.current = null
+      return
+    }
+    if (entering.current?.spot !== here) entering.current = { spot: here, since: 0 }
+    entering.current.since += dt
+    if (entering.current.since > 0.35) {
+      area.current = here
+      entering.current = null
+      onArea(here)
+    }
+  })
+  return (
+    <PlayerRig
+      start={start}
+      boxes={OFFICE_BOXES}
+      activities={activities}
+      blocked={() => null}
+      controls={walk.controls}
+      request={walk.request}
+      onPrompt={walk.onPrompt}
+      onProgress={walk.onProgress}
+      onDone={(a, completed) => walk.onDone(a.action, completed)}
+      onReady={walk.onReady}
+      look={{ ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }}
+      surface="carpet"
+      low={low}
+      now={now}
+      hands={hands}
+      startOrbit={{ yaw: 0.5, pitch: 0.5, distance: 4.2 }}
+    />
+  )
 }
 
 /** A glowing ring on the floor: click it to walk there. */

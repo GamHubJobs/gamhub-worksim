@@ -98,10 +98,11 @@ src/world/
 | Millpond Park  | A walk round the pond, a run of the loop, sitting on a bench                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Cog & Kerb     | Choose a bike and pay; sell a bike back; look over the car, sign the lease, take the keys; hand it back                                                                                                                                                                                                                                                                                                                                                          |
 | Home           | Cook at the hob (sizzle and steam) and eat at the table; breakfast; coffee from the machine; a takeaway (order on the phone, collect at the door, eat); brush teeth and wash at the basin (the tap runs), then shower (water, splashes, steam, a wet floor); get dressed; read, watch a series (the TV lights up), call a friend or play games on the sofa; study at the desk; yoga; a run or out with friends; bed (sit, lie down, fall asleep); the front door |
+| The office     | Walk between reception, the desks, the manager’s office and the break room (moving between areas takes office time, as before); sit down at your desk and log in before the computer opens; talk to Nina, your senior colleague and Tom face to face; sit in the visitor’s chair with your manager; make a coffee at the machine (steam from the mug); have lunch at the table; read the whiteboard and the notice board; leave by the exit                      |
 
 ## Still to do
 
-- The office (sitting at the desk and typing, the manager's office, meetings).
+- Meetings are still joined from the panel (the character does not walk to the meeting first).
 - The driver cannot be seen inside the car (its cabin is solid).
 - Weather (rain), a screen to change the keys, and screenshots of every interaction.
 

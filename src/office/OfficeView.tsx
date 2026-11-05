@@ -18,6 +18,8 @@ import {
   type ReactNode,
 } from 'react'
 import { audio } from '../audio/manager'
+import { WalkView } from '../world/WalkView'
+import { isInteraction } from './scene/officeLayout'
 import { fill, getPerson } from '../content/departments'
 import {
   SPOTS,
@@ -78,7 +80,7 @@ interface OfficeViewProps {
 
 /** Falls back to the floor plan if the 3D view fails for any reason. */
 class SceneBoundary extends Component<
-  { fallback: ReactNode; children: ReactNode },
+  { fallback: ReactNode; children: ReactNode; onFail?: () => void },
   { failed: boolean }
 > {
   state = { failed: false }
@@ -87,6 +89,7 @@ class SceneBoundary extends Component<
   }
   componentDidCatch(error: unknown) {
     console.warn('The 3D office could not be shown; using the floor plan instead.', error)
+    this.props.onFail?.()
   }
   render() {
     return this.state.failed ? this.props.fallback : this.props.children
@@ -145,7 +148,33 @@ export function OfficeView({
   const meetingNow = openMeeting(work)
   const upcoming = nextMeeting(work)
 
+  // With 3D, the player walks the office and does things in person (the result
+  // when they finish); until the view is ready, or without 3D, at once.
+  const [ready, setReady] = useState(false)
+  const [sceneFailed, setSceneFailed] = useState(false)
+  const walkable = webgl && !sceneFailed && ready
+  const [request, setRequest] = useState<{ id: string; nonce: number } | null>(null)
+  const ask = (id: string) => setRequest((r) => ({ id, nonce: (r?.nonce ?? 0) + 1 }))
+
+  /** Uses something: walks there and does it, or at once without 3D. */
+  function doInteract(id: InteractionId) {
+    if (walkable) ask(id)
+    else interact(id)
+  }
+
+  /** Walked into another area of the office: it takes office time, as before. */
+  function arrive(next: SpotId) {
+    if (next === spot) return
+    setDialogue(null)
+    void onAct(walk)
+    onGo(next)
+  }
+
   function go(next: SpotId) {
+    if (walkable) {
+      if (next !== spot) ask(`go:${next}`)
+      return
+    }
     setDialogue(null)
     if (next !== spot) {
       for (let i = 0; i < 4; i++)
@@ -266,15 +295,20 @@ export function OfficeView({
   }
 
   // Stable handlers for the 3D scene, so it does not redraw on every change.
-  const handlers = useRef({ go, interact })
+  const handlers = useRef({ go, doInteract, interact, arrive })
   useEffect(() => {
-    handlers.current = { go, interact }
+    handlers.current = { go, doInteract, interact, arrive }
   })
   const sceneGo = useCallback((next: SpotId) => handlers.current.go(next), [])
   const sceneInteract = useCallback(
-    (id: InteractionId) => handlers.current.interact(id),
+    (id: InteractionId) => handlers.current.doInteract(id),
     [],
   )
+  const onArea = useCallback((next: SpotId) => handlers.current.arrive(next), [])
+  const onReady = useCallback(() => setReady(true), [])
+  const onActivityDone = useCallback((action: string | null, completed: boolean) => {
+    if (completed && action && isInteraction(action)) handlers.current.interact(action)
+  }, [])
 
   const floorPlan = <FloorPlan spot={spot} onGo={go} />
   const meetingHere = meetingNow && meetingNow.spot === spot
@@ -282,28 +316,47 @@ export function OfficeView({
   return (
     <div className="relative isolate min-h-0 flex-1 overflow-hidden" data-testid="office">
       <div className="absolute inset-0">
-        {webgl ? (
-          <SceneBoundary fallback={floorPlan}>
-            <Suspense
-              fallback={
-                <div className="flex h-full items-center justify-center bg-slate-100 text-slate-500">
-                  Arriving at the office…
-                </div>
-              }
-            >
-              <OfficeScene
-                spot={spot}
-                computerAlert={unread > 0}
-                playerName={profile.name}
-                desk={Object.values(deskLayout(profile))
-                  .map((item) => item!.id)
-                  .join(',')}
-                onGo={sceneGo}
-                onInteract={sceneInteract}
-                talkingTo={dialogue?.speaker ?? null}
-              />
-            </Suspense>
-          </SceneBoundary>
+        {webgl && !sceneFailed ? (
+          <WalkView
+            className="h-full rounded-none ring-0"
+            testId="office-3d"
+            promptClass="bottom-20"
+            helpClass="top-3 left-80"
+            label="The office in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to or talks to whoever is there. The panel and the Places bar do the same."
+          >
+            {(api) => (
+              <SceneBoundary fallback={floorPlan} onFail={() => setSceneFailed(true)}>
+                <Suspense
+                  fallback={
+                    <div className="flex h-full items-center justify-center bg-slate-100 text-slate-500">
+                      Arriving at the office…
+                    </div>
+                  }
+                >
+                  <OfficeScene
+                    walk={{
+                      controls: api.controls,
+                      request,
+                      onPrompt: api.onPrompt,
+                      onProgress: api.onProgress,
+                      onDone: onActivityDone,
+                      onReady,
+                      onArea,
+                    }}
+                    spot={spot}
+                    computerAlert={unread > 0}
+                    playerName={profile.name}
+                    desk={Object.values(deskLayout(profile))
+                      .map((item) => item!.id)
+                      .join(',')}
+                    onGo={sceneGo}
+                    onInteract={sceneInteract}
+                    talkingTo={dialogue?.speaker ?? null}
+                  />
+                </Suspense>
+              </SceneBoundary>
+            )}
+          </WalkView>
         ) : (
           floorPlan
         )}
@@ -383,15 +436,15 @@ export function OfficeView({
                 interaction={interaction}
                 unread={unread}
                 lunchOpen={lunchAvailability(work) === 'available'}
-                onClick={() => interact(interaction.id)}
+                onClick={() => doInteract(interaction.id)}
               />
             </li>
           ))}
         </ul>
         {webgl && (
           <p className="mt-3 text-xs text-slate-500">
-            Tip: click the blue rings on the floor to walk around, or click people and
-            objects.
+            Tip: walk with W, A, S and D (or click the blue rings on the floor), and press
+            E next to people and things, or click them.
           </p>
         )}
       </section>

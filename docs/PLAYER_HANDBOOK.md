@@ -35,6 +35,13 @@ WorkSim is free, needs no account, and keeps your progress **on this device only
 
 ## The office
 
+You walk the office yourself (W A S D, the mouse to look, E to use things or talk to
+people), or use the **Places** bar and the panel, which walk you there. Going from one
+area to another (reception, your desk, the manager's office, the break room) takes a
+few minutes of office time. At your desk you sit down and log in before the computer
+opens; colleagues are spoken to face to face; coffee is made at the machine and lunch
+eaten at the table.
+
 You arrive at reception in a 3D office.
 
 - **Places** (or the blue rings on the floor) take you to your desk, your manager’s

@@ -191,18 +191,20 @@ export function PlayerRig(props: PlayerRigProps) {
     }
   }, [pageRide])
   // Walking to a spot: how close it has got, and for how long it has made no progress.
-  const approach = useRef({ x: NaN, z: NaN, best: Infinity, stuck: 0 })
+  const approach = useRef({ x: NaN, z: NaN, best: Infinity, stuck: 0, time: 0 })
   /** Steps into place through furniture once close, or when it is blocked. */
   function through(tx: number, tz: number, s: Body, dt: number): boolean {
     if (approach.current.x !== tx || approach.current.z !== tz)
-      approach.current = { x: tx, z: tz, best: Infinity, stuck: 0 }
+      approach.current = { x: tx, z: tz, best: Infinity, stuck: 0, time: 0 }
     const a = approach.current
     const d = Math.hypot(tx - s.x, tz - s.z)
+    a.time += dt * speedUp()
     if (d < a.best - 0.02) {
       a.best = d
       a.stuck = 0
     } else a.stuck += dt
-    return d < 1.2 || a.stuck > 0.4
+    // Close by, blocked, or sliding along a wall for too long: step through.
+    return d < 1.2 || a.stuck > 0.4 || a.time > 2.5 + d / 4
   }
   const lastPrompt = useRef<string | null>(null)
   const lastProgress = useRef(-1)
@@ -279,13 +281,13 @@ export function PlayerRig(props: PlayerRigProps) {
   )
 
   useFrame((_, raw) => {
-    // Real time (up to a quarter of a second, if the computer is busy), moved in
+    // Real time (up to a second, if the computer draws slowly), moved in
     // small steps so collisions stay exact: the same pace however fast it draws.
     if (import.meta.env.DEV) {
       const w = window as unknown as { __worksimFrames?: number }
       w.__worksimFrames = (w.__worksimFrames ?? 0) + 1
     }
-    const dt = Math.min(raw, 0.25)
+    const dt = Math.min(raw, 1)
     const steps = Math.max(1, Math.ceil(dt / 0.04))
     const sub = dt / steps
     const c = controls.current
@@ -555,11 +557,21 @@ export function PlayerRig(props: PlayerRigProps) {
     // Draw again at full speed only while something is changing: moving,
     // acting, keys held, or the camera still settling. Otherwise the slow
     // ticker keeps idle breathing going without using the computer for nothing.
-    const settling =
+    let settling =
       Math.abs(goal[0] - camera.position.x) +
         Math.abs(goal[1] - camera.position.y) +
         Math.abs(goal[2] - camera.position.z) >
       0.003
+    // A camera still not settled after a moment with nothing pressed snaps into
+    // place, so the view never keeps redrawing for nothing.
+    if (settling && controls.current.held.size === 0 && s.speed === 0) {
+      unsettled.current += dt
+      if (unsettled.current > 1.5) {
+        camera.position.set(goal[0], goal[1], goal[2])
+        camera.lookAt(eye[0], eye[1] - 0.15, eye[2])
+        settling = false
+      }
+    } else unsettled.current = 0
     if (
       settling ||
       s.speed > 0 ||
@@ -573,6 +585,7 @@ export function PlayerRig(props: PlayerRigProps) {
   // At most 30 frames a second while something moves (20 on low graphics):
   // smooth enough, and kind to computers that draw 3D without a graphics card.
   const pending = useRef(false)
+  const unsettled = useRef(0)
   function redraw() {
     if (pending.current) return
     pending.current = true

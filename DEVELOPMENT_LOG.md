@@ -167,6 +167,43 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-05 · Character 4: the office
+
+### Built
+
+- **The office is walkable** (`src/office/scene/officeLayout.ts`, `OfficeScene.tsx`)
+  with the shared character and controls. Which area the player is in (reception, the
+  desks, the manager's office, the break room) follows where they walk, and moving
+  between areas takes office time, as the Places buttons always have.
+- **Everything is done in person**: sitting down and logging in before the computer
+  opens, talking to Nina, the senior colleague and Tom face to face, taking the
+  visitor's chair with the manager, making a coffee (steam from the mug), lunch at the
+  table, reading the whiteboard and notice board, leaving by the exit. The panel and
+  the Places bar walk the character there; the game's result is the same as before,
+  at the end. Without 3D, or until it is ready, they act at once.
+- The office redraws only when what it shows changes (the walking settings are
+  compared by contents).
+
+### Fixed while testing
+
+- The area markers' coordinates were read in the wrong order (the desk sent the player
+  between the rows; reception into the break room).
+- A walk sliding along a wall could fail to arrive: after a short while the character
+  steps through to the spot.
+- An area only counts once the player has been in it for a moment, so a boundary cannot
+  flip between two areas (each costing office time).
+- Computers drawing 3D in software draw the office about once a second: movement and
+  activities now keep their real pace however slowly frames come (up to a second a
+  frame, in small steps); a camera that has not settled snaps into place.
+
+### Tests
+
+- The browser tests' "sit at the computer" helper also turns on the development-only
+  speed-up (a test that starts its own career had none).
+- Checked in screenshots: walking from the break room to the desks; walking to the
+  chair to use the computer.
+- Results: 2,114 unit tests; 166 Chromium browser tests passed (1 skipped: the opt-in location screenshots), 1 of them on a retry: the full first week ran past its 2-minute limit the first time (it is the longest journey, and now walks to the desk and sits down each time); 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
+
 ## 2026-11-05 · Character 3: the street, the bike and the car
 
 ### Built

@@ -29,12 +29,18 @@ export function WalkView({
   className,
   testId,
   attributes,
+  promptClass = 'bottom-3',
+  helpClass = 'top-2 left-3',
   children,
 }: {
   label: string
   className: string
   testId: string
   attributes?: Record<string, string>
+  /** Where the prompt and progress sit (above other controls, if any). */
+  promptClass?: string
+  /** Where the controls help sits. */
+  helpClass?: string
   children: (api: WalkApi) => ReactNode
 }) {
   const box = useRef<HTMLDivElement>(null)
@@ -129,7 +135,7 @@ export function WalkView({
 
       {progress ? (
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center"
+          className={`pointer-events-none absolute inset-x-0 ${promptClass} z-30 flex justify-center`}
           data-testid="activity"
         >
           <div className="w-72 rounded-lg bg-slate-900/85 px-3 py-2 text-white shadow">
@@ -149,7 +155,7 @@ export function WalkView({
         </div>
       ) : prompt ? (
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center"
+          className={`pointer-events-none absolute inset-x-0 ${promptClass} z-30 flex justify-center`}
           data-testid="prompt"
         >
           <p
@@ -187,7 +193,9 @@ export function WalkView({
           {locked ? 'Mouse look on (Esc)' : 'Mouse look'}
         </button>
       </div>
-      <p className="pointer-events-none absolute top-2 left-3 rounded bg-slate-900/60 px-2 py-0.5 text-[11px] text-slate-100">
+      <p
+        className={`pointer-events-none absolute ${helpClass} rounded bg-slate-900/60 px-2 py-0.5 text-[11px] text-slate-100`}
+      >
         WASD move · Shift run · C crouch · Space jump · {interact} use · drag or Q/R to
         look · wheel to zoom
       </p>

@@ -23,6 +23,9 @@ export async function startCareerIfNeeded(page: Page, name = 'Alex') {
 
 /** If the player is walking around the office, goes to their desk and uses the computer. */
 export async function sitAtComputer(page: Page) {
+  await page.evaluate(
+    "window.__worksimSpeed = 12; sessionStorage.setItem('worksim.testSpeed', '12')",
+  )
   // The desktop loads after the start screen: wait until the office or the
   // computer is showing before deciding which one it is.
   const office = page.getByTestId('office')
