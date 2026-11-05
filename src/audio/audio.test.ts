@@ -105,6 +105,14 @@ describe('scenes', () => {
     expect(layersFor({ place: 'meeting', time: 'day' }).chatter).toBeUndefined()
     expect(layersFor({ place: 'district', time: 'day' }).construction).toBeGreaterThan(0)
     expect(layersFor({ place: 'quiet', time: 'day' })).toEqual({})
+    // Inside the places: the pond, trolleys, treadmills, the yard.
+    expect(layersFor({ place: 'park', time: 'day' })).toMatchObject({
+      water: 1,
+      ducks: 3,
+    })
+    expect(layersFor({ place: 'shop', time: 'day' }).trolleys).toBeGreaterThan(0)
+    expect(layersFor({ place: 'gym', time: 'day' }).treadmills).toBe(1)
+    expect(layersFor({ place: 'garage', time: 'day' }).engines).toBeGreaterThan(0)
     const keys = (['office', 'cafe', 'gym', 'home', 'park', 'shop'] as const).map(
       (place) => JSON.stringify(layersFor({ place, time: 'day' })),
     )

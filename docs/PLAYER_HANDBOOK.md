@@ -90,6 +90,9 @@ you to your flat.
   or W, A, S and D (Up and Down walk, Left and Right turn, Shift runs) and press Enter at
   a door; or choose a place from the list, which shows how long the walk is and whether
   it is open. Walking takes time on the clock.
+  - Inside each place you see it in 3D (see [LOCATIONS.md](LOCATIONS.md)). Things
+    with an amber ring on the floor can be used: click one to do what the list offers
+    there. Drag to look around.
   - **Kettle & Crumb** (café, 7:00–22:00): breakfast, coffee and cake, dinner.
   - **Daily Basket** (food shop, 7:00–23:00): a week of groceries for less than having
     them delivered, or a single ready meal.
@@ -322,13 +325,17 @@ pavement), doors open and close, and there are sounds for a new email, a finishe
 task, pay day, an offer and a promotion. Music plays now and then, and changes with
 where you are; an interview has its own.
 
-**Sound** (in the top bar, or ♪ on the taskbar) has a master volume, a volume and an
+**Sound & graphics** (in the top bar, or ♪ on the taskbar) has a master volume, a volume and an
 on/off switch for music, surroundings, interface and game sounds, your character and
 people, and **Mute all sound**. **Fewer sounds** makes everything calmer (it is on at
 first if your system asks for less motion). **Sound captions** shows a short note for
 important sounds. Each kind has a **Test** button. Sound starts after your first click
 or key press, and the game is fully playable without it. Every sound is made on your
 computer as you play: nothing is downloaded. See [SOUND_PLAN.md](SOUND_PLAN.md).
+
+**Graphics** (in the same panel): Auto, High or Low detail for the 3D office, home,
+street and places. Low has fewer lights and people and is smoother on slower
+computers; Auto picks it on computers without a graphics card.
 
 ## Accessibility
 

@@ -6,6 +6,17 @@ import { useEffect, useRef } from 'react'
 import { audio, type EffectId } from './manager'
 import { CATEGORIES, type AudioSettings, type CategoryId } from './settings'
 import { useAudioSettings } from './useAudio'
+import { setGraphicsQuality, useGraphicsQuality, type Quality } from '../ui/graphics'
+
+const QUALITIES: Array<[Quality, string, string]> = [
+  ['auto', 'Auto', 'Less detail on computers that draw 3D without a graphics card.'],
+  ['high', 'High', 'Full detail: lights, every person and prop.'],
+  [
+    'low',
+    'Low',
+    'Fewer lights and people, lower resolution: smoother on slower computers.',
+  ],
+]
 
 const SAMPLE: Record<CategoryId, EffectId> = {
   music: 'achievement',
@@ -17,6 +28,7 @@ const SAMPLE: Record<CategoryId, EffectId> = {
 
 export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
   const settings = useAudioSettings()
+  const quality = useGraphicsQuality()
   const dialog = useRef<HTMLDivElement>(null)
   const change = (next: Partial<AudioSettings>) => audio.update({ ...settings, ...next })
   const changeCategory = (
@@ -61,7 +73,7 @@ export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center justify-between gap-2">
           <h2 id="sound-title" className="text-lg font-bold text-slate-900">
-            Sound
+            Sound and graphics
           </h2>
           <button
             type="button"
@@ -164,6 +176,31 @@ export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
             </span>
           </label>
         </div>
+
+        <fieldset className="mt-3 border-t border-slate-100 pt-3" data-testid="graphics">
+          <legend className="text-sm font-semibold text-slate-900">Graphics</legend>
+          <p className="text-xs text-slate-500">
+            For the 3D office, home, street and places. Everything also works from the
+            lists beside them.
+          </p>
+          <div className="mt-2 space-y-1">
+            {QUALITIES.map(([id, name, about]) => (
+              <label key={id} className="flex items-start gap-2 text-sm text-slate-800">
+                <input
+                  type="radio"
+                  name="graphics-quality"
+                  className="mt-1"
+                  checked={quality === id}
+                  onChange={() => setGraphicsQuality(id)}
+                />
+                <span>
+                  <span className="font-medium">{name}</span>
+                  <span className="block text-xs text-slate-500">{about}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
       </div>
     </div>
   )

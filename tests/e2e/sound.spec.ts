@@ -59,7 +59,7 @@ test('sound follows the player, and the settings are kept', async ({ page }) => 
   expect(await loudest(page, 600)).toBeGreaterThan(0.001)
 
   // The settings: master volume and captions, kept after a reload.
-  await page.getByRole('button', { name: 'Sound', exact: true }).click()
+  await page.getByRole('button', { name: 'Sound & graphics' }).click()
   const panel = page.getByTestId('sound-panel')
   await panel.getByLabel('Master volume').fill('50')
   await panel.getByLabel('Sound captions').check()
@@ -69,7 +69,7 @@ test('sound follows the player, and the settings are kept', async ({ page }) => 
   await expect(page.getByTestId('sound-captions')).toContainText('Pay received')
   await page.reload()
   await expect(page.getByTestId('office')).toBeVisible({ timeout: 30_000 })
-  await page.getByRole('button', { name: 'Sound', exact: true }).click()
+  await page.getByRole('button', { name: 'Sound & graphics' }).click()
   await expect(panel.getByLabel('Master volume')).toHaveValue('50')
   await expect(panel.getByLabel('Sound captions')).toBeChecked()
 

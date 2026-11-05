@@ -35,6 +35,7 @@ import { getDeskItem, type DeskItem } from '../../content/desk'
 import { Desk, Floor, OfficeChair } from './furniture'
 import { Box, Place, Plant, Sofa } from './parts'
 import { PeopleDetail, Person, Walker, type PersonLook } from './people'
+import { isLow, useGraphicsQuality } from '../../ui/graphics'
 
 /**
  * The people of the office, each with their own look. Who sits where is fixed;
@@ -188,7 +189,10 @@ export default memo(OfficeScene)
 
 function OfficeScene(props: OfficeSceneProps) {
   const start = getSpot(props.spot).camera
-  const [lowPower, setLowPower] = useState(false)
+  // What the computer can do, and the player's choice in Settings.
+  const [software, setLowPower] = useState(false)
+  const quality = useGraphicsQuality()
+  const lowPower = isLow(quality, software)
   // Shadows, reflections and contact shadows are costly to build: they wait until
   // the graphics have been checked, so a computer without a graphics card never
   // has to build them first.

@@ -52,21 +52,24 @@ src/audio/useAudio.ts ── the game's news as sounds, read from changes to the
 
 ## What is heard where
 
-| Scene                 | Surroundings                                                       | Music      |
-| --------------------- | ------------------------------------------------------------------ | ---------- |
-| Reception             | air conditioning, doors, footsteps, a phone, some talk             | focus      |
-| The office floor      | typing, phones, the printer, chairs, colleagues talking, footsteps | focus      |
-| At the computer       | the office, quieter, with your own typing                          | focus      |
-| Manager's office      | air conditioning, a clock, a chair: quiet                          | none       |
-| Break room            | the coffee machine, cups, the microwave, the fridge, talk          | none       |
-| High street           | traffic, passing cars, horns, people, footsteps, wind, birds       | city       |
-| The homes end         | lighter traffic, birds (most in the morning), doors                | city       |
-| The park end          | wind, birds, people                                                | city       |
-| Business district     | busier traffic, footsteps, construction in working hours           | electronic |
-| Café                  | the coffee machine, cups, the till, lots of talk                   | café       |
-| Shop, gym, Cog & Kerb | the till / weights / tools                                         | electronic |
-| Home                  | the fridge, a clock, distant traffic, birds or crickets            | home       |
-| Interview (laptop)    | home                                                               | interview  |
+| Scene                  | Surroundings                                                       | Music      |
+| ---------------------- | ------------------------------------------------------------------ | ---------- |
+| Reception              | air conditioning, doors, footsteps, a phone, some talk             | focus      |
+| The office floor       | typing, phones, the printer, chairs, colleagues talking, footsteps | focus      |
+| At the computer        | the office, quieter, with your own typing                          | focus      |
+| Manager's office       | air conditioning, a clock, a chair: quiet                          | none       |
+| Break room             | the coffee machine, cups, the microwave, the fridge, talk          | none       |
+| High street            | traffic, passing cars, horns, people, footsteps, wind, birds       | city       |
+| The homes end          | lighter traffic, birds (most in the morning), doors                | city       |
+| The park end           | wind, birds, people                                                | city       |
+| Business district      | busier traffic, footsteps, construction in working hours           | electronic |
+| Café                   | the coffee machine, cups, the till, lots of talk                   | café       |
+| Shop                   | air conditioning, the till, trolleys, footsteps                    | none       |
+| Gym                    | treadmills, weights, footsteps, talk                               | electronic |
+| Cog & Kerb             | tools, an engine starting in the yard                              | electronic |
+| Park (inside the gate) | water, ducks, birds, wind, people                                  | city       |
+| Home                   | the fridge, a clock, distant traffic, birds or crickets            | home       |
+| Interview (laptop)     | home                                                               | interview  |
 
 By time of day: mornings bring birds, the day is busiest, evenings quieter with
 crickets, and at night there is little traffic, no horns and no construction.

@@ -4,7 +4,15 @@
  * time and may cost money, and how they look after themselves shows at work
  * the next day.
  */
-import { Component, lazy, Suspense, useState, type ReactNode } from 'react'
+import {
+  Component,
+  lazy,
+  Suspense,
+  useCallback,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { getHome, type HomeId, type SlotId } from '../content/home'
 import { homeOf } from '../game/home'
 import { supportsWebGL } from '../office/webgl'
@@ -13,6 +21,7 @@ import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { CommuteChoices } from './CommuteChoices'
 import { Phone } from './Phone'
 import { CareerPanel } from './CareerPanel'
+import type { Doing } from '../city/scene/interiors/kit'
 import { audio } from '../audio/manager'
 import type { ProfileData } from '../game/career'
 import { canGo, plansTonight, unreadCount, type Contact } from '../game/social'
@@ -87,6 +96,45 @@ export function HomeView({
     (a) => a.room === room && a.phases.includes(phase === 'work' ? 'evening' : phase),
   )
   const day = phase === 'morning' ? nextWorkday(profile.work.day) : profile.work.day
+  // Everything that can be done at home now, for the furniture in 3D (as the lists).
+  const now = phase === 'work' ? 'evening' : phase
+  const doings: Doing[] = [
+    ...HOME_ACTIONS.filter((a) => a.phases.includes(now)).map((a) => ({
+      id: a.id,
+      label: a.label,
+      detail: `${a.minutes} min${a.cost ? ` · ${formatMoney(a.cost)}` : ''}`,
+      blocked: canDo(profile, a),
+    })),
+    ...(phase === 'evening'
+      ? [
+          {
+            id: 'bed',
+            label: 'Go to bed',
+            detail: `${sleepHours(life.minute).toFixed(1)} hours before the alarm`,
+            blocked: null,
+          },
+        ]
+      : []),
+    {
+      id: 'go-out',
+      label: 'Go out into the neighbourhood',
+      detail: 'Café, shop, gym, park',
+      blocked: canGoOut(profile),
+    },
+  ]
+  const doingsKey = JSON.stringify(doings)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stableDoings = useMemo(() => doings, [doingsKey])
+  const doThing = useCallback(
+    (id: string) => {
+      if (id === 'bed') return onBed()
+      if (id === 'go-out') return onGoOutside()
+      const action = HOME_ACTIONS.find((a) => a.id === id)
+      if (action) setRoom(action.room)
+      onAction(id)
+    },
+    [onAction, onBed, onGoOutside],
+  )
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f1ec]" data-testid="home">
@@ -108,7 +156,7 @@ export function HomeView({
 
           {webgl && (
             <div
-              className="h-72 overflow-hidden rounded-xl bg-slate-200 shadow-sm ring-1 ring-slate-200"
+              className="h-96 overflow-hidden rounded-xl bg-slate-200 shadow-sm ring-1 ring-slate-200"
               data-testid="home-3d"
               aria-hidden
             >
@@ -126,6 +174,8 @@ export function HomeView({
                     room={room}
                     phase={phase === 'morning' ? 'morning' : 'evening'}
                     dressed={phase === 'morning' && life.ready.dressed}
+                    doings={stableDoings}
+                    onAct={doThing}
                   />
                 </Suspense>
               </SceneBoundary>

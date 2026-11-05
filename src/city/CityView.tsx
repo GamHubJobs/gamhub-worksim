@@ -12,6 +12,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  useMemo,
 } from 'react'
 import { PLACES, PLACE_ACTIONS, getPlace, type PlaceId } from '../content/city'
 import { formatMoney } from '../content/life'
@@ -29,6 +30,8 @@ import { supportsWebGL } from '../office/webgl'
 import { areaAt, standAt, type Area } from './streets'
 import { timeOfDay, type Place } from '../audio/scenes'
 import { AudioScene } from '../audio/useAudio'
+import type { Doing } from './scene/interiors/kit'
+import type { InteriorId } from './scene/InteriorScene'
 
 /** What each place in the neighbourhood sounds like inside. */
 const INSIDE: Record<PlaceId, Place> = {
@@ -43,6 +46,11 @@ const INSIDE: Record<PlaceId, Place> = {
 import type { Profile } from '../persistence/schemas'
 
 const CityScene = lazy(() => import('./scene/CityScene'))
+const InteriorScene = lazy(() => import('./scene/InteriorScene'))
+
+/** Places with a 3D interior (home has the flat; the office has its own view). */
+const INTERIORS = new Set<PlaceId>(['cafe', 'shop', 'gym', 'park', 'garage'])
+const DEALS = new Set<string>(['buy-bike', 'sell-bike', 'lease-car', 'end-lease'])
 
 /** Shows nothing instead of the 3D street if it fails: the list still works. */
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -117,6 +125,16 @@ export function CityView({
     [profile, onEnter],
   )
   const onNear = useCallback((id: PlaceId | null) => setNear(id), [])
+  // The last thing done in this place: the player is shown there in 3D.
+  const [last, setLast] = useState<{ place: PlaceId; id: string } | null>(null)
+  const doThing = useCallback(
+    (id: string) => {
+      setLast({ place: life.city.at, id })
+      if (DEALS.has(id)) onDeal(id as TransportDeal)
+      else onAction(id)
+    },
+    [life.city.at, onAction, onDeal],
+  )
   // Which part of the street the player is in, for the sounds around them.
   const [area, setArea] = useState<Area>(() => areaAt(standAt(life.city.at)[0]))
   const onArea = useCallback((next: Area) => setArea(next), [])
@@ -139,6 +157,48 @@ export function CityView({
   const actions = PLACE_ACTIONS.filter(
     (a) => a.place === here.id && a.phases.includes(phase),
   )
+  // Cog & Kerb's deals: the bike (to buy or sell back) and the car (to lease or hand back).
+  const deals: Array<[TransportDeal, string, string]> =
+    here.id === 'garage'
+      ? [
+          life.vehicles.bike
+            ? [
+                'sell-bike',
+                `Sell your bike · ${formatMoney(Math.round(BIKE.price * BIKE.resale))}`,
+                'Second-hand, back to the shop.',
+              ]
+            : [
+                'buy-bike',
+                `Buy a ${BIKE.name.toLowerCase()} · ${formatMoney(BIKE.price)}`,
+                BIKE.description,
+              ],
+          life.vehicles.car
+            ? ['end-lease', 'Hand the car back', 'The weekly lease stops.']
+            : [
+                'lease-car',
+                `Lease a small car · ${formatMoney(CAR.deposit)} now, then ${formatMoney(CAR.weekly)} a week`,
+                CAR.description,
+              ],
+        ]
+      : []
+  // What can be done here, for the hotspots in 3D (the same as the list).
+  const doings: Doing[] = [
+    ...actions.map((a) => ({
+      id: a.id,
+      label: a.label,
+      detail: `${a.minutes} min${a.cost ? ` · ${formatMoney(a.cost)}` : ''}`,
+      blocked: canDo(profile, a),
+    })),
+    ...deals.map(([id, label, about]) => ({
+      id,
+      label: label.split(' · ')[0],
+      detail: label.includes(' · ') ? label.split(' · ')[1] : about,
+      blocked: canDeal(profile, id),
+    })),
+  ]
+  const doingsKey = JSON.stringify(doings)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stableDoings = useMemo(() => doings, [doingsKey])
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto bg-[#eef1ec]" data-testid="city">
@@ -165,7 +225,37 @@ export function CityView({
             </p>
           </header>
 
-          {webgl && (
+          {webgl && !outside && INTERIORS.has(here.id) ? (
+            <div
+              className="relative h-96 overflow-hidden rounded-xl bg-stone-800 shadow-sm ring-1 ring-slate-200"
+              data-testid="city-3d"
+              data-interior={here.id}
+              role="img"
+              aria-label={`Inside ${here.name} in 3D. Drag to look around; click a marked object to use it. Everything here is also in the list below.`}
+            >
+              <SceneBoundary>
+                <Suspense
+                  fallback={
+                    <div className="flex h-full items-center justify-center text-sm text-stone-300">
+                      Going in…
+                    </div>
+                  }
+                >
+                  <InteriorScene
+                    place={here.id as InteriorId}
+                    dark={dark}
+                    morning={phase === 'morning'}
+                    doings={stableDoings}
+                    last={last?.place === here.id ? last.id : null}
+                    onAct={doThing}
+                  />
+                </Suspense>
+              </SceneBoundary>
+              <p className="pointer-events-none absolute bottom-2 left-3 rounded bg-stone-900/70 px-2 py-0.5 text-xs text-stone-100">
+                Drag to look around · click a ringed object to use it
+              </p>
+            </div>
+          ) : webgl ? (
             <div
               className="relative h-80 overflow-hidden rounded-xl bg-slate-300 shadow-sm ring-1 ring-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
               data-testid="city-3d"
@@ -226,7 +316,7 @@ export function CityView({
                 </div>
               )}
             </div>
-          )}
+          ) : null}
 
           <p
             role="status"
@@ -332,7 +422,7 @@ export function CityView({
                       <button
                         type="button"
                         disabled={!!blocked}
-                        onClick={() => onAction(action.id)}
+                        onClick={() => doThing(action.id)}
                         title={blocked ?? undefined}
                         className="flex w-full items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-55"
                       >
@@ -354,48 +444,24 @@ export function CityView({
                     </li>
                   )
                 })}
-                {here.id === 'garage' &&
-                  (
-                    [
-                      life.vehicles.bike
-                        ? [
-                            'sell-bike',
-                            `Sell your bike · ${formatMoney(Math.round(BIKE.price * BIKE.resale))}`,
-                            'Second-hand, back to the shop.',
-                          ]
-                        : [
-                            'buy-bike',
-                            `Buy a ${BIKE.name.toLowerCase()} · ${formatMoney(BIKE.price)}`,
-                            BIKE.description,
-                          ],
-                      life.vehicles.car
-                        ? ['end-lease', 'Hand the car back', 'The weekly lease stops.']
-                        : [
-                            'lease-car',
-                            `Lease a small car · ${formatMoney(CAR.deposit)} now, then ${formatMoney(CAR.weekly)} a week`,
-                            CAR.description,
-                          ],
-                    ] as Array<[TransportDeal, string, string]>
-                  ).map(([which, label, about]) => {
-                    const blocked = canDeal(profile, which)
-                    return (
-                      <li key={which}>
-                        <button
-                          type="button"
-                          disabled={!!blocked}
-                          onClick={() => onDeal(which)}
-                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-violet-400 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-55"
-                        >
-                          <span className="block font-medium text-slate-900">
-                            {label}
-                          </span>
-                          <span className="block text-xs text-slate-600">
-                            {blocked ?? about}
-                          </span>
-                        </button>
-                      </li>
-                    )
-                  })}
+                {deals.map(([which, label, about]) => {
+                  const blocked = canDeal(profile, which)
+                  return (
+                    <li key={which}>
+                      <button
+                        type="button"
+                        disabled={!!blocked}
+                        onClick={() => doThing(which)}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-violet-400 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-55"
+                      >
+                        <span className="block font-medium text-slate-900">{label}</span>
+                        <span className="block text-xs text-slate-600">
+                          {blocked ?? about}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
                 {actions.length === 0 && here.id !== 'garage' && (
                   <li className="text-sm text-slate-500">
                     Nothing to do here right now.

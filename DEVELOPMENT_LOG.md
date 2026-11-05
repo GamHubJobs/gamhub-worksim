@@ -167,6 +167,59 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-05 · Locations: real environments for every place
+
+### The problem
+
+Going into a place hid the player but left the camera in the street, pointed at the
+shop's sign: the café was a close-up of its name (see
+[docs/screenshots/locations/before-cafe.png](docs/screenshots/locations/before-cafe.png)).
+The flat was a small, sparse view.
+
+### Built
+
+- **Interiors** (`src/city/scene/InteriorScene.tsx`, `src/city/scene/interiors/`): the
+  café, the food shop, the gym, the park and Cog & Kerb each have their own 3D
+  environment (described in [docs/LOCATIONS.md](docs/LOCATIONS.md)), loaded only when
+  the player goes in; the street is not drawn meanwhile. The camera stands inside and
+  can be turned and zoomed a little. Staff, customers, members and visitors.
+- **Hotspots**: objects with an amber ring do the place's real actions (the same list
+  as the buttons, with the same checks and effects), with a label showing the cost and
+  time or why not. The player is shown where they last did something.
+- **Home**: fittings that come with every home (tall walls with windows, curtains,
+  radiators and pictures; tiled kitchen and bathroom, carpeted bedroom; fridge and
+  wall cupboards; toilet, basin and mirror; ceiling lights; the front door with coat
+  hooks), a larger view, and the furniture owned and the front door as hotspots for
+  what they are used for. The furniture shop and its effects are unchanged.
+- **Graphics quality** (Auto, High, Low) in the renamed **Sound & graphics** panel,
+  applied to every 3D view (office, home, street, places).
+- **Sound**: new layers for the interiors (water and ducks in the park, trolleys in
+  the shop, treadmills at the gym, an engine in Cog & Kerb's yard).
+- Shared vehicle models (`src/city/scene/vehicles.tsx`) for the street and showroom.
+- `npm run shots:locations`: screenshots of every location into
+  `docs/screenshots/locations` (committed for this report).
+
+### Reviewed
+
+- Visited every location in screenshots: the five places, home's four rooms, the
+  street, and the office's reception, desk, manager's office and break room. Fixed what
+  the review found: people facing the wrong way, a dark band above the room (the
+  camera was outside it), a dark gym and black mirror, closed fridges hiding their
+  products, the checkout out of view, cars too close, the flat's front door blocking
+  the view.
+- The office already met the standard (reception, desks, manager's office, break room,
+  colleagues) and was left as it is; the street likewise.
+
+### Tests
+
+- 3 new browser tests (`tests/e2e/interiors.spec.ts`): every place shows its own
+  interior with its own sound, and back to the street; clicking the café's espresso
+  machine buys a coffee, the gym's weights a workout, the park bench passes time; at
+  home, the front door in 3D goes out. In development each hotspot reports where it is
+  on screen, so the tests click the real object.
+- 1 new unit test (`src/ui/graphics.test.ts`); the sound tests cover the new layers.
+- Results: 2,099 unit tests; 166 Chromium browser tests passed; 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
+
 ## 2026-11-05 · Sound
 
 ### Decisions

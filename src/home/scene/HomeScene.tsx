@@ -14,6 +14,26 @@ import { Box } from '../../office/scene/parts'
 import { Person, PeopleDetail, type PersonLook } from '../../office/scene/people'
 import { prefersReducedMotion } from '../../ui/motion'
 import { FurnitureModel } from './models'
+import { Fittings } from './fittings'
+import { Hotspot } from '../../city/scene/interiors/common'
+import { Interior, type Doing, type InteriorState } from '../../city/scene/interiors/kit'
+
+/** What each piece of furniture is for, when clicked (the first that applies now). */
+const USES: Partial<Record<SlotId, string[]>> = {
+  kitchen: ['cook', 'breakfast'],
+  coffee: ['coffee'],
+  table: ['takeaway'],
+  shower: ['shower'],
+  bed: ['bed'],
+  wardrobe: ['dress'],
+  sofa: ['call'],
+  tv: ['series'],
+  console: ['games'],
+  desk: ['study'],
+  shelf: ['read'],
+  mat: ['yoga'],
+}
+import { isLow, useGraphicsQuality } from '../../ui/graphics'
 
 const STILL = prefersReducedMotion()
 
@@ -35,6 +55,9 @@ export interface HomeSceneProps {
   room: RoomId
   phase: 'evening' | 'morning'
   dressed: boolean
+  /** What can be done at home now (the same as the room lists), and doing it. */
+  doings: Doing[]
+  onAct: (id: string) => void
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -52,7 +75,10 @@ export default memo(HomeScene)
 
 function HomeScene(props: HomeSceneProps) {
   const home = getHome(props.homeId)
-  const [lowPower, setLowPower] = useState(false)
+  // What the computer can do, and the player's choice in Settings.
+  const [software, setLowPower] = useState(false)
+  const quality = useGraphicsQuality()
+  const lowPower = isLow(quality, software)
   const focus = home.rooms[props.room]
   const owned = useMemo(
     () =>
@@ -63,6 +89,16 @@ function HomeScene(props: HomeSceneProps) {
   )
   const [w, d] = home.size
   const evening = props.phase === 'evening'
+  const state: InteriorState = useMemo(
+    () => ({
+      doings: Object.fromEntries(props.doings.map((x) => [x.id, x])),
+      act: props.onAct,
+      dark: evening,
+      low: lowPower,
+      last: null,
+    }),
+    [props.doings, props.onAct, evening, lowPower],
+  )
 
   return (
     <Canvas
@@ -88,53 +124,54 @@ function HomeScene(props: HomeSceneProps) {
         color={evening ? '#ffcf99' : '#fff8ee'}
       />
       <CameraRig x={focus[0]} z={focus[1]} />
-      <PeopleDetail low={lowPower}>
-        <Floor kind="wood" position={[0, 0, 0]} size={[w, d]} />
-        {/* Low walls, so the rooms can be seen from above */}
-        <Box size={[w, 1.1, 0.12]} position={[0, 0.55, -d / 2]} color="#efe9df" />
-        <Box size={[0.12, 1.1, d]} position={[-w / 2, 0.55, 0]} color="#efe9df" />
-        <Box size={[0.12, 1.1, d]} position={[w / 2, 0.55, 0]} color="#efe9df" />
-        {/* The bathroom wall and the window */}
-        <Box
-          size={[0.1, 1.1, d * 0.42]}
-          position={[home.rooms.bathroom[0] - 1.2, 0.55, -d / 2 + d * 0.21]}
-          color="#e7e1d6"
-        />
-        <Box
-          size={[1.6, 0.6, 0.04]}
-          position={[-w / 4, 0.8, -d / 2 + 0.07]}
-          color={evening ? '#334155' : '#bae6fd'}
-          emissive={evening ? undefined : '#7dd3fc'}
-        />
-        {home.places.map((place) => {
-          const entry = owned.find(([slot]) => slot === place.slot)?.[1]
-          const item = entry ? getFurniture(entry.item) : undefined
-          if (!item) return null
-          return (
-            <group
-              key={place.slot}
-              position={[place.at[0], 0, place.at[1]]}
-              rotation={[0, place.at[2], 0]}
-            >
-              <FurnitureModel
-                slot={place.slot as SlotId}
-                item={item.id}
-                colour={item.colours[entry!.colour] ?? item.colours[0]}
-              />
-            </group>
-          )
-        })}
-        <Person
-          position={[focus[0] + 0.6, 0, focus[1] + 0.9]}
-          rotation={Math.PI - 0.4}
-          look={
-            props.dressed
-              ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
-              : PLAYER
-          }
-          phase={0.4}
-        />
-      </PeopleDetail>
+      <Interior.Provider value={state}>
+        <PeopleDetail low={lowPower}>
+          <Floor kind="wood" position={[0, 0, 0]} size={[w, d]} />
+          <Fittings home={home} evening={evening} />
+          {/* A low wall on the right, so the rooms can be seen */}
+          <Box size={[0.12, 1.1, d]} position={[w / 2, 0.55, 0]} color="#efe9df" />
+          {home.places.map((place) => {
+            const entry = owned.find(([slot]) => slot === place.slot)?.[1]
+            const item = entry ? getFurniture(entry.item) : undefined
+            if (!item) return null
+            const model = (
+              <group rotation={[0, place.at[2], 0]}>
+                <FurnitureModel
+                  slot={place.slot as SlotId}
+                  item={item.id}
+                  colour={item.colours[entry!.colour] ?? item.colours[0]}
+                />
+              </group>
+            )
+            const use = USES[place.slot as SlotId]?.find((id) => state.doings[id])
+            return use ? (
+              <Hotspot
+                key={place.slot}
+                action={use}
+                position={[place.at[0], 0, place.at[1]]}
+                ring={0.7}
+                tag={2}
+              >
+                {model}
+              </Hotspot>
+            ) : (
+              <group key={place.slot} position={[place.at[0], 0, place.at[1]]}>
+                {model}
+              </group>
+            )
+          })}
+          <Person
+            position={[focus[0] + 0.6, 0, focus[1] + 0.9]}
+            rotation={Math.PI - 0.4}
+            look={
+              props.dressed
+                ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
+                : PLAYER
+            }
+            phase={0.4}
+          />
+        </PeopleDetail>
+      </Interior.Provider>
     </Canvas>
   )
 }

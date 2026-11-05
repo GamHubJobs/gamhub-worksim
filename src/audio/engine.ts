@@ -648,6 +648,44 @@ export function createEngine(): AudioEngine | null {
           })
         length = 2.2
         break
+      case 'ducks': {
+        // A soft quack or two: a nasal tone through a narrow filter.
+        const n = Math.floor(rand(1, 3))
+        for (let i = 0; i < n; i++)
+          tone(to, rand(380, 460), t + i * 0.22, 0.12, {
+            type: 'sawtooth',
+            gain: 0.025,
+            glideTo: rand(300, 340),
+            filter: 1400,
+            pan,
+          })
+        length = n * 0.25
+        break
+      }
+      case 'trolleys':
+        length = rand(1.5, 3)
+        hiss(to, t, length, {
+          color: 'white',
+          freq: 2200,
+          q: 2,
+          gain: 0.025,
+          attack: 0.3,
+          pan,
+          panTo: -pan,
+        })
+        break
+      case 'engines':
+        // A car starting in the yard: a crank, then an idle that fades.
+        length = 3
+        tone(to, 45, t, 0.6, { type: 'sawtooth', gain: 0.03, filter: 300, pan: 0.6 })
+        tone(to, 55, t + 0.6, 2.2, {
+          type: 'sawtooth',
+          gain: 0.025,
+          glideTo: 48,
+          filter: 260,
+          pan: 0.6,
+        })
+        break
       case 'footsteps': {
         const n = Math.floor(rand(4, 9))
         const g = rand(0.12, 0.25)
@@ -692,10 +730,18 @@ export function createEngine(): AudioEngine | null {
       hum(run, 100, 0.006)
     }
     if (layers.fridge) hum(run, 55, 0.012)
+    if (layers.water) bed(run, 'pink', 'bandpass', 900, 0.05, 0.8)
+    if (layers.treadmills) {
+      hum(run, 70, 0.01)
+      bed(run, 'brown', 'lowpass', 260, 0.12, 0.2)
+    }
     // Occasional events, each checked a few times a second.
     const events = (Object.entries(layers) as Array<[Layer, number]>).filter(
       ([layer, rate]) =>
-        rate > 0 && !['traffic', 'wind', 'aircon', 'fridge', 'clock'].includes(layer),
+        rate > 0 &&
+        !['traffic', 'wind', 'aircon', 'fridge', 'clock', 'water', 'treadmills'].includes(
+          layer,
+        ),
     )
     const tickMs = 250
     run.timers.push(

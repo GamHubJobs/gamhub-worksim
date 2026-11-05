@@ -19,7 +19,8 @@
     "test:pwa": "playwright test -c playwright.pwa.config.ts",
     "test:browsers": "playwright test -c playwright.browsers.config.ts",
     "measure:memory": "node scripts/measure-memory.mjs",
-    "ai-bridge": "node scripts/ai-bridge/serve.ts"
+    "ai-bridge": "node scripts/ai-bridge/serve.ts",
+    "shots:locations": "node scripts/location-shots.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

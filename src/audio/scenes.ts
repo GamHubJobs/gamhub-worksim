@@ -66,6 +66,11 @@ export type Layer =
   | 'tools'
   | 'construction'
   | 'footsteps'
+  | 'water' // a pond lapping
+  | 'ducks'
+  | 'trolleys'
+  | 'treadmills' // a steady hum
+  | 'engines'
 
 /**
  * What is heard, and how busy it is (events a minute; beds 1). The street is
@@ -111,6 +116,8 @@ export function layersFor(scene: Scene): Partial<Record<Layer, number>> {
       }
     case 'park':
       return {
+        water: 1,
+        ducks: time === 'night' ? 0 : 3,
         wind: 1,
         birds: time === 'night' ? 0 : 8,
         crickets: time === 'night' || time === 'evening' ? 1 : 0,
@@ -141,10 +148,10 @@ export function layersFor(scene: Scene): Partial<Record<Layer, number>> {
     case 'shop':
     case 'garage':
       return place === 'shop'
-        ? { aircon: 1, till: 3, footsteps: 3, chatter: 2, doors: 1 }
-        : { tools: 4, doors: 1, chatter: 1, traffic: 0.4 }
+        ? { aircon: 1, till: 3, trolleys: 3, footsteps: 3, chatter: 2, doors: 1 }
+        : { tools: 4, engines: 1.5, doors: 1, chatter: 1, traffic: 0.4 }
     case 'gym':
-      return { aircon: 1, weights: 5, footsteps: 6, chatter: 2 }
+      return { aircon: 1, treadmills: 1, weights: 5, footsteps: 6, chatter: 2 }
     case 'home':
       return {
         fridge: 1,

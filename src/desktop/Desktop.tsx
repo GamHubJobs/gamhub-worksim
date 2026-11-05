@@ -541,7 +541,7 @@ export function Desktop({
           onClick={() => setSoundOpen(true)}
           className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
         >
-          Sound
+          Sound &amp; graphics
         </button>
         <button
           type="button"
@@ -1227,13 +1227,13 @@ export function Desktop({
             <button
               type="button"
               onClick={() => setSoundOpen(true)}
-              title="Sound"
+              title="Sound and graphics"
               className="flex w-9 items-center justify-center text-white hover:bg-white/10"
             >
               <span aria-hidden className="text-sm">
                 ♪
               </span>
-              <span className="sr-only">Sound</span>
+              <span className="sr-only">Sound and graphics</span>
             </button>
             <button
               type="button"
