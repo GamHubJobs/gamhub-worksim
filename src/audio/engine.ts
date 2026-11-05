@@ -459,6 +459,16 @@ export function createEngine(): AudioEngine | null {
         })
         hiss(to, t, 0.2, { color: 'brown', type: 'lowpass', freq: 300, gain: 0.2 * v })
         break
+      case 'engine':
+        // A small car's engine: a low, slightly rough hum (overlapping repeats).
+        tone(to, 48, t, 0.95, {
+          type: 'sawtooth',
+          gain: 0.03 * v,
+          attack: 0.15,
+          filter: 240,
+        })
+        tone(to, 96, t, 0.95, { type: 'triangle', gain: 0.015 * v, attack: 0.15 })
+        break
       case 'beep':
         tone(to, 1900, t, 0.08, { gain: 0.07 * v })
         break

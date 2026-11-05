@@ -8,48 +8,40 @@
  */
 import { useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
-import { memo, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import {
-  CanvasTexture,
-  SRGBColorSpace,
-  Vector3,
-  type Group,
-  type WebGLRenderer,
-} from 'three'
+  createContext,
+  memo,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react'
+import { CanvasTexture, SRGBColorSpace, type Group, type WebGLRenderer } from 'three'
 import { PLACES, type PlaceId } from '../../content/city'
-import { BOUNDS, nearestDoor, standAt, areaAt, surfaceAt, type Area } from '../streets'
-import { audio } from '../../audio/manager'
+import { BOUNDS, standAt, areaAt, surfaceAt, type Area } from '../streets'
 import { Bike, Bus, Car } from './vehicles'
 import type { Vector } from '../../content/office'
 import { Box, Plant } from '../../office/scene/parts'
-import {
-  Person,
-  PeopleDetail,
-  Walker,
-  type Motion,
-  type PersonLook,
-} from '../../office/scene/people'
+import { PeopleDetail, Walker, type PersonLook } from '../../office/scene/people'
 import { prefersReducedMotion } from '../../ui/motion'
+import type { Box as Solid } from '../../world/character/controller'
+import type { Activity } from '../../world/interaction/activity'
+import {
+  PlayerRig,
+  type ActivityNow,
+  type Controls,
+  type Hands,
+  type Prompt,
+  type Vehicles,
+} from '../../world/PlayerRig'
 import { isLow, useGraphicsQuality } from '../../ui/graphics'
 
 const STILL = prefersReducedMotion()
 
-/** Walking and running speeds, in units a second. */
-const WALK = 6
-const RUN = 11
-/** Seconds between footsteps: the walk cycle is about a second (two steps). */
-const STEP_WALK = 0.5
-const STEP_RUN = 0.34
-/** On the bike, faster still. */
-const RIDE = 13
-const RIDE_FAST = 18
-
 /** Where the player is, for the traffic (which stops for them). */
 const playerAt = { x: 0, z: 0 }
-/** Turning speed, in radians a second. */
-const TURN = 2.6
-/** Where the camera may go: above the street, in front of the buildings. */
-const CAMERA = { minX: -70, maxX: 72, maxZ: 8.2 }
 
 /** The way the player faces at a door: out towards the street. */
 function facingStreet(id: PlaceId): number {
@@ -174,20 +166,25 @@ export interface CitySceneProps {
   phase: 'evening' | 'morning'
   dark: boolean
   dressed: boolean
-  /** The keys held down, set by the page around the 3D view. */
-  keys: RefObject<Set<string>>
-  /** Called when the player comes near a door, or moves away (null). */
-  onNear: (id: PlaceId | null) => void
+  /** Keys and mouse, from the page around the view. */
+  controls: RefObject<Controls>
   /** The part of the street the player is in, for its sounds. */
   onArea?: (area: Area) => void
   /** Called when the player clicks a door. */
   onDoor: (id: PlaceId) => void
-  /** The door the player is at (its sign is hidden: the page names it). */
-  near: PlaceId | null
+  /** Why a door cannot be used now (closed, too late), or null. */
+  blocked: (id: PlaceId) => string | null
+  onPrompt: (prompt: Prompt | null) => void
+  onProgress: (progress: { label: string; progress: number } | null) => void
+  /** Went in at a door (the page takes the player inside). */
+  onEnter: (id: PlaceId) => void
+  onReady?: () => void
   /** On their bike (quicker), and what they own (shown in the street). */
   riding: boolean
   bike: boolean
   car: boolean
+  /** Got on or off the bike. */
+  onRide: (riding: boolean) => void
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -208,7 +205,12 @@ function CityScene(props: CitySceneProps) {
   const [software, setLowPower] = useState(false)
   const quality = useGraphicsQuality()
   const lowPower = isLow(quality, software)
-  const [busy, setBusy] = useState(false)
+  const [parked, setParked] = useState({ x: -46, z: 3.6, heading: Math.PI / 2 })
+  const [driving, setDriving] = useState(false)
+  const parking = useMemo(
+    () => ({ parked, setParked, driving, setDriving }),
+    [parked, driving],
+  )
   const sky = props.dark ? '#1e293b' : props.phase === 'morning' ? '#cfe8f7' : '#f3c99b'
 
   return (
@@ -219,7 +221,7 @@ function CityScene(props: CitySceneProps) {
       gl={{ antialias: !lowPower, powerPreference: 'default' }}
       onCreated={({ gl }) => setLowPower(isSoftware(gl))}
     >
-      <Ticker fps={STILL ? 1 / 30 : busy ? 30 : lowPower ? 1 : 12} />
+      <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 12} />
       <color attach="background" args={[sky]} />
       <fog attach="fog" args={[sky, 40, 120]} />
       <hemisphereLight
@@ -230,40 +232,41 @@ function CityScene(props: CitySceneProps) {
         intensity={props.dark ? 0.25 : 1.3}
         color={props.phase === 'morning' ? '#fff8ee' : '#ffd2a1'}
       />
-      <PeopleDetail low={lowPower}>
-        <Street dark={props.dark} />
-        <Park />
-        <BusinessDistrict />
-        <Traffic />
-        {props.car && (
-          <Car position={[-46, 0, 3.6]} rotation={Math.PI / 2} colour="#0f766e" />
-        )}
-        {props.bike && !(props.riding && props.outside) && (
-          <Bike position={[-36.5, 0, 9.2]} rotation={Math.PI / 2} />
-        )}
-        {PASSERS_BY.map((p, i) => (
-          <Walker
-            key={i}
-            path={p.path}
-            look={p.look}
-            speed={p.speed}
-            pause={2}
-            phase={i * 0.7}
-          />
-        ))}
-        <Player
-          {...props}
-          onBusy={(b) => {
-            if (b !== busy) setBusy(b)
-          }}
-        />
-      </PeopleDetail>
+      <Parking.Provider value={parking}>
+        <PeopleDetail low={lowPower}>
+          <Street dark={props.dark} />
+          <Park />
+          <BusinessDistrict />
+          <Traffic />
+          {props.car && !driving && (
+            <Car
+              position={[parked.x, 0, parked.z]}
+              rotation={parked.heading}
+              colour="#0f766e"
+            />
+          )}
+          {props.bike && !(props.riding && props.outside) && (
+            <Bike position={[-36.5, 0, 9.2]} rotation={Math.PI / 2} />
+          )}
+          {PASSERS_BY.map((p, i) => (
+            <Walker
+              key={i}
+              path={p.path}
+              look={p.look}
+              speed={p.speed}
+              pause={2}
+              phase={i * 0.7}
+            />
+          ))}
+          <StreetPlayer {...props} low={lowPower} />
+        </PeopleDetail>
+      </Parking.Provider>
       {PLACES.map((place) => (
         <Door
           key={place.id}
           name={place.name}
           colour={place.colour}
-          labelled={place.id !== props.near}
+          labelled
           position={[place.door[0], 0.02, place.door[1] - Math.sign(place.door[1]) * 0.6]}
           onClick={() => props.onDoor(place.id)}
         />
@@ -272,172 +275,117 @@ function CityScene(props: CitySceneProps) {
   )
 }
 
-/** The player: moved by the keys held down, with the camera following behind. */
-function Player({
-  at,
-  outside,
-  dressed,
-  riding,
-  keys,
-  onNear,
-  onBusy,
-  onArea,
-}: CitySceneProps & {
-  onBusy: (busy: boolean) => void
-}) {
-  const group = useRef<Group>(null)
-  const motion = useRef<Motion>({ walking: false })
-  const position = useRef(standAt(at))
-  const heading = useRef(facingStreet(at))
-  const near = useRef<PlaceId | null>(null)
-  const camera = useThree((state) => state.camera)
-  const invalidate = useThree((state) => state.invalidate)
-  const goal = useMemo(() => new Vector3(), [])
-  const look = useMemo(() => new Vector3(), [])
-  const target = useMemo(() => new Vector3(), [])
-  const first = useRef(true)
-  const onBike = useRef(riding)
-  useEffect(() => {
-    onBike.current = riding
-    motion.current.walking = false
-    invalidate()
-  }, [riding, invalidate])
+/** Solid edges of the street: the buildings on each side and its two ends (tall, for the camera). */
+const STREET_BOXES: Solid[] = [
+  { x: 0, z: BOUNDS.maxZ + 3, hx: 80, hz: 3, top: 14 },
+  { x: 0, z: BOUNDS.minZ - 3, hx: 80, hz: 3, top: 14 },
+  { x: BOUNDS.minX - 3, z: 0, hx: 3, hz: 12, top: 14 },
+  { x: BOUNDS.maxX + 3, z: 0, hx: 3, hz: 12, top: 14 },
+]
 
-  // Going into a place from the list moves the player to its door.
-  useEffect(() => {
-    position.current = standAt(at)
-    heading.current = facingStreet(at)
-    first.current = true
-    invalidate()
-  }, [at, invalidate])
-
-  // Movement runs on its own steady timer, so it is the same speed however
-  // fast the computer draws.
-  useEffect(() => {
-    if (!outside) {
-      onNear(null)
-      near.current = null
-      return
+/** Going in at each door: walk up to it and push it open. */
+function doorActivities(): Activity[] {
+  return PLACES.map((place) => {
+    const [x, z] = place.door
+    const side = Math.sign(z)
+    return {
+      id: `door-${place.id}`,
+      action: `enter:${place.id}`,
+      prompt:
+        place.id === 'home'
+          ? 'go inside: home'
+          : place.id === 'office'
+            ? 'go to work'
+            : `go into ${place.name}`,
+      // From the door out to about 4 m into the street.
+      spot: { x, z: z - side * 1.8, reach: 2.4 },
+      anchor: { x, z: z - side * 1.1, heading: side > 0 ? Math.PI : 0 },
+      stages: [{ clip: 'push-door', seconds: 0.8, label: `Going in: ${place.name}` }],
+      sounds: [{ at: 0.3, id: 'door' }],
     }
-    const moving = motion.current
-    let last = performance.now()
-    let busy = false
-    // Footsteps keep time with the walk: one each half stride of the animation.
-    let sinceStep = 0
-    let area = areaAt(position.current[0])
-    onArea?.(area)
-    const report = () => {
-      const now = nearestDoor(position.current[0], position.current[1])
-      if (now !== near.current) {
-        near.current = now
-        onNear(now)
-      }
-    }
-    report()
-    const timer = window.setInterval(() => {
-      const now = performance.now()
-      const delta = Math.min(0.1, (now - last) / 1000)
-      last = now
-      const held = keys.current ?? new Set<string>()
-      // Up and down walk forwards and back; left and right turn.
-      let turn = 0
-      let forward = 0
-      if (held.has('ArrowLeft') || held.has('a')) turn += 1
-      if (held.has('ArrowRight') || held.has('d')) turn -= 1
-      if (held.has('ArrowUp') || held.has('w')) forward += 1
-      if (held.has('ArrowDown') || held.has('s')) forward -= 0.6
-      const walking = turn !== 0 || forward !== 0
-      if (walking !== busy) {
-        busy = walking
-        // On the bike the legs stay on the pedals.
-        motion.current.walking = walking && !onBike.current
-        onBusy(walking)
-      }
-      if (!walking) return
-      heading.current += turn * TURN * delta
-      const fast = held.has('Shift')
-      const speed =
-        forward * (onBike.current ? (fast ? RIDE_FAST : RIDE) : fast ? RUN : WALK) * delta
-      const [x, z] = position.current
-      position.current = [
-        Math.min(
-          BOUNDS.maxX,
-          Math.max(BOUNDS.minX, x - Math.sin(heading.current) * speed),
-        ),
-        Math.min(
-          BOUNDS.maxZ,
-          Math.max(BOUNDS.minZ, z - Math.cos(heading.current) * speed),
-        ),
-      ]
-      report()
-      if (!onBike.current && forward !== 0) {
-        sinceStep += delta
-        if (sinceStep >= (fast ? STEP_RUN : STEP_WALK)) {
-          sinceStep = 0
-          audio.play('step', { surface: surfaceAt(position.current[1]) })
-        }
-      }
-      const here = areaAt(position.current[0])
-      if (here !== area) {
-        area = here
-        onArea?.(here)
-      }
-      invalidate()
-    }, 33)
-    return () => {
-      window.clearInterval(timer)
-      moving.walking = false
-    }
-  }, [outside, keys, onNear, onBusy, onArea, invalidate])
-
-  useFrame((_, delta) => {
-    const g = group.current
-    if (!g) return
-    const [x, z] = position.current
-    g.position.set(x, 0, z)
-    playerAt.x = x
-    playerAt.z = z
-    const h = heading.current
-    g.rotation.y = h
-    // The camera follows behind and a little above, and never leaves the
-    // street (so buildings do not get in the way).
-    goal.set(
-      Math.min(CAMERA.maxX, Math.max(CAMERA.minX, x + Math.sin(h) * 6.5)),
-      3.6,
-      Math.min(CAMERA.maxZ, Math.max(-CAMERA.maxZ, z + Math.cos(h) * 6.5)),
-    )
-    look.set(x - Math.sin(h) * 3, 1.4, z - Math.cos(h) * 3)
-    const step = first.current || STILL ? 1 : 1 - Math.exp(-delta * 5)
-    if (first.current) target.copy(look)
-    first.current = false
-    camera.position.lerp(goal, step)
-    target.lerp(look, step)
-    camera.lookAt(target)
-    if (
-      camera.position.distanceToSquared(goal) > 1e-4 ||
-      target.distanceToSquared(look) > 1e-4
-    )
-      invalidate()
   })
+}
 
+const DOORS = doorActivities()
+
+/**
+ * The player in the street: the shared third-person character (walking,
+ * the bike, a leased car), going in at doors; the traffic stops for them and
+ * the sounds follow the part of the street they are in.
+ */
+function StreetPlayer(props: CitySceneProps & { low: boolean }) {
+  const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
+  const hands = useRef<Hands>({ left: null, right: null })
+  const area = useRef<Area | null>(null)
+  const start = standAt(props.at)
+  useFrame(() => {
+    playerAt.x = now.current.x
+    playerAt.z = now.current.z
+    const here = areaAt(now.current.x)
+    if (here !== area.current) {
+      area.current = here
+      props.onArea?.(here)
+    }
+  })
+  const { parked, setParked, driving, setDriving } = useContext(Parking)
+  const vehicles: Vehicles = {
+    bike: props.bike,
+    car: props.car ? parked : null,
+    riding: driving ? 'car' : props.riding ? 'bike' : null,
+    onChange: (riding, at) => {
+      setDriving(riding === 'car')
+      if (at) setParked(at)
+      if (riding !== 'car') props.onRide(riding === 'bike')
+    },
+    render: (kind) =>
+      kind === 'bike' ? (
+        <Bike position={[0, 0, 0]} rotation={0} />
+      ) : (
+        <Car position={[0, 0, 0]} rotation={0} colour="#0f766e" />
+      ),
+  }
+  if (!props.outside) return null
   return (
-    <group ref={group} visible={outside}>
-      {riding && <Bike position={[0, 0, 0]} rotation={0} />}
-      <group position={riding ? [0, 0.42, 0.08] : [0, 0, 0]}>
-        <Person
-          look={
-            dressed
-              ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
-              : PLAYER
-          }
-          phase={0.3}
-          motion={motion}
-          seated={riding}
-        />
-      </group>
-    </group>
+    <PlayerRig
+      start={{ x: start[0], z: start[1], heading: facingStreet(props.at) }}
+      boxes={STREET_BOXES}
+      activities={DOORS}
+      blocked={(a) => (a.action ? props.blocked(a.action.slice(6) as PlaceId) : null)}
+      controls={props.controls}
+      request={null}
+      onPrompt={props.onPrompt}
+      onProgress={props.onProgress}
+      onDone={(a, completed) => {
+        if (completed && a.action) props.onEnter(a.action.slice(6) as PlaceId)
+      }}
+      onReady={props.onReady}
+      look={
+        props.dressed
+          ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
+          : PLAYER
+      }
+      surfaceAt={(_, z) => surfaceAt(z)}
+      now={now}
+      hands={hands}
+      vehicles={vehicles}
+      low={props.low}
+      startOrbit={{ yaw: facingStreet(props.at), pitch: 0.3, distance: 5 }}
+    />
   )
 }
+
+/** Where the leased car is parked, and whether the player is driving it. */
+const Parking = createContext<{
+  parked: { x: number; z: number; heading: number }
+  setParked: (at: { x: number; z: number; heading: number }) => void
+  driving: boolean
+  setDriving: (on: boolean) => void
+}>({
+  parked: { x: -46, z: 3.6, heading: Math.PI / 2 },
+  setParked: () => {},
+  driving: false,
+  setDriving: () => {},
+})
 
 /** A door the player can go in at: a ring on the pavement and the place's name. */
 function Door({

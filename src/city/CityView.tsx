@@ -9,7 +9,6 @@ import {
   lazy,
   Suspense,
   useCallback,
-  useRef,
   useState,
   type ReactNode,
   useMemo,
@@ -71,17 +70,6 @@ class SceneBoundary extends Component<
   }
 }
 
-const MOVE_KEYS = new Set([
-  'ArrowUp',
-  'ArrowDown',
-  'ArrowLeft',
-  'ArrowRight',
-  'w',
-  'a',
-  's',
-  'd',
-])
-
 export function CityView({
   profile,
   onEnter,
@@ -106,12 +94,10 @@ export function CityView({
   onRide: (riding: boolean) => void
 }) {
   const [webgl] = useState(supportsWebGL)
-  const [near, setNear] = useState<PlaceId | null>(null)
   const [phone, setPhone] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   // Choosing how to get to work, at the end of the street.
   const [travel, setTravel] = useState(false)
-  const keys = useRef(new Set<string>())
   const life = profile.work.life
   const phase = lifePhase(profile) === 'morning' ? 'morning' : 'evening'
   const day = phase === 'morning' ? nextWorkday(profile.work.day) : profile.work.day
@@ -129,7 +115,6 @@ export function CityView({
     },
     [profile, onEnter],
   )
-  const onNear = useCallback((id: PlaceId | null) => setNear(id), [])
   // Inside a place with a 3D interior, things are done there by the character
   // (the game action when they finish); without 3D, straight away.
   const [interiorFailed, setInteriorFailed] = useState(false)
@@ -167,21 +152,6 @@ export function CityView({
   // Which part of the street the player is in, for the sounds around them.
   const [area, setArea] = useState<Area>(() => areaAt(standAt(life.city.at)[0]))
   const onArea = useCallback((next: Area) => setArea(next), [])
-
-  function keyDown(event: React.KeyboardEvent) {
-    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
-    if (MOVE_KEYS.has(key) || key === 'Shift') {
-      event.preventDefault()
-      keys.current.add(key)
-    } else if ((key === 'Enter' || key === 'e') && near && outside) {
-      event.preventDefault()
-      go(near)
-    }
-  }
-  function keyUp(event: React.KeyboardEvent) {
-    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
-    keys.current.delete(key)
-  }
 
   const actions = PLACE_ACTIONS.filter(
     (a) => a.place === here.id && a.phases.includes(phase),
@@ -290,66 +260,43 @@ export function CityView({
               )}
             </WalkView>
           ) : webgl ? (
-            <div
-              className="relative h-80 overflow-hidden rounded-xl bg-slate-300 shadow-sm ring-1 ring-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
-              data-testid="city-3d"
-              role="application"
-              aria-label="The street in 3D. Up and Down (or W and S) walk, Left and Right (or A and D) turn, Shift runs, and Enter goes in at a door."
-              tabIndex={0}
-              onKeyDown={keyDown}
-              onKeyUp={keyUp}
-              onBlur={() => keys.current.clear()}
+            <WalkView
+              key="street"
+              className="h-[28rem] bg-slate-300"
+              testId="city-3d"
+              label="The street in 3D. W, A, S and D (or the arrow keys) walk, Shift runs, drag the mouse or press Q and R to look around, E goes in at a door, and F gets on or off your bike or in and out of your car."
             >
-              <SceneBoundary>
-                <Suspense
-                  fallback={
-                    <div className="flex h-full items-center justify-center text-sm text-slate-600">
-                      Stepping outside…
-                    </div>
-                  }
-                >
-                  <CityScene
-                    at={life.city.at}
-                    outside={outside}
-                    phase={phase}
-                    dark={dark}
-                    dressed={phase === 'morning' && life.ready.dressed}
-                    keys={keys}
-                    onNear={onNear}
-                    onArea={onArea}
-                    onDoor={go}
-                    near={near}
-                    riding={life.city.riding}
-                    car={life.vehicles.car}
-                    bike={life.vehicles.bike}
-                  />
-                </Suspense>
-              </SceneBoundary>
-              {outside && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
-                  {near ? (
-                    <button
-                      type="button"
-                      data-testid="door-prompt"
-                      onClick={() => go(near)}
-                      className="pointer-events-auto rounded-full bg-slate-900/85 px-4 py-1.5 text-sm font-medium text-white shadow hover:bg-slate-900"
-                    >
-                      {near === 'home'
-                        ? 'Go inside: home'
-                        : near === 'office'
-                          ? 'Go to work'
-                          : `Go into ${getPlace(near)!.name}`}{' '}
-                      <span className="text-xs font-normal text-slate-300">(Enter)</span>
-                    </button>
-                  ) : (
-                    <span className="rounded-full bg-slate-900/60 px-3 py-1 text-xs text-white">
-                      Click here, then walk with the arrow keys: Up to walk, Left and
-                      Right to turn
-                    </span>
-                  )}
-                </div>
+              {(api) => (
+                <SceneBoundary>
+                  <Suspense
+                    fallback={
+                      <div className="flex h-full items-center justify-center text-sm text-slate-600">
+                        Stepping outside…
+                      </div>
+                    }
+                  >
+                    <CityScene
+                      at={life.city.at}
+                      outside={outside}
+                      phase={phase}
+                      dark={dark}
+                      dressed={phase === 'morning' && life.ready.dressed}
+                      controls={api.controls}
+                      onPrompt={api.onPrompt}
+                      onProgress={api.onProgress}
+                      onArea={onArea}
+                      onDoor={go}
+                      onEnter={go}
+                      blocked={(id) => canEnter(profile, id)}
+                      riding={life.city.riding}
+                      car={life.vehicles.car}
+                      bike={life.vehicles.bike}
+                      onRide={onRide}
+                    />
+                  </Suspense>
+                </SceneBoundary>
               )}
-            </div>
+            </WalkView>
           ) : null}
 
           <p

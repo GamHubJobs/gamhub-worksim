@@ -166,8 +166,9 @@ export function WalkView({
               </>
             ) : (
               <>
-                Press <kbd className="rounded bg-white/20 px-1.5">{interact}</kbd> to{' '}
-                {prompt.text}
+                Press{' '}
+                <kbd className="rounded bg-white/20 px-1.5">{prompt.key ?? interact}</kbd>{' '}
+                to {prompt.text}
               </>
             )}
           </p>

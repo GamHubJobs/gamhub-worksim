@@ -63,7 +63,7 @@ export function Particles({
       new MeshBasicMaterial({
         color: new Color(preset.colour),
         transparent: !preset.additive,
-        opacity: preset.additive ? 1 : 0.85,
+        opacity: preset.additive ? 1 : (preset.opacity ?? 0.85),
         blending: preset.additive ? AdditiveBlending : NormalBlending,
         depthWrite: false,
         toneMapped: false,

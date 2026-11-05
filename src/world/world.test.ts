@@ -6,11 +6,13 @@ import {
   SPEED,
   body,
   collide,
+  drive,
   nearest,
   step,
   turnTowards,
   walkTo,
   type Box,
+  type CarState,
 } from './character/controller'
 import { barDepth, clipFrame, SIT, STAND, type ClipId } from './character/rig'
 import {
@@ -230,5 +232,38 @@ describe('activities', () => {
     expect(effectsAt(bench, 2)).toHaveLength(0)
     expect(effectsAt(bench, 4)).toHaveLength(1)
     expect(heldAt(bench, 2)).toEqual({})
+  })
+})
+
+describe('driving', () => {
+  const go = (
+    c: CarState,
+    input: Partial<typeof NO_INPUT>,
+    seconds: number,
+    boxes: Box[] = [],
+  ) => {
+    for (let i = 0; i < seconds * 30; i++)
+      c = drive(c, { ...NO_INPUT, ...input }, 1 / 30, boxes)
+    return c
+  }
+  const parked: CarState = { x: 0, z: 0, heading: 0, speed: 0 }
+
+  it('accelerates forward, steers only when moving, and brakes', () => {
+    const fast = go(parked, { forward: 1 }, 3)
+    expect(fast.speed).toBeGreaterThan(10)
+    expect(fast.z).toBeLessThan(-10)
+    expect(go(parked, { right: 1 }, 1).heading).toBe(0)
+    const turned = go(fast, { forward: 1, right: 1 }, 1)
+    expect(turned.heading).toBeLessThan(-0.5)
+    expect(go(fast, { forward: -1 }, 2).speed).toBeLessThanOrEqual(0.1)
+    // Left alone, it rolls to a stop.
+    expect(go(fast, {}, 6).speed).toBe(0)
+  })
+
+  it('stops against a wall instead of going through it', () => {
+    const wallAhead: Box = { x: 0, z: -8, hx: 5, hz: 0.5, top: 3 }
+    const c = go(parked, { forward: 1 }, 5, [wallAhead])
+    expect(c.z).toBeGreaterThan(-8 + 0.5)
+    expect(c.speed).toBeLessThan(4)
   })
 })

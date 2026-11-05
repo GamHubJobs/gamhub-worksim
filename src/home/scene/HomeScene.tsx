@@ -210,6 +210,7 @@ function HomeScene(props: HomeSceneProps) {
                   : PLAYER
               }
               surface="wood"
+              low={lowPower}
               now={now}
               onReady={props.onReady}
               hands={hands}

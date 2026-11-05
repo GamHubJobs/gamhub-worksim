@@ -52,6 +52,7 @@ export const EFFECTS = {
   rustle: 'character',
   chair: 'character',
   beep: 'effects',
+  engine: 'character',
   greet: 'voices',
 } as const satisfies Record<string, CategoryId>
 
@@ -91,6 +92,7 @@ export const MIN_GAP: Record<EffectId, number> = {
   rustle: 600,
   chair: 800,
   beep: 250,
+  engine: 700,
   greet: 2500,
 }
 

@@ -74,12 +74,15 @@ export function cameraAt(
   if (Number.isFinite(ceiling)) return place(target, orbit, boxes, ceiling).at
   const near = Math.min(1.5, orbit.distance)
   let best: { at: [number, number, number]; clear: number } | null = null
-  for (let pitch = orbit.pitch; pitch <= 1.35; pitch += 0.12) {
+  const from = Number.isFinite(orbit.pitch) ? orbit.pitch : 0.3
+  for (let i = 0; i < 12; i++) {
+    const pitch = from + i * 0.12
+    if (pitch > 1.35) break
     const { at, clear } = place(target, { ...orbit, pitch }, boxes, ceiling)
     if (!best || clear > best.clear) best = { at, clear }
     if (clear >= near) return at
   }
-  return best!.at
+  return best ? best.at : place(target, orbit, boxes, ceiling).at
 }
 
 /** How far the camera can be from the target, at this orbit, before something is in the way. */

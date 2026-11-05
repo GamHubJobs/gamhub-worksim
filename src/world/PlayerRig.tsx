@@ -23,7 +23,10 @@ import { audio, type Surface } from '../audio/manager'
 import { Person, type Motion, type PersonLook } from '../office/scene/people'
 import { cameraAt, clampOrbit, clearance, type Orbit } from './character/camera'
 import {
+  BIKE_SPEED,
   body as makeBody,
+  drive,
+  type CarState,
   nearest,
   NO_INPUT,
   step,
@@ -43,6 +46,7 @@ import {
 } from './interaction/activity'
 import type { Control } from './keys'
 import { Prop } from './props'
+import { Particles } from './vfx/Particles'
 
 /** What is happening now, for the room's objects (a barbell, a shower) to follow. */
 export interface ActivityNow {
@@ -59,8 +63,24 @@ export interface Hands {
   right: Group | null
 }
 
+export type Ride = 'bike' | 'car' | null
+
+export interface Vehicles {
+  bike: boolean
+  /** Where a leased car is parked (null without one). */
+  car: { x: number; z: number; heading: number } | null
+  /** On the bike or in the car now (the page's record). */
+  riding: Ride
+  /** Got on, in, off or out; with where the car was left. */
+  onChange: (riding: Ride, car?: { x: number; z: number; heading: number }) => void
+  /** The model under or around the player. */
+  render: (kind: 'bike' | 'car') => ReactNode
+}
+
 /** What the page around the 3D view tells the player (outside the canvas). */
 export interface Prompt {
+  /** The key to press, if not the usual one (F for vehicles). */
+  key?: string
   text: string
   /** Why it cannot be done now, if not. */
   blocked: string | null
@@ -96,8 +116,14 @@ export interface PlayerRigProps {
   look: PersonLook
   /** Called once the player is in the room and can do things. */
   onReady?: () => void
+  /** In the street: the bike and a leased car (F to get on or in, and off or out). */
+  vehicles?: Vehicles
+  /** The floor underfoot by position (the street: road or pavement). */
+  surfaceAt?: (x: number, z: number) => Surface
   /** What the floor is, for footsteps. */
   surface?: Surface
+  /** Low graphics: fewer frames while moving. */
+  low?: boolean
   now: RefObject<ActivityNow>
   hands: RefObject<Hands>
 }
@@ -150,6 +176,20 @@ export function PlayerRig(props: PlayerRigProps) {
     }),
   )
   const mode = useRef<Mode>({ kind: 'free' })
+  const ride = useRef<Ride>(props.vehicles?.riding ?? null)
+  const car = useRef<CarState>({ x: 0, z: 0, heading: 0, speed: 0 })
+  const pedal = useRef(0)
+  const engine = useRef(0)
+  const [riding, setRiding] = useState<Ride>(ride.current)
+  // The page can put the player on or off the bike (its list button).
+  const pageRide = props.vehicles?.riding ?? null
+  useEffect(() => {
+    if (pageRide === ride.current) return
+    if (pageRide !== 'car') {
+      ride.current = pageRide
+      setRiding(pageRide)
+    }
+  }, [pageRide])
   // Walking to a spot: how close it has got, and for how long it has made no progress.
   const approach = useRef({ x: NaN, z: NaN, best: Infinity, stuck: 0 })
   /** Steps into place through furniture once close, or when it is blocked. */
@@ -239,7 +279,15 @@ export function PlayerRig(props: PlayerRigProps) {
   )
 
   useFrame((_, raw) => {
-    const dt = Math.min(raw, 0.05)
+    // Real time (up to a quarter of a second, if the computer is busy), moved in
+    // small steps so collisions stay exact: the same pace however fast it draws.
+    if (import.meta.env.DEV) {
+      const w = window as unknown as { __worksimFrames?: number }
+      w.__worksimFrames = (w.__worksimFrames ?? 0) + 1
+    }
+    const dt = Math.min(raw, 0.25)
+    const steps = Math.max(1, Math.ceil(dt / 0.04))
+    const sub = dt / steps
     const c = controls.current
     const pressed = c.pressed.splice(0)
     const h = c.held
@@ -272,15 +320,87 @@ export function PlayerRig(props: PlayerRigProps) {
         crouch: h.has('crouch'),
         jump: pressed.includes('jump'),
       }
+      const v = latest.current.vehicles
+      // F: on or off the bike, into or out of the car.
+      if (v && pressed.includes('vehicle')) {
+        if (ride.current === 'car') {
+          // Out on the driver's side; the car stays where it is.
+          const c = car.current
+          s = {
+            ...s,
+            x: c.x - Math.cos(c.heading) * 1.4,
+            z: c.z + Math.sin(c.heading) * 1.4,
+            heading: c.heading,
+            speed: 0,
+          }
+          ride.current = null
+          v.onChange(null, { x: c.x, z: c.z, heading: c.heading })
+          audio.play('door')
+        } else if (ride.current === 'bike') {
+          ride.current = null
+          v.onChange(null)
+        } else if (v.car && Math.hypot(v.car.x - s.x, v.car.z - s.z) < 3.2) {
+          car.current = { ...v.car, speed: 0 }
+          ride.current = 'car'
+          v.onChange('car')
+          audio.play('door')
+        } else if (v.bike) {
+          ride.current = 'bike'
+          v.onChange('bike')
+        }
+        if (ride.current !== riding) setRiding(ride.current)
+        rig.current = null
+      }
       const before = s
-      s = step(s, input, o.yaw, dt, boxes)
-      if (!before.grounded && s.grounded) audio.play('step')
-      // Footsteps in time with the walk (two a stride).
-      footsteps(s, dt)
-      // What is near enough to use.
-      const near = nearest(s.x, s.z, spots)
+      if (ride.current === 'car') {
+        for (let k = 0; k < steps; k++)
+          car.current = drive(car.current, input, sub, boxes)
+        const c = car.current
+        s = { ...s, x: c.x, z: c.z, heading: c.heading, speed: Math.abs(c.speed), y: 0 }
+        rig.current = clipFrame('drive', clock.current)
+        engine.current += dt
+        if (engine.current > 0.8) {
+          engine.current = 0
+          audio.play('engine')
+        }
+      } else if (ride.current === 'bike') {
+        for (let k = 0; k < steps; k++)
+          s = step(
+            s,
+            { ...input, jump: false, crouch: false },
+            o.yaw,
+            sub,
+            boxes,
+            BIKE_SPEED,
+          )
+        pedal.current += dt * Math.min(1.4, s.speed / 4)
+        rig.current = clipFrame('cycle', pedal.current)
+      } else {
+        for (let k = 0; k < steps; k++)
+          s = step(s, { ...input, jump: input.jump && k === 0 }, o.yaw, sub, boxes)
+        if (!before.grounded && s.grounded) audio.play('step')
+        // Footsteps in time with the walk (two a stride).
+        footsteps(s, dt)
+      }
+      clock.current += dt
+      // What is near enough to use (not from the car).
+      const near = ride.current === 'car' ? null : nearest(s.x, s.z, spots)
+      const carNear =
+        !near && !ride.current && v?.car && Math.hypot(v.car.x - s.x, v.car.z - s.z) < 3.2
+      if (carNear || (ride.current && !near)) {
+        const text =
+          ride.current === 'car'
+            ? 'get out of the car'
+            : ride.current === 'bike'
+              ? 'get off your bike'
+              : 'get into your car'
+        if (text !== lastPrompt.current) {
+          lastPrompt.current = text
+          latest.current.onPrompt({ key: 'F', text, blocked: null })
+        }
+      }
       const text = near ? near.activity.prompt : null
-      if (text !== lastPrompt.current) {
+      if (!(carNear || (ride.current && !near)) && text !== lastPrompt.current) {
         lastPrompt.current = text
         latest.current.onPrompt(
           near
@@ -291,19 +411,32 @@ export function PlayerRig(props: PlayerRigProps) {
             : null,
         )
       }
-      if (near && pressed.includes('interact')) begin(near.activity)
-      motion.current = {
-        walking: s.speed > 0.2,
-        running: s.speed > 3,
-        crouching: input.crouch,
-        airborne: !s.grounded,
+      if (near && pressed.includes('interact')) {
+        // Off the bike first (a door, a counter).
+        if (ride.current === 'bike' && v) {
+          ride.current = null
+          setRiding(null)
+          v.onChange(null)
+          rig.current = null
+        }
+        begin(near.activity)
       }
+      motion.current = ride.current
+        ? { walking: false }
+        : {
+            walking: s.speed > 0.2,
+            running: s.speed > 3,
+            crouching: input.crouch,
+            airborne: !s.grounded,
+          }
     } else if (m.kind === 'going') {
       if (pressed.includes('interact') || moveKeys) stop(false)
       else {
         const a = m.activity
         const ghost = through(a.anchor.x, a.anchor.z, s, dt)
-        const r = walkTo(s, a.anchor.x, a.anchor.z, dt, boxes, 1.9 * speedUp(), ghost)
+        let r = { body: s, arrived: false }
+        for (let k = 0; k < steps && !r.arrived; k++)
+          r = walkTo(r.body, a.anchor.x, a.anchor.z, sub, boxes, 1.9 * speedUp(), ghost)
         s = r.body
         footsteps(s, dt)
         motion.current = { walking: s.speed > 0.2 }
@@ -322,15 +455,18 @@ export function PlayerRig(props: PlayerRigProps) {
         if (next && m.placed < current.index) {
           // Walk (carrying what is held) to where this stage happens; the clock waits.
           rig.current = null
-          const r = walkTo(
-            s,
-            next.x,
-            next.z,
-            dt,
-            boxes,
-            (current.stage.run ? 3.6 : 1.9) * speedUp(),
-            through(next.x, next.z, s, dt),
-          )
+          const ghost = through(next.x, next.z, s, dt)
+          let r = { body: s, arrived: false }
+          for (let k = 0; k < steps && !r.arrived; k++)
+            r = walkTo(
+              r.body,
+              next.x,
+              next.z,
+              sub,
+              boxes,
+              (current.stage.run ? 3.6 : 1.9) * speedUp(),
+              ghost,
+            )
           s = r.body
           footsteps(s, dt)
           motion.current = { walking: s.speed > 0.2, running: !!current.stage.run }
@@ -397,6 +533,11 @@ export function PlayerRig(props: PlayerRigProps) {
   /** The camera follows smoothly and stays clear of walls. */
   function followCamera(s: Body, dt: number) {
     const o = orbit.current
+    if (ride.current === 'car') {
+      o.distance += (7 - o.distance) * Math.min(1, dt * 2)
+      // Behind the car, unless the player is turning the camera.
+      o.yaw = turnTowards(o.yaw, s.heading, dt * 1.5)
+    }
     const lying = rig.current && rig.current.pitch > 1
     const eye: [number, number, number] = [
       s.x,
@@ -426,7 +567,22 @@ export function PlayerRig(props: PlayerRigProps) {
       mode.current.kind !== 'free' ||
       controls.current.held.size > 0
     )
-      invalidate()
+      redraw()
+  }
+
+  // At most 30 frames a second while something moves (20 on low graphics):
+  // smooth enough, and kind to computers that draw 3D without a graphics card.
+  const pending = useRef(false)
+  function redraw() {
+    if (pending.current) return
+    pending.current = true
+    window.setTimeout(
+      () => {
+        pending.current = false
+        invalidate()
+      },
+      latest.current.low ? 50 : 33,
+    )
   }
 
   /** The first camera angle round a spot with a clear view of the character. */
@@ -446,13 +602,17 @@ export function PlayerRig(props: PlayerRigProps) {
   }
 
   const stride = useRef(0)
+  const clock = useRef(0)
   function footsteps(s: Body, dt: number) {
     if (s.speed < 0.3 || !s.grounded) return
     stride.current += dt
     const every = s.speed > 3 ? 0.32 : 0.5
     if (stride.current >= every) {
       stride.current = 0
-      audio.play('step', { surface: latest.current.surface ?? 'wood' })
+      const p = state.current
+      audio.play('step', {
+        surface: latest.current.surfaceAt?.(p.x, p.z) ?? latest.current.surface ?? 'wood',
+      })
     }
   }
 
@@ -461,16 +621,42 @@ export function PlayerRig(props: PlayerRigProps) {
     right: held.right ? <Prop kind={held.right} /> : undefined,
   }
 
+  // The exhaust, from the back of the car (left in the air behind it as it moves).
+  const tailpipe = () => {
+    const c = car.current
+    return [
+      c.x + Math.sin(c.heading) * 2.05 + Math.cos(c.heading) * 0.55,
+      0.3,
+      c.z + Math.cos(c.heading) * 2.05 - Math.sin(c.heading) * 0.55,
+    ] as [number, number, number]
+  }
+
   return (
-    <group ref={group}>
-      <Person
-        look={props.look}
-        phase={0.3}
-        motion={motion}
-        rig={rig}
-        hold={holding}
-        hands={hands}
-      />
-    </group>
+    <>
+      {riding === 'car' && (
+        <Particles kind="exhaust" at={[0, 0, 0]} active track={tailpipe} />
+      )}
+      <group ref={group}>
+        {riding && props.vehicles?.render(riding)}
+        <group
+          position={
+            riding === 'car'
+              ? [-0.4, 0.05, 0.25]
+              : riding === 'bike'
+                ? [0, 0, 0.1]
+                : [0, 0, 0]
+          }
+        >
+          <Person
+            look={props.look}
+            phase={0.3}
+            motion={motion}
+            rig={rig}
+            hold={holding}
+            hands={hands}
+          />
+        </group>
+      </group>
+    </>
   )
 }

@@ -167,6 +167,36 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-05 · Character 3: the street, the bike and the car
+
+### Built
+
+- **The street uses the shared character** (`src/city/scene/CityScene.tsx`): walking
+  with W A S D and the mouse camera, doors as activities ("Press E to go into …", or why
+  not), the camera kept inside the street by its buildings.
+- **Vehicles** (`src/world/PlayerRig.tsx`, `drive()` in `controller.ts`): F gets on or
+  off the bike (quicker, seated and pedalling; the list button still works) and into
+  or out of a leased car, which is driven with W and S (accelerate, brake, reverse) and
+  A and D (steering that grows with speed), rolls to a stop, stops against walls, and
+  stays where it is parked. The camera pulls back behind the car; exhaust (from the
+  tailpipe, left behind in the air) and an engine sound.
+- **Performance**: while something moves, 3D views now draw at most 30 frames a second
+  (20 on low graphics); movement follows real time in small steps. Before this, several
+  pages walking at once in software 3D could stall (found in testing).
+- **Safety**: turning angles are wrapped with arithmetic and the camera's search is
+  bounded, so a bad value can never loop.
+- Door prompts now show from the doorstep (they had needed standing out in the street).
+
+### Tests
+
+- 2 new unit tests (driving: accelerating, steering only when moving, braking, rolling
+  to a stop, stopping against a wall).
+- Browser tests updated for the new door prompt; the footstep count allows for a busy
+  computer starting slowly.
+- Checked in screenshots: walking across the road to the café and going in; getting
+  into the car, driving down the road, getting out beside it.
+- Results: 2,114 unit tests; 166 Chromium browser tests passed (1 skipped: the opt-in location screenshots), none needing a retry; 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
+
 ## 2026-11-05 · Character 2: the home
 
 ### Built

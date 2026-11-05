@@ -114,6 +114,10 @@ you to your flat.
   - Traffic goes up and down the street (it stops for you). With a bike, **Get on your
     bike** makes walking between places twice as quick; your bike waits by your door
     and a leased car is parked outside.
+  - In 3D you walk the street like the places (W A S D, the mouse to look). **Press E**
+    at a door to go in. **F** gets you on or off your bike, and next to your leased car
+    gets you in: W and S to drive and brake, A and D to steer, and F again to park and
+    get out.
 - **Ways to work** (from the front door or the end of the street), with when you would
   arrive:
 

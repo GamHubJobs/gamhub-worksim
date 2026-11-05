@@ -39,6 +39,8 @@ export interface Body {
 }
 
 export const SPEED = { walk: 1.9, run: 4.6, crouch: 1.0, back: 1.4 }
+/** On a bike: quicker, and backwards is walking it. */
+export const BIKE_SPEED = { walk: 5.5, run: 8.5, crouch: 5.5, back: 1.2 }
 export const RADIUS = 0.3
 const GRAVITY = 16
 const JUMP = 4.6
@@ -60,9 +62,10 @@ export function body(x: number, z: number, heading = 0): Body {
 
 /** The shortest signed turn from one heading to another. */
 export function turnTowards(from: number, to: number, max: number): number {
-  let d = to - from
-  while (d > Math.PI) d -= Math.PI * 2
-  while (d < -Math.PI) d += Math.PI * 2
+  // Wrapped into −π…π with arithmetic, not loops (a huge or bad angle cannot hang it).
+  const full = Math.PI * 2
+  let d = ((((to - from) % full) + full + Math.PI) % full) - Math.PI
+  if (!Number.isFinite(d)) d = 0
   return from + Math.max(-max, Math.min(max, d))
 }
 
@@ -114,18 +117,20 @@ export function step(
   cameraYaw: number,
   dt: number,
   boxes: Box[],
+  /** Walking speeds, or a bike's. */
+  speeds: typeof SPEED = SPEED,
 ): Body {
   const len = Math.hypot(input.forward, input.right)
   const moving = len > 0.01
   const target = !moving
     ? 0
     : input.crouch
-      ? SPEED.crouch
+      ? speeds.crouch
       : input.forward < 0 && Math.abs(input.right) < 0.01 && !input.run
-        ? SPEED.back
+        ? speeds.back
         : input.run
-          ? SPEED.run
-          : SPEED.walk
+          ? speeds.run
+          : speeds.walk
   const speed = b.speed + (target - b.speed) * Math.min(1, ACCEL * dt)
   let heading = b.heading
   let x = b.x
@@ -208,4 +213,49 @@ export function nearest<T extends { x: number; z: number; reach: number }>(
     }
   }
   return best
+}
+
+/** A car: speed along its heading, steered by turning the wheels. */
+export interface CarState {
+  x: number
+  z: number
+  heading: number
+  speed: number
+}
+
+export const CAR = {
+  top: 11,
+  fast: 16,
+  reverse: 4,
+  accel: 5,
+  brake: 9,
+  turn: 1.5,
+  radius: 1.1,
+}
+
+/**
+ * One step of driving: W and S are the accelerator and reverse (or the brake
+ * while moving forward), A and D steer (more at speed, not at a standstill),
+ * and the car slows by itself when nothing is pressed. Pure.
+ */
+export function drive(c: CarState, input: Input, dt: number, boxes: Box[]): CarState {
+  const top = input.run ? CAR.fast : CAR.top
+  let speed = c.speed
+  if (input.forward > 0) speed = Math.min(top, speed + CAR.accel * dt)
+  else if (input.forward < 0)
+    speed =
+      speed > 0.1
+        ? speed - CAR.brake * dt
+        : Math.max(-CAR.reverse, speed - CAR.accel * dt)
+  else speed -= Math.sign(speed) * Math.min(Math.abs(speed), 2.5 * dt)
+  const grip = Math.min(1, Math.abs(speed) / 3) * Math.sign(speed)
+  const heading = c.heading - input.right * CAR.turn * grip * dt
+  let x = c.x - Math.sin(heading) * speed * dt
+  let z = c.z - Math.cos(heading) * speed * dt
+  const [cx, cz] = collide(x, z, CAR.radius, boxes)
+  // Hitting something stops the car.
+  if (Math.hypot(cx - x, cz - z) > 1e-3) speed *= 0.3
+  x = cx
+  z = cz
+  return { x, z, heading, speed }
 }

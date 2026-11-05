@@ -27,6 +27,8 @@ export interface Preset {
   additive: boolean
   /** Particles stop at the floor (y = 0) instead of falling through. */
   floor: boolean
+  /** How see-through solid particles are (default 0.85). */
+  opacity?: number
 }
 
 export const PRESETS: Record<VfxKind, Preset> = {
@@ -166,18 +168,19 @@ export const PRESETS: Record<VfxKind, Preset> = {
     floor: true,
   },
   exhaust: {
-    max: 30,
-    low: 10,
-    rate: 7,
-    life: [1.2, 1.8],
-    spread: [0.04, 0.01],
-    vy: [0.1, 0.25],
-    vxz: 0.12,
-    gravity: -0.05,
-    size: [0.05, 0.22],
+    max: 24,
+    low: 8,
+    rate: 6,
+    life: [0.9, 1.4],
+    spread: [0.03, 0.01],
+    vy: [0.08, 0.2],
+    vxz: 0.1,
+    gravity: -0.04,
+    size: [0.03, 0.13],
     stretch: 1,
     colour: '#9ca3af',
     additive: false,
     floor: false,
+    opacity: 0.35,
   },
 }

@@ -171,6 +171,7 @@ function InteriorScene(props: InteriorSceneProps) {
               onDone={(a, completed) => onDone(a.action, completed)}
               look={look}
               surface={layout.surface}
+              low={low}
               now={now}
               onReady={props.onReady}
               hands={hands}

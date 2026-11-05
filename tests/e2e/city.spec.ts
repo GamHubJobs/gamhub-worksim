@@ -112,7 +112,7 @@ test('walking the street in 3D with the keyboard, and going in at a door', async
   await street.focus()
   // The café is across the street from home: walk north until at its door.
   await page.keyboard.down('ArrowUp')
-  await expect(city(page).getByTestId('door-prompt')).toContainText('Kettle & Crumb', {
+  await expect(city(page).getByTestId('prompt')).toContainText('Kettle & Crumb', {
     timeout: 15_000,
   })
   await page.keyboard.up('ArrowUp')

@@ -111,12 +111,14 @@ test('home, the street and the café each sound different, with footsteps', asyn
   const street = page.getByTestId('city-3d')
   await street.focus()
   const steps = (await stats(page)).played.step ?? 0
+  await expect(street.locator('canvas')).toBeVisible({ timeout: 30_000 })
   await page.keyboard.down('ArrowUp')
-  await page.waitForTimeout(1600)
+  await page.waitForTimeout(3000)
   await page.keyboard.up('ArrowUp')
+  // About two steps a second (allowing for a busy computer starting slowly).
   const walked = ((await stats(page)).played.step ?? 0) - steps
   expect(walked).toBeGreaterThanOrEqual(2)
-  expect(walked).toBeLessThanOrEqual(5)
+  expect(walked).toBeLessThanOrEqual(9)
 
   // Into the café: its own sound.
   await page.getByTestId('place-cafe').click()

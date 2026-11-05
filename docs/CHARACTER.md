@@ -7,17 +7,18 @@ it is finished. This document describes how it works and what is done so far.
 
 ## Controls
 
-| Control                   | Keys (default)                          |
-| ------------------------- | --------------------------------------- |
-| Walk forward / back       | W / S (or ↑ / ↓)                        |
-| Move left / right         | A / D                                   |
-| Run                       | Shift (hold)                            |
-| Crouch                    | C (hold)                                |
-| Jump                      | Space                                   |
-| Use, start or stop        | E (or Enter)                            |
-| Turn the camera           | drag the mouse, or Q / R                |
-| Zoom                      | mouse wheel, or + / −                   |
-| Mouse look (pointer lock) | the **Mouse look** button; Esc releases |
+| Control                       | Keys (default)                          |
+| ----------------------------- | --------------------------------------- |
+| Walk forward / back           | W / S (or ↑ / ↓)                        |
+| Move left / right             | A / D                                   |
+| Run                           | Shift (hold)                            |
+| Crouch                        | C (hold)                                |
+| Jump                          | Space                                   |
+| Use, start or stop            | E (or Enter)                            |
+| Bike on or off, car in or out | F                                       |
+| Turn the camera               | drag the mouse, or Q / R                |
+| Zoom                          | mouse wheel, or + / −                   |
+| Mouse look (pointer lock)     | the **Mouse look** button; Esc releases |
 
 Crouch is **C** rather than Ctrl: in a browser, Ctrl with W closes the tab, and the
 page cannot prevent it. The keys are kept in `src/world/keys.ts` (with saving on this
@@ -76,9 +77,16 @@ src/world/
   ceiling (the cutaway flat) the camera rises to look down; during an activity it picks
   the first clear angle.
 - **Until the 3D view is ready**, the lists do things straight away.
-- **Performance**: only the place the player is in is loaded; the view draws at full
-  speed only while something changes (moving, acting, the camera settling) and a few
-  times a second otherwise.
+- **The street** uses the same character: doors are activities (Press E to go in, or
+  why not: closed, too late), F gets on or off the bike (quicker; the character sits and
+  pedals) and, next to a leased car, into it: W and S accelerate and brake or reverse, A
+  and D steer (more at speed), the car rolls to a stop by itself and stops against
+  walls, the camera pulls back behind it, exhaust comes out of the back and the engine
+  is heard; F again parks it and gets out. The traffic still stops for the player.
+- **Performance**: only the place the player is in is loaded; while something changes
+  (moving, acting, the camera settling) the view draws at most 30 frames a second (20 on
+  low graphics), and a few times a second otherwise. Movement follows real time in small
+  steps, so the character keeps its pace on a busy computer.
 
 ## What each place offers
 
@@ -93,8 +101,8 @@ src/world/
 
 ## Still to do
 
-- The street (walking with these controls; the bike and the car with F) and the office
-  (sitting at the desk and typing, the manager's office, meetings).
+- The office (sitting at the desk and typing, the manager's office, meetings).
+- The driver cannot be seen inside the car (its cabin is solid).
 - Weather (rain), a screen to change the keys, and screenshots of every interaction.
 
 ## Limits
