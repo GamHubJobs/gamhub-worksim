@@ -358,6 +358,15 @@ The plan is in [PHASE8_PLAN.md](PHASE8_PLAN.md); players start with
   - `npm run test:browsers`: Firefox, WebKit and Edge;
   - `npm run measure:startup` and `npm run measure:memory`: performance.
 
+### Sound
+
+`src/audio/`: made with Web Audio as the game runs (no audio files). `manager.ts` is
+the one entry point (settings, scene claims, duplicate prevention, captions) and loads
+`engine.ts` only after the first click or key press, if any sound is on. Views claim a
+scene (`useAudioScene`); the game's news becomes sound in `useGameSounds`, from changes
+to the save, so the game rules have no sound in them. See
+[SOUND_PLAN.md](SOUND_PLAN.md).
+
 ### The working life (Phase 2)
 
 All of it is stored in `profile.work` (profile format 2), so it autosaves and is

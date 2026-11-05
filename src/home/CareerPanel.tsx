@@ -44,6 +44,8 @@ import {
 } from '../game/careerLife'
 import { RATING_NAMES } from '../game/reviews'
 import { LifeAssistant } from './LifeAssistant'
+import { AudioScene } from '../audio/useAudio'
+import { timeOfDay } from '../audio/scenes'
 
 type Act = (change: (profile: ProfileData) => ProfileData) => Promise<unknown>
 type Tab = 'jobs' | 'pay' | 'business' | 'ai'
@@ -240,6 +242,13 @@ function Interview({
         onDone()
       }}
     >
+      <AudioScene
+        scene={{
+          place: 'home',
+          time: timeOfDay(profile.work.life.minute),
+          moment: 'interview',
+        }}
+      />
       <h3 className="font-medium text-slate-900">
         Video interview: {roleFor(profile, ad)} at {ad.employer}
       </h3>

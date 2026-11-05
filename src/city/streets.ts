@@ -4,6 +4,21 @@
  */
 import { PLACES, type PlaceId } from '../content/city'
 
+/** The part of the street, for its sounds: homes, the high street, the park, offices. */
+export type Area = 'residential' | 'street' | 'park' | 'district'
+
+export function areaAt(x: number): Area {
+  if (x < -28) return 'residential'
+  if (x < 28) return 'street'
+  if (x < 52) return 'park'
+  return 'district'
+}
+
+/** What is underfoot: the road between the kerbs, the pavement either side. */
+export function surfaceAt(z: number): 'road' | 'pavement' {
+  return Math.abs(z) < 5 ? 'road' : 'pavement'
+}
+
 /** Where the player can walk: the street and its pavements. */
 export const BOUNDS = { minX: -64, maxX: 66, minZ: -8.6, maxZ: 8.6 }
 /** How close to a door the player must be to go in. */

@@ -26,6 +26,20 @@ import { canDeal, type TransportDeal } from '../game/transport'
 import type { CommuteId } from '../content/life'
 import { Phone } from '../home/Phone'
 import { supportsWebGL } from '../office/webgl'
+import { areaAt, standAt, type Area } from './streets'
+import { timeOfDay, type Place } from '../audio/scenes'
+import { AudioScene } from '../audio/useAudio'
+
+/** What each place in the neighbourhood sounds like inside. */
+const INSIDE: Record<PlaceId, Place> = {
+  home: 'home',
+  office: 'district',
+  cafe: 'cafe',
+  shop: 'shop',
+  gym: 'gym',
+  park: 'park',
+  garage: 'garage',
+}
 import type { Profile } from '../persistence/schemas'
 
 const CityScene = lazy(() => import('./scene/CityScene'))
@@ -103,6 +117,9 @@ export function CityView({
     [profile, onEnter],
   )
   const onNear = useCallback((id: PlaceId | null) => setNear(id), [])
+  // Which part of the street the player is in, for the sounds around them.
+  const [area, setArea] = useState<Area>(() => areaAt(standAt(life.city.at)[0]))
+  const onArea = useCallback((next: Area) => setArea(next), [])
 
   function keyDown(event: React.KeyboardEvent) {
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
@@ -125,6 +142,12 @@ export function CityView({
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto bg-[#eef1ec]" data-testid="city">
+      <AudioScene
+        scene={{
+          place: outside ? area : INSIDE[life.city.at],
+          time: timeOfDay(life.minute),
+        }}
+      />
       <div className="mx-auto grid max-w-5xl gap-5 p-5 lg:grid-cols-[1fr_20rem]">
         <section aria-label="The neighbourhood" className="space-y-4">
           <header className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
@@ -169,6 +192,7 @@ export function CityView({
                     dressed={phase === 'morning' && life.ready.dressed}
                     keys={keys}
                     onNear={onNear}
+                    onArea={onArea}
                     onDoor={go}
                     near={near}
                     riding={life.city.riding}

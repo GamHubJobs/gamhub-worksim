@@ -17,6 +17,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { audio } from '../audio/manager'
 import { fill, getPerson } from '../content/departments'
 import {
   SPOTS,
@@ -134,6 +135,10 @@ export function OfficeView({
       : null,
   )
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * 100))
+  const talking = !!dialogue
+  useEffect(() => {
+    if (talking) audio.play('greet')
+  }, [talking])
   const current = getSpot(spot)
   const unread = unreadCount(profile)
   const { work } = profile
@@ -142,6 +147,12 @@ export function OfficeView({
 
   function go(next: SpotId) {
     setDialogue(null)
+    if (next !== spot) {
+      for (let i = 0; i < 4; i++)
+        window.setTimeout(() => audio.play('step', { surface: 'carpet' }), i * 480)
+      if (next === 'manager' || spot === 'manager')
+        window.setTimeout(() => audio.play('door'), 1900)
+    }
     if (next !== spot) void onAct(walk)
     onGo(next)
   }

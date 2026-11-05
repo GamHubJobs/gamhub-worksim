@@ -1097,6 +1097,7 @@ export function SheetEditor({
           ref={gridRef}
           tabIndex={0}
           role="grid"
+          data-sound="typing"
           aria-label={`Spreadsheet ${sheet.name}`}
           aria-readonly={!editable}
           onKeyDown={onGridKeyDown}

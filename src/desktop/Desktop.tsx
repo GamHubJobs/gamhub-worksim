@@ -36,6 +36,10 @@ import { computerNotices } from '../game/notices'
 import { caseFor } from '../game/caseVariants'
 import { chooseDeskItem } from '../game/desk'
 import { HelpPanel } from '../ui/HelpPanel'
+import { AudioSettingsPanel, SoundCaptions } from '../audio/AudioSettingsPanel'
+import { audio } from '../audio/manager'
+import { timeOfDay, type Place } from '../audio/scenes'
+import { AudioScene, useGameSounds } from '../audio/useAudio'
 import {
   attemptDef,
   openAttempt,
@@ -203,6 +207,14 @@ function initialArea(): Area {
   }
 }
 
+/** What each part of the office sounds like. */
+const OFFICE_PLACE: Record<string, Place> = {
+  reception: 'reception',
+  desk: 'office',
+  manager: 'meeting',
+  breakroom: 'breakroom',
+}
+
 export function Desktop({
   profile,
   career,
@@ -213,6 +225,8 @@ export function Desktop({
   // Where the player is: in the office (a spot), or at the computer (an app).
   const [view, setViewState] = useState<View>(() => readLastView() ?? DEFAULT_VIEW)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [soundOpen, setSoundOpen] = useState(false)
+  useGameSounds(profile)
   const [area, setArea] = useState<Area>(initialArea)
   // The computer's open windows, as the player left them.
   const [desk, setDesk] = useState<Desk>(() => {
@@ -379,6 +393,19 @@ export function Desktop({
 
   const dayOver = profile.work.dayOver
   const atComputer = view.app !== 'office' && !dayOver
+  // Sitting down at the computer and getting up again; windows opening and closing.
+  const sitting = useRef(atComputer)
+  useEffect(() => {
+    if (sitting.current !== atComputer) audio.play(atComputer ? 'sit' : 'stand')
+    sitting.current = atComputer
+  }, [atComputer])
+  const windowCount = useRef(desk.windows.length)
+  useEffect(() => {
+    const count = desk.windows.length
+    if (atComputer && count !== windowCount.current)
+      audio.play(count > windowCount.current ? 'open' : 'close')
+    windowCount.current = count
+  }, [desk.windows.length, atComputer])
   const onTimePassed = useCallback(
     (minutes: number) => void act((p) => passTime(p, minutes, 'work')),
     [act],
@@ -511,6 +538,13 @@ export function Desktop({
         </button>
         <button
           type="button"
+          onClick={() => setSoundOpen(true)}
+          className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+        >
+          Sound
+        </button>
+        <button
+          type="button"
           onClick={() => setHelpOpen(true)}
           className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
         >
@@ -538,6 +572,24 @@ export function Desktop({
       <div className="flex h-screen flex-col bg-slate-100" data-testid="desktop">
         {header}
         {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
+        {soundOpen && <AudioSettingsPanel onClose={() => setSoundOpen(false)} />}
+        <SoundCaptions />
+        {dayOver && lifePhase(profile) === 'work' ? (
+          <AudioScene scene={{ place: 'quiet', time: timeOfDay(profile.work.minute) }} />
+        ) : dayOver &&
+          profile.work.life.city.at === 'home' &&
+          profile.work.life.city.inside ? (
+          <AudioScene
+            scene={{ place: 'home', time: timeOfDay(profile.work.life.minute) }}
+          />
+        ) : dayOver ? null : (
+          <AudioScene
+            scene={{
+              place: OFFICE_PLACE[view.spot ?? 'reception'],
+              time: timeOfDay(profile.work.minute),
+            }}
+          />
+        )}
         {dayOver && lifePhase(profile) === 'work' ? (
           // The day's summary, then home.
           <DayEnd profile={profile} onNextDay={() => void act(goHome)} />
@@ -1036,6 +1088,9 @@ export function Desktop({
       data-testid="desktop"
     >
       {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
+      {soundOpen && <AudioSettingsPanel onClose={() => setSoundOpen(false)} />}
+      <SoundCaptions />
+      <AudioScene scene={{ place: 'computer', time: timeOfDay(profile.work.minute) }} />
       <AiHubContext.Provider value={aiHub}>
         <DesktopSurface
           icons={desktopIcons}
@@ -1168,6 +1223,17 @@ export function Desktop({
                   {notifications.all.length}
                 </span>
               )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSoundOpen(true)}
+              title="Sound"
+              className="flex w-9 items-center justify-center text-white hover:bg-white/10"
+            >
+              <span aria-hidden className="text-sm">
+                ♪
+              </span>
+              <span className="sr-only">Sound</span>
             </button>
             <button
               type="button"

@@ -17,7 +17,8 @@ import {
   type WebGLRenderer,
 } from 'three'
 import { PLACES, type PlaceId } from '../../content/city'
-import { BOUNDS, nearestDoor, standAt } from '../streets'
+import { BOUNDS, nearestDoor, standAt, areaAt, surfaceAt, type Area } from '../streets'
+import { audio } from '../../audio/manager'
 import type { Vector } from '../../content/office'
 import { Box, Plant } from '../../office/scene/parts'
 import {
@@ -34,6 +35,9 @@ const STILL = prefersReducedMotion()
 /** Walking and running speeds, in units a second. */
 const WALK = 6
 const RUN = 11
+/** Seconds between footsteps: the walk cycle is about a second (two steps). */
+const STEP_WALK = 0.5
+const STEP_RUN = 0.34
 /** On the bike, faster still. */
 const RIDE = 13
 const RIDE_FAST = 18
@@ -172,6 +176,8 @@ export interface CitySceneProps {
   keys: RefObject<Set<string>>
   /** Called when the player comes near a door, or moves away (null). */
   onNear: (id: PlaceId | null) => void
+  /** The part of the street the player is in, for its sounds. */
+  onArea?: (area: Area) => void
   /** Called when the player clicks a door. */
   onDoor: (id: PlaceId) => void
   /** The door the player is at (its sign is hidden: the page names it). */
@@ -270,6 +276,7 @@ function Player({
   keys,
   onNear,
   onBusy,
+  onArea,
 }: CitySceneProps & {
   onBusy: (busy: boolean) => void
 }) {
@@ -310,6 +317,10 @@ function Player({
     const moving = motion.current
     let last = performance.now()
     let busy = false
+    // Footsteps keep time with the walk: one each half stride of the animation.
+    let sinceStep = 0
+    let area = areaAt(position.current[0])
+    onArea?.(area)
     const report = () => {
       const now = nearestDoor(position.current[0], position.current[1])
       if (now !== near.current) {
@@ -354,13 +365,25 @@ function Player({
         ),
       ]
       report()
+      if (!onBike.current && forward !== 0) {
+        sinceStep += delta
+        if (sinceStep >= (fast ? STEP_RUN : STEP_WALK)) {
+          sinceStep = 0
+          audio.play('step', { surface: surfaceAt(position.current[1]) })
+        }
+      }
+      const here = areaAt(position.current[0])
+      if (here !== area) {
+        area = here
+        onArea?.(here)
+      }
       invalidate()
     }, 33)
     return () => {
       window.clearInterval(timer)
       moving.walking = false
     }
-  }, [outside, keys, onNear, onBusy, invalidate])
+  }, [outside, keys, onNear, onBusy, onArea, invalidate])
 
   useFrame((_, delta) => {
     const g = group.current

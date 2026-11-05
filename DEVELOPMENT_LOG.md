@@ -137,6 +137,18 @@ working simulations of the professional software used in its field (see
 - [x] L6 Career life: applications, salary negotiation, a side business
 - [x] L7 AI in daily life
 
+**Sound** (complete). Plan: [docs/SOUND_PLAN.md](docs/SOUND_PLAN.md).
+
+- [x] S1 Audio manager and settings
+- [x] S2 Interface and game sounds
+- [x] S3 Workplace surroundings
+- [x] S4 Character sounds (footsteps, doors, sitting, typing)
+- [x] S5 The neighbourhood's surroundings
+- [x] S6 Music by mood
+- [x] S7 People (murmur and greetings; no voice acting)
+- [x] S8 Time of day (weather: not applicable, there is no weather in the game)
+- [x] S9 Offline, performance and accessibility checks
+
 **WorkSim AI** (complete). Plan: [docs/AI_PLAN.md](docs/AI_PLAN.md).
 
 - [x] AI.1 Architecture audit
@@ -154,6 +166,51 @@ working simulations of the professional software used in its field (see
 - [x] C. A more realistic 3D office
 
 ---
+
+## 2026-11-05 · Sound
+
+### Decisions
+
+- **Every sound is generated** in the browser with Web Audio (tones, filtered noise,
+  envelopes) rather than recorded. Nothing to licence or download, nothing copied, no
+  cost, works offline with no change to the service worker, and the start-up is
+  unaffected: the engine is a separate file of about 5 kB (compressed) loaded after
+  the first click or key press, and only if some sound is on.
+- **One manager** (`src/audio/manager.ts`): settings, per-kind levels, duplicate
+  prevention (a minimum gap per sound), captions and scene claims. Views claim a
+  scene while shown; the latest claim wins and hands back when released.
+- **Game sounds from changes to the save** (`src/audio/useAudio.ts`), so the game rules
+  have no sound in them: promotion, achievement, task passed or not, assessment, pay,
+  side-business income, offers, declined offers, employers' answers, new email, phone
+  messages, going overdrawn, doors in the neighbourhood. At most two at once.
+- **No weather** (the game has none) and **no voice acting** (murmur and a greeting
+  hum instead; no paid or AI voices).
+
+### Built
+
+- `src/audio/settings.ts`, `scenes.ts`, `manager.ts`, `engine.ts`, `useAudio.ts`,
+  `AudioSettingsPanel.tsx` (with `SoundCaptions`).
+- **Sound** in the top bar and ♪ on the taskbar: master, five kinds (music,
+  surroundings, interface and game sounds, your character, people) with volume,
+  switch and a test button, Mute all, Fewer sounds, Sound captions. Saved on this
+  device (`worksim.audio.v1`).
+- Scenes: reception, the office floor, the computer, the manager's office, the break
+  room, the day's end, home, the interview, the street by area (homes, high street,
+  park, business district), the café, shop, gym, Cog & Kerb and the park, each by
+  time of day.
+- Character: footsteps every half stride while walking in 3D (road or pavement,
+  quicker when running), carpet steps between office areas, floorboards between rooms
+  at home, doors, sitting down at and getting up from the computer, typing in text
+  fields and the spreadsheet grid; windows opening and closing on the computer.
+- A colleague's greeting when a conversation starts; buttons click softly.
+
+### Tests
+
+- 16 new unit tests (`src/audio/audio.test.ts`).
+- 2 new browser tests (`tests/e2e/sound.spec.ts`), including a measured, non-silent
+  output, scenes following the player, footsteps in time with walking, settings kept
+  after a reload, captions and silence when muted.
+- Results: 2,098 unit tests; 163 Chromium browser tests passed (2 spreadsheet tests needed a retry: a screenshot run started at the same time deleted their trace files, not a fault in the app); 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (was 283: the small sound manager loads with the app; the engine does not).
 
 ## 2026-11-05 · L7: WorkSim AI in daily life
 

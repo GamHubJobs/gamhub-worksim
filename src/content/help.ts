@@ -114,11 +114,20 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    id: 'sound',
+    title: 'Sound',
+    text: [
+      'WorkSim has sound: the office, the street, the café and home each sound different and change through the day, with footsteps, doors, typing, and sounds for new emails, finished tasks, pay day and promotions. Music plays now and then. Every sound is made on your computer as you play, so nothing is downloaded and it works offline.',
+      'Open **Sound** (in the top bar, or ♪ on the taskbar) to change the master volume, turn each kind of sound up, down or off, or mute everything. **Fewer sounds** makes the surroundings quieter and sparser with no button clicks; **Sound captions** shows a short note on screen for important sounds. Sound is never needed to play. Settings are kept on this device.',
+    ],
+  },
+  {
     id: 'access',
     title: 'Keyboard and accessibility',
     text: [
       'Everything can be done with the keyboard: Tab and Shift+Tab to move, Enter or Space to choose, Escape to close. In Sheets, the arrow keys move between cells; in Slides, Tab selects elements and the arrow keys move them.',
-      'If your system asks for less motion, WorkSim switches animations off and keeps the 3D office still.',
+      'If your system asks for less motion, WorkSim switches animations off and keeps the 3D office still, and starts with fewer sounds.',
+      'Sound is never needed: important sounds always come with something on screen, and **Sound captions** (in Sound) adds a short note for each.',
     ],
   },
   {

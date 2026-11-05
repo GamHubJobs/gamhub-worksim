@@ -13,6 +13,7 @@ import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { CommuteChoices } from './CommuteChoices'
 import { Phone } from './Phone'
 import { CareerPanel } from './CareerPanel'
+import { audio } from '../audio/manager'
 import type { ProfileData } from '../game/career'
 import { canGo, plansTonight, unreadCount, type Contact } from '../game/social'
 import {
@@ -164,7 +165,15 @@ export function HomeView({
                     key={r.id}
                     type="button"
                     aria-current={r.id === room ? 'location' : undefined}
-                    onClick={() => setRoom(r.id)}
+                    onClick={() => {
+                      if (r.id !== room)
+                        for (let i = 0; i < 3; i++)
+                          window.setTimeout(
+                            () => audio.play('step', { surface: 'wood' }),
+                            i * 450,
+                          )
+                      setRoom(r.id)
+                    }}
                     className={`rounded-full px-3.5 py-1.5 text-sm ${
                       r.id === room
                         ? 'bg-amber-700 text-white'

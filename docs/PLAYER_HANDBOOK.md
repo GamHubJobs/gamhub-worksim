@@ -313,6 +313,23 @@ opened online, it starts and saves offline too. Opening a career for the first t
 needs a connection. Updates wait until you choose **Update now**. See
 [INSTALL_AND_OFFLINE.md](INSTALL_AND_OFFLINE.md).
 
+## Sound
+
+The office, the street, the café and home each sound different and change through the
+day: typing and phones at work, traffic and birds outside, the coffee machine in the
+café, the fridge and a clock at home. Footsteps keep time with your walk (road or
+pavement), doors open and close, and there are sounds for a new email, a finished
+task, pay day, an offer and a promotion. Music plays now and then, and changes with
+where you are; an interview has its own.
+
+**Sound** (in the top bar, or ♪ on the taskbar) has a master volume, a volume and an
+on/off switch for music, surroundings, interface and game sounds, your character and
+people, and **Mute all sound**. **Fewer sounds** makes everything calmer (it is on at
+first if your system asks for less motion). **Sound captions** shows a short note for
+important sounds. Each kind has a **Test** button. Sound starts after your first click
+or key press, and the game is fully playable without it. Every sound is made on your
+computer as you play: nothing is downloaded. See [SOUND_PLAN.md](SOUND_PLAN.md).
+
 ## Accessibility
 
 Everything works with the keyboard. Screen readers are supported, and reduced motion

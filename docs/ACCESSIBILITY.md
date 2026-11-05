@@ -31,6 +31,13 @@ page lists what is supported and how it is tested.
   - the 3D camera jumps between places instead of gliding;
   - the people in the office stay still.
 
+- **Sound is optional.** Nothing needs sound: every important sound comes with
+  something on screen, and **Sound captions** (in Sound) shows a short note for each
+  (also announced to screen readers). Each kind of sound has its own volume and
+  switch, there is Mute all, and **Fewer sounds** (on at first when the system asks
+  for less motion) makes the surroundings quieter and drops button clicks. A
+  compressor stops sudden loud sounds. The Sound panel works with the keyboard.
+
 - **The editors.**
   - In Sheets, the grid is a proper grid of rows and cells, and the address and value
     of the active cell (and its formula) are announced as you move.
