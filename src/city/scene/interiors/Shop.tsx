@@ -11,7 +11,7 @@ import type { Vector } from '../../../content/office'
 import { Box } from '../../../office/scene/parts'
 import { Person } from '../../../office/scene/people'
 import { Board, Hotspot, Lamp, Room } from './common'
-import { PLAYER, signPainting, useInterior } from './kit'
+import { signPainting, useInterior } from './kit'
 
 const PRODUCT_COLOURS = [
   '#dc2626',
@@ -222,7 +222,7 @@ function Checkout() {
 }
 
 export default function Shop() {
-  const { last, low } = useInterior()
+  const { low } = useInterior()
   return (
     <group>
       <Room
@@ -329,22 +329,6 @@ export default function Shop() {
           shade="#e5e7eb"
         />
       ))}
-
-      {last === 'shop-groceries' ? (
-        <group>
-          <Person
-            position={[-1.8, 0, 2.8]}
-            rotation={Math.PI * 0.85}
-            look={PLAYER}
-            phase={0.3}
-          />
-          <Trolley position={[-1.6, 0, 2.1]} rotation={Math.PI} />
-        </group>
-      ) : last === 'shop-meal' ? (
-        <Person position={[2.4, 0, -3]} rotation={0.2} look={PLAYER} phase={0.3} />
-      ) : (
-        <Person position={[0.6, 0, 2]} rotation={Math.PI} look={PLAYER} phase={0.3} />
-      )}
     </group>
   )
 }

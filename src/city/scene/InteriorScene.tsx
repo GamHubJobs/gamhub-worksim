@@ -1,20 +1,32 @@
 /**
  * Inside a place in the neighbourhood, in 3D: only that place is loaded and
- * drawn (each interior is its own small file), lit for the hour, with a
- * camera the player can turn and zoom a little to look around. Clicking a
- * hotspot does the same as the button in the list beside it.
+ * drawn (each interior is its own small file), lit for the hour. The player
+ * walks about in third person (see world/PlayerRig.tsx) and does things there
+ * for real: the place's layout lists what is solid and every activity. A
+ * ringed object, the "Press E" prompt and the list beside the view all start
+ * the same activity; its game action is completed when it has been played.
  */
-import { OrbitControls } from '@react-three/drei'
 import { Canvas, type RootState } from '@react-three/fiber'
-import { lazy, memo, Suspense, useMemo, useState } from 'react'
+import { lazy, memo, Suspense, useMemo, useRef, useState, type RefObject } from 'react'
 import type { WebGLRenderer } from 'three'
 import type { PlaceId } from '../../content/city'
-import type { Vector } from '../../content/office'
 import { PeopleDetail } from '../../office/scene/people'
 import { prefersReducedMotion } from '../../ui/motion'
 import { isLow, useGraphicsQuality } from '../../ui/graphics'
+import { World } from '../../world/context'
+import type { Activity } from '../../world/interaction/activity'
+import {
+  PlayerRig,
+  type ActivityNow,
+  type Controls,
+  type Hands,
+  type Prompt,
+} from '../../world/PlayerRig'
+import { ActivityEffects } from '../../world/vfx/ActivityEffects'
 import { Ticker } from './interiors/common'
-import { Interior, type Doing, type InteriorState } from './interiors/kit'
+import { GYM_ACTIVITIES, GYM_BOXES, GYM_SIZE, GYM_START } from './interiors/gymLayout'
+import { Interior, PLAYER, type Doing, type InteriorState } from './interiors/kit'
+import { CAFE, GARAGE, PARK, SHOP, type Layout } from './interiors/layouts'
 
 const STILL = prefersReducedMotion()
 
@@ -28,25 +40,37 @@ const ROOMS = {
   garage: lazy(() => import('./interiors/Garage')),
 } satisfies Record<InteriorId, unknown>
 
-/** Where the camera starts, what it looks at, and how far it may move. */
-const VIEWS: Record<
-  InteriorId,
-  { camera: Vector; target: Vector; near: number; far: number }
-> = {
-  cafe: { camera: [0.6, 2.3, 4.1], target: [-0.4, 1.1, -1.6], near: 2.5, far: 6.2 },
-  shop: { camera: [1.4, 2.4, 4.6], target: [0, 1.1, -1.2], near: 2.5, far: 6.4 },
-  gym: { camera: [0.8, 2.5, 4.6], target: [0, 1, -1.2], near: 2.5, far: 6.4 },
-  park: { camera: [0, 4.2, 11.5], target: [0, 0.8, -1.5], near: 5, far: 15 },
-  garage: { camera: [0.8, 2.5, 4.6], target: [-0.6, 1, -1.2], near: 2.5, far: 6.6 },
+const LAYOUTS: Record<InteriorId, Layout> = {
+  cafe: CAFE,
+  shop: SHOP,
+  park: PARK,
+  garage: GARAGE,
+  gym: {
+    size: GYM_SIZE,
+    start: GYM_START,
+    boxes: GYM_BOXES,
+    activities: GYM_ACTIVITIES,
+    surface: 'tile',
+  },
 }
 
 export interface InteriorSceneProps {
   place: InteriorId
   dark: boolean
   morning: boolean
+  /** What can be done here now (the same list as the buttons). */
   doings: Doing[]
-  last: string | null
-  onAct: (id: string) => void
+  /** Keys and mouse, from the page around the view. */
+  controls: RefObject<Controls>
+  /** An activity asked for from the list or a ringed object. */
+  request: { id: string; nonce: number } | null
+  /** Asks for an activity (a ringed object was clicked). */
+  onRequest: (id: string) => void
+  onPrompt: (prompt: Prompt | null) => void
+  onProgress: (progress: { label: string; progress: number } | null) => void
+  /** An activity finished: `completed` false if it was stopped part way. */
+  onDone: (action: string | null, completed: boolean) => void
+  dressed: boolean
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -60,43 +84,56 @@ function isSoftware(gl: WebGLRenderer): boolean {
   return /swiftshader|llvmpipe|software|basic render/i.test(renderer)
 }
 
-function InteriorScene({
-  place,
-  dark,
-  morning,
-  doings,
-  last,
-  onAct,
-}: InteriorSceneProps) {
+function InteriorScene(props: InteriorSceneProps) {
+  const { place, dark, morning, doings } = props
   const [software, setSoftware] = useState(false)
   const quality = useGraphicsQuality()
   const low = isLow(quality, software)
-  const [moving, setMoving] = useState(false)
-  const view = VIEWS[place]
+  const layout = LAYOUTS[place]
   const Room = ROOMS[place]
   const outdoors = place === 'park'
   const sky = dark ? '#1e293b' : morning ? '#cfe8f7' : '#f3c99b'
-  const state: InteriorState = useMemo(
-    () => ({
-      doings: Object.fromEntries(doings.map((d) => [d.id, d])),
-      act: onAct,
-      dark,
-      low,
-      last,
-    }),
-    [doings, onAct, dark, low, last],
+  const now = useRef<ActivityNow>({
+    id: null,
+    t: 0,
+    x: layout.start.x,
+    z: layout.start.z,
+  })
+  const hands = useRef<Hands>({ left: null, right: null })
+  const byAction = useMemo(
+    () => Object.fromEntries(doings.map((d) => [d.id, d])),
+    [doings],
   )
+  // Only what can be done here now (at this time of day, with what the player owns).
+  const activities = useMemo(
+    () => layout.activities.filter((a) => a.action === null || byAction[a.action]),
+    [layout, byAction],
+  )
+  const state: InteriorState = useMemo(
+    () => ({ doings: byAction, act: props.onRequest, dark, low, last: null }),
+    [byAction, props.onRequest, dark, low],
+  )
+  const world = useMemo(() => ({ now, hands, low }), [low])
+  const onDone = props.onDone
+  const look = props.dressed
+    ? { ...PLAYER, outfit: 'shirt' as const, top: '#dbeafe', tie: '#1e3a8a' }
+    : PLAYER
 
   return (
     <Canvas
       key={place}
       dpr={low ? 0.6 : [1, 1.5]}
       frameloop="demand"
-      camera={{ position: view.camera, fov: outdoors ? 50 : 62, near: 0.1, far: 120 }}
+      camera={{
+        position: [layout.start.x, 2, layout.start.z + 3],
+        fov: 60,
+        near: 0.05,
+        far: 120,
+      }}
       gl={{ antialias: !low, powerPreference: 'default' }}
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
     >
-      <Ticker fps={STILL ? 1 / 30 : moving ? 30 : low ? 2 : 12} />
+      <Ticker fps={STILL ? 1 / 30 : low ? 4 : 12} />
       <color attach="background" args={[outdoors ? sky : '#1c1917']} />
       {outdoors && <fog attach="fog" args={[sky, 18, 60]} />}
       <hemisphereLight
@@ -111,26 +148,34 @@ function InteriorScene({
         intensity={outdoors ? (dark ? 0.2 : 1.2) : 0.6}
         color={morning ? '#fff8ee' : '#ffe4c4'}
       />
-      <Interior.Provider value={state}>
-        <PeopleDetail low={low}>
-          <Suspense fallback={null}>
-            <Room />
-          </Suspense>
-        </PeopleDetail>
-      </Interior.Provider>
-      <OrbitControls
-        target={view.target}
-        enablePan={false}
-        enableDamping={!STILL}
-        minDistance={view.near}
-        maxDistance={view.far}
-        minPolarAngle={0.55}
-        maxPolarAngle={1.38}
-        minAzimuthAngle={-0.85}
-        maxAzimuthAngle={0.85}
-        onStart={() => setMoving(true)}
-        onEnd={() => setMoving(false)}
-      />
+      <World.Provider value={world}>
+        <Interior.Provider value={state}>
+          <PeopleDetail low={low}>
+            <Suspense fallback={null}>
+              <Room />
+            </Suspense>
+            <PlayerRig
+              start={layout.start}
+              boxes={layout.boxes}
+              ceiling={outdoors ? undefined : layout.size.height}
+              activities={activities}
+              blocked={(a: Activity) =>
+                a.action ? (byAction[a.action]?.blocked ?? null) : null
+              }
+              controls={props.controls}
+              request={props.request}
+              onPrompt={props.onPrompt}
+              onProgress={props.onProgress}
+              onDone={(a, completed) => onDone(a.action, completed)}
+              look={look}
+              surface={layout.surface}
+              now={now}
+              hands={hands}
+            />
+            <ActivityEffects activities={activities} />
+          </PeopleDetail>
+        </Interior.Provider>
+      </World.Provider>
     </Canvas>
   )
 }

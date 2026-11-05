@@ -102,10 +102,54 @@ function Detail({ children }: { children: ReactNode }) {
   return useContext(LowDetail) ? null : <>{children}</>
 }
 
-/** Set every frame by a Walker: whether the person is walking right now. */
+/** Set every frame by a Walker or the player: how the person is moving right now. */
 export interface Motion {
   walking: boolean
+  /** Running: a longer, quicker stride. */
+  running?: boolean
+  crouching?: boolean
+  /** In the air (jumping). */
+  airborne?: boolean
 }
+
+/** A pose for the whole body, set every frame by an activity (see world/character/rig.ts). */
+export interface RigPose {
+  lean: number
+  hipL: number
+  hipR: number
+  kneeL: number
+  kneeR: number
+  shoulderL: Vector
+  shoulderR: Vector
+  elbowL: number
+  elbowR: number
+  headPitch: number
+  headYaw: number
+  seated: boolean
+  y: number
+  pitch: number
+  roll: number
+}
+
+/** Where the hands are, for things that must follow them (a barbell). */
+export interface HandMarkers {
+  left: Group | null
+  right: Group | null
+}
+
+const CROUCH_POSE = {
+  lean: 0.35,
+  hipL: 1.1,
+  hipR: 1.0,
+  kneeL: -1.9,
+  kneeR: -1.8,
+  shoulderL: [0.5, 0, -0.1] as Vector,
+  shoulderR: [0.5, 0, 0.1] as Vector,
+  elbowL: 0.6,
+  elbowR: 0.6,
+  headPitch: 0,
+}
+const CROUCH_DROP = -0.32
 
 // ---------------------------------------------------------------------------
 // Shared geometry and materials
@@ -255,6 +299,9 @@ export function Person({
   talking = false,
   phase = 0,
   motion,
+  rig,
+  hold,
+  hands,
 }: {
   position?: Vector
   rotation?: number
@@ -266,6 +313,12 @@ export function Person({
   /** Keeps different people out of step. */
   phase?: number
   motion?: RefObject<Motion>
+  /** A whole-body pose from an activity, when there is one (the player). */
+  rig?: RefObject<RigPose | null>
+  /** Things held in each hand. */
+  hold?: { left?: ReactNode; right?: ReactNode }
+  /** Filled in with the hands, for objects that follow them. */
+  hands?: RefObject<HandMarkers>
 }) {
   const camera = useThree((state) => state.camera)
 
@@ -286,6 +339,7 @@ export function Person({
   const hipR = useRef<Group>(null)
   const kneeL = useRef<Group>(null)
   const kneeR = useRef<Group>(null)
+  const pose = useRef<Group>(null)
   const scratch = useRef({ v: new Vector3(), walk: 0 }).current
 
   const width = WIDTH[look.build ?? 'average']
@@ -310,7 +364,8 @@ export function Person({
   )
 
   const base = typing ? TYPING : seated ? SEATED : STANDING
-  const hipY = seated ? HIP.seated : HIP.standing
+  // With a rig, the body is laid out standing and lowered or laid down as a whole.
+  const hipY = seated && !rig ? HIP.seated : HIP.standing
   const sleeves = look.sleeves ?? (look.outfit === 'polo' ? 'short' : 'long')
   const armMaterial = m.top
   const forearmMaterial = sleeves === 'long' ? m.top : m.skin
@@ -320,15 +375,31 @@ export function Person({
 
   useFrame(({ clock }, delta) => {
     const t = clock.elapsedTime + phase
-    const walking = motion?.current?.walking ?? false
+    const frame = rig?.current ?? null
+    const moving = motion?.current
+    const running = !frame && !!moving?.running
+    const crouching = !frame && !!moving?.crouching
+    const walking = !frame && (moving?.walking ?? false)
     const k = STILL ? 1 : 1 - Math.exp(-delta * 6)
     const lerp = (from: number, to: number) => (STILL ? to : from + (to - from) * k)
 
     // Walking blends in and out over a moment.
     scratch.walk = lerp(scratch.walk, walking ? 1 : 0)
     const w = STILL ? 0 : scratch.walk
-    const stride = Math.sin(t * 6.2)
+    const stride = Math.sin(t * (running ? 9.5 : crouching ? 5 : 6.2))
     const still = STILL ? 0 : 1
+    // What the body is doing: an activity's pose, crouching, or the usual one.
+    const b = frame ?? (crouching ? CROUCH_POSE : base)
+    if (pose.current) {
+      const drop = frame
+        ? (frame.seated ? HIP.seated - HIP.standing : 0) + frame.y
+        : crouching
+          ? CROUCH_DROP
+          : 0
+      pose.current.position.y = lerp(pose.current.position.y, HIP.standing + drop)
+      pose.current.rotation.x = lerp(pose.current.rotation.x, frame?.pitch ?? 0)
+      pose.current.rotation.z = lerp(pose.current.rotation.z, frame?.roll ?? 0)
+    }
 
     // Where the player (the camera) is, in this person's own space.
     let faceYaw = 0
@@ -367,58 +438,65 @@ export function Person({
         still * (seated ? 0 : Math.sin(t * 0.45) * 0.015 * (1 - w))
     }
     if (spine.current) {
-      spine.current.rotation.x = lerp(spine.current.rotation.x, base.lean + w * -0.05)
+      spine.current.rotation.x = lerp(
+        spine.current.rotation.x,
+        b.lean + w * (running ? 0.18 : -0.05),
+      )
       spine.current.scale.set(1, 1 + still * Math.sin(t * 1.5) * 0.008, 1)
     }
 
     // Legs: still when seated or standing, swinging when walking.
-    const swing = w * stride * 0.5
+    const swing = w * stride * (running ? 0.85 : crouching ? 0.3 : 0.5)
+    const tuck = !frame && moving?.airborne ? -0.7 : 0
     if (hipL.current)
-      hipL.current.rotation.x = lerp(hipL.current.rotation.x, base.hipL + swing)
+      hipL.current.rotation.x = lerp(hipL.current.rotation.x, b.hipL + swing)
     if (hipR.current)
-      hipR.current.rotation.x = lerp(hipR.current.rotation.x, base.hipR - swing)
+      hipR.current.rotation.x = lerp(hipR.current.rotation.x, b.hipR - swing)
     if (kneeL.current)
       kneeL.current.rotation.x = lerp(
         kneeL.current.rotation.x,
-        base.kneeL - w * Math.max(0, -stride) * 0.75,
+        b.kneeL - w * Math.max(0, -stride) * (running ? 1.3 : 0.75) + tuck,
       )
     if (kneeR.current)
       kneeR.current.rotation.x = lerp(
         kneeR.current.rotation.x,
-        base.kneeR - w * Math.max(0, stride) * 0.75,
+        b.kneeR - w * Math.max(0, stride) * (running ? 1.3 : 0.75) + tuck,
       )
 
     // Arms: typing, gesturing while talking, or swinging in the walk.
     const keys = typing ? still * 0.06 : 0
     const gesture = talking ? still * (0.5 + Math.sin(t * 1.7) * 0.25) : 0
     if (shoulderL.current) {
-      const [x, y, z] = base.shoulderL
+      const [x, y, z] = b.shoulderL
       shoulderL.current.rotation.set(
         lerp(shoulderL.current.rotation.x, x - swing * 0.7),
-        y,
-        z,
+        lerp(shoulderL.current.rotation.y, y),
+        lerp(shoulderL.current.rotation.z, z),
       )
     }
     if (shoulderR.current) {
-      const [x, y, z] = base.shoulderR
+      const [x, y, z] = b.shoulderR
       shoulderR.current.rotation.set(
         lerp(
           shoulderR.current.rotation.x,
           x + swing * 0.7 + (seated ? 0 : gesture * 0.5),
         ),
-        y,
-        z,
+        lerp(shoulderR.current.rotation.y, y),
+        lerp(shoulderR.current.rotation.z, z),
       )
     }
     if (elbowL.current)
       elbowL.current.rotation.x = lerp(
         elbowL.current.rotation.x,
-        base.elbowL + w * 0.25 + keys * Math.sin(t * 13),
+        b.elbowL + w * (running ? 1.2 : 0.25) + keys * Math.sin(t * 13),
       )
     if (elbowR.current)
       elbowR.current.rotation.x = lerp(
         elbowR.current.rotation.x,
-        base.elbowR + w * 0.25 + keys * Math.sin(t * 11 + 1.3) + gesture * 1.4,
+        b.elbowR +
+          w * (running ? 1.2 : 0.25) +
+          keys * Math.sin(t * 11 + 1.3) +
+          gesture * 1.4,
       )
 
     // The head: looks at the screen, around the room, or at the player.
@@ -426,10 +504,10 @@ export function Person({
       const wander = still * Math.sin(t * 0.33) * (typing ? 0.12 : 0.3)
       const yaw = attention
         ? MathUtils.clamp(faceYaw - bodyTurn, -1.1, 1.1)
-        : wander * (1 - w)
+        : wander * (1 - w) + (frame?.headYaw ?? 0)
       const pitch = attention
         ? facePitch
-        : base.headPitch + still * Math.sin(t * 0.27) * 0.04
+        : b.headPitch + still * Math.sin(t * 0.27) * 0.04
       head.current.rotation.y = lerp(head.current.rotation.y, yaw)
       head.current.rotation.x = lerp(
         head.current.rotation.x,
@@ -461,161 +539,199 @@ export function Person({
   return (
     <group ref={outer} position={position} rotation={[0, rotation, 0]}>
       <group ref={turn} scale={look.height ?? 1}>
-        {/* Legs */}
-        {(
-          [
-            [-hipX, hipL, kneeL, base.hipL, base.kneeL],
-            [hipX, hipR, kneeR, base.hipR, base.kneeR],
-          ] as const
-        ).map(([x, hip, knee, hipAngle, kneeAngle]) => (
-          <group key={x} ref={hip} position={[x, hipY, 0]} rotation={[hipAngle, 0, 0]}>
-            <mesh geometry={GEO.thigh} material={m.trousers} position={[0, -0.2, 0]} />
-            <group ref={knee} position={[0, -0.41, 0]} rotation={[kneeAngle, 0, 0]}>
-              <mesh geometry={GEO.shin} material={m.trousers} position={[0, -0.19, 0]} />
-              {/* Shoe */}
-              <group position={[0, -0.4, 0]}>
-                <mesh
-                  geometry={GEO.unit}
-                  material={m.shoes}
-                  position={[0, -0.028, -0.045]}
-                  scale={[0.05, 0.036, 0.125]}
-                />
-                <mesh
-                  geometry={GEO.sole}
-                  material={m.shoes}
-                  position={[0, -0.057, -0.04]}
-                />
-              </group>
-            </group>
-          </group>
-        ))}
-
-        <group ref={body}>
-          {/* Hips */}
-          <mesh
-            geometry={GEO.pelvis}
-            material={m.trousers}
-            position={[0, hipY + 0.035, 0]}
-            scale={[1.3 * width, 0.74, 0.9]}
-          />
-          <group ref={spine} position={[0, hipY + 0.05, 0]} rotation={[base.lean, 0, 0]}>
-            {/* Torso */}
-            <mesh
-              geometry={GEO.torso}
-              material={m.top}
-              position={[0, 0.27, 0]}
-              scale={[1.4 * width, 1, 0.82]}
-            />
-            <Detail>
-              {open && (
-                <>
-                  {/* The shirt showing between the lapels, and its buttons */}
-                  <mesh
-                    geometry={GEO.panel}
-                    material={m.under}
-                    position={[0, 0.39, -0.106]}
-                  />
-                  {look.outfit === 'cardigan' &&
-                    [0.3, 0.22, 0.14].map((y) => (
-                      <mesh
-                        key={y}
-                        geometry={GEO.button}
-                        material={m.under}
-                        position={[0.058, y, -0.109]}
-                      />
-                    ))}
-                </>
-              )}
-              {look.outfit === 'polo' &&
-                [0.47, 0.42].map((y) => (
-                  <mesh
-                    key={y}
-                    geometry={GEO.button}
-                    material={m.white}
-                    position={[0, y, -0.11]}
-                  />
-                ))}
-              {collared &&
-                [-1, 1].map((side) => (
-                  <mesh
-                    key={side}
-                    geometry={GEO.collar}
-                    material={look.outfit === 'polo' ? m.top : m.under}
-                    position={[side * 0.038, 0.535, -0.08]}
-                    rotation={[-0.45, side * 0.3, side * 0.55]}
-                  />
-                ))}
-              {look.tie && (
-                <>
-                  <mesh
-                    geometry={GEO.knot}
-                    material={m.tie}
-                    position={[0, 0.505, -0.106]}
-                  />
-                  <mesh
-                    geometry={GEO.tie}
-                    material={m.tie}
-                    position={[0, 0.37, -0.112]}
-                    rotation={[0.08, 0, 0]}
-                  />
-                </>
-              )}
-            </Detail>
-
-            {/* Arms */}
+        {/* Lowered, raised or laid down as a whole about the hips (activities) */}
+        <group ref={pose} position={[0, HIP.standing, 0]}>
+          <group position={[0, -HIP.standing, 0]}>
+            {/* Legs */}
             {(
               [
-                [-shoulderX, shoulderL, elbowL, base.shoulderL, base.elbowL],
-                [shoulderX, shoulderR, elbowR, base.shoulderR, base.elbowR],
+                [-hipX, hipL, kneeL, base.hipL, base.kneeL],
+                [hipX, hipR, kneeR, base.hipR, base.kneeR],
               ] as const
-            ).map(([x, shoulder, elbow, shoulderAngle, elbowAngle]) => (
+            ).map(([x, hip, knee, hipAngle, kneeAngle]) => (
               <group
                 key={x}
-                ref={shoulder}
-                position={[x, SHOULDER_Y, 0]}
-                rotation={shoulderAngle}
+                ref={hip}
+                position={[x, hipY, 0]}
+                rotation={[hipAngle, 0, 0]}
               >
                 <mesh
-                  geometry={GEO.upperArm}
-                  material={armMaterial}
-                  position={[0, -0.14, 0]}
+                  geometry={GEO.thigh}
+                  material={m.trousers}
+                  position={[0, -0.2, 0]}
                 />
-                <group ref={elbow} position={[0, -0.29, 0]} rotation={[elbowAngle, 0, 0]}>
+                <group ref={knee} position={[0, -0.41, 0]} rotation={[kneeAngle, 0, 0]}>
                   <mesh
-                    geometry={GEO.forearm}
-                    material={forearmMaterial}
-                    position={[0, -0.13, 0]}
+                    geometry={GEO.shin}
+                    material={m.trousers}
+                    position={[0, -0.19, 0]}
                   />
-                  {/* Hand, with a thumb on the inside */}
-                  <mesh
-                    geometry={GEO.hand}
-                    material={m.skin}
-                    position={[0, -0.295, -0.004]}
-                    scale={[0.72, 1.15, 0.5]}
-                  />
-                  <Detail>
+                  {/* Shoe */}
+                  <group position={[0, -0.4, 0]}>
                     <mesh
-                      geometry={GEO.thumb}
-                      material={m.skin}
-                      position={[x > 0 ? -0.024 : 0.024, -0.27, -0.012]}
-                      rotation={[0, 0, x > 0 ? -0.5 : 0.5]}
+                      geometry={GEO.unit}
+                      material={m.shoes}
+                      position={[0, -0.028, -0.045]}
+                      scale={[0.05, 0.036, 0.125]}
                     />
-                  </Detail>
+                    <mesh
+                      geometry={GEO.sole}
+                      material={m.shoes}
+                      position={[0, -0.057, -0.04]}
+                    />
+                  </group>
                 </group>
               </group>
             ))}
 
-            {/* Neck and head */}
-            <mesh geometry={GEO.neck} material={m.skin} position={[0, 0.555, 0.005]} />
-            <group ref={head} position={[0, NECK_TOP, 0]}>
-              <Head
-                look={look}
-                m={m}
-                eyes={eyes}
-                brows={brows}
-                mouth={mouth}
-                smile={smile}
+            <group ref={body}>
+              {/* Hips */}
+              <mesh
+                geometry={GEO.pelvis}
+                material={m.trousers}
+                position={[0, hipY + 0.035, 0]}
+                scale={[1.3 * width, 0.74, 0.9]}
               />
+              <group
+                ref={spine}
+                position={[0, hipY + 0.05, 0]}
+                rotation={[base.lean, 0, 0]}
+              >
+                {/* Torso */}
+                <mesh
+                  geometry={GEO.torso}
+                  material={m.top}
+                  position={[0, 0.27, 0]}
+                  scale={[1.4 * width, 1, 0.82]}
+                />
+                <Detail>
+                  {open && (
+                    <>
+                      {/* The shirt showing between the lapels, and its buttons */}
+                      <mesh
+                        geometry={GEO.panel}
+                        material={m.under}
+                        position={[0, 0.39, -0.106]}
+                      />
+                      {look.outfit === 'cardigan' &&
+                        [0.3, 0.22, 0.14].map((y) => (
+                          <mesh
+                            key={y}
+                            geometry={GEO.button}
+                            material={m.under}
+                            position={[0.058, y, -0.109]}
+                          />
+                        ))}
+                    </>
+                  )}
+                  {look.outfit === 'polo' &&
+                    [0.47, 0.42].map((y) => (
+                      <mesh
+                        key={y}
+                        geometry={GEO.button}
+                        material={m.white}
+                        position={[0, y, -0.11]}
+                      />
+                    ))}
+                  {collared &&
+                    [-1, 1].map((side) => (
+                      <mesh
+                        key={side}
+                        geometry={GEO.collar}
+                        material={look.outfit === 'polo' ? m.top : m.under}
+                        position={[side * 0.038, 0.535, -0.08]}
+                        rotation={[-0.45, side * 0.3, side * 0.55]}
+                      />
+                    ))}
+                  {look.tie && (
+                    <>
+                      <mesh
+                        geometry={GEO.knot}
+                        material={m.tie}
+                        position={[0, 0.505, -0.106]}
+                      />
+                      <mesh
+                        geometry={GEO.tie}
+                        material={m.tie}
+                        position={[0, 0.37, -0.112]}
+                        rotation={[0.08, 0, 0]}
+                      />
+                    </>
+                  )}
+                </Detail>
+
+                {/* Arms */}
+                {(
+                  [
+                    [-shoulderX, shoulderL, elbowL, base.shoulderL, base.elbowL],
+                    [shoulderX, shoulderR, elbowR, base.shoulderR, base.elbowR],
+                  ] as const
+                ).map(([x, shoulder, elbow, shoulderAngle, elbowAngle]) => (
+                  <group
+                    key={x}
+                    ref={shoulder}
+                    position={[x, SHOULDER_Y, 0]}
+                    rotation={shoulderAngle}
+                  >
+                    <mesh
+                      geometry={GEO.upperArm}
+                      material={armMaterial}
+                      position={[0, -0.14, 0]}
+                    />
+                    <group
+                      ref={elbow}
+                      position={[0, -0.29, 0]}
+                      rotation={[elbowAngle, 0, 0]}
+                    >
+                      <mesh
+                        geometry={GEO.forearm}
+                        material={forearmMaterial}
+                        position={[0, -0.13, 0]}
+                      />
+                      <group
+                        position={[0, -0.295, -0.004]}
+                        ref={(g) => {
+                          if (hands?.current) hands.current[x < 0 ? 'left' : 'right'] = g
+                        }}
+                      >
+                        {x < 0 ? hold?.left : hold?.right}
+                      </group>
+                      {/* Hand, with a thumb on the inside */}
+                      <mesh
+                        geometry={GEO.hand}
+                        material={m.skin}
+                        position={[0, -0.295, -0.004]}
+                        scale={[0.72, 1.15, 0.5]}
+                      />
+                      <Detail>
+                        <mesh
+                          geometry={GEO.thumb}
+                          material={m.skin}
+                          position={[x > 0 ? -0.024 : 0.024, -0.27, -0.012]}
+                          rotation={[0, 0, x > 0 ? -0.5 : 0.5]}
+                        />
+                      </Detail>
+                    </group>
+                  </group>
+                ))}
+
+                {/* Neck and head */}
+                <mesh
+                  geometry={GEO.neck}
+                  material={m.skin}
+                  position={[0, 0.555, 0.005]}
+                />
+                <group ref={head} position={[0, NECK_TOP, 0]}>
+                  <Head
+                    look={look}
+                    m={m}
+                    eyes={eyes}
+                    brows={brows}
+                    mouth={mouth}
+                    smile={smile}
+                  />
+                </group>
+              </group>
             </group>
           </group>
         </group>

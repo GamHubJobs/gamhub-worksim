@@ -10,7 +10,7 @@ import { Box, Plant } from '../../../office/scene/parts'
 import { Person } from '../../../office/scene/people'
 import { Bike, Car } from '../vehicles'
 import { Board, Hotspot, Lamp, Room } from './common'
-import { PLAYER, menuPainting, signPainting, useInterior } from './kit'
+import { menuPainting, signPainting, useInterior } from './kit'
 
 const PRICES = menuPainting(
   'Hire & sales',
@@ -29,7 +29,7 @@ const PRICES = menuPainting(
 )
 
 export default function Garage() {
-  const { doings, last, dark } = useInterior()
+  const { doings, dark } = useInterior()
   const bikeAction = doings['sell-bike'] ? 'sell-bike' : 'buy-bike'
   const carAction = doings['end-lease'] ? 'end-lease' : 'lease-car'
   return (
@@ -166,14 +166,6 @@ export default function Garage() {
           shade="#a1a1aa"
         />
       ))}
-
-      {last === 'buy-bike' || last === 'sell-bike' ? (
-        <Person position={[-4.6, 0, -2]} rotation={Math.PI} look={PLAYER} phase={0.3} />
-      ) : last === 'lease-car' || last === 'end-lease' ? (
-        <Person position={[-1.4, 0, 0.6]} rotation={Math.PI} look={PLAYER} phase={0.3} />
-      ) : (
-        <Person position={[1.2, 0, 2]} rotation={Math.PI} look={PLAYER} phase={0.3} />
-      )}
     </group>
   )
 }

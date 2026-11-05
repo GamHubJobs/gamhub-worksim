@@ -167,6 +167,47 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-05 · Character 1: third-person control and physical activities in the places
+
+### Built
+
+- **A character system shared by every place** (`src/world/`, described in
+  [docs/CHARACTER.md](docs/CHARACTER.md)): camera-relative movement with running,
+  crouching (C, not Ctrl: Ctrl+W closes the browser tab) and jumping; collisions with
+  walls and furniture; a third-person camera turned by dragging, Q/R or mouse look, with
+  zoom, kept clear of walls; 31 animations in code; an activity format (spot, anchor,
+  stages, held things, sounds, effects, the game action at the end); a "Press E" prompt
+  and a progress bar.
+- **The person model extended** (`office/scene/people.tsx`): running, crouching,
+  jumping, whole-body poses (lying, rolling), things held in each hand and hand markers.
+  People who do not use these behave exactly as before.
+- **The five places are walkable** and every action there is performed: the bench press
+  with the bar following the hands, curls, squats, treadmill, bike, class and shower at
+  Forge Fitness; ordering, collecting, sitting and eating or drinking at Kettle & Crumb;
+  shopping the aisles with a basket and paying at Daily Basket; walking, running and
+  sitting at Millpond Park; buying a bike or leasing the car at Cog & Kerb.
+- **Effects**: one particle system (water, splashes, steam, sizzle, sweat, bubbles,
+  breath, dust, exhaust), wet floors, effects that follow a hand.
+- **Sounds**: clank, breath, water, pour, sip, bite, rustle, chair and beep, at their
+  moments in each activity; footsteps by floor.
+- **The rule**: the game action happens when the activity is finished; stopping it gives
+  nothing. Without 3D the list still does things straight away.
+- Fixed while testing: the character stuck at the edge of the bench (now steps into
+  place when blocked); the cup's steam too bright; the view drew at full speed even when
+  nothing moved (now only while something changes); a request remembered from one place
+  started again in another (requests now belong to their place).
+
+### Tests
+
+- 13 new unit tests (`src/world/world.test.ts`): movement, collisions, jumping and
+  crouching, walking to a spot, the camera and walls, every clip, the bench press,
+  activity stages, sounds and effects.
+- Browser tests updated: the café, shop, gym and garage tests wait for the activity to
+  be played (a development-only speed-up keeps them quick); the hotspot tests check that
+  clicking the espresso machine, the weights and the bench does the real thing.
+- Screenshots: [docs/screenshots/interactions](docs/screenshots/interactions).
+- Results: 2,112 unit tests; 166 Chromium browser tests passed, 3 of them on a retry (timing under load: the career-content loading test, the home front-door test and the footstep count, which counted 12 steps when the computer was slow to release the key); 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
+
 ## 2026-11-05 · Locations: real environments for every place
 
 ### The problem

@@ -22,10 +22,15 @@ async function goOut(page: Page) {
   await expect(city(page)).toContainText('Out in the neighbourhood')
 }
 
+// Activities are played out in 3D (walking over, doing them), so these take longer.
+test.setTimeout(180_000)
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
   await startCareerIfNeeded(page, 'Sam Taylor')
   await expect(page.getByTestId('office')).toBeVisible({ timeout: 30_000 })
+  // Activities in 3D (walking there, doing them) play faster in tests.
+  await page.evaluate('window.__worksimSpeed = 12')
 })
 
 test('a bike from Cog & Kerb: round the neighbourhood, then to work', async ({
@@ -42,7 +47,9 @@ test('a bike from Cog & Kerb: round the neighbourhood, then to work', async ({
   await city(page)
     .getByRole('button', { name: /Buy a city bike/ })
     .click()
-  await expect(city(page).getByTestId('balance')).toHaveText('£57.50')
+  await expect(city(page).getByTestId('balance')).toHaveText('£57.50', {
+    timeout: 30_000,
+  })
   await expect(
     city(page).getByRole('button', { name: /Lease a small car/ }),
   ).toBeDisabled()

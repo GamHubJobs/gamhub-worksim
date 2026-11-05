@@ -90,9 +90,14 @@ you to your flat.
   or W, A, S and D (Up and Down walk, Left and Right turn, Shift runs) and press Enter at
   a door; or choose a place from the list, which shows how long the walk is and whether
   it is open. Walking takes time on the clock.
-  - Inside each place you see it in 3D (see [LOCATIONS.md](LOCATIONS.md)). Things
-    with an amber ring on the floor can be used: click one to do what the list offers
-    there. Drag to look around.
+  - Inside each place you see it in 3D (see [LOCATIONS.md](LOCATIONS.md)) and walk your
+    character about: **W A S D** move, **Shift** runs, **C** crouches, **Space** jumps,
+    drag the mouse or press **Q** and **R** to look around, and the wheel zooms (or use
+    **Mouse look**, and Esc to release it). Near something usable, **Press E**: the
+    character walks over and does it for real, from a bench press to a week's shopping,
+    and it counts when it is finished (moving or pressing E stops it, and nothing is
+    given part way). Ringed objects and the list start the same activities. See
+    [CHARACTER.md](CHARACTER.md).
   - **Kettle & Crumb** (café, 7:00–22:00): breakfast, coffee and cake, dinner.
   - **Daily Basket** (food shop, 7:00–23:00): a week of groceries for less than having
     them delivered, or a single ready meal.

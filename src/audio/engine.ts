@@ -382,6 +382,86 @@ export function createEngine(): AudioEngine | null {
       case 'step':
         step(to, t, surface, 0.9 * v)
         break
+      case 'clank':
+        // Metal on metal: a bar meeting its rack, plates knocking.
+        ;[310, 790, 1260].forEach((f) =>
+          tone(to, f * rand(0.97, 1.03), t, 0.35, { gain: 0.05 * v }),
+        )
+        hiss(to, t, 0.06, { color: 'white', freq: 2600, q: 2, gain: 0.12 * v })
+        break
+      case 'breath':
+        // A hard breath out.
+        hiss(to, t, 0.55, {
+          color: 'pink',
+          freq: 900,
+          freqTo: 500,
+          q: 0.7,
+          gain: 0.12 * v,
+          attack: 0.08,
+        })
+        break
+      case 'water':
+        // Running water: overlapping bursts make a steady stream.
+        hiss(to, t, 1.25, {
+          color: 'white',
+          freq: 2400,
+          q: 0.5,
+          gain: 0.08 * v,
+          attack: 0.15,
+        })
+        hiss(to, t, 1.25, {
+          color: 'pink',
+          freq: 700,
+          q: 0.8,
+          gain: 0.06 * v,
+          attack: 0.15,
+        })
+        break
+      case 'pour':
+        hiss(to, t, 1.4, {
+          color: 'pink',
+          freq: 1300,
+          freqTo: 900,
+          q: 2,
+          gain: 0.08 * v,
+          attack: 0.1,
+        })
+        break
+      case 'sip':
+        hiss(to, t, 0.25, {
+          color: 'pink',
+          freq: 1600,
+          q: 3,
+          gain: 0.06 * v,
+          attack: 0.05,
+        })
+        tone(to, 320, t + 0.22, 0.06, { gain: 0.03 * v, glideTo: 260 })
+        break
+      case 'bite':
+        hiss(to, t, 0.08, { color: 'white', freq: 1800, q: 2, gain: 0.08 * v })
+        hiss(to, t + 0.18, 0.06, { color: 'white', freq: 1500, q: 2, gain: 0.06 * v })
+        break
+      case 'rustle':
+        hiss(to, t, 0.35, {
+          color: 'white',
+          freq: 3200,
+          q: 0.8,
+          gain: 0.06 * v,
+          attack: 0.03,
+        })
+        break
+      case 'chair':
+        tone(to, rand(110, 150), t, 0.25, {
+          type: 'sawtooth',
+          gain: 0.03 * v,
+          glideTo: rand(80, 100),
+          filter: 600,
+        })
+        hiss(to, t, 0.2, { color: 'brown', type: 'lowpass', freq: 300, gain: 0.2 * v })
+        break
+      case 'beep':
+        tone(to, 1900, t, 0.08, { gain: 0.07 * v })
+        break
       case 'greet':
         // A short, friendly "mm-hm": a voice-like hum, not words.
         murmur(to, t, 0.35, 0.12 * v, 1)
@@ -391,7 +471,24 @@ export function createEngine(): AudioEngine | null {
 
   function effectsBus(id: EffectId): CategoryId {
     if (id === 'greet') return 'voices'
-    if (['door', 'sit', 'stand', 'type', 'step'].includes(id)) return 'character'
+    if (
+      [
+        'door',
+        'sit',
+        'stand',
+        'type',
+        'step',
+        'clank',
+        'breath',
+        'water',
+        'pour',
+        'sip',
+        'bite',
+        'rustle',
+        'chair',
+      ].includes(id)
+    )
+      return 'character'
     return 'effects'
   }
 

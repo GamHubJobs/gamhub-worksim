@@ -32,6 +32,7 @@ import { timeOfDay, type Place } from '../audio/scenes'
 import { AudioScene } from '../audio/useAudio'
 import type { Doing } from './scene/interiors/kit'
 import type { InteriorId } from './scene/InteriorScene'
+import { WalkView } from '../world/WalkView'
 
 /** What each place in the neighbourhood sounds like inside. */
 const INSIDE: Record<PlaceId, Place> = {
@@ -53,13 +54,17 @@ const INTERIORS = new Set<PlaceId>(['cafe', 'shop', 'gym', 'park', 'garage'])
 const DEALS = new Set<string>(['buy-bike', 'sell-bike', 'lease-car', 'end-lease'])
 
 /** Shows nothing instead of the 3D street if it fails: the list still works. */
-class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+class SceneBoundary extends Component<
+  { children: ReactNode; onFail?: () => void },
+  { failed: boolean }
+> {
   state = { failed: false }
   static getDerivedStateFromError() {
     return { failed: true }
   }
   componentDidCatch(error: unknown) {
     console.warn('The 3D neighbourhood could not be shown.', error)
+    this.props.onFail?.()
   }
   render() {
     return this.state.failed ? null : this.props.children
@@ -125,15 +130,36 @@ export function CityView({
     [profile, onEnter],
   )
   const onNear = useCallback((id: PlaceId | null) => setNear(id), [])
-  // The last thing done in this place: the player is shown there in 3D.
-  const [last, setLast] = useState<{ place: PlaceId; id: string } | null>(null)
-  const doThing = useCallback(
+  // Inside a place with a 3D interior, things are done there by the character
+  // (the game action when they finish); without 3D, straight away.
+  const [interiorFailed, setInteriorFailed] = useState(false)
+  const walkable = webgl && !interiorFailed && !outside && INTERIORS.has(here.id)
+  // What was asked for, in which place (a new place starts with nothing asked).
+  const [request, setRequest] = useState<{
+    id: string
+    nonce: number
+    place: PlaceId
+  } | null>(null)
+  const commit = useCallback(
     (id: string) => {
-      setLast({ place: life.city.at, id })
       if (DEALS.has(id)) onDeal(id as TransportDeal)
       else onAction(id)
     },
-    [life.city.at, onAction, onDeal],
+    [onAction, onDeal],
+  )
+  const doThing = useCallback(
+    (id: string) => {
+      if (walkable)
+        setRequest((r) => ({ id, nonce: (r?.nonce ?? 0) + 1, place: life.city.at }))
+      else commit(id)
+    },
+    [walkable, commit, life.city.at],
+  )
+  const onActivityDone = useCallback(
+    (action: string | null, completed: boolean) => {
+      if (completed && action) commit(action)
+    },
+    [commit],
   )
   // Which part of the street the player is in, for the sounds around them.
   const [area, setArea] = useState<Area>(() => areaAt(standAt(life.city.at)[0]))
@@ -225,36 +251,40 @@ export function CityView({
             </p>
           </header>
 
-          {webgl && !outside && INTERIORS.has(here.id) ? (
-            <div
-              className="relative h-96 overflow-hidden rounded-xl bg-stone-800 shadow-sm ring-1 ring-slate-200"
-              data-testid="city-3d"
-              data-interior={here.id}
-              role="img"
-              aria-label={`Inside ${here.name} in 3D. Drag to look around; click a marked object to use it. Everything here is also in the list below.`}
+          {walkable ? (
+            <WalkView
+              key={here.id}
+              className="h-[28rem] bg-stone-800"
+              testId="city-3d"
+              attributes={{ 'data-interior': here.id }}
+              label={`Inside ${here.name} in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to. Everything here is also in the list below.`}
             >
-              <SceneBoundary>
-                <Suspense
-                  fallback={
-                    <div className="flex h-full items-center justify-center text-sm text-stone-300">
-                      Going in…
-                    </div>
-                  }
-                >
-                  <InteriorScene
-                    place={here.id as InteriorId}
-                    dark={dark}
-                    morning={phase === 'morning'}
-                    doings={stableDoings}
-                    last={last?.place === here.id ? last.id : null}
-                    onAct={doThing}
-                  />
-                </Suspense>
-              </SceneBoundary>
-              <p className="pointer-events-none absolute bottom-2 left-3 rounded bg-stone-900/70 px-2 py-0.5 text-xs text-stone-100">
-                Drag to look around · click a ringed object to use it
-              </p>
-            </div>
+              {(api) => (
+                <SceneBoundary onFail={() => setInteriorFailed(true)}>
+                  <Suspense
+                    fallback={
+                      <div className="flex h-full items-center justify-center text-sm text-stone-300">
+                        Going in…
+                      </div>
+                    }
+                  >
+                    <InteriorScene
+                      place={here.id as InteriorId}
+                      dark={dark}
+                      morning={phase === 'morning'}
+                      doings={stableDoings}
+                      controls={api.controls}
+                      request={request?.place === here.id ? request : null}
+                      onRequest={doThing}
+                      onPrompt={api.onPrompt}
+                      onProgress={api.onProgress}
+                      onDone={onActivityDone}
+                      dressed={phase === 'morning' && life.ready.dressed}
+                    />
+                  </Suspense>
+                </SceneBoundary>
+              )}
+            </WalkView>
           ) : webgl ? (
             <div
               className="relative h-80 overflow-hidden rounded-xl bg-slate-300 shadow-sm ring-1 ring-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"

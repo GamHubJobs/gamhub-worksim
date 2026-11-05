@@ -232,6 +232,61 @@ export function Room({
         position={[0, 0.07, -depth / 2 + 0.12]}
         color={skirting}
       />
+      {/* The front wall (behind the camera as you come in): the door and two windows */}
+      <FrontWall width={width} depth={depth} height={height} colour={side} />
+    </group>
+  )
+}
+
+/** The street side of a room: a doorway near the middle, a window either side. */
+function FrontWall({
+  width,
+  depth,
+  height,
+  colour,
+}: {
+  width: number
+  depth: number
+  height: number
+  colour: string
+}) {
+  const z = depth / 2
+  const door = 1.3
+  // Wall either side of the doorway, and above it.
+  const left = width / 2 + 0.6
+  const right = width / 2 - 1.9
+  return (
+    <group>
+      <Box
+        size={[left, height, 0.2]}
+        position={[-width / 2 + left / 2, height / 2, z]}
+        color={colour}
+      />
+      <Box
+        size={[right, height, 0.2]}
+        position={[width / 2 - right / 2, height / 2, z]}
+        color={colour}
+      />
+      <Box
+        size={[door, height - 2.3, 0.2]}
+        position={[1.25, 2.3 + (height - 2.3) / 2, z]}
+        color={colour}
+      />
+      <Window
+        size={[2.2, 1.5]}
+        position={[-width / 4, 1.6, z - 0.12]}
+        rotation={Math.PI}
+      />
+      <Window
+        size={[1.6, 1.5]}
+        position={[width / 2 - 1.4, 1.6, z - 0.12]}
+        rotation={Math.PI}
+      />
+      {/* The door, open onto the street */}
+      <mesh position={[1.25, 1.15, z + 0.05]}>
+        <planeGeometry args={[door, 2.3]} />
+        <meshBasicMaterial color="#94a3b8" toneMapped={false} />
+      </mesh>
     </group>
   )
 }

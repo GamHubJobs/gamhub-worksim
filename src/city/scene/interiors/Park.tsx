@@ -12,7 +12,7 @@ import { Box } from '../../../office/scene/parts'
 import { Person, Walker, type PersonLook } from '../../../office/scene/people'
 import { prefersReducedMotion } from '../../../ui/motion'
 import { Board, Hotspot } from './common'
-import { PLAYER, signPainting, useInterior } from './kit'
+import { signPainting, useInterior } from './kit'
 
 const STILL = prefersReducedMotion()
 
@@ -206,7 +206,7 @@ const VISITORS: Array<{ path: Vector[]; look: PersonLook; speed: number }> = [
 ]
 
 export default function Park() {
-  const { last, low } = useInterior()
+  const { low } = useInterior()
   return (
     <group>
       {/* Grass to the horizon, and the path round the pond */}
@@ -285,32 +285,6 @@ export default function Park() {
       {(low ? VISITORS.slice(0, 1) : VISITORS).map((v, i) => (
         <Walker key={i} path={v.path} look={v.look} speed={v.speed} pause={1} phase={i} />
       ))}
-
-      {last === 'park-bench' ? (
-        <Person
-          position={[-3.4, 0, 2.05]}
-          rotation={0}
-          seated
-          look={PLAYER}
-          phase={0.3}
-        />
-      ) : last === 'park-run' ? (
-        <Person
-          position={[5.2, 0, 2]}
-          rotation={Math.PI * 0.8}
-          look={{ ...PLAYER, outfit: 'polo', sleeves: 'short' }}
-          phase={0.3}
-        />
-      ) : last === 'park-walk' ? (
-        <Person
-          position={[-1.4, 0, 2.9]}
-          rotation={Math.PI / 2}
-          look={PLAYER}
-          phase={0.3}
-        />
-      ) : (
-        <Person position={[0.6, 0, 5.2]} rotation={Math.PI} look={PLAYER} phase={0.3} />
-      )}
     </group>
   )
 }

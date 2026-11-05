@@ -43,6 +43,15 @@ export const EFFECTS = {
   stand: 'character',
   type: 'character',
   step: 'character',
+  clank: 'character',
+  breath: 'character',
+  water: 'character',
+  pour: 'character',
+  sip: 'character',
+  bite: 'character',
+  rustle: 'character',
+  chair: 'character',
+  beep: 'effects',
   greet: 'voices',
 } as const satisfies Record<string, CategoryId>
 
@@ -73,6 +82,15 @@ export const MIN_GAP: Record<EffectId, number> = {
   stand: 600,
   type: 45,
   step: 150,
+  clank: 400,
+  breath: 900,
+  water: 700,
+  pour: 1500,
+  sip: 1500,
+  bite: 1200,
+  rustle: 600,
+  chair: 800,
+  beep: 250,
   greet: 2500,
 }
 

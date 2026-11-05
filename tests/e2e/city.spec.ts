@@ -28,6 +28,9 @@ async function goOut(page: Page) {
 
 let problems: string[] = []
 
+// Activities are played out in 3D (walking over, doing them), so these take longer.
+test.setTimeout(180_000)
+
 test.beforeEach(async ({ page }) => {
   problems = []
   page.on('console', (m) => {
@@ -42,6 +45,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/')
   await startCareerIfNeeded(page, 'Sam Taylor')
   await expect(page.getByTestId('office')).toBeVisible({ timeout: 30_000 })
+  // Activities in 3D (walking there, doing them) play faster in tests.
+  await page.evaluate('window.__worksimSpeed = 12')
 })
 
 // The street, going in and coming out log no errors.
@@ -66,10 +71,12 @@ test('an evening out: dinner at the café, the shop, and home again', async ({ p
   await city(page)
     .getByRole('button', { name: /Dinner at the café/ })
     .click()
-  await expect(city(page).getByTestId('balance')).not.toHaveText(balance!)
+  // The character orders, sits down and eats in 3D; the meal counts when it is finished.
   await expect(city(page).getByTestId('city-log')).toContainText(
     'Had dinner at Kettle & Crumb',
+    { timeout: 30_000 },
   )
+  await expect(city(page).getByTestId('balance')).not.toHaveText(balance!)
 
   // On to the shop for groceries.
   await city(page).getByRole('button', { name: 'Back out to the street' }).click()
@@ -77,7 +84,9 @@ test('an evening out: dinner at the café, the shop, and home again', async ({ p
   await city(page)
     .getByRole('button', { name: /Buy a week of groceries/ })
     .click()
-  await expect(city(page).getByTestId('money')).toContainText('11 meals in the fridge')
+  await expect(city(page).getByTestId('money')).toContainText('11 meals in the fridge', {
+    timeout: 30_000,
+  })
 
   // The neighbourhood passes the automated accessibility checks.
   const audit = await new AxeBuilder({ page })
@@ -99,6 +108,7 @@ test('walking the street in 3D with the keyboard, and going in at a door', async
   await goOut(page)
   const street = city(page).getByTestId('city-3d')
   test.skip((await street.count()) === 0, 'No 3D in this browser')
+  await expect(street.locator('canvas')).toBeVisible({ timeout: 30_000 })
   await street.focus()
   // The café is across the street from home: walk north until at its door.
   await page.keyboard.down('ArrowUp')
@@ -135,11 +145,18 @@ test('the morning: a gym shower and breakfast out, then walking to work', async 
   await city(page)
     .getByRole('button', { name: /Shower in the changing rooms/ })
     .click()
+  await expect(city(page).getByTestId('city-log')).toContainText('Showered at the gym', {
+    timeout: 30_000,
+  })
   await city(page).getByRole('button', { name: 'Back out to the street' }).click()
   await city(page).getByTestId('place-cafe').click()
   await city(page)
     .getByRole('button', { name: /Breakfast at the café/ })
     .click()
+  await expect(city(page).getByTestId('city-log')).toContainText(
+    'Had breakfast at Kettle & Crumb',
+    { timeout: 30_000 },
+  )
   await city(page).getByRole('button', { name: 'Back out to the street' }).click()
 
   await expect(city(page).getByTestId('place-office')).toContainText('40 min walk')

@@ -4,12 +4,16 @@
  * by the windows, and a few customers. The counter, the cake case and a free
  * table are hotspots for the café's own actions.
  */
+import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
+import type { Group, Mesh } from 'three'
 import { PLACE_ACTIONS } from '../../../content/city'
+import { useWorld } from '../../../world/context'
 import { formatMoney } from '../../../content/life'
 import { Box, Plant } from '../../../office/scene/parts'
 import { Person } from '../../../office/scene/people'
 import { Board, Chair, Hotspot, Lamp, Room, Window } from './common'
-import { PLAYER, menuPainting, signPainting, useInterior } from './kit'
+import { menuPainting, signPainting, useInterior } from './kit'
 
 const price = (id: string) =>
   formatMoney(PLACE_ACTIONS.find((a) => a.id === id)?.cost ?? 0)
@@ -124,8 +128,52 @@ function EspressoMachine() {
   )
 }
 
+/**
+ * What the player ordered, on their table once they sit down: a plate of food
+ * or a slice of cake, getting smaller as it is eaten.
+ */
+function TableOrder() {
+  const { now } = useWorld()
+  const plate = useRef<Group>(null)
+  const food = useRef<Mesh>(null)
+  const cake = useRef<Mesh>(null)
+  useFrame(() => {
+    const { id, t } = now.current
+    const meal = id === 'breakfast' || id === 'dinner'
+    const eating = id === 'dinner' ? 12.8 : 9.6
+    const shown = (meal || id === 'coffee') && t >= 5.6
+    if (plate.current) plate.current.visible = shown
+    const left = (start: number, seconds: number) =>
+      Math.max(0.15, 1 - Math.max(0, t - start) / seconds)
+    if (food.current) {
+      food.current.visible = meal
+      food.current.scale.setScalar(left(6.8, eating))
+    }
+    if (cake.current) {
+      cake.current.visible = id === 'coffee'
+      cake.current.scale.setScalar(left(6.8, 9))
+    }
+  })
+  return (
+    <group ref={plate} position={[-3, 0.775, 1.95]} visible={false}>
+      <mesh>
+        <cylinderGeometry args={[0.16, 0.13, 0.02, 24]} />
+        <meshStandardMaterial color="#fafaf9" />
+      </mesh>
+      <mesh ref={food} position={[0, 0.03, 0]} scale={[1, 1, 1]}>
+        <sphereGeometry args={[0.09, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#b45309" />
+      </mesh>
+      <mesh ref={cake} position={[0, 0.045, 0]}>
+        <boxGeometry args={[0.12, 0.07, 0.08]} />
+        <meshStandardMaterial color="#78350f" />
+      </mesh>
+    </group>
+  )
+}
+
 export default function Cafe() {
-  const { last, low } = useInterior()
+  const { low } = useInterior()
   return (
     <group>
       <Room
@@ -202,6 +250,7 @@ export default function Cafe() {
         <Table position={[0, 0, 0]} />
         <Cup position={[0.15, 0.77, 0.1]} />
       </Hotspot>
+      <TableOrder />
       <Table position={[3, 0, -0.6]} />
       <Table position={[4.4, 0, 2.6]} />
       {!low && <Table position={[0.4, 0, 2.2]} />}
@@ -259,17 +308,6 @@ export default function Cafe() {
       <Plant position={[5.4, 0, -3.9]} scale={1.3} />
       <Plant position={[-5.4, 0, 3.6]} scale={1.1} />
       <Plant position={[1.6, 0, -3.9]} scale={0.9} />
-
-      {/* Where the player is: at the counter, or sitting down to eat */}
-      {last === 'cafe-dinner' ? (
-        <Person position={[-3, 0, 2.35]} seated look={PLAYER} phase={0.3} />
-      ) : last === 'cafe-breakfast' ? (
-        <Person position={[0.3, 0, -1.9]} rotation={0.2} look={PLAYER} phase={0.3} />
-      ) : last === 'cafe-coffee' ? (
-        <Person position={[-3.6, 0, -1.9]} rotation={-0.2} look={PLAYER} phase={0.3} />
-      ) : (
-        <Person position={[1.2, 0, 1.6]} rotation={Math.PI} look={PLAYER} phase={0.3} />
-      )}
     </group>
   )
 }
