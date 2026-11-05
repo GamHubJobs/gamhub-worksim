@@ -878,6 +878,15 @@ export const LifeSchema = z.object({
         .default([]),
     })
     .prefault({}),
+  /** Where the player is out of work hours: at home, or out in the neighbourhood (see content/city.ts). */
+  city: z
+    .object({
+      /** The place they are at, or last left. */
+      at: z.enum(['home', 'office', 'cafe', 'shop', 'gym', 'park']).default('home'),
+      /** Inside it, or out in the street. */
+      inside: z.boolean().default(true),
+    })
+    .prefault({}),
   /** Where the player lives and what is in it (see content/home.ts). */
   home: z
     .object({

@@ -15,12 +15,14 @@ export function Phone({
   onContact,
   onRead,
   onClose,
+  closeLabel = 'Back to the flat',
 }: {
   profile: Profile
   onRespond: (messageId: string, accept: boolean) => void
   onContact: (friendId: string, how: Contact) => void
   onRead: (friendId: string) => void
   onClose: () => void
+  closeLabel?: string
 }) {
   const life = profile.work.life
   const messages = life.social.messages
@@ -52,7 +54,7 @@ export function Phone({
           onClick={onClose}
           className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
         >
-          Back to the flat
+          {closeLabel}
         </button>
       </div>
       <div className="mt-3 grid gap-4 sm:grid-cols-[13rem_1fr]">

@@ -132,7 +132,7 @@ working simulations of the professional software used in its field (see
 - [x] L1 Needs, home routines, sleep, the commute, money
 - [x] L2 The home: a 3D flat, furniture, upgrades
 - [x] L3 Social life: friends, a phone, invitations
-- [ ] L4 The city: a walkable district, third-person, enterable places
+- [x] L4 The city: a walkable district, third-person, enterable places
 - [ ] L5 Getting around: walking, bus, bike, car
 - [ ] L6 Career life: applications, salary negotiation, a side business
 - [ ] L7 AI in daily life
@@ -154,6 +154,54 @@ working simulations of the professional software used in its field (see
 - [x] C. A more realistic 3D office
 
 ---
+
+## 2026-11-05 · L4: the neighbourhood
+
+### Built
+
+- **The neighbourhood** (`src/content/city.ts`): one street with the player's
+  building, Kettle & Crumb (café), Daily Basket (food shop), Forge Fitness (gym),
+  Millpond Park and the road to the office, each with a door on the street, opening
+  hours and activities (eleven in all: breakfast, coffee, dinner, groceries, a ready
+  meal, a workout, a class, a gym shower, a walk, a run, a bench).
+- **Rules** (`src/game/city.ts`, pure): stepping outside, walking between places (time
+  along the street, needs falling on the way), going in (with the reason when a place is
+  closed or it is too late), and the walk to work in the morning (the walk commute).
+  Home and place activities share one set of rules (`LifeAction`), which now also check
+  where the player is; bed is only at home.
+- **The street in 3D** (`src/city/scene/CityScene.tsx`): buildings, shop fronts with
+  awnings, a park with a pond, trees and benches, street lamps that light up after
+  dark, office towers at the end, and five people walking about. The player walks in
+  third person (Up and Down walk, Left and Right turn, Shift runs, Enter goes in;
+  doors can be clicked), with the camera behind them and kept above the street. Place
+  names are drawn in code (no fonts or page elements in 3D). Movement runs on its own
+  steady timer; the scene draws 12 times a second when still (once a second on
+  software 3D) and 30 while walking.
+- **The city screen** (`src/city/CityView.tsx`): the 3D street, a prompt at each
+  door, the list of places (walk time, opening hours, why not), the activities inside,
+  the phone, needs, money and the evening's log. Needs and money panels are now shared
+  with home (`src/home/LifePanels.tsx`). The front door at home has **Go out into the
+  neighbourhood**.
+- **Save data**: `life.city` (where the player is), additive.
+- **Fixed while testing**: the first camera followed from the south and ended up inside
+  the buildings on that side; it now follows behind the player and stays above the
+  street. Labels drawn as page elements in 3D logged console errors when the street was
+  left; they are now drawn in code.
+
+### Tests
+
+- 8 new unit tests (`src/game/city.test.ts`): the places, walking times, an evening at
+  the café and the shop and home again, opening hours and late nights, the morning
+  routine out and the walk to work, older saves, and the street helpers (doors, bounds).
+- 3 new browser tests (`tests/e2e/city.spec.ts`): an evening out (with the
+  accessibility audit), walking the street in 3D with the keyboard and going in at a
+  door, and a morning at the gym and the café before walking to work.
+- The city tests also passed in Firefox and WebKit (run once against the development
+  server); they fail on any console error except one that only appears in development
+  mode (React mounting the office twice).
+- Results: 2,060 unit tests; 158 Chromium browser tests passed; 5 production-build
+  tests; Firefox, WebKit and Edge 8 passed, 1 skipped. Start screen 283 kB (the city
+  loads only when the player goes out).
 
 ## 2026-11-04 · L3: friends, the phone and invitations
 

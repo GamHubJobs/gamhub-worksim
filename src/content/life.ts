@@ -37,9 +37,9 @@ export const ROOMS: Array<{ id: RoomId; name: string; description: string }> = [
 
 export type LifePhase = 'evening' | 'morning'
 
-export interface HomeAction {
+/** Something the player can do out of work hours, at home or in town. */
+export interface LifeAction {
   id: string
-  room: RoomId
   label: string
   /** When it can be done. */
   phases: LifePhase[]
@@ -62,6 +62,10 @@ export interface HomeAction {
   needsItem?: boolean
   /** Skill XP added to the career skill the player has least of (studying). */
   skillXp?: number
+}
+
+export interface HomeAction extends LifeAction {
+  room: RoomId
 }
 
 const HOUR = 60

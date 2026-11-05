@@ -56,6 +56,8 @@ import { getCase } from '../content/cases'
 import { passTime } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
 import { HomeView } from '../home/HomeView'
+import { CityView } from '../city/CityView'
+import { enterPlace, goOutside } from '../game/city'
 import { doHomeAction, goHome, goToBed, leaveForWork, lifePhase } from '../game/life'
 import { buyFurniture, moveHome, recolour, sellFurniture } from '../game/home'
 import { contactFriend, goOut, markRead as readMessages, respond } from '../game/social'
@@ -538,6 +540,21 @@ export function Desktop({
         {dayOver && lifePhase(profile) === 'work' ? (
           // The day's summary, then home.
           <DayEnd profile={profile} onNextDay={() => void act(goHome)} />
+        ) : dayOver &&
+          !(profile.work.life.city.at === 'home' && profile.work.life.city.inside) ? (
+          // Out in the neighbourhood (or inside a place there).
+          <CityView
+            profile={profile}
+            onEnter={(id) => {
+              void act((p) => enterPlace(p, id))
+              if (id === 'office') setView({ app: 'office', spot: 'reception' })
+            }}
+            onOutside={() => void act(goOutside)}
+            onAction={(id) => void act((p) => doHomeAction(p, id))}
+            onRespond={(id, accept) => void act((p) => respond(p, id, accept))}
+            onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}
+            onRead={(friend) => void act((p) => readMessages(p, friend))}
+          />
         ) : dayOver ? (
           <HomeView
             profile={profile}
@@ -555,6 +572,7 @@ export function Desktop({
             onGoOut={(id) => void act((p) => goOut(p, id))}
             onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}
             onRead={(friend) => void act((p) => readMessages(p, friend))}
+            onGoOutside={() => void act(goOutside)}
           />
         ) : (
           <OfficeView

@@ -51,3 +51,24 @@ documented and committed before the next.
   Monday), and spending (groceries, meals out, fares), with a statement.
 - **Getting to work**: walk (free, slow, some exercise), bus (cheap, quicker) or taxi
   (dear, quickest).
+
+## L4 in detail
+
+- **The neighbourhood**: one main street (an original layout) with the player's
+  building, a café, a food shop, a gym, a park, and the road to the office at the end.
+  Its places, opening hours and activities are content (`src/content/city.ts`); the
+  rules are pure functions (`src/game/city.ts`).
+- **Where the player is**: at home, out in the street, or inside a place
+  (`life.city`, additive: older saves start at home). Home actions need the player at
+  home, place actions inside the place while it is open, and bed only at home.
+- **Walking**: going from one place to another takes minutes on the clock along the
+  street, and needs fall on the way. Walking about in 3D between doors is free; the
+  time is counted from the place left to the place entered.
+- **Third person**: the camera follows behind the player and stays above the street, so
+  buildings never block the view. Up and Down walk, Left and Right turn, Shift runs,
+  Enter goes in; doors can be clicked. Movement runs on its own steady timer, so it is
+  the same speed on a slow computer; the scene draws only a few times a second when
+  nothing moves.
+- **Without 3D**: the list of places does everything the street does.
+- **The morning**: from the street the player can walk on to work (the walk commute):
+  breakfast at the café or a shower at the gym count for the morning routine.

@@ -17,8 +17,10 @@ import {
   formatMoney,
   type CommuteId,
   type HomeAction,
+  type LifeAction,
   type NeedId,
 } from '../content/life'
+import { PLACE_ACTIONS, closedReason, getPlace, type PlaceAction } from '../content/city'
 import { HOURS } from '../content/workday'
 import type { Life } from '../persistence/schemas'
 import { careerLevel, type ProfileData } from './career'
@@ -69,6 +71,7 @@ export function goHome(profile: ProfileData): ProfileData {
     minute: Math.round(work.minute + commuteMinutes(work.life, commute.id)),
     needs,
     log: [],
+    city: { at: 'home', inside: true },
   }
   life = spend(life, work.day, commute.cost, `${commute.name} home`)
   life = note(life, `Home from work (${commute.name.toLowerCase()})`)
@@ -89,15 +92,26 @@ export function goHome(profile: ProfileData): ProfileData {
 // At home
 // ---------------------------------------------------------------------------
 
-export function getHomeAction(id: string): HomeAction | undefined {
-  return HOME_ACTIONS.find((a) => a.id === id)
+/** An action at home or in a place in the neighbourhood. */
+export function getHomeAction(id: string): HomeAction | PlaceAction | undefined {
+  return HOME_ACTIONS.find((a) => a.id === id) ?? PLACE_ACTIONS.find((a) => a.id === id)
 }
 
 /** Whether an action can be done now, and if not, why (shown to the player). */
-export function canDo(profile: ProfileData, action: HomeAction): string | null {
+export function canDo(
+  profile: ProfileData,
+  action: LifeAction & { place?: string },
+): string | null {
   const life = profile.work.life
   const phase = lifePhase(profile)
   if (phase === 'work') return 'You are at work.'
+  // Where the player is: at home for home actions, inside the place for the rest.
+  if (action.place) {
+    const place = getPlace(action.place)!
+    if (life.city.at !== place.id || !life.city.inside) return `Only at ${place.name}.`
+    const closed = closedReason(place, life.minute)
+    if (closed) return closed
+  } else if (life.city.at !== 'home' || !life.city.inside) return 'You are not at home.'
   if (!action.phases.includes(phase))
     return phase === 'morning'
       ? 'Not now: it is the morning.'
@@ -128,7 +142,7 @@ export function doHomeAction(profile: ProfileData, id: string): ProfileData {
   let life = work.life
   const needs = decayed(life.needs, action.minutes)
   // A homely place: fun falls more slowly in the evening.
-  if (life.phase === 'evening')
+  if (life.phase === 'evening' && !('place' in action))
     needs.fun = clamp(Math.round(needs.fun + comfort(life) * 0.4 * (action.minutes / 60)))
   const bonus = bonusFor(life, action.id)
   for (const need of new Set([
@@ -180,6 +194,8 @@ export function sleepHours(bedtime: number): number {
 /** Goes to bed: the night passes, the alarm rings, and rent is due on Mondays. */
 export function goToBed(profile: ProfileData): ProfileData {
   if (lifePhase(profile) !== 'evening') return profile
+  if (profile.work.life.city.at !== 'home' || !profile.work.life.city.inside)
+    return profile
   const work = profile.work
   const next = nextWorkday(work.day)
   const weekend = next - work.day > 1
@@ -242,7 +258,12 @@ export function leaveForWork(profile: ProfileData, commuteId: CommuteId): Profil
   const before = profile.work.life
   const started = startNextDay(profile)
   let work = started.work
-  let life: Life = { ...before, phase: 'work', commute: commuteId }
+  let life: Life = {
+    ...before,
+    phase: 'work',
+    commute: commuteId,
+    city: { at: 'home', inside: true },
+  }
   life = spend(life, work.day, commute.cost, `${commute.name} to work`)
 
   // The time they walk in.

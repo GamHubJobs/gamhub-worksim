@@ -9,12 +9,12 @@ import { getHome, type HomeId, type SlotId } from '../content/home'
 import { homeOf } from '../game/home'
 import { supportsWebGL } from '../office/webgl'
 import { HomeShop } from './HomeShop'
+import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { Phone } from './Phone'
 import { canGo, plansTonight, unreadCount, type Contact } from '../game/social'
 import {
   COMMUTES,
   HOME_ACTIONS,
-  NEEDS,
   ROOMS,
   formatMoney,
   type CommuteId,
@@ -22,7 +22,8 @@ import {
 } from '../content/life'
 import { HOURS } from '../content/workday'
 import { formatTime, nextWorkday, weekdayName } from '../game/clock'
-import { arrivalFor, canDo, lifePhase, needWarnings, sleepHours } from '../game/life'
+import { arrivalFor, canDo, lifePhase, sleepHours } from '../game/life'
+import { canGoOut } from '../game/city'
 import type { Profile } from '../persistence/schemas'
 
 const HomeScene = lazy(() => import('./scene/HomeScene'))
@@ -54,6 +55,7 @@ export function HomeView({
   onGoOut,
   onContact,
   onRead,
+  onGoOutside,
 }: {
   profile: Profile
   onAction: (id: string) => void
@@ -67,6 +69,7 @@ export function HomeView({
   onGoOut: (messageId: string) => void
   onContact: (friendId: string, how: Contact) => void
   onRead: (friendId: string) => void
+  onGoOutside: () => void
 }) {
   const [webgl] = useState(supportsWebGL)
   const [shop, setShop] = useState<'shop' | 'move' | 'phone' | null>(null)
@@ -78,7 +81,6 @@ export function HomeView({
     (a) => a.room === room && a.phases.includes(phase === 'work' ? 'evening' : phase),
   )
   const day = phase === 'morning' ? nextWorkday(profile.work.day) : profile.work.day
-  const warnings = needWarnings(life)
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f1ec]" data-testid="home">
@@ -216,6 +218,21 @@ export function HomeView({
                   {room !== 'bedroom' && phase === 'evening' && actions.length === 0 && (
                     <li className="text-sm text-slate-500">
                       Nothing to do here this evening.
+                    </li>
+                  )}
+                  {room === 'door' && (
+                    <li>
+                      <button
+                        type="button"
+                        disabled={!!canGoOut(profile)}
+                        onClick={onGoOutside}
+                        className="flex w-full items-center justify-between gap-3 rounded-lg bg-emerald-700 px-3 py-2 text-left text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+                      >
+                        Go out into the neighbourhood
+                        <span className="text-xs font-normal text-emerald-100">
+                          {canGoOut(profile) ?? 'Café, shop, gym, park'}
+                        </span>
+                      </button>
                     </li>
                   )}
                 </ul>
@@ -368,104 +385,8 @@ export function HomeView({
               </button>
             </div>
           </section>
-          <section
-            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
-            data-testid="needs"
-          >
-            <h2 className="font-semibold text-slate-900">How you are</h2>
-            <ul className="mt-2 space-y-2">
-              {NEEDS.map((need) => {
-                const value = Math.round(life.needs[need.id])
-                return (
-                  <li key={need.id}>
-                    <div className="flex justify-between text-xs text-slate-600">
-                      <span>{need.name}</span>
-                      <span>{value}</span>
-                    </div>
-                    <div
-                      role="meter"
-                      aria-label={need.name}
-                      aria-valuenow={value}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-slate-200"
-                    >
-                      <div
-                        className={`h-full rounded-full ${
-                          value < 30
-                            ? 'bg-red-500'
-                            : value < 55
-                              ? 'bg-amber-500'
-                              : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${value}%` }}
-                      />
-                    </div>
-                  </li>
-                )
-              })}
-              <li className="flex justify-between text-xs text-slate-600">
-                <span>Energy</span>
-                <span>{Math.round(profile.work.wellbeing.energy)}</span>
-              </li>
-              <li className="flex justify-between text-xs text-slate-600">
-                <span>Stress</span>
-                <span>{Math.round(profile.work.wellbeing.stress)}</span>
-              </li>
-            </ul>
-            {warnings.length > 0 && (
-              <ul
-                className="mt-3 space-y-0.5 text-xs text-amber-800"
-                aria-label="Things to look after"
-              >
-                {warnings.map((w) => (
-                  <li key={w}>{w}</li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section
-            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
-            data-testid="money"
-          >
-            <h2 className="font-semibold text-slate-900">Money</h2>
-            <p
-              className={`text-2xl font-semibold ${life.money < 0 ? 'text-red-700' : 'text-slate-900'}`}
-              data-testid="balance"
-            >
-              {formatMoney(life.money)}
-            </p>
-            <p className="text-xs text-slate-500">
-              {life.food} meal{life.food === 1 ? '' : 's'} in the fridge · paid on
-              Fridays, rent on Mondays
-            </p>
-            {life.ledger.length > 0 && (
-              <details className="mt-2 text-xs">
-                <summary className="cursor-pointer text-slate-600">Statement</summary>
-                <ul className="mt-1 space-y-0.5">
-                  {life.ledger
-                    .slice(-12)
-                    .reverse()
-                    .map((entry, i) => (
-                      <li key={i} className="flex justify-between gap-2">
-                        <span className="text-slate-600">
-                          {weekdayName(entry.day).slice(0, 3)} · {entry.text}
-                        </span>
-                        <span
-                          className={
-                            entry.amount < 0 ? 'text-slate-700' : 'text-emerald-700'
-                          }
-                        >
-                          {entry.amount > 0 ? '+' : ''}
-                          {formatMoney(entry.amount)}
-                        </span>
-                      </li>
-                    ))}
-                </ul>
-              </details>
-            )}
-          </section>
+          <NeedsPanel profile={profile} />
+          <MoneyPanel life={life} />
 
           {life.log.length > 0 && (
             <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">

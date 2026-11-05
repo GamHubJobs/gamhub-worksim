@@ -85,6 +85,20 @@ you to your flat.
     invitation you ignore is missed, and a promise you do not keep hurts most.
   - **Get in touch**: send a message, call, or invite someone round for dinner (you need
     two meals in the fridge and a table).
+- **The neighbourhood** (**Go out into the neighbourhood** at the front door): your
+  street in 3D, with people walking about. Click the view, then walk with the arrow keys
+  or W, A, S and D (Up and Down walk, Left and Right turn, Shift runs) and press Enter at
+  a door; or choose a place from the list, which shows how long the walk is and whether
+  it is open. Walking takes time on the clock.
+  - **Kettle & Crumb** (café, 7:00–22:00): breakfast, coffee and cake, dinner.
+  - **Daily Basket** (food shop, 7:00–23:00): a week of groceries for less than having
+    them delivered, or a single ready meal.
+  - **Forge Fitness** (gym, 6:00–23:00): a workout, a fitness class, and showers in the
+    changing rooms.
+  - **Millpond Park** (always open): a walk round the pond, a run, a bench.
+  - **Home**: go back inside. You can only go to bed at home.
+  - **Walk to work** (mornings only): the walk to the office; the day starts when you
+    arrive.
 - **Money**: you are paid on Fridays (more as you are promoted) and rent is taken on
   Mondays. The statement lists everything in and out. Going overdrawn is stressful.
 
