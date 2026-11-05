@@ -258,16 +258,24 @@ export const LATEST_BEDTIME = 26 * HOUR
 /** Hours of sleep the body needs. */
 export const SLEEP_NEEDED = 8
 
-export type CommuteId = 'walk' | 'bus' | 'taxi'
+export type CommuteId = 'walk' | 'bike' | 'bus' | 'car' | 'taxi'
 
-export const COMMUTES: Array<{
+export interface Commute {
   id: CommuteId
   name: string
   minutes: number
+  /** Each way, in pence (fares, or fuel and parking). */
   cost: number
   energy: number
+  stress?: number
+  /** What the journey does for needs (cycling is fun, and makes you hot). */
+  needs?: Partial<Record<NeedId, number>>
+  /** Something the player must own (see content/transport.ts). */
+  vehicle?: 'bike' | 'car'
   description: string
-}> = [
+}
+
+export const COMMUTES: Commute[] = [
   {
     id: 'walk',
     name: 'Walk',
@@ -277,12 +285,33 @@ export const COMMUTES: Array<{
     description: 'Free, and some fresh air on the way.',
   },
   {
+    id: 'bike',
+    name: 'Bike',
+    minutes: 20,
+    cost: 0,
+    energy: -2,
+    stress: -3,
+    needs: { fun: 5, hygiene: -12 },
+    vehicle: 'bike',
+    description: 'Free and quick, and good for you; you arrive a little warm.',
+  },
+  {
     id: 'bus',
     name: 'Bus',
     minutes: 25,
     cost: 250,
     energy: 0,
     description: 'Cheap and reliable.',
+  },
+  {
+    id: 'car',
+    name: 'Car',
+    minutes: 15,
+    cost: 450,
+    energy: 0,
+    stress: 3,
+    vehicle: 'car',
+    description: 'Quick and dry, but fuel and parking add up, and so does the traffic.',
   },
   {
     id: 'taxi',

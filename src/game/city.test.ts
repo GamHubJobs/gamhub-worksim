@@ -25,13 +25,14 @@ const at = (p: ProfileData, minute: number): ProfileData => ({
 })
 
 describe('the neighbourhood', () => {
-  it('has six places with doors on the street', () => {
+  it('has seven places with doors on the street', () => {
     expect(PLACES.map((p) => p.id)).toEqual([
       'home',
       'cafe',
       'shop',
       'gym',
       'park',
+      'garage',
       'office',
     ])
     for (const action of PLACE_ACTIONS) expect(getPlace(action.place)).toBeDefined()
@@ -54,7 +55,7 @@ describe('the neighbourhood', () => {
     expect(canDo(p, getHomeAction('cook')!)).toBe('You are not at home.')
     const start = p.work.life.minute
     p = enterPlace(p, 'cafe')
-    expect(p.work.life.city).toEqual({ at: 'cafe', inside: true })
+    expect(p.work.life.city).toMatchObject({ at: 'cafe', inside: true })
     expect(p.work.life.minute).toBe(start + walkMinutes('home', 'cafe'))
     const money = p.work.life.money
     p = doHomeAction(p, 'cafe-dinner')
@@ -63,7 +64,7 @@ describe('the neighbourhood', () => {
     // Bed only at home.
     expect(goToBed(p)).toBe(p)
     p = enterPlace(goOutside(p), 'home')
-    expect(p.work.life.city).toEqual({ at: 'home', inside: true })
+    expect(p.work.life.city).toMatchObject({ at: 'home', inside: true })
     expect(p.work.life.log.some((l) => l.includes('Walked home'))).toBe(true)
     expect(goToBed(p).work.life.phase).toBe('morning')
   })
@@ -106,7 +107,7 @@ describe('the neighbourhood', () => {
     expect(p.work.dayOver).toBe(false)
     expect(p.work.day).toBeGreaterThan(day)
     expect(p.work.life.commute).toBe('walk')
-    expect(p.work.life.city).toEqual({ at: 'home', inside: true })
+    expect(p.work.life.city).toMatchObject({ at: 'home', inside: true })
   })
 
   it('older saves start at home', () => {
@@ -116,6 +117,7 @@ describe('the neighbourhood', () => {
     expect(WorkStateSchema.parse({ ...work, life: old }).life.city).toEqual({
       at: 'home',
       inside: true,
+      riding: false,
     })
   })
 })

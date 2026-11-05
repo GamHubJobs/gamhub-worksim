@@ -58,7 +58,10 @@ export function goOutside(profile: ProfileData): ProfileData {
 /** Minutes to walk from where the player is to a place (the office: the walk to work). */
 export function minutesTo(profile: ProfileData, id: PlaceId): number {
   const life = profile.work.life
-  return id === 'office' ? commuteMinutes(life, 'walk') : walkMinutes(life.city.at, id)
+  if (id === 'office') return commuteMinutes(life, 'walk')
+  const walk = walkMinutes(life.city.at, id)
+  // On the bike, twice as quick.
+  return life.city.riding && walk ? Math.max(1, Math.round(walk / 2)) : walk
 }
 
 /** Why the player cannot go into a place now, or null. */
@@ -91,13 +94,14 @@ export function enterPlace(profile: ProfileData, id: PlaceId): ProfileData {
     ...life,
     minute: life.minute + minutes,
     needs: decayed(life.needs, minutes),
-    city: { at: id, inside: true },
+    // The bike is left at home; elsewhere it waits outside.
+    city: { at: id, inside: true, riding: id === 'home' ? false : life.city.riding },
   }
   next = note(
     { ...next, minute: life.minute },
     id === 'home'
-      ? `Walked home (${minutes} min)`
-      : `Walked to ${place.name} (${minutes} min)`,
+      ? `${life.city.riding ? 'Cycled' : 'Walked'} home (${minutes} min)`
+      : `${life.city.riding ? 'Cycled' : 'Walked'} to ${place.name} (${minutes} min)`,
   )
   next = { ...next, minute: life.minute + minutes }
   // A short walk is good for you; a long one is tiring.

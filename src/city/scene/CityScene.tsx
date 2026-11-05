@@ -34,6 +34,12 @@ const STILL = prefersReducedMotion()
 /** Walking and running speeds, in units a second. */
 const WALK = 6
 const RUN = 11
+/** On the bike, faster still. */
+const RIDE = 13
+const RIDE_FAST = 18
+
+/** Where the player is, for the traffic (which stops for them). */
+const playerAt = { x: 0, z: 0 }
 /** Turning speed, in radians a second. */
 const TURN = 2.6
 /** Where the camera may go: above the street, in front of the buildings. */
@@ -170,6 +176,10 @@ export interface CitySceneProps {
   onDoor: (id: PlaceId) => void
   /** The door the player is at (its sign is hidden: the page names it). */
   near: PlaceId | null
+  /** On their bike (quicker), and what they own (shown in the street). */
+  riding: boolean
+  bike: boolean
+  car: boolean
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -213,6 +223,13 @@ function CityScene(props: CitySceneProps) {
         <Street dark={props.dark} />
         <Park />
         <BusinessDistrict />
+        <Traffic />
+        {props.car && (
+          <Car position={[-46, 0, 3.6]} rotation={Math.PI / 2} colour="#0f766e" />
+        )}
+        {props.bike && !(props.riding && props.outside) && (
+          <Bike position={[-36.5, 0, 9.2]} rotation={Math.PI / 2} />
+        )}
         {PASSERS_BY.map((p, i) => (
           <Walker
             key={i}
@@ -249,6 +266,7 @@ function Player({
   at,
   outside,
   dressed,
+  riding,
   keys,
   onNear,
   onBusy,
@@ -266,6 +284,12 @@ function Player({
   const look = useMemo(() => new Vector3(), [])
   const target = useMemo(() => new Vector3(), [])
   const first = useRef(true)
+  const onBike = useRef(riding)
+  useEffect(() => {
+    onBike.current = riding
+    motion.current.walking = false
+    invalidate()
+  }, [riding, invalidate])
 
   // Going into a place from the list moves the player to its door.
   useEffect(() => {
@@ -285,6 +309,7 @@ function Player({
     }
     const moving = motion.current
     let last = performance.now()
+    let busy = false
     const report = () => {
       const now = nearestDoor(position.current[0], position.current[1])
       if (now !== near.current) {
@@ -306,13 +331,17 @@ function Player({
       if (held.has('ArrowUp') || held.has('w')) forward += 1
       if (held.has('ArrowDown') || held.has('s')) forward -= 0.6
       const walking = turn !== 0 || forward !== 0
-      if (walking !== motion.current.walking) {
-        motion.current.walking = walking
+      if (walking !== busy) {
+        busy = walking
+        // On the bike the legs stay on the pedals.
+        motion.current.walking = walking && !onBike.current
         onBusy(walking)
       }
       if (!walking) return
       heading.current += turn * TURN * delta
-      const speed = forward * (held.has('Shift') ? RUN : WALK) * delta
+      const fast = held.has('Shift')
+      const speed =
+        forward * (onBike.current ? (fast ? RIDE_FAST : RIDE) : fast ? RUN : WALK) * delta
       const [x, z] = position.current
       position.current = [
         Math.min(
@@ -338,6 +367,8 @@ function Player({
     if (!g) return
     const [x, z] = position.current
     g.position.set(x, 0, z)
+    playerAt.x = x
+    playerAt.z = z
     const h = heading.current
     g.rotation.y = h
     // The camera follows behind and a little above, and never leaves the
@@ -363,15 +394,19 @@ function Player({
 
   return (
     <group ref={group} visible={outside}>
-      <Person
-        look={
-          dressed
-            ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
-            : PLAYER
-        }
-        phase={0.3}
-        motion={motion}
-      />
+      {riding && <Bike position={[0, 0, 0]} rotation={0} />}
+      <group position={riding ? [0, 0.42, 0.08] : [0, 0, 0]}>
+        <Person
+          look={
+            dressed
+              ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
+              : PLAYER
+          }
+          phase={0.3}
+          motion={motion}
+          seated={riding}
+        />
+      </group>
     </group>
   )
 }
@@ -640,6 +675,140 @@ function BusinessDistrict() {
         color="#bae6fd"
         opacity={0.5}
       />
+    </group>
+  )
+}
+
+/** A bike, facing along its rotation: two wheels, a frame, a saddle and handlebars. */
+function Bike({ position, rotation }: { position: Vector; rotation: number }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      {[-0.52, 0.52].map((z) => (
+        <mesh key={z} position={[0, 0.34, z]} rotation={[0, Math.PI / 2, 0]}>
+          <torusGeometry args={[0.32, 0.035, 8, 24]} />
+          <meshStandardMaterial color="#18181b" roughness={0.6} />
+        </mesh>
+      ))}
+      <Box size={[0.05, 0.05, 1.0]} position={[0, 0.62, 0]} color="#dc2626" />
+      <Box size={[0.05, 0.4, 0.05]} position={[0, 0.5, 0.22]} color="#dc2626" />
+      <Box size={[0.18, 0.05, 0.26]} position={[0, 0.78, 0.26]} color="#27272a" />
+      <Box size={[0.55, 0.04, 0.04]} position={[0, 0.9, -0.46]} color="#27272a" />
+      <Box size={[0.04, 0.3, 0.04]} position={[0, 0.74, -0.46]} color="#27272a" />
+    </group>
+  )
+}
+
+/** A small car, facing along its rotation (forwards is -z). */
+function Car({
+  position,
+  rotation,
+  colour,
+}: {
+  position: Vector
+  rotation: number
+  colour: string
+}) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <Box size={[1.8, 0.7, 4]} position={[0, 0.65, 0]} color={colour} radius={0.15} />
+      <Box
+        size={[1.6, 0.6, 2.1]}
+        position={[0, 1.25, 0.3]}
+        color="#cbd5e1"
+        radius={0.12}
+      />
+      {[
+        [-0.85, -1.3],
+        [0.85, -1.3],
+        [-0.85, 1.3],
+        [0.85, 1.3],
+      ].map(([x, z], i) => (
+        <mesh key={i} position={[x, 0.33, z]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.33, 0.33, 0.22, 14]} />
+          <meshStandardMaterial color="#18181b" />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function Bus({ colour }: { colour: string }) {
+  return (
+    <group>
+      <Box size={[2.5, 2.6, 10]} position={[0, 1.6, 0]} color={colour} radius={0.2} />
+      <Box size={[2.54, 0.9, 8.6]} position={[0, 2.1, 0.3]} color="#1e293b" />
+      {[-3.4, 3.4].map((z) =>
+        [-1.2, 1.2].map((x) => (
+          <mesh key={`${x}${z}`} position={[x, 0.45, z]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.45, 0.45, 0.3, 14]} />
+            <meshStandardMaterial color="#18181b" />
+          </mesh>
+        )),
+      )}
+    </group>
+  )
+}
+
+/**
+ * The traffic: a bus and a few cars going up and down the street, each in its
+ * lane, stopping when the player is in the road in front of them.
+ */
+const VEHICLES: Array<{
+  kind: 'bus' | 'car'
+  lane: 1 | -1
+  speed: number
+  start: number
+  colour: string
+}> = [
+  { kind: 'bus', lane: 1, speed: 7, start: -70, colour: '#b91c1c' },
+  { kind: 'car', lane: 1, speed: 10, start: 10, colour: '#1d4ed8' },
+  { kind: 'car', lane: -1, speed: 9, start: 40, colour: '#f59e0b' },
+  { kind: 'car', lane: -1, speed: 11, start: -30, colour: '#e5e7eb' },
+]
+const ROAD_END = 90
+
+function Traffic() {
+  const groups = useRef<Array<Group | null>>([])
+  const along = useRef(VEHICLES.map((v) => v.start))
+  useFrame((_, raw) => {
+    if (STILL) return
+    const delta = Math.min(raw, 0.25)
+    VEHICLES.forEach((v, i) => {
+      const g = groups.current[i]
+      if (!g) return
+      // Eastbound in the south lane, westbound in the north lane.
+      const z = v.lane * 2.4
+      const x = along.current[i]
+      const ahead = (playerAt.x - x) * v.lane
+      const inLane = Math.abs(playerAt.z - z) < 2.2
+      const blocked = inLane && ahead > 0 && ahead < (v.kind === 'bus' ? 9 : 6)
+      if (!blocked) {
+        let next = x + v.lane * v.speed * delta
+        if (next > ROAD_END) next = -ROAD_END
+        if (next < -ROAD_END) next = ROAD_END
+        along.current[i] = next
+      }
+      g.position.set(along.current[i], 0, z)
+    })
+  })
+  return (
+    <group>
+      {VEHICLES.map((v, i) => (
+        <group
+          key={i}
+          ref={(g) => {
+            groups.current[i] = g
+          }}
+          position={[v.start, 0, v.lane * 2.4]}
+          rotation={[0, v.lane > 0 ? -Math.PI / 2 : Math.PI / 2, 0]}
+        >
+          {v.kind === 'bus' ? (
+            <Bus colour={v.colour} />
+          ) : (
+            <Car position={[0, 0, 0]} rotation={0} colour={v.colour} />
+          )}
+        </group>
+      ))}
     </group>
   )
 }

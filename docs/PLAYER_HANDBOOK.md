@@ -97,8 +97,27 @@ you to your flat.
     changing rooms.
   - **Millpond Park** (always open): a walk round the pond, a run, a bench.
   - **Home**: go back inside. You can only go to bed at home.
-  - **Walk to work** (mornings only): the walk to the office; the day starts when you
-    arrive.
+  - **Cog & Kerb** (bikes and car hire, 8:00–20:00): buy a city bike (£240; it sells
+    back for £96) or lease a small car (£250 for the first week, then £60 every Monday
+    with the rent, until you hand it back).
+  - **Go to work** (mornings only): choose how, at the end of the street; the day starts
+    when you arrive.
+  - Traffic goes up and down the street (it stops for you). With a bike, **Get on your
+    bike** makes walking between places twice as quick; your bike waits by your door
+    and a leased car is parked outside.
+- **Ways to work** (from the front door or the end of the street), with when you would
+  arrive:
+
+  | Way  | Time | Cost                   | Also                                    |
+  | ---- | ---- | ---------------------- | --------------------------------------- |
+  | Walk | 40   | free                   | a little tiring                         |
+  | Bike | 20   | free (own a bike)      | fun, less stress, you arrive warm       |
+  | Bus  | 25   | £2.50                  |                                         |
+  | Car  | 15   | £4.50 fuel and parking | needs a lease; the traffic is stressful |
+  | Taxi | 12   | £14                    |                                         |
+
+  A home nearer work takes minutes off every way.
+
 - **Money**: you are paid on Fridays (more as you are promoted) and rent is taken on
   Mondays. The statement lists everything in and out. Going overdrawn is stressful.
 

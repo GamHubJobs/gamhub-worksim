@@ -58,6 +58,7 @@ import { OfficeView } from '../office/OfficeView'
 import { HomeView } from '../home/HomeView'
 import { CityView } from '../city/CityView'
 import { enterPlace, goOutside } from '../game/city'
+import { deal, setRiding } from '../game/transport'
 import { doHomeAction, goHome, goToBed, leaveForWork, lifePhase } from '../game/life'
 import { buyFurniture, moveHome, recolour, sellFurniture } from '../game/home'
 import { contactFriend, goOut, markRead as readMessages, respond } from '../game/social'
@@ -550,6 +551,12 @@ export function Desktop({
               if (id === 'office') setView({ app: 'office', spot: 'reception' })
             }}
             onOutside={() => void act(goOutside)}
+            onLeave={(commute) => {
+              void act((p) => leaveForWork(p, commute))
+              setView({ app: 'office', spot: 'reception' })
+            }}
+            onDeal={(which) => void act((p) => deal(p, which))}
+            onRide={(riding) => void act((p) => setRiding(p, riding))}
             onAction={(id) => void act((p) => doHomeAction(p, id))}
             onRespond={(id, accept) => void act((p) => respond(p, id, accept))}
             onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}

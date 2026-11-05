@@ -10,10 +10,10 @@ import { homeOf } from '../game/home'
 import { supportsWebGL } from '../office/webgl'
 import { HomeShop } from './HomeShop'
 import { MoneyPanel, NeedsPanel } from './LifePanels'
+import { CommuteChoices } from './CommuteChoices'
 import { Phone } from './Phone'
 import { canGo, plansTonight, unreadCount, type Contact } from '../game/social'
 import {
-  COMMUTES,
   HOME_ACTIONS,
   ROOMS,
   formatMoney,
@@ -22,7 +22,7 @@ import {
 } from '../content/life'
 import { HOURS } from '../content/workday'
 import { formatTime, nextWorkday, weekdayName } from '../game/clock'
-import { arrivalFor, canDo, lifePhase, sleepHours } from '../game/life'
+import { canDo, lifePhase, sleepHours } from '../game/life'
 import { canGoOut } from '../game/city'
 import type { Profile } from '../persistence/schemas'
 
@@ -280,54 +280,7 @@ export function HomeView({
                     className="mt-4 border-t border-slate-100 pt-3"
                     data-testid="commute"
                   >
-                    <h3 className="text-sm font-semibold text-slate-900">
-                      Leave for work
-                    </h3>
-                    <ul className="mt-2 grid gap-2 sm:grid-cols-3">
-                      {COMMUTES.map((c) => {
-                        const arrival = arrivalFor(profile, c.id)
-                        const broke = life.money < c.cost
-                        return (
-                          <li key={c.id}>
-                            <button
-                              type="button"
-                              disabled={broke}
-                              onClick={() => onLeave(c.id)}
-                              className="w-full rounded-lg border border-slate-200 p-3 text-left text-sm hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50"
-                            >
-                              <span className="block font-medium text-slate-900">
-                                {c.name}
-                                {c.cost ? ` · ${formatMoney(c.cost)}` : ' · free'}
-                              </span>
-                              <span className="block text-xs text-slate-600">
-                                {c.description}
-                              </span>
-                              <span
-                                className={`mt-1 block text-xs font-medium ${
-                                  arrival.late ? 'text-red-700' : 'text-emerald-700'
-                                }`}
-                              >
-                                Arrive {formatTime(arrival.minute)}
-                                {arrival.late ? ` (${arrival.late} min late)` : ''}
-                              </span>
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                    {!(life.ready.ate && life.ready.showered && life.ready.dressed) && (
-                      <p className="mt-2 text-xs text-amber-800">
-                        Not ready yet:{' '}
-                        {[
-                          !life.ready.ate && 'breakfast',
-                          !life.ready.showered && 'a shower',
-                          !life.ready.dressed && 'work clothes',
-                        ]
-                          .filter(Boolean)
-                          .join(', ')}
-                        . It will show at work.
-                      </p>
-                    )}
+                    <CommuteChoices profile={profile} onLeave={onLeave} />
                   </div>
                 )}
               </div>

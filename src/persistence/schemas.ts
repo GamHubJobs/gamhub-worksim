@@ -822,7 +822,17 @@ export const LifeSchema = z.object({
   /** When the player went to bed last night (home-clock minutes), if they did. */
   bedtime: z.number().int().nonnegative().nullable().default(null),
   /** The last way they travelled to work. */
-  commute: z.enum(['walk', 'bus', 'taxi']).default('bus'),
+  commute: z.enum(['walk', 'bike', 'bus', 'car', 'taxi']).default('bus'),
+  /** What the player owns to get around (see content/transport.ts). */
+  vehicles: z
+    .object({
+      bike: z.boolean().default(false),
+      /** A car on a weekly lease, paid on Mondays. */
+      car: z.boolean().default(false),
+      /** The last week the lease was paid. */
+      carWeek: z.number().int().nonnegative().default(0),
+    })
+    .prefault({}),
   /** Money in and out, newest last (the last 60). */
   ledger: z
     .array(
@@ -882,9 +892,13 @@ export const LifeSchema = z.object({
   city: z
     .object({
       /** The place they are at, or last left. */
-      at: z.enum(['home', 'office', 'cafe', 'shop', 'gym', 'park']).default('home'),
+      at: z
+        .enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage'])
+        .default('home'),
       /** Inside it, or out in the street. */
       inside: z.boolean().default(true),
+      /** Riding their bike around the neighbourhood (twice as quick as walking). */
+      riding: z.boolean().default(false),
     })
     .prefault({}),
   /** Where the player lives and what is in it (see content/home.ts). */

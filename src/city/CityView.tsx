@@ -17,9 +17,13 @@ import { PLACES, PLACE_ACTIONS, getPlace, type PlaceId } from '../content/city'
 import { formatMoney } from '../content/life'
 import { formatTime, nextWorkday, weekdayName } from '../game/clock'
 import { canEnter, minutesTo } from '../game/city'
-import { arrivalFor, canDo, lifePhase } from '../game/life'
+import { canDo, lifePhase } from '../game/life'
 import { unreadCount, type Contact } from '../game/social'
+import { CommuteChoices } from '../home/CommuteChoices'
 import { MoneyPanel, NeedsPanel } from '../home/LifePanels'
+import { BIKE, CAR } from '../content/transport'
+import { canDeal, type TransportDeal } from '../game/transport'
+import type { CommuteId } from '../content/life'
 import { Phone } from '../home/Phone'
 import { supportsWebGL } from '../office/webgl'
 import type { Profile } from '../persistence/schemas'
@@ -59,6 +63,9 @@ export function CityView({
   onRespond,
   onContact,
   onRead,
+  onLeave,
+  onDeal,
+  onRide,
 }: {
   profile: Profile
   onEnter: (id: PlaceId) => void
@@ -67,11 +74,16 @@ export function CityView({
   onRespond: (messageId: string, accept: boolean) => void
   onContact: (friendId: string, how: Contact) => void
   onRead: (friendId: string) => void
+  onLeave: (commute: CommuteId) => void
+  onDeal: (deal: TransportDeal) => void
+  onRide: (riding: boolean) => void
 }) {
   const [webgl] = useState(supportsWebGL)
   const [near, setNear] = useState<PlaceId | null>(null)
   const [phone, setPhone] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  // Choosing how to get to work, at the end of the street.
+  const [travel, setTravel] = useState(false)
   const keys = useRef(new Set<string>())
   const life = profile.work.life
   const phase = lifePhase(profile) === 'morning' ? 'morning' : 'evening'
@@ -84,7 +96,9 @@ export function CityView({
     (id: PlaceId) => {
       const blocked = canEnter(profile, id)
       setNotice(blocked)
-      if (!blocked) onEnter(id)
+      if (blocked) return
+      if (id === 'office') setTravel(true)
+      else onEnter(id)
     },
     [profile, onEnter],
   )
@@ -157,6 +171,9 @@ export function CityView({
                     onNear={onNear}
                     onDoor={go}
                     near={near}
+                    riding={life.city.riding}
+                    car={life.vehicles.car}
+                    bike={life.vehicles.bike}
                   />
                 </Suspense>
               </SceneBoundary>
@@ -172,7 +189,7 @@ export function CityView({
                       {near === 'home'
                         ? 'Go inside: home'
                         : near === 'office'
-                          ? 'Walk to work'
+                          ? 'Go to work'
                           : `Go into ${getPlace(near)!.name}`}{' '}
                       <span className="text-xs font-normal text-slate-300">(Enter)</span>
                     </button>
@@ -204,12 +221,38 @@ export function CityView({
               onClose={() => setPhone(false)}
               closeLabel="Put your phone away"
             />
+          ) : outside && travel ? (
+            <div
+              className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+              data-testid="commute"
+            >
+              <CommuteChoices profile={profile} onLeave={onLeave} title="Go to work" />
+              <button
+                type="button"
+                onClick={() => setTravel(false)}
+                className="mt-3 rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+              >
+                Not yet
+              </button>
+            </div>
           ) : outside ? (
             <div
               className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
               data-testid="places"
             >
-              <h2 className="font-semibold text-slate-900">Places</h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-semibold text-slate-900">Places</h2>
+                {life.vehicles.bike && (
+                  <button
+                    type="button"
+                    aria-pressed={life.city.riding}
+                    onClick={() => onRide(!life.city.riding)}
+                    className="rounded-full border border-slate-300 px-3 py-1 text-sm hover:bg-emerald-50 aria-pressed:border-emerald-600 aria-pressed:bg-emerald-50"
+                  >
+                    {life.city.riding ? 'On your bike: get off' : 'Get on your bike'}
+                  </button>
+                )}
+              </div>
               <ul className="mt-2 grid gap-2 sm:grid-cols-2">
                 {PLACES.map((place) => {
                   const blocked = canEnter(profile, place.id)
@@ -229,7 +272,7 @@ export function CityView({
                             className="h-2.5 w-2.5 rounded-full"
                             style={{ background: place.colour }}
                           />
-                          {place.id === 'office' ? 'Walk to work' : place.name}
+                          {place.id === 'office' ? 'Go to work' : place.name}
                         </span>
                         <span className="block text-xs text-slate-600">
                           {place.kind}
@@ -240,9 +283,9 @@ export function CityView({
                         <span className="mt-1 block text-xs text-slate-500">
                           {blocked ??
                             (place.id === 'office'
-                              ? `${minutes} min on foot · arrive ${formatTime(arrivalFor(profile, 'walk').minute)}`
+                              ? `On foot, by bike, bus, car or taxi · ${minutes} min walk`
                               : minutes
-                                ? `${minutes} min walk`
+                                ? `${minutes} min ${life.city.riding ? 'by bike' : 'walk'}`
                                 : 'You are here')}
                         </span>
                       </button>
@@ -287,7 +330,49 @@ export function CityView({
                     </li>
                   )
                 })}
-                {actions.length === 0 && (
+                {here.id === 'garage' &&
+                  (
+                    [
+                      life.vehicles.bike
+                        ? [
+                            'sell-bike',
+                            `Sell your bike · ${formatMoney(Math.round(BIKE.price * BIKE.resale))}`,
+                            'Second-hand, back to the shop.',
+                          ]
+                        : [
+                            'buy-bike',
+                            `Buy a ${BIKE.name.toLowerCase()} · ${formatMoney(BIKE.price)}`,
+                            BIKE.description,
+                          ],
+                      life.vehicles.car
+                        ? ['end-lease', 'Hand the car back', 'The weekly lease stops.']
+                        : [
+                            'lease-car',
+                            `Lease a small car · ${formatMoney(CAR.deposit)} now, then ${formatMoney(CAR.weekly)} a week`,
+                            CAR.description,
+                          ],
+                    ] as Array<[TransportDeal, string, string]>
+                  ).map(([which, label, about]) => {
+                    const blocked = canDeal(profile, which)
+                    return (
+                      <li key={which}>
+                        <button
+                          type="button"
+                          disabled={!!blocked}
+                          onClick={() => onDeal(which)}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-violet-400 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-55"
+                        >
+                          <span className="block font-medium text-slate-900">
+                            {label}
+                          </span>
+                          <span className="block text-xs text-slate-600">
+                            {blocked ?? about}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                {actions.length === 0 && here.id !== 'garage' && (
                   <li className="text-sm text-slate-500">
                     Nothing to do here right now.
                   </li>

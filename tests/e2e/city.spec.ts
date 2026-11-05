@@ -110,7 +110,7 @@ test('walking the street in 3D with the keyboard, and going in at a door', async
   await expect(city(page).getByTestId('place')).toContainText('Kettle & Crumb')
 })
 
-test('the morning: a gym shower and breakfast out, then the walk to work', async ({
+test('the morning: a gym shower and breakfast out, then walking to work', async ({
   page,
 }) => {
   await endTheDay(page)
@@ -142,7 +142,8 @@ test('the morning: a gym shower and breakfast out, then the walk to work', async
     .click()
   await city(page).getByRole('button', { name: 'Back out to the street' }).click()
 
-  await expect(city(page).getByTestId('place-office')).toContainText('40 min on foot')
+  await expect(city(page).getByTestId('place-office')).toContainText('40 min walk')
   await city(page).getByTestId('place-office').click()
+  await city(page).locator('[data-commute="walk"]').click()
   await expect(page.getByTestId('office')).toBeVisible({ timeout: 30_000 })
 })

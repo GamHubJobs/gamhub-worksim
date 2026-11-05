@@ -133,7 +133,7 @@ working simulations of the professional software used in its field (see
 - [x] L2 The home: a 3D flat, furniture, upgrades
 - [x] L3 Social life: friends, a phone, invitations
 - [x] L4 The city: a walkable district, third-person, enterable places
-- [ ] L5 Getting around: walking, bus, bike, car
+- [x] L5 Getting around: walking, bus, bike, car
 - [ ] L6 Career life: applications, salary negotiation, a side business
 - [ ] L7 AI in daily life
 
@@ -154,6 +154,40 @@ working simulations of the professional software used in its field (see
 - [x] C. A more realistic 3D office
 
 ---
+
+## 2026-11-05 · L5: getting around
+
+### Built
+
+- **Five ways to work** (`src/content/life.ts`): walk, bike (new: free, 20 minutes, fun
+  and less stress, a little warm on arrival), bus, car (new: 15 minutes, £4.50 fuel
+  and parking each way, a little stress from the traffic) and taxi. The choice, with
+  arrival times and reasons, is one component (`src/home/CommuteChoices.tsx`) at the
+  front door and at the end of the street.
+- **Cog & Kerb** (bikes and car hire, 8:00–20:00) on the high street: buy a bike
+  (£240, sold back for £96) or lease a small car (£250 for the first week, then £60
+  every Monday until handed back). Rules in `src/game/transport.ts`; the lease is
+  charged with the rent.
+- **The neighbourhood**: **Get on your bike** halves walking times between places and
+  speeds up the player in 3D (seated on a bike). The bike waits by the door, a leased
+  car is parked outside, and a bus and three cars drive the street in their lanes,
+  stopping for the player.
+- **Save data**: `life.vehicles` (bike, car, the last week paid) and `life.city.riding`;
+  two new ways to work and a new place in the saved lists. All additive.
+
+### Tests
+
+- 4 new unit tests (`src/game/transport.test.ts`): bike and car need owning; buying,
+  riding (half the time), cycling to work (free, warmer) and selling the bike; the
+  car lease with its Monday charge, fuel and parking, and handing it back; opening
+  hours. The city tests now include Cog & Kerb.
+- 1 new browser test (`tests/e2e/transport.spec.ts`): buying a bike, riding home,
+  the car offered but not owned, and cycling to work from the street.
+- Results: 2,064 unit tests; 159 Chromium browser tests passed; 5 production-build
+  tests; Firefox, WebKit and Edge 7 passed, 1 skipped, 1 failed in the full run: the
+  Firefox backup-and-restore journey (untouched by this stage) ran past its 3-minute
+  limit with two browsers at once, and passed when run again on its own (1.1 minutes).
+  Start screen 283 kB.
 
 ## 2026-11-05 · L4: the neighbourhood
 

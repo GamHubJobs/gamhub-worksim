@@ -70,5 +70,20 @@ documented and committed before the next.
   the same speed on a slow computer; the scene draws only a few times a second when
   nothing moves.
 - **Without 3D**: the list of places does everything the street does.
-- **The morning**: from the street the player can walk on to work (the walk commute):
+- **The morning**: from the street the player can go on to work (the walk commute):
   breakfast at the café or a shower at the gym count for the morning routine.
+
+## L5 in detail
+
+- **Ways to work**: walk, bike, bus, car and taxi, each with a time, a cost each way,
+  and effects on energy, stress and needs (`COMMUTES` in `src/content/life.ts`). The
+  same choice is offered at the front door and at the end of the street, with the
+  arrival time and the reason when one is not possible.
+- **Owning a way to get around** (`src/content/transport.ts`, `src/game/transport.ts`):
+  a bike bought once and sold second-hand; a car on a weekly lease (a deposit for the
+  first week, then a charge every Monday with the rent). Both from Cog & Kerb, a new
+  place on the high street. Saved in `life.vehicles` (additive).
+- **In the neighbourhood**: on the bike, walking times between places are halved and
+  the player moves faster in 3D; the bike waits by the door and a leased car is
+  parked outside. A bus and cars drive the street in their lanes and stop for the
+  player.

@@ -6,7 +6,7 @@
  */
 import type { LifeAction } from './life'
 
-export type PlaceId = 'home' | 'office' | 'cafe' | 'shop' | 'gym' | 'park'
+export type PlaceId = 'home' | 'office' | 'cafe' | 'shop' | 'gym' | 'park' | 'garage'
 
 export interface Place {
   id: PlaceId
@@ -71,6 +71,15 @@ export const PLACES: Place[] = [
     colour: '#4d7c0f',
   },
   {
+    id: 'garage',
+    name: 'Cog & Kerb',
+    kind: 'Bikes and car hire',
+    description: 'Bikes to buy, and small cars on a weekly lease.',
+    door: [-23, -8],
+    open: [8 * HOUR, 20 * HOUR],
+    colour: '#7c3aed',
+  },
+  {
     id: 'office',
     name: 'The office',
     kind: 'The road to work',
@@ -102,7 +111,7 @@ export const WALK_UNITS_A_MINUTE = 9
 
 /** Things to do inside the places in the neighbourhood. */
 export interface PlaceAction extends LifeAction {
-  place: Exclude<PlaceId, 'home' | 'office'>
+  place: Exclude<PlaceId, 'home' | 'office' | 'garage'>
 }
 
 export const PLACE_ACTIONS: PlaceAction[] = [

@@ -30,6 +30,7 @@ import { formatTime, nextWorkday, weekdayIndex, weekNumber, weekdayName } from '
 import { changeReputation } from './relationships'
 import { log, startNextDay } from './workday'
 import { afterNight, eveningMessages } from './social'
+import { canCommute, chargeCarLease } from './transport'
 import { clamp, decayed, earn, note, spend, withLife, withWellbeing } from './lifeTime'
 
 export const commuteOf = (id: CommuteId) => COMMUTES.find((c) => c.id === id)!
@@ -71,7 +72,7 @@ export function goHome(profile: ProfileData): ProfileData {
     minute: Math.round(work.minute + commuteMinutes(work.life, commute.id)),
     needs,
     log: [],
-    city: { at: 'home', inside: true },
+    city: { at: 'home', inside: true, riding: false },
   }
   life = spend(life, work.day, commute.cost, `${commute.name} home`)
   life = note(life, `Home from work (${commute.name.toLowerCase()})`)
@@ -232,6 +233,7 @@ export function goToBed(profile: ProfileData): ProfileData {
     life = { ...life, rentWeek: weekNumber(next) }
     life = note(life, `Paid ${formatMoney(rent)} rent`)
   }
+  if (weekdayIndex(next) === 0) life = chargeCarLease(life, next)
   return withLife(profile, life)
 }
 
@@ -253,7 +255,7 @@ export function arrivalFor(profile: ProfileData, commute: CommuteId): Arrival {
 export function leaveForWork(profile: ProfileData, commuteId: CommuteId): ProfileData {
   if (lifePhase(profile) !== 'morning') return profile
   const commute = commuteOf(commuteId)
-  if (profile.work.life.money < commute.cost) return profile
+  if (canCommute(profile.work.life, commuteId)) return profile
   const { minute, late } = arrivalFor(profile, commuteId)
   const before = profile.work.life
   const started = startNextDay(profile)
@@ -262,7 +264,7 @@ export function leaveForWork(profile: ProfileData, commuteId: CommuteId): Profil
     ...before,
     phase: 'work',
     commute: commuteId,
-    city: { at: 'home', inside: true },
+    city: { at: 'home', inside: true, riding: false },
   }
   life = spend(life, work.day, commute.cost, `${commute.name} to work`)
 
@@ -275,7 +277,13 @@ export function leaveForWork(profile: ProfileData, commuteId: CommuteId): Profil
 
   // How rested and ready they are.
   let energy = commute.energy
-  let stress = 0
+  let stress = commute.stress ?? 0
+  if (commute.needs) {
+    const needs = { ...life.needs }
+    for (const [need, value] of Object.entries(commute.needs) as Array<[NeedId, number]>)
+      needs[need] = clamp(needs[need] + value)
+    life = { ...life, needs }
+  }
   const sleep = before.bedtime === null ? SLEEP_NEEDED : sleepHours(before.bedtime)
   energy += sleepBonus(before)
   const weekend = work.day - profile.work.day > 1
