@@ -13,7 +13,6 @@ import {
   HOME_ACTIONS,
   LATEST_BEDTIME,
   SLEEP_NEEDED,
-  WEEKLY_PAY,
   formatMoney,
   type CommuteId,
   type HomeAction,
@@ -25,12 +24,12 @@ import { HOURS } from '../content/workday'
 import type { Life } from '../persistence/schemas'
 import { careerLevel, type ProfileData } from './career'
 import { bonusFor, comfort, enablerOf, enables, homeOf, sleepBonus } from './home'
-import { levelNumber } from './cases'
 import { formatTime, nextWorkday, weekdayIndex, weekNumber, weekdayName } from './clock'
 import { changeReputation } from './relationships'
 import { log, startNextDay } from './workday'
 import { afterNight, eveningMessages } from './social'
 import { canCommute, chargeCarLease } from './transport'
+import { careerEvening, weeklyPay } from './careerLife'
 import { clamp, decayed, earn, note, spend, withLife, withWellbeing } from './lifeTime'
 
 export const commuteOf = (id: CommuteId) => COMMUTES.find((c) => c.id === id)!
@@ -78,15 +77,18 @@ export function goHome(profile: ProfileData): ProfileData {
   life = note(life, `Home from work (${commute.name.toLowerCase()})`)
   // Friends get in touch in the evening.
   life = eveningMessages(life, work.day)
+  // Employers and the manager answer (see careerLife.ts).
+  const next = careerEvening(withLife(profile, life))
+  life = next.work.life
   // Pay day: Friday, once a week.
   const week = weekNumber(work.day)
   if (weekdayIndex(work.day) === 4 && life.paidWeek < week) {
-    const level = Math.min(WEEKLY_PAY.length, levelNumber(profile)) - 1
-    life = earn(life, work.day, WEEKLY_PAY[level], `Pay for week ${week}`)
+    const pay = weeklyPay(next)
+    life = earn(life, work.day, pay, `Pay for week ${week}`)
     life = { ...life, paidWeek: week }
-    life = note(life, `Paid ${formatMoney(WEEKLY_PAY[level])} for the week`)
+    life = note(life, `Paid ${formatMoney(pay)} for the week`)
   }
-  return withLife(profile, life)
+  return withLife(next, life)
 }
 
 // ---------------------------------------------------------------------------

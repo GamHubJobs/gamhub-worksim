@@ -12,6 +12,8 @@ import { HomeShop } from './HomeShop'
 import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { CommuteChoices } from './CommuteChoices'
 import { Phone } from './Phone'
+import { CareerPanel } from './CareerPanel'
+import type { ProfileData } from '../game/career'
 import { canGo, plansTonight, unreadCount, type Contact } from '../game/social'
 import {
   HOME_ACTIONS,
@@ -56,6 +58,7 @@ export function HomeView({
   onContact,
   onRead,
   onGoOutside,
+  onCareer,
 }: {
   profile: Profile
   onAction: (id: string) => void
@@ -70,9 +73,11 @@ export function HomeView({
   onContact: (friendId: string, how: Contact) => void
   onRead: (friendId: string) => void
   onGoOutside: () => void
+  /** Career life on the laptop: applies a rule from game/careerLife.ts. */
+  onCareer: (change: (profile: ProfileData) => ProfileData) => Promise<unknown>
 }) {
   const [webgl] = useState(supportsWebGL)
-  const [shop, setShop] = useState<'shop' | 'move' | 'phone' | null>(null)
+  const [shop, setShop] = useState<'shop' | 'move' | 'phone' | 'career' | null>(null)
   const life = profile.work.life
   const phase = lifePhase(profile)
   const [room, setRoom] = useState<RoomId>(phase === 'morning' ? 'bedroom' : 'living')
@@ -126,7 +131,13 @@ export function HomeView({
             </div>
           )}
 
-          {shop === 'phone' ? (
+          {shop === 'career' ? (
+            <CareerPanel
+              profile={profile}
+              onAct={onCareer}
+              onClose={() => setShop(null)}
+            />
+          ) : shop === 'phone' ? (
             <Phone
               profile={profile}
               onRespond={onRespond}
@@ -134,7 +145,7 @@ export function HomeView({
               onRead={onRead}
               onClose={() => setShop(null)}
             />
-          ) : shop ? (
+          ) : shop === 'shop' || shop === 'move' ? (
             <HomeShop
               profile={profile}
               tab={shop}
@@ -312,6 +323,24 @@ export function HomeView({
               Open your phone
             </button>
           </section>
+          {phase === 'evening' && (
+            <section
+              className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+              data-testid="laptop-summary"
+            >
+              <h2 className="font-semibold text-slate-900">Laptop</h2>
+              <p className="text-xs text-slate-500">
+                Job adverts, asking for a rise and a side business.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShop('career')}
+                className="mt-2 rounded-md border border-slate-300 px-2.5 py-1 text-sm hover:bg-amber-50"
+              >
+                Open your laptop
+              </button>
+            </section>
+          )}
           <section
             className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
             data-testid="your-home"

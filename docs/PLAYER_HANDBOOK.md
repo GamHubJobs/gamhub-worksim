@@ -118,6 +118,25 @@ you to your flat.
 
   A home nearer work takes minutes off every way.
 
+- **Your laptop** (evenings at home): your career outside the office.
+  - **Jobs**: four other employers are hiring (a housing trust, a freight company, a
+    firm of advisers and the district council), each for a role in your own career at
+    your level or one above, with the pay they would offer. They screen on your real
+    record: your level, tasks done to standard and your latest review. They reply the
+    next evening, with reasons if it is a no. An interview is three questions; answers
+    with a real example (what happened, what you did, how it turned out) score best,
+    and 4 out of 6 gets an offer, which stands for a week. You stay at your company:
+    an offer is something to mention when you ask for a rise.
+  - **Pay**: write to your manager asking for 3, 6, 10 or 15% (every four weeks). They
+    answer the next evening from your latest review, your reputation and any offer you
+    mention. Ask for more than that supports and you get what it does support, or
+    nothing; asking for a lot with nothing behind it costs some goodwill. Rises stay
+    with you when you are promoted.
+  - **Side business**: evening tutoring (£30 to set up), handmade cards and prints
+    (£60) or bike tune-ups (£45, needs your own bike). Each evening's work pays, more
+    for every three sessions as regulars come. Starting one declares it to your
+    employer. More than three evenings a week on top of work is tiring.
+
 - **Money**: you are paid on Fridays (more as you are promoted) and rent is taken on
   Mondays. The statement lists everything in and out. Going overdrawn is stressful.
 

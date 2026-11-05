@@ -833,6 +833,64 @@ export const LifeSchema = z.object({
       carWeek: z.number().int().nonnegative().default(0),
     })
     .prefault({}),
+  /** Job hunting, pay talks and a side business (see content/careerLife.ts). */
+  career: z
+    .object({
+      /** Applications to other employers, newest last. */
+      applications: z
+        .array(
+          z.object({
+            jobId: z.string(),
+            /** The day the player applied. */
+            day: z.number().int().min(1),
+            stage: z.enum([
+              'applied',
+              'rejected',
+              'interview',
+              'failed',
+              'offer',
+              'declined',
+              'used',
+              'expired',
+            ]),
+            /** The day the stage changed. */
+            since: z.number().int().min(1),
+            /** The weekly pay offered, in pence. */
+            offer: z.number().int().nonnegative().nullable().default(null),
+            /** What the employer said: reasons, interview feedback. */
+            notes: z.array(z.string()).max(8).default([]),
+          }),
+        )
+        .max(20)
+        .default([]),
+      /** Pay rises so far, in per cent on top of the level's pay. */
+      raisePct: z.number().int().nonnegative().default(0),
+      /** The week of the last pay talk. */
+      talkWeek: z.number().int().nonnegative().default(0),
+      /** A request for a rise waiting for the manager's answer. */
+      payTalk: z
+        .object({
+          ask: z.number().int().positive(),
+          day: z.number().int().min(1),
+          /** The outside offer cited, by job ID. */
+          offerJob: z.string().nullable().default(null),
+        })
+        .nullable()
+        .default(null),
+      /** The last answer about pay, for the panel. */
+      payAnswer: z.string().nullable().default(null),
+      business: z
+        .object({
+          id: z.enum(['tutoring', 'crafts', 'repairs']).nullable().default(null),
+          sessions: z.number().int().nonnegative().default(0),
+          earned: z.number().int().nonnegative().default(0),
+          /** Evenings this week, to warn about overdoing it. */
+          week: z.number().int().nonnegative().default(0),
+          weekSessions: z.number().int().nonnegative().default(0),
+        })
+        .prefault({}),
+    })
+    .prefault({}),
   /** Money in and out, newest last (the last 60). */
   ledger: z
     .array(

@@ -580,6 +580,7 @@ export function Desktop({
             onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}
             onRead={(friend) => void act((p) => readMessages(p, friend))}
             onGoOutside={() => void act(goOutside)}
+            onCareer={act}
           />
         ) : (
           <OfficeView

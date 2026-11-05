@@ -139,8 +139,11 @@ test('backup and restore between two browser profiles, and switching career', as
     buffer: Buffer.from(text),
   })
   const safety = other.waitForEvent('download')
+  // The restore ends by reloading the page: wait for that, not just the download.
+  const reloaded = other.waitForEvent('load', { timeout: 60_000 })
   await other.getByRole('button', { name: 'Replace my data with this backup' }).click()
   await safety
+  await reloaded
   await expect(other.getByRole('navigation', { name: 'Apps' })).toBeVisible({
     timeout: 60_000,
   })

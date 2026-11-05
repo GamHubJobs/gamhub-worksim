@@ -134,7 +134,7 @@ working simulations of the professional software used in its field (see
 - [x] L3 Social life: friends, a phone, invitations
 - [x] L4 The city: a walkable district, third-person, enterable places
 - [x] L5 Getting around: walking, bus, bike, car
-- [ ] L6 Career life: applications, salary negotiation, a side business
+- [x] L6 Career life: applications, salary negotiation, a side business
 - [ ] L7 AI in daily life
 
 **WorkSim AI** (complete). Plan: [docs/AI_PLAN.md](docs/AI_PLAN.md).
@@ -154,6 +154,38 @@ working simulations of the professional software used in its field (see
 - [x] C. A more realistic 3D office
 
 ---
+
+## 2026-11-05 · L6: career life
+
+### Built
+
+- **The laptop** at home in the evening (`src/home/CareerPanel.tsx`), with three tabs.
+- **Jobs**: four fictional employers (Larkspur Housing Trust, Harbour Lane Logistics,
+  Quill & Ledger Partners, Brightwater District Council) advertise a role in the
+  player's own career. Applications are screened on the real record the next evening,
+  with reasons; interviews are three competency questions with feedback on every
+  answer; offers stand for a week and can be turned down or mentioned in a pay talk.
+  The player stays at their company, so careers and progression are unchanged.
+- **Pay**: asking the manager for a rise every four weeks. The answer, the next
+  evening, comes from the latest review, reputation and any outside offer; over-asking
+  gets the supported amount or nothing, and a big ask with nothing behind it costs
+  reputation. Friday pay now includes rises.
+- **Side business**: evening tutoring, handmade cards and prints, or bike tune-ups
+  (needs a bike): a setup cost, pay each evening that grows with regular customers,
+  declared to the employer, and stress for more than three evenings a week.
+- **Save data**: `life.career` (applications, rises, the pending pay talk, the
+  business). Additive. Everything is deterministic: no AI and no randomness.
+
+### Tests
+
+- 9 new unit tests (`src/game/careerLife.test.ts`): screening with reasons, interviews
+  passed and failed, offers lapsing, pay decisions from the record, the manager's
+  answer and Friday pay with the rise, an outside offer as leverage, and the side
+  business (setup, pay, regulars, closing, overdoing it).
+- 1 new browser test (`tests/e2e/careerLife.spec.ts`): applying, starting and working
+  on a side business, asking for a rise, and both answers the next evening.
+- Fixed a timing race in the cross-browser backup test (`tests/browsers/journey.spec.ts`): restoring ends with a page reload, and the test went on as soon as the safety download started, so in Firefox it sometimes clicked on the page just before it reloaded. It now waits for the reload too. This was the Firefox timeout recorded in L5.
+- Results: 2,073 unit tests; 160 Chromium browser tests passed; 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before), after the fix above (before it, the Firefox backup test failed). Start screen 283 kB.
 
 ## 2026-11-05 · L5: getting around
 

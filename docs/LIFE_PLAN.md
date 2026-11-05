@@ -87,3 +87,22 @@ documented and committed before the next.
   the player moves faster in 3D; the bike waits by the door and a leased car is
   parked outside. A bus and cars drive the street in their lanes and stop for the
   player.
+
+## L6 in detail
+
+- **Job hunting** (`src/content/careerLife.ts`, `src/game/careerLife.ts`): four
+  fictional employers advertise a role in the player's own career (at their level or
+  one above). Applications are screened on the real record (level, tasks passed,
+  latest review rating) the next evening, with reasons. An interview is three
+  competency questions with a strong, an adequate and a weak answer; 4 out of 6 gets
+  an offer (a factor on current pay) that stands for 7 days. The player stays at
+  their company: WorkSim's careers, tasks and progression are untouched, and an offer
+  is leverage for a pay talk.
+- **Pay talks**: every four weeks, ask for 3, 6, 10 or 15%. The manager answers the
+  next evening; what the record supports comes from the latest review, reputation and
+  a cited offer (used up). Over-asking gets the supported amount or nothing, and a
+  big ask with nothing behind it costs reputation. Pay is the level's pay plus rises
+  (`weeklyPay`), paid on Fridays as before.
+- **A side business**: three to choose from, a setup cost, an evening session that
+  pays more as regulars come, and stress for more than three evenings a week.
+- All deterministic: no AI, no randomness. Saved in `life.career` (additive).
