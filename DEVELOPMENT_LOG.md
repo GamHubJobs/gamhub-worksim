@@ -169,7 +169,68 @@ working simulations of the professional software used in its field (see
 
 - [x] P1 Every person in every place can be talked to (E or a click)
 
-**Story Mode** (planned). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
+**Story Mode** (in progress). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
+
+- [x] Story 1–4 Engine and save, the Story screen and tracker, missions played in the
+      world, Finance & Administration chapter 1
+- [ ] Story 5 Chapters 2 and 3 of the same campaign, and its ending
+- [ ] Story 6–10 The other five careers
+- [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-06 · Story 1–4: Story Mode, and the first chapter played in person
+
+### Built
+
+- **Story Mode** (`src/game/story/`): one engine for every campaign (chapters, missions
+  of five kinds, objectives, scenes, decisions, flags, rewards given once), with the
+  story kept in its own optional part of the save (`work.story`). Free play is
+  unchanged: a career has no story unless the player starts one, and putting it away
+  keeps the career.
+- **Objectives are done in the world**, by the game's own systems: walking up to the
+  person a mission names plays their scene (with choices); a case arrives in the inbox and
+  is answered in the work tools; a meeting attended; being somewhere (the café, the park)
+  or dressed. The story checks after every change in the game, and after a case is sent.
+- **Screens**: Free play or Story Mode on the first screen; a **Story** button in the top
+  bar (start, continue, chapters and missions with Start, the people in the story and how
+  they see the player, the decisions made, put the story away); a tracker on screen (the
+  mission, what to do now and where); a "Mission complete" card (the summary, which
+  depends on the decisions, and the rewards).
+- **"Short Delivery"** (Finance & Administration), chapter 1: five missions (first
+  morning; faces and names; the missing invoice; the bakery on the corner, a side
+  mission in town; month-end). The player's choice about a colleague's mistake (cover for
+  him, tell the manager, or fix the process together) changes what the manager says,
+  what happens at month-end, the summaries and trust. Original characters and writing.
+- Fixed on the way: two 3D labels in the office (the player's desk nameplate and the
+  department sign) were drawn above the page's panels and could block a click on them.
+
+### Tests
+
+- Unit tests (`story.test.ts`, 11): free play has no story; older saves load; a story
+  round-trips through the save; putting it away keeps the career; only the person the
+  current objective names has a scene; a finished mission's reward is given once, its
+  summary shown, what opens next; a choice is made once; a mission with several physical
+  objectives (two people, a case, the manager); a meeting objective; a side mission in
+  town; decisions changing later scenes, summaries and trust; completing the chapter.
+- Browser tests (`story.spec.ts`): from the first screen in Story Mode, the first
+  morning played in person (Nina's welcome, Priya), the mission complete with its XP;
+  the missing invoice started from the Story screen; a reload part way (the story carries
+  on); Marcus, Ben, the case answered on the computer, Priya saying what follows from the
+  decision; the decisions on the Story screen and month-end open. And free play: no story
+  unless chosen, one started from the Story screen.
+- Screenshots: `docs/screenshots/story/`.
+- Results: 2,182 unit tests passed. Chromium browser tests, full run: 182 passed, 3
+  skipped (the opt-in screenshots), 1 flaky: the accessibility check of the start screen
+  and the office failed its first attempt and passed on its retry; run alone twice
+  afterwards, it passed both times. 5 production-build tests passed. Firefox, WebKit and
+  Edge 8 passed, 1 skipped (as before). Start screen 295 kB (from 286: the Story Mode
+  choice on the first screen).
+
+### Limits
+
+- One campaign, one chapter so far; the other careers say "coming soon".
+- No cinematic camera yet: scenes use the conversation view.
 
 ---
 

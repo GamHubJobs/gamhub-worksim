@@ -26,6 +26,7 @@ import {
 } from '../game/cases'
 import { caseRecordContent } from '../game/caseRecord'
 import { caseFor } from '../game/caseVariants'
+import { checkStory } from '../game/story/engine'
 import { careerLevel, DEFAULT_CAREER_ID } from '../game/career'
 import { getDeviceId } from '../persistence/db'
 import { DOCUMENT_FORMAT_VERSIONS } from '../persistence/schemas'
@@ -480,9 +481,12 @@ export function useCareer() {
         const changed = advanceCareer(change(latest), now).profile
         return {
           ...latest,
-          ...checkAchievements(
-            checkAssessments(checkCases(checkEvents(checkReviews(changed, now)), now)),
-            now,
+          // The story moves on with whatever has just come true.
+          ...checkStory(
+            checkAchievements(
+              checkAssessments(checkCases(checkEvents(checkReviews(changed, now)), now)),
+              now,
+            ),
           ),
         }
       })
@@ -606,9 +610,14 @@ export function useCareer() {
           }
           return {
             ...latest,
-            ...checkAchievements(
-              checkCases(recordCaseResult(latest, def, result, submittedAt), submittedAt),
-              submittedAt,
+            ...checkStory(
+              checkAchievements(
+                checkCases(
+                  recordCaseResult(latest, def, result, submittedAt),
+                  submittedAt,
+                ),
+                submittedAt,
+              ),
             ),
           }
         },

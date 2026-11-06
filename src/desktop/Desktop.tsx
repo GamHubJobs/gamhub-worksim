@@ -6,6 +6,9 @@
  * are the same WorkSim apps as before.
  */
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { StoryPanel, StoryTracker } from './StoryPanel'
+import { NEW_STORY_KEY } from './Onboarding'
+import { startStory } from '../game/story/engine'
 import { useAppServices } from '../app/services'
 import type { ContextItem, Proposal } from '../ai/types'
 import { workContext } from '../ai/workContext'
@@ -228,6 +231,14 @@ export function Desktop({
   const [view, setViewState] = useState<View>(() => readLastView() ?? DEFAULT_VIEW)
   const [helpOpen, setHelpOpen] = useState(false)
   const [soundOpen, setSoundOpen] = useState(false)
+  const [storyOpen, setStoryOpen] = useState(false)
+  // A new career started in Story Mode: the story begins as the desk opens.
+  useEffect(() => {
+    if (sessionStorage.getItem(NEW_STORY_KEY) !== '1') return
+    sessionStorage.removeItem(NEW_STORY_KEY)
+    if (!profile.work.story) void career.act((p) => startStory(p))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const weatherSetting = useWeatherSetting()
   useGameSounds(profile)
   const [area, setArea] = useState<Area>(initialArea)
@@ -504,70 +515,88 @@ export function Desktop({
       APP_COLORS[app.key] ?? (app.key.startsWith('tool:') ? TOOL_COLOR : '#1f6fbf')
 
   const header = (
-    <header className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-2">
-      <div className="flex items-baseline gap-3">
-        <span className="text-lg font-bold tracking-tight text-blue-900">
-          GamHub WorkSim
-        </span>
-        <span className="text-sm text-slate-500">{COMPANY.name}</span>
-      </div>
-      <div className="flex items-center gap-4">
-        {!dayOver && (
-          <WorkClock profile={profile} running={atComputer} onTimePassed={onTimePassed} />
-        )}
-        <button
-          type="button"
-          onClick={() => setView({ app: 'career' })}
-          className="flex items-center gap-3 rounded-md px-2 py-1 text-left hover:bg-slate-50"
-          data-testid="player-chip"
-        >
-          <span className="text-right">
-            <span className="block text-sm font-medium text-slate-800">
-              {profile.name}
-            </span>
-            <span className="block text-xs text-slate-500">{current.title}</span>
+    <>
+      <header className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-2">
+        <div className="flex items-baseline gap-3">
+          <span className="text-lg font-bold tracking-tight text-blue-900">
+            GamHub WorkSim
           </span>
-          <span className="w-28">
-            <span className="block text-right text-xs text-slate-500" data-testid="xp">
-              {profile.xp} XP
-            </span>
-            <span className="mt-0.5 block h-1.5 overflow-hidden rounded-full bg-slate-200">
-              <span
-                className="block h-full rounded-full bg-blue-600"
-                style={{ width: `${xpPercent}%` }}
-              />
-            </span>
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setSoundOpen(true)}
-          className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
-        >
-          Sound &amp; graphics
-        </button>
-        <button
-          type="button"
-          onClick={() => setHelpOpen(true)}
-          className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
-        >
-          Help
-        </button>
-        <button
-          type="button"
-          onClick={onOpenStorage}
-          className="relative rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
-        >
-          Storage &amp; backup
-          {storageWarning && (
-            <span
-              aria-label="needs attention"
-              className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-amber-500"
+          <span className="text-sm text-slate-500">{COMPANY.name}</span>
+        </div>
+        <div className="flex items-center gap-4">
+          {!dayOver && (
+            <WorkClock
+              profile={profile}
+              running={atComputer}
+              onTimePassed={onTimePassed}
             />
           )}
-        </button>
-      </div>
-    </header>
+          <button
+            type="button"
+            onClick={() => setView({ app: 'career' })}
+            className="flex items-center gap-3 rounded-md px-2 py-1 text-left hover:bg-slate-50"
+            data-testid="player-chip"
+          >
+            <span className="text-right">
+              <span className="block text-sm font-medium text-slate-800">
+                {profile.name}
+              </span>
+              <span className="block text-xs text-slate-500">{current.title}</span>
+            </span>
+            <span className="w-28">
+              <span className="block text-right text-xs text-slate-500" data-testid="xp">
+                {profile.xp} XP
+              </span>
+              <span className="mt-0.5 block h-1.5 overflow-hidden rounded-full bg-slate-200">
+                <span
+                  className="block h-full rounded-full bg-blue-600"
+                  style={{ width: `${xpPercent}%` }}
+                />
+              </span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setStoryOpen(true)}
+            className="rounded-md border border-rose-300 px-3 py-1 text-sm text-rose-800 hover:bg-rose-50"
+            data-testid="story-button"
+          >
+            Story
+          </button>
+          <button
+            type="button"
+            onClick={() => setSoundOpen(true)}
+            className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+          >
+            Sound &amp; graphics
+          </button>
+          <button
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+          >
+            Help
+          </button>
+          <button
+            type="button"
+            onClick={onOpenStorage}
+            className="relative rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+          >
+            Storage &amp; backup
+            {storageWarning && (
+              <span
+                aria-label="needs attention"
+                className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-amber-500"
+              />
+            )}
+          </button>
+        </div>
+      </header>
+      <StoryTracker profile={profile} act={act} />
+      {storyOpen && (
+        <StoryPanel profile={profile} act={act} onClose={() => setStoryOpen(false)} />
+      )}
+    </>
   )
 
   if (dayOver || view.app === 'office') {

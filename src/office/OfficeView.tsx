@@ -20,6 +20,10 @@ import {
 import { audio } from '../audio/manager'
 import { WalkView } from '../world/WalkView'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
+import { StoryScenePanel } from '../world/npc/StoryScenePanel'
+import { campaignFor } from '../game/story/campaigns'
+import { missionById, playScene, sceneFor, sceneLines } from '../game/story/engine'
+import type { Scene } from '../game/story/types'
 import { metAs, onTalkRequest, release } from '../world/npc/people'
 import { holdEncounter, relationOf, type Situation, type Who } from '../game/encounters'
 import { isInteraction } from './scene/officeLayout'
@@ -141,6 +145,23 @@ export function OfficeView({
       : null,
   )
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * 100))
+  // A story scene, when the mission under way needs this person (see game/story/).
+  const [storyScene, setStoryScene] = useState<{
+    scene: Scene
+    name: string
+    mission: string
+    lines: string[]
+  } | null>(null)
+  /** The story scene to play with someone now, if any. */
+  function storySceneWith(id: string, name: string) {
+    const scene = sceneFor(profile, id)
+    if (!scene) return false
+    const campaign = campaignFor(profile.careerId)!
+    const story = profile.work.story!
+    const mission = missionById(campaign, story.active)?.title ?? ''
+    setStoryScene({ scene, name, mission, lines: sceneLines(profile, scene) })
+    return true
+  }
   // Talking to someone met in the office (anyone but the conversations below).
   const [encounter, setEncounter] = useState<{
     who: Who
@@ -235,6 +256,7 @@ export function OfficeView({
 
   /** A conversation with one of the four colleagues the player works with most. */
   function talkWith(person: ColleagueId) {
+    if (storySceneWith(person, getPerson(person).name)) return
     if (person === 'facilities') setTipIndex((n) => n + 1)
     const conversation = conversationWith(profile, person, tipIndex)
     void onAct((p) => holdConversation(p, person, conversation))
@@ -250,6 +272,11 @@ export function OfficeView({
     const n = metAs(id)
     if (!n) {
       release()
+      return
+    }
+    // The story first: the person the mission under way is about.
+    if (storySceneWith(id, n.who.name)) {
+      setDialogue(null)
       return
     }
     const named = Object.values(PEOPLE_AT).includes(id as ColleagueId)
@@ -360,7 +387,7 @@ export function OfficeView({
   // A click on someone: walk over to talk to them.
   useEffect(() => onTalkRequest((id) => ask(`person:${id}`)), [])
   // The conversation is over: whoever it was goes back to their day.
-  const conversing = !!dialogue || !!encounter
+  const conversing = !!dialogue || !!encounter || !!storyScene
   useEffect(() => {
     if (!conversing) release()
   }, [conversing])
@@ -528,6 +555,19 @@ export function OfficeView({
         ))}
       </nav>
 
+      {storyScene && (
+        <StoryScenePanel
+          key={storyScene.scene.id}
+          scene={storyScene.scene}
+          name={storyScene.name}
+          mission={storyScene.mission}
+          lines={storyScene.lines}
+          onChoose={(choice) =>
+            void onAct((p) => playScene(p, storyScene.scene.id, choice))
+          }
+          onClose={() => setStoryScene(null)}
+        />
+      )}
       {encounter && (
         <EncounterPanel
           key={encounter.who.id}

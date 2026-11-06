@@ -57,3 +57,38 @@ characters; complete a mission with several physical objectives; make a decision
 changes a later event; unlock a side mission; explore freely between missions; save and
 restore story progress (and refresh mid-mission); complete a chapter; return to free
 play without losing anything. Screenshots and in-game evidence for each.
+
+## Done
+
+### Story 1–4 · The engine, the Story screen, missions played in the world, chapter 1
+
+- **The engine** (`src/game/story/`): campaigns, chapters, missions (main, side,
+  workplace, personal, character), objectives and scenes are data; `engine.ts` works out
+  what is open, locked, under way and done, the current objective, the player's
+  decisions and the flags they set, and gives a finished mission's reward once (XP,
+  trust, money). Objectives are done by the game's own systems: a scene played on
+  walking up to the person it names; a case answered on the computer (it arrives when
+  the mission starts); a meeting attended; being somewhere or dressed. After every
+  change in the game the story checks what has come true.
+- **The save**: `work.story`, optional. A career without it is free play, exactly as
+  before; older saves load unchanged. Refreshes and restarts carry on where the story
+  was. Putting the story away keeps the career.
+- **Starting**: the first screen offers Free play or Story Mode (for careers with a
+  story); the **Story** button in the top bar starts one later, or shows it: continue,
+  the chapters and missions (with Start), the people in the story and how they see the
+  player, the decisions made.
+- **While playing**: a tracker on screen (the mission, what to do now and where), and a
+  "Mission complete" card with the summary (which depends on the decisions) and the
+  rewards. Walking up to the person an objective names (E, a click, or the panel's Talk
+  button) plays their scene, in place of small talk, with choices.
+- **Finance & Administration, "Short Delivery", chapter 1** (five missions): the first
+  morning (Nina at reception, Priya in her office); faces and names (Marcus, Tom, Leila);
+  the missing invoice (Marcus admits a short delivery he never raised and asks the player
+  to keep quiet; Ben has the delivery note; the supplier's case on the computer; telling
+  Priya); the bakery on the corner (side: Walter in the park, then the café); month-end
+  (the stand-up, then Priya). Covering for Marcus, telling Priya, or fixing the process
+  together changes what Priya says when told, what she says at month-end (the auditors
+  find the credit note; or the new check caught two more), the summaries and trust.
+- **Limits**: one campaign so far, one chapter; the other careers show "coming soon". No
+  cinematic camera yet (the conversation view is used). Scenes are written, not
+  generated.

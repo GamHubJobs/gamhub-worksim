@@ -2,6 +2,10 @@
 import { useState, type FormEvent } from 'react'
 import { CAREERS } from '../content/careers'
 import { COMPANY } from '../content/company'
+import { campaignFor } from '../game/story/campaigns'
+
+/** Asks the desk to begin the story when it first opens (see Desktop). */
+export const NEW_STORY_KEY = 'worksim.newStory'
 
 export function Onboarding({
   onStart,
@@ -11,6 +15,8 @@ export function Onboarding({
   const [name, setName] = useState('')
   const [careerId, setCareerId] = useState(CAREERS[0].id)
   const [starting, setStarting] = useState(false)
+  const [mode, setMode] = useState<'free' | 'story'>('free')
+  const story = campaignFor(careerId)
   const [error, setError] = useState<string | null>(null)
 
   async function submit(event: FormEvent) {
@@ -19,6 +25,8 @@ export function Onboarding({
     setStarting(true)
     setError(null)
     try {
+      if (mode === 'story' && story) sessionStorage.setItem(NEW_STORY_KEY, '1')
+      else sessionStorage.removeItem(NEW_STORY_KEY)
       await onStart(name.trim(), careerId)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -75,6 +83,61 @@ export function Onboarding({
                 </span>
               </label>
             ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="mt-5" data-testid="play-mode">
+          <legend className="font-medium text-slate-800">How you play</legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <label
+              className={`flex cursor-pointer gap-3 rounded-lg border p-3 text-sm ${
+                mode === 'free'
+                  ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <input
+                type="radio"
+                name="mode"
+                checked={mode === 'free'}
+                onChange={() => setMode('free')}
+                className="mt-1"
+              />
+              <span>
+                <span className="block font-semibold text-slate-900">Free play</span>
+                <span className="block text-slate-600">
+                  An open-ended career and life: work, live, grow at your own pace.
+                </span>
+              </span>
+            </label>
+            <label
+              className={`flex gap-3 rounded-lg border p-3 text-sm ${
+                !story
+                  ? 'cursor-not-allowed border-slate-200 text-slate-400'
+                  : mode === 'story'
+                    ? 'cursor-pointer border-rose-500 bg-rose-50 ring-1 ring-rose-500'
+                    : 'cursor-pointer border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <input
+                type="radio"
+                name="mode"
+                checked={mode === 'story' && !!story}
+                disabled={!story}
+                onChange={() => setMode('story')}
+                className="mt-1"
+              />
+              <span>
+                <span className="block font-semibold">
+                  Story Mode{story ? `: ${story.title}` : ''}
+                </span>
+                <span className="block">
+                  {story
+                    ? 'A story told in missions you play in person, with choices that come back later. Free play is always there between missions.'
+                    : 'Coming soon for this career (Finance & Administration has the first story).'}
+                </span>
+              </span>
+            </label>
           </div>
         </fieldset>
 

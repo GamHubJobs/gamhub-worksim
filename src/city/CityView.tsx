@@ -35,6 +35,10 @@ import type { InteriorId } from './scene/InteriorScene'
 import { WalkView } from '../world/WalkView'
 import { isRaining, useWeatherSetting } from '../world/weather'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
+import { StoryScenePanel } from '../world/npc/StoryScenePanel'
+import { campaignFor } from '../game/story/campaigns'
+import { missionById, playScene, sceneFor, sceneLines } from '../game/story/engine'
+import type { Scene } from '../game/story/types'
 import { metAs, onTalkRequest, release } from '../world/npc/people'
 import { holdEncounter, relationOf, type Situation, type Who } from '../game/encounters'
 import type { ProfileData } from '../game/career'
@@ -154,6 +158,23 @@ export function CityView({
     },
     [walkable, commit, life.city.at],
   )
+  // A story scene, when the mission under way needs this person (see game/story/).
+  const [storyScene, setStoryScene] = useState<{
+    scene: Scene
+    name: string
+    mission: string
+    lines: string[]
+  } | null>(null)
+  /** The story scene to play with someone now, if any. */
+  function storySceneWith(id: string, name: string) {
+    const scene = sceneFor(profile, id)
+    if (!scene) return false
+    const campaign = campaignFor(profile.careerId)!
+    const story = profile.work.story!
+    const mission = missionById(campaign, story.active)?.title ?? ''
+    setStoryScene({ scene, name, mission, lines: sceneLines(profile, scene) })
+    return true
+  }
   // Talking to someone met here (anyone: staff, customers, people in the street).
   const [encounter, setEncounter] = useState<{ who: Who; situation: Situation } | null>(
     null,
@@ -166,12 +187,14 @@ export function CityView({
         release()
         return
       }
+      if (storySceneWith(id, n.who.name)) return
       setEncounter({
         who: n.who,
         situation: { availability: n.availability, doing: n.doing, minute },
       })
     },
-    [minute],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [minute, profile],
   )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
@@ -197,8 +220,8 @@ export function CityView({
   )
   // The conversation is over: they go back to what they were doing.
   useEffect(() => {
-    if (!encounter) release()
-  }, [encounter])
+    if (!encounter && !storyScene) release()
+  }, [encounter, storyScene])
   // Which part of the street the player is in, for the sounds around them.
   const [area, setArea] = useState<Area>(() => areaAt(standAt(life.city.at)[0]))
   const onArea = useCallback((next: Area) => setArea(next), [])
@@ -354,6 +377,20 @@ export function CityView({
             </WalkView>
           ) : null}
 
+          {storyScene && (
+            <StoryScenePanel
+              key={storyScene.scene.id}
+              className="fixed right-4 bottom-4 z-40"
+              scene={storyScene.scene}
+              name={storyScene.name}
+              mission={storyScene.mission}
+              lines={storyScene.lines}
+              onChoose={(choice) =>
+                void onAct((p) => playScene(p, storyScene.scene.id, choice))
+              }
+              onClose={() => setStoryScene(null)}
+            />
+          )}
           {encounter && (
             <EncounterPanel
               key={encounter.who.id}

@@ -66,6 +66,17 @@ know you and what happened last time. Friendly conversations build trust a littl
 a day per person; a real favour builds more; rudeness costs trust and is remembered.
 Press **Esc** or **Goodbye** to end a conversation. See [People](PEOPLE.md).
 
+### Story Mode
+
+Choose **Story Mode** on the first screen, or press **Story** in the top bar, to play a
+story told in missions (so far for Finance & Administration: "Short Delivery"). The
+tracker at the top right says what to do now and where. Missions are played in person:
+walk up to the person a mission is about and their scene plays, with choices; some need
+work on your computer, a meeting, or a visit somewhere in town. What you decide comes
+back later. Between missions your time is your own, and everything else in your career
+carries on as normal. The Story screen lists the missions (start one, or switch), the
+people in your story and the decisions you made.
+
 ## Life outside work
 
 After work you go home. The end-of-day summary still comes first; **Go home** takes

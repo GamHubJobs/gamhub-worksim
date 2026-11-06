@@ -720,6 +720,7 @@ function Building({ playerName }: { playerName: string }) {
         position={[0.8, 1.95, -7.87]}
         distanceFactor={4}
         pointerEvents="none"
+        zIndexRange={[10, 0]}
       >
         <span className="text-[10px] font-semibold tracking-[0.3em] text-slate-500 uppercase">
           {activeDepartment().name}
@@ -731,6 +732,8 @@ function Building({ playerName }: { playerName: string }) {
         position={[0.6, 0.79, 1.42]}
         rotation={[-Math.PI / 2, 0, 0]}
         distanceFactor={2.5}
+        pointerEvents="none"
+        zIndexRange={[10, 0]}
       >
         <span className="pointer-events-none rounded-sm bg-white px-1.5 py-0.5 text-[9px] font-semibold text-slate-700 shadow">
           {playerName}
@@ -813,6 +816,7 @@ function Reception() {
         position={[-6.6, 1.95, 2.4]}
         distanceFactor={4}
         pointerEvents="none"
+        zIndexRange={[10, 0]}
       >
         <div className="text-center text-white">
           <p className="text-2xl font-bold tracking-wide">{COMPANY.name}</p>

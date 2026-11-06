@@ -1000,6 +1000,29 @@ export const LifeSchema = z.object({
     .prefault({}),
 })
 
+/**
+ * Story Mode (see game/story/): the campaign being played, which chapter, the
+ * mission under way and its objectives done, missions finished, the player's
+ * decisions and the flags they set. Missing for free play (older saves too).
+ */
+export const StorySchema = z.object({
+  campaign: z.string(),
+  /** The day it was started. */
+  started: z.number().int(),
+  chapter: z.string(),
+  /** The mission being played, if any. */
+  active: z.string().nullable(),
+  /** Per mission: the objectives done. */
+  progress: z.record(z.string(), z.array(z.string())),
+  /** Missions finished, in order. */
+  done: z.array(z.string()),
+  /** Per scene: the choice made. */
+  decisions: z.record(z.string(), z.string()),
+  flags: z.array(z.string()),
+  /** The last mission finished, until its summary has been read. */
+  finished: z.string().nullable().default(null),
+})
+
 export const WorkStateSchema = z.object({
   day: z.number().int().min(1),
   minute: OfficeMinuteSchema,
@@ -1009,6 +1032,8 @@ export const WorkStateSchema = z.object({
   wellbeing: WellbeingSchema,
   /** Per person ID; colleagues the player has not met yet are missing. */
   relationships: z.record(z.string(), RelationshipSchema),
+  /** Story Mode, if the player is playing a story (free play otherwise). */
+  story: StorySchema.optional(),
   /** How the wider office sees the player's professionalism. */
   reputation: PercentSchema,
   /** Per assignment ID. */
@@ -1228,6 +1253,7 @@ export type Deadline = z.infer<typeof DeadlineSchema>
 export type DaySummary = z.infer<typeof DaySummarySchema>
 export type Review = z.infer<typeof ReviewSchema>
 export type WorkState = z.infer<typeof WorkStateSchema>
+export type Story = z.infer<typeof StorySchema>
 export type Profile = z.infer<typeof ProfileSchema>
 export type MetaEntry = z.infer<typeof MetaEntrySchema>
 export type OutboxEntry = z.infer<typeof OutboxEntrySchema>
