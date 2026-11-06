@@ -64,7 +64,7 @@ test('sound follows the player, and the settings are kept', async ({ page }) => 
   await panel.getByLabel('Master volume').fill('50')
   await panel.getByLabel('Sound captions').check()
   await expect(panel.getByText('50%').first()).toBeVisible()
-  await panel.getByRole('button', { name: 'Close' }).click()
+  await panel.getByRole('button', { name: 'Close', exact: true }).click()
   await play(page, 'pay')
   await expect(page.getByTestId('sound-captions')).toContainText('Pay received')
   await page.reload()
@@ -76,7 +76,7 @@ test('sound follows the player, and the settings are kept', async ({ page }) => 
   // Mute all: silence (the surroundings fade out too).
   await panel.getByLabel('Mute all sound').check()
   await expect(panel.getByLabel('Master volume')).toBeDisabled()
-  await panel.getByRole('button', { name: 'Close' }).click()
+  await panel.getByRole('button', { name: 'Close', exact: true }).click()
   await page.waitForTimeout(1500)
   expect(await loudest(page, 400)).toBeLessThan(0.0005)
   expect(errors).toEqual([])

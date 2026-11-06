@@ -21,8 +21,9 @@ it is finished. This document describes how it works and what is done so far.
 | Mouse look (pointer lock)     | the **Mouse look** button; Esc releases |
 
 Crouch is **C** rather than Ctrl: in a browser, Ctrl with W closes the tab, and the
-page cannot prevent it. The keys are kept in `src/world/keys.ts` (with saving on this
-device); a screen to change them is still to come.
+page cannot prevent it. The keys can be changed in **Sound & graphics → Controls**:
+choose a control, press the new key (Esc cancels), or **Reset the keys**. They are kept
+on this device (`src/world/keys.ts`).
 
 Near something usable, a small prompt says **Press E to …** (or why it cannot be done
 now). While an activity plays, a bar shows its stage and progress; pressing E or moving
@@ -100,11 +101,18 @@ src/world/
 | Home           | Cook at the hob (sizzle and steam) and eat at the table; breakfast; coffee from the machine; a takeaway (order on the phone, collect at the door, eat); brush teeth and wash at the basin (the tap runs), then shower (water, splashes, steam, a wet floor); get dressed; read, watch a series (the TV lights up), call a friend or play games on the sofa; study at the desk; yoga; a run or out with friends; bed (sit, lie down, fall asleep); the front door |
 | The office     | Walk between reception, the desks, the manager’s office and the break room (moving between areas takes office time, as before); sit down at your desk and log in before the computer opens; talk to Nina, your senior colleague and Tom face to face; sit in the visitor’s chair with your manager; make a coffee at the machine (steam from the mug); have lunch at the table; read the whiteboard and the notice board; leave by the exit                      |
 
+## Weather
+
+On about one day in three it rains (decided from the day number, so the same every
+time: `src/world/weather.ts`). Outdoors, on the street and in the park, rain falls
+around the player, splashes on the ground, the road looks wet and the sky is greyer;
+rain is heard outdoors and softly at home. **Sound & graphics → Weather** can set it to
+**Always dry**. On Low graphics there are fewer drops.
+
 ## Still to do
 
 - Meetings are still joined from the panel (the character does not walk to the meeting first).
 - The driver cannot be seen inside the car (its cabin is solid).
-- Weather (rain), a screen to change the keys, and screenshots of every interaction.
 
 ## Limits
 

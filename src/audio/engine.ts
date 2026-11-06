@@ -793,6 +793,19 @@ export function createEngine(): AudioEngine | null {
           pan: 0.6,
         })
         break
+      case 'thunder':
+        // Distant thunder: a long, low rumble rolling across.
+        length = 4
+        hiss(to, t, 3.8, {
+          color: 'brown',
+          type: 'lowpass',
+          freq: 160,
+          freqTo: 70,
+          gain: 0.35,
+          attack: 0.6,
+          pan: rand(-0.6, 0.6),
+        })
+        break
       case 'footsteps': {
         const n = Math.floor(rand(4, 9))
         const g = rand(0.12, 0.25)
@@ -838,6 +851,11 @@ export function createEngine(): AudioEngine | null {
     }
     if (layers.fridge) hum(run, 55, 0.012)
     if (layers.water) bed(run, 'pink', 'bandpass', 900, 0.05, 0.8)
+    if (layers.rain) {
+      // Rain: a hiss of drops and a softer patter beneath it.
+      bed(run, 'white', 'highpass', 2200, 0.09 * layers.rain, 0.15)
+      bed(run, 'pink', 'bandpass', 1100, 0.07 * layers.rain, 0.25)
+    }
     if (layers.treadmills) {
       hum(run, 70, 0.01)
       bed(run, 'brown', 'lowpass', 260, 0.12, 0.2)
@@ -846,9 +864,16 @@ export function createEngine(): AudioEngine | null {
     const events = (Object.entries(layers) as Array<[Layer, number]>).filter(
       ([layer, rate]) =>
         rate > 0 &&
-        !['traffic', 'wind', 'aircon', 'fridge', 'clock', 'water', 'treadmills'].includes(
-          layer,
-        ),
+        ![
+          'traffic',
+          'wind',
+          'aircon',
+          'fridge',
+          'clock',
+          'water',
+          'treadmills',
+          'rain',
+        ].includes(layer),
     )
     const tickMs = 250
     run.timers.push(

@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import { controlFor, keyName, readKeymap, type Control } from './keys'
+import { controlFor, keyName, keymap, onKeymapChange, type Control } from './keys'
 import type { Controls, Prompt } from './PlayerRig'
 
 export interface WalkApi {
@@ -56,7 +56,8 @@ export function WalkView({
     null,
   )
   const [locked, setLocked] = useState(false)
-  const [keymap] = useState(readKeymap)
+  const [keys, setKeys] = useState(keymap)
+  useEffect(() => onKeymapChange(() => setKeys(keymap())), [])
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
 
   useEffect(() => {
@@ -78,24 +79,24 @@ export function WalkView({
 
   const keyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      const c = controlFor(keymap, e.code)
+      const c = controlFor(keys, e.code)
       if (!c) return
       e.preventDefault()
       if (ONCE.has(c)) {
         if (!e.repeat) controls.current.pressed.push(c)
       } else controls.current.held.add(c)
     },
-    [keymap],
+    [keys],
   )
   const keyUp = useCallback(
     (e: React.KeyboardEvent) => {
-      const c = controlFor(keymap, e.code)
+      const c = controlFor(keys, e.code)
       if (c) controls.current.held.delete(c)
     },
-    [keymap],
+    [keys],
   )
 
-  const interact = keyName(keymap.interact[0])
+  const interact = keyName(keys.interact[0] ?? 'KeyE')
   return (
     <div
       ref={box}

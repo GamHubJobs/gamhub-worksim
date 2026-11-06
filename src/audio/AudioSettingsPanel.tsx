@@ -7,6 +7,8 @@ import { audio, type EffectId } from './manager'
 import { CATEGORIES, type AudioSettings, type CategoryId } from './settings'
 import { useAudioSettings } from './useAudio'
 import { setGraphicsQuality, useGraphicsQuality, type Quality } from '../ui/graphics'
+import { setWeatherSetting, useWeatherSetting } from '../world/weather'
+import { Controls } from './ControlsSettings'
 
 const QUALITIES: Array<[Quality, string, string]> = [
   ['auto', 'Auto', 'Less detail on computers that draw 3D without a graphics card.'],
@@ -29,6 +31,7 @@ const SAMPLE: Record<CategoryId, EffectId> = {
 export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
   const settings = useAudioSettings()
   const quality = useGraphicsQuality()
+  const weather = useWeatherSetting()
   const dialog = useRef<HTMLDivElement>(null)
   const change = (next: Partial<AudioSettings>) => audio.update({ ...settings, ...next })
   const changeCategory = (
@@ -73,7 +76,7 @@ export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center justify-between gap-2">
           <h2 id="sound-title" className="text-lg font-bold text-slate-900">
-            Sound and graphics
+            Sound, graphics and controls
           </h2>
           <button
             type="button"
@@ -192,6 +195,38 @@ export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
                   className="mt-1"
                   checked={quality === id}
                   onChange={() => setGraphicsQuality(id)}
+                />
+                <span>
+                  <span className="font-medium">{name}</span>
+                  <span className="block text-xs text-slate-500">{about}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <Controls />
+
+        <fieldset className="mt-3 border-t border-slate-100 pt-3" data-testid="weather">
+          <legend className="text-sm font-semibold text-slate-900">Weather</legend>
+          <div className="mt-1 space-y-1">
+            {(
+              [
+                [
+                  'forecast',
+                  'As forecast',
+                  'Rain on some days, outdoors, with its sound.',
+                ],
+                ['dry', 'Always dry', 'No rain.'],
+              ] as const
+            ).map(([id, name, about]) => (
+              <label key={id} className="flex items-start gap-2 text-sm text-slate-800">
+                <input
+                  type="radio"
+                  name="weather"
+                  className="mt-1"
+                  checked={weather === id}
+                  onChange={() => setWeatherSetting(id)}
                 />
                 <span>
                   <span className="font-medium">{name}</span>

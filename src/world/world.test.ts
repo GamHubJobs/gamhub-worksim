@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { layersFor } from '../audio/scenes'
+import { isRaining, rainsOn } from './weather'
+import { DEFAULT_KEYS, controlFor, keyName, withKey } from './keys'
 import { cameraAt, clampOrbit, rayBox } from './character/camera'
 import {
   NO_INPUT,
@@ -265,5 +268,41 @@ describe('driving', () => {
     const c = go(parked, { forward: 1 }, 5, [wallAhead])
     expect(c.z).toBeGreaterThan(-8 + 0.5)
     expect(c.speed).toBeLessThan(4)
+  })
+})
+
+describe('the weather', () => {
+  it('rains on about a third of days, the same days every time, unless always dry', () => {
+    const rainy = Array.from({ length: 300 }, (_, i) => rainsOn(i + 1)).filter(
+      Boolean,
+    ).length
+    expect(rainy).toBeGreaterThan(70)
+    expect(rainy).toBeLessThan(130)
+    expect(rainsOn(7)).toBe(rainsOn(7))
+    const wet = Array.from({ length: 30 }, (_, i) => i + 1).find(rainsOn)!
+    expect(isRaining(wet, 'forecast')).toBe(true)
+    expect(isRaining(wet, 'dry')).toBe(false)
+  })
+
+  it('rain is heard outdoors, softly at home, and keeps the birds away', () => {
+    const street = layersFor({ place: 'street', time: 'day', rain: true })
+    expect(street.rain).toBe(1)
+    expect(street.thunder).toBeGreaterThan(0)
+    expect(street.birds).toBe(0)
+    expect(layersFor({ place: 'home', time: 'evening', rain: true }).rain).toBeLessThan(1)
+    expect(layersFor({ place: 'office', time: 'day', rain: true }).rain).toBeUndefined()
+    expect(layersFor({ place: 'street', time: 'day' }).rain).toBeUndefined()
+  })
+})
+
+describe('changing the keys', () => {
+  it('gives a control a new key and takes that key from any other', () => {
+    const map = withKey(DEFAULT_KEYS, 'jump', 'KeyE')
+    expect(map.jump).toEqual(['KeyE'])
+    expect(map.interact).not.toContain('KeyE')
+    expect(controlFor(map, 'KeyE')).toBe('jump')
+    expect(controlFor(DEFAULT_KEYS, 'KeyC')).toBe('crouch')
+    expect(keyName('ShiftLeft')).toBe('Shift')
+    expect(keyName('KeyW')).toBe('W')
   })
 })

@@ -167,6 +167,32 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-05 · Character 5: rain and controls
+
+### Built
+
+- **Rain** (`src/world/weather.ts`, `src/world/vfx/Rain.tsx`): on about one day in
+  three, fixed by the day number. On the street and in the park, streaks of rain fall
+  around the player, splash on the ground, the road looks wet and the sky turns grey;
+  the rain and distant thunder are heard outdoors, and softly at home. Fewer drops on
+  Low graphics, and the rain draws at a capped rate.
+- **Weather setting**: Sound & graphics → Weather, _As forecast_ or _Always dry_.
+- **Changing the keys**: Sound & graphics → Controls lists every control with its key;
+  choose one and press the new key (Esc cancels), or reset them all. Changes apply at
+  once, also in a 3D view already open.
+- **Interaction screenshots** in `docs/screenshots/interactions/`
+  (`npm run shots:interactions`): the office desk, cooking and eating, the shower,
+  the bench press, the café, the shop, bed and rain in the street.
+
+### Tests
+
+- New browser tests: rain on a rainy day (heard on the street, and off with Always
+  dry); changing a key and resetting the keys. Unit tests for the weather and keys.
+- Fixed while testing: the panel now has more than one button whose name includes "Close", so the sound test picks the exact one.
+- Results: 2,117 unit tests; 168 Chromium browser tests passed (3 skipped: the opt-in screenshots). Before the fix above, the sound test failed twice, and the accessibility check passed on a retry (it is slow under the full run); the sound tests then passed on their own. 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
+
+---
+
 ## 2026-11-05 · Character 4: the office
 
 ### Built

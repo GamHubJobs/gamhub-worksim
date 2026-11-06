@@ -354,6 +354,10 @@ computer as you play: nothing is downloaded. See [SOUND_PLAN.md](SOUND_PLAN.md).
 street and places. Low has fewer lights and people and is smoother on slower
 computers; Auto picks it on computers without a graphics card.
 
+**Weather** (same panel): on some days it rains outdoors, seen and heard; choose
+**Always dry** for no rain. **Controls** (same panel): change the key for any
+control (choose it, then press the new key), or reset them all.
+
 ## Accessibility
 
 Everything works with the keyboard. Screen readers are supported, and reduced motion

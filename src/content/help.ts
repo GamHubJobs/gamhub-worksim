@@ -120,7 +120,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'Sound',
     text: [
       'WorkSim has sound: the office, the street, the café and home each sound different and change through the day, with footsteps, doors, typing, and sounds for new emails, finished tasks, pay day and promotions. Music plays now and then. Every sound is made on your computer as you play, so nothing is downloaded and it works offline.',
-      'Open **Sound & graphics** (in the top bar, or ♪ on the taskbar) to change the master volume, turn each kind of sound up, down or off, or mute everything. **Fewer sounds** makes the surroundings quieter and sparser with no button clicks; **Sound captions** shows a short note on screen for important sounds. Sound is never needed to play. **Graphics** (Auto, High or Low) sets the detail of the 3D views: Low is smoother on slower computers. Settings are kept on this device.',
+      'Open **Sound & graphics** (in the top bar, or ♪ on the taskbar) to change the master volume, turn each kind of sound up, down or off, or mute everything. **Fewer sounds** makes the surroundings quieter and sparser with no button clicks; **Sound captions** shows a short note on screen for important sounds. Sound is never needed to play. **Graphics** (Auto, High or Low) sets the detail of the 3D views: Low is smoother on slower computers. **Weather**: rain on some days outdoors, or **Always dry**. **Controls**: change the key for walking, running, jumping, using things and the rest, or reset them. Settings are kept on this device.',
     ],
   },
   {

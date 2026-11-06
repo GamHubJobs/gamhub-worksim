@@ -23,6 +23,7 @@ import {
   type Prompt,
 } from '../../world/PlayerRig'
 import { ActivityEffects } from '../../world/vfx/ActivityEffects'
+import { Rain } from '../../world/vfx/Rain'
 import { Ticker } from './interiors/common'
 import { GYM_ACTIVITIES, GYM_BOXES, GYM_SIZE, GYM_START } from './interiors/gymLayout'
 import { Interior, PLAYER, type Doing, type InteriorState } from './interiors/kit'
@@ -73,6 +74,8 @@ export interface InteriorSceneProps {
   /** The 3D view is ready: activities can be handed to it. */
   onReady?: () => void
   dressed: boolean
+  /** It is raining today (seen in the park). */
+  raining?: boolean
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -94,7 +97,13 @@ function InteriorScene(props: InteriorSceneProps) {
   const layout = LAYOUTS[place]
   const Room = ROOMS[place]
   const outdoors = place === 'park'
-  const sky = dark ? '#1e293b' : morning ? '#cfe8f7' : '#f3c99b'
+  const sky = dark
+    ? '#1e293b'
+    : outdoors && props.raining
+      ? '#94a3b8'
+      : morning
+        ? '#cfe8f7'
+        : '#f3c99b'
   const now = useRef<ActivityNow>({
     id: null,
     t: 0,
@@ -177,6 +186,7 @@ function InteriorScene(props: InteriorSceneProps) {
               hands={hands}
             />
             <ActivityEffects activities={activities} />
+            {outdoors && props.raining && <Rain low={low} />}
           </PeopleDetail>
         </Interior.Provider>
       </World.Provider>

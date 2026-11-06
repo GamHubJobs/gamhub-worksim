@@ -32,6 +32,7 @@ import { AudioScene } from '../audio/useAudio'
 import type { Doing } from './scene/interiors/kit'
 import type { InteriorId } from './scene/InteriorScene'
 import { WalkView } from '../world/WalkView'
+import { isRaining, useWeatherSetting } from '../world/weather'
 
 /** What each place in the neighbourhood sounds like inside. */
 const INSIDE: Record<PlaceId, Place> = {
@@ -103,6 +104,8 @@ export function CityView({
   const day = phase === 'morning' ? nextWorkday(profile.work.day) : profile.work.day
   const outside = !life.city.inside
   const here = getPlace(life.city.at)!
+  const weather = useWeatherSetting()
+  const raining = isRaining(day, weather)
   const dark = phase === 'evening' && life.minute >= 20 * 60
 
   const go = useCallback(
@@ -205,6 +208,7 @@ export function CityView({
         scene={{
           place: outside ? area : INSIDE[life.city.at],
           time: timeOfDay(life.minute),
+          rain: raining,
         }}
       />
       <div className="mx-auto grid max-w-5xl gap-5 p-5 lg:grid-cols-[1fr_20rem]">
@@ -254,6 +258,7 @@ export function CityView({
                       onDone={onActivityDone}
                       onReady={() => setReadyIn(here.id)}
                       dressed={phase === 'morning' && life.ready.dressed}
+                      raining={raining}
                     />
                   </Suspense>
                 </SceneBoundary>
@@ -292,6 +297,7 @@ export function CityView({
                       car={life.vehicles.car}
                       bike={life.vehicles.bike}
                       onRide={onRide}
+                      raining={raining}
                     />
                   </Suspense>
                 </SceneBoundary>

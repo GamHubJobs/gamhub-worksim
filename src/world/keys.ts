@@ -74,12 +74,35 @@ export function readKeymap(): Keymap {
   }
 }
 
+let cached: Keymap | null = null
+const listeners = new Set<() => void>()
+
+/** The keys in use now (read once, then kept up to date). */
+export function keymap(): Keymap {
+  return (cached ??= readKeymap())
+}
+
 export function writeKeymap(map: Keymap): void {
+  cached = map
   try {
     window.localStorage.setItem(KEYS_STORAGE, JSON.stringify(map))
   } catch {
     // Storage blocked: the change applies until the page closes.
   }
+  for (const listener of listeners) listener()
+}
+
+export function onKeymapChange(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+/** One control set to a single key (any other control using that key loses it). */
+export function withKey(map: Keymap, control: Control, code: string): Keymap {
+  const out = { ...map }
+  for (const c of CONTROLS) out[c.id] = out[c.id].filter((k) => k !== code)
+  out[control] = [code]
+  return out
 }
 
 /** A key's name for the screen: KeyW → W, ShiftLeft → Shift, ArrowUp → ↑. */

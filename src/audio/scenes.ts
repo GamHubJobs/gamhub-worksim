@@ -27,6 +27,8 @@ export interface Scene {
   time: TimeOfDay
   /** A moment with its own music (an interview at home). */
   moment?: 'interview'
+  /** It is raining (heard outdoors, softly indoors at home). */
+  rain?: boolean
 }
 
 /** The time of day for a clock in minutes since midnight (past 24:00 at night). */
@@ -39,7 +41,9 @@ export function timeOfDay(minute: number): TimeOfDay {
 }
 
 export const sceneKey = (scene: Scene | null) =>
-  scene ? `${scene.place}:${scene.time}:${scene.moment ?? ''}` : 'none'
+  scene
+    ? `${scene.place}:${scene.time}:${scene.moment ?? ''}${scene.rain ? ':rain' : ''}`
+    : 'none'
 
 /** Background layers, by scene: steady beds and occasional events. */
 export type Layer =
@@ -71,12 +75,23 @@ export type Layer =
   | 'trolleys'
   | 'treadmills' // a steady hum
   | 'engines'
+  | 'rain' // a steady bed
+  | 'thunder'
 
 /**
  * What is heard, and how busy it is (events a minute; beds 1). The street is
  * busiest in the day, quiet at night; the office is busy in working hours.
  */
 export function layersFor(scene: Scene): Partial<Record<Layer, number>> {
+  const base = baseLayers(scene)
+  if (!scene.rain) return base
+  const outdoors = ['street', 'residential', 'district', 'park'].includes(scene.place)
+  if (outdoors) return { ...base, rain: 1, thunder: 0.4, birds: 0, crickets: 0 }
+  if (scene.place === 'home') return { ...base, rain: 0.35 }
+  return base
+}
+
+function baseLayers(scene: Scene): Partial<Record<Layer, number>> {
   const { place, time } = scene
   const busy = time === 'day' ? 1 : time === 'night' ? 0.25 : 0.6
   switch (place) {

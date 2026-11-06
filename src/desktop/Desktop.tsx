@@ -40,6 +40,8 @@ import { AudioSettingsPanel, SoundCaptions } from '../audio/AudioSettingsPanel'
 import { audio } from '../audio/manager'
 import { timeOfDay, type Place } from '../audio/scenes'
 import { AudioScene, useGameSounds } from '../audio/useAudio'
+import { isRaining, useWeatherSetting } from '../world/weather'
+import { nextWorkday } from '../game/clock'
 import {
   attemptDef,
   openAttempt,
@@ -226,6 +228,7 @@ export function Desktop({
   const [view, setViewState] = useState<View>(() => readLastView() ?? DEFAULT_VIEW)
   const [helpOpen, setHelpOpen] = useState(false)
   const [soundOpen, setSoundOpen] = useState(false)
+  const weatherSetting = useWeatherSetting()
   useGameSounds(profile)
   const [area, setArea] = useState<Area>(initialArea)
   // The computer's open windows, as the player left them.
@@ -580,7 +583,17 @@ export function Desktop({
           profile.work.life.city.at === 'home' &&
           profile.work.life.city.inside ? (
           <AudioScene
-            scene={{ place: 'home', time: timeOfDay(profile.work.life.minute) }}
+            scene={{
+              place: 'home',
+              time: timeOfDay(profile.work.life.minute),
+              // Rain heard softly on the windows.
+              rain: isRaining(
+                profile.work.life.phase === 'morning'
+                  ? nextWorkday(profile.work.day)
+                  : profile.work.day,
+                weatherSetting,
+              ),
+            }}
           />
         ) : dayOver ? null : (
           <AudioScene

@@ -74,8 +74,9 @@ src/audio/useAudio.ts ── the game's news as sounds, read from changes to the
 By time of day: mornings bring birds, the day is busiest, evenings quieter with
 crickets, and at night there is little traffic, no horns and no construction.
 
-**Weather** is not part of WorkSim (there is no weather in the game), so there is no
-rain or thunder: adding weather only for its sound would not fit what the player sees.
+**Weather.** On rainy days (see [CHARACTER.md](CHARACTER.md#weather)) rain is heard
+outdoors with the occasional distant thunder, and softly at home; it goes with the rain
+the player sees, and stops with **Always dry**.
 
 **Voices.** There is no voice acting and no AI voices. People are heard as
 conversational murmur (voice-like sound, not words), and a colleague gives a short
@@ -91,7 +92,7 @@ friendly "mm-hm" when a conversation starts; the words are on screen.
 5. The neighbourhood's surroundings, by area and place (done).
 6. Music by mood, with rests, and short pieces for promotions and achievements (done).
 7. People: murmur and greetings (done; no voice acting).
-8. Time of day (done); weather (not applicable: see above).
+8. Time of day and rain (done).
 9. Offline, performance and accessibility checks (done: no assets to cache, the engine
    loads on demand, captions and "fewer sounds", tests below).
 

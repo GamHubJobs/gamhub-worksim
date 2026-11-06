@@ -37,6 +37,7 @@ import {
   type Vehicles,
 } from '../../world/PlayerRig'
 import { isLow, useGraphicsQuality } from '../../ui/graphics'
+import { Rain } from '../../world/vfx/Rain'
 
 const STILL = prefersReducedMotion()
 
@@ -185,6 +186,8 @@ export interface CitySceneProps {
   car: boolean
   /** Got on or off the bike. */
   onRide: (riding: boolean) => void
+  /** It is raining today. */
+  raining?: boolean
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -211,7 +214,13 @@ function CityScene(props: CitySceneProps) {
     () => ({ parked, setParked, driving, setDriving }),
     [parked, driving],
   )
-  const sky = props.dark ? '#1e293b' : props.phase === 'morning' ? '#cfe8f7' : '#f3c99b'
+  const sky = props.dark
+    ? '#1e293b'
+    : props.raining
+      ? '#94a3b8'
+      : props.phase === 'morning'
+        ? '#cfe8f7'
+        : '#f3c99b'
 
   return (
     <Canvas
@@ -259,6 +268,9 @@ function CityScene(props: CitySceneProps) {
             />
           ))}
           <StreetPlayer {...props} low={lowPower} />
+          {props.raining && props.outside && (
+            <Rain low={lowPower} wet={{ size: [150, 10], at: [0, 0] }} />
+          )}
         </PeopleDetail>
       </Parking.Provider>
       {PLACES.map((place) => (
