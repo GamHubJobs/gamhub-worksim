@@ -173,9 +173,52 @@ working simulations of the professional software used in its field (see
 
 - [x] Story 1–4 Engine and save, the Story screen and tracker, missions played in the
       world, Finance & Administration chapter 1
-- [ ] Story 5 Chapters 2 and 3 of the same campaign, and its ending
+- [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [ ] Story 6–10 The other five careers
 - [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-06 · Story 5: “Short Delivery” to its end
+
+### Built
+
+- **Chapter 2 · The supplier review**: the main mission takes the player round the
+  office (Leila, Ben, and Dana the coordinator, new to the story) to uncover a supplier
+  paid for forty deliveries that never came, signed by a director; the player decides
+  whose name goes on the report (their own, the team's, or none). A work mission (a
+  consultant's rejected taxi claim, answered as a case on the computer), and two that
+  only open if earned in chapter 1: helping Maya (Walter's granddaughter, who runs the
+  café) with her shoeboxes of receipts, in town after work; and an afternoon shadowing
+  Marcus, who admits he has been offered another job.
+- **Chapter 3 · Audit week**: the stand-up, Nina's word on what the auditors asked for,
+  Marcus before the auditors, Priya before the report. What the player hid or told in
+  chapter 1 comes back here (the credit note; a pale Marcus asking what you will say).
+- **The ending**: Priya offers a new role. Take it, put Marcus forward, or turn it down
+  to help small businesses like Maya's. Three endings, each with its own summary, and
+  what Priya says first depends on what happened with Marcus and the café. The Story
+  screen shows "The end" once the main missions are done; side missions stay open and
+  the career carries on in free play.
+- For development and tests: `window.__worksim.storyAt(mission, flags)` jumps the
+  story to a mission.
+
+### Tests
+
+- Unit tests (3 more, 14 in all): the campaign holds together (every scene, person and
+  case an objective names exists; every scene is used; every flag a mission needs can be
+  earned); the whole story played to three different endings, with side missions only
+  when earned; what was hidden in chapter 1 changing chapter 3.
+- Browser tests (2 more in `story.spec.ts`): the supplier review played in person with
+  four people and the ending chosen, "The end" on the Story screen; and the side mission
+  at the café in town, after going home and out.
+- Results: 2,185 unit tests passed. Chromium browser tests, full run: 182 passed, 3
+  skipped (the opt-in screenshots), 2 flaky (a backup restore and the full first week,
+  each failed once and passed on its retry), and 1 failed: the Accounting career's Books
+  tool test (saved work after a reload), which failed both attempts under the full
+  parallel run and passed when run alone afterwards. It does not touch Story Mode;
+  it is noted to watch. 5 production-build tests passed. Firefox, WebKit and Edge 8
+  passed, 1 skipped. Start screen 299 kB (from 295: the story titles on the first
+  screen).
 
 ---
 

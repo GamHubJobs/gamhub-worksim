@@ -2,12 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { WorkStateSchema } from '../../persistence/schemas'
 import { newProfileData, type ProfileData } from '../career'
 import { trustOf } from '../relationships'
+import { caseFor } from '../caseVariants'
+import { officeWho } from '../../office/scene/officeCast'
+import { TOWN_PEOPLE } from '../../content/townPeople'
 import { FINANCE_STORY } from './campaigns/finance'
 import {
   checkStory,
   currentObjective,
   endStory,
   missionById,
+  missionsOf,
   playScene,
   progressOf,
   sceneFor,
@@ -208,6 +212,149 @@ describe('decisions change what happens later', () => {
     })
     p = playScene(p, 'priya-month-end', 'own')
     expect(story(p).flags).toContain('chapter1-done')
-    expect(progressOf(FINANCE_STORY, story(p))).toEqual({ done: 3, of: 3 })
+    expect(progressOf(FINANCE_STORY, story(p))).toEqual({ done: 3, of: 6 })
+    expect(story(p).chapter).toBe('ch2')
+  })
+})
+
+describe('the whole of “Short Delivery”', () => {
+  it('holds together: every scene, person and case an objective names exists', () => {
+    const people = new Set([
+      ...Object.keys(officeWho()),
+      ...Object.values(TOWN_PEOPLE).map((w) => w.id),
+    ])
+    const ids = new Set<string>()
+    for (const m of missionsOf(FINANCE_STORY)) {
+      expect(ids.has(m.id), m.id).toBe(false)
+      ids.add(m.id)
+      for (const id of [...(m.after ?? [])])
+        expect(ids.has(id), `${m.id} after ${id}`).toBe(true)
+      for (const o of m.objectives) {
+        if (o.kind === 'talk') {
+          expect(FINANCE_STORY.scenes[o.scene], o.scene).toBeDefined()
+          expect(FINANCE_STORY.scenes[o.scene].person, o.scene).toBe(o.person)
+          expect(people.has(o.person), o.person).toBe(true)
+        }
+        if (o.kind === 'case') expect(caseFor(fresh(), o.case), o.case).toBeDefined()
+      }
+    }
+    // Every scene is used, and every flag a mission needs can be set by a choice.
+    const used = new Set(
+      missionsOf(FINANCE_STORY).flatMap((m) =>
+        m.objectives.flatMap((o) => (o.kind === 'talk' ? [o.scene] : [])),
+      ),
+    )
+    expect(Object.keys(FINANCE_STORY.scenes).filter((s) => !used.has(s))).toEqual([])
+    const settable = new Set([
+      ...Object.values(FINANCE_STORY.scenes).flatMap((s) =>
+        s.choices.flatMap((c) => c.flags ?? []),
+      ),
+      ...missionsOf(FINANCE_STORY).flatMap((m) => m.flags ?? []),
+    ])
+    for (const m of missionsOf(FINANCE_STORY))
+      for (const f of m.needs ?? [])
+        expect(settable.has(f), `${m.id} needs ${f}`).toBe(true)
+  })
+
+  /** Plays the whole story, choosing with `pick` (scene id → choice id). */
+  function playAll(pick: Record<string, string>) {
+    let p = startStory(fresh())
+    const submitted = (q: ProfileData, id: string) =>
+      checkStory({
+        ...q,
+        work: {
+          ...q.work,
+          cases: { ...q.work.cases, [id]: { ...q.work.cases[id]!, status: 'submitted' } },
+        },
+      })
+    const atStandup = (q: ProfileData) =>
+      checkStory({
+        ...q,
+        work: {
+          ...q.work,
+          today: { ...q.work.today, meetings: { standup: 'attended' } },
+        },
+      })
+    for (let guard = 0; guard < 60; guard++) {
+      const s = story(p)
+      if (!s.active) {
+        const next = missionsOf(FINANCE_STORY).find(
+          (m) => statusOf(FINANCE_STORY, s, m) === 'open',
+        )
+        if (!next) break
+        p = startMission(p, next.id)
+        continue
+      }
+      const o = currentObjective(FINANCE_STORY, s)!
+      if (o.kind === 'talk') {
+        const scene = FINANCE_STORY.scenes[o.scene]
+        p = playScene(p, o.scene, pick[o.scene] ?? scene.choices[0].id)
+      } else if (o.kind === 'case') p = submitted(p, o.case)
+      else if (o.kind === 'meeting') {
+        // A new day's stand-up.
+        p = atStandup({
+          ...p,
+          work: { ...p.work, today: { ...p.work.today, meetings: {} } },
+        })
+      } else {
+        const life = p.work.life
+        p = checkStory({
+          ...p,
+          work: {
+            ...p.work,
+            life: {
+              ...life,
+              phase: 'evening',
+              city: { ...life.city, at: 'cafe', inside: true },
+            },
+          },
+        })
+        p = { ...p, work: { ...p.work, life: { ...p.work.life, phase: 'work' } } }
+      }
+    }
+    return p
+  }
+
+  it('can be played to the end, through all three chapters, to three different endings', () => {
+    const lead = playAll({
+      'priya-offer': 'lead',
+      'marcus-first': 'brief',
+      'walter-bakery': 'later',
+    })
+    const marcus = playAll({
+      'priya-offer': 'marcus',
+      'marcus-first': 'shadow',
+      'marcus-secret': 'tell',
+    })
+    const ownWay = playAll({ 'priya-offer': 'own-way', 'walter-bakery': 'offer' })
+    for (const p of [lead, marcus, ownWay]) {
+      expect(story(p).flags).toContain('story-complete')
+      expect(progressOf(FINANCE_STORY, story(p))).toEqual({ done: 6, of: 6 })
+      expect(story(p).chapter).toBe('ch3')
+    }
+    const ending = (p: ProfileData) =>
+      missionById(FINANCE_STORY, 'next-step')!.summary(story(p).flags)
+    expect(new Set([ending(lead), ending(marcus), ending(ownWay)]).size).toBe(3)
+    // Side missions only when their flag was earned.
+    expect(story(marcus).done).toContain('marcus-thursday')
+    expect(story(lead).done).not.toContain('marcus-thursday')
+    expect(story(ownWay).done).toContain('bakery-books')
+    expect(story(lead).done).not.toContain('bakery-books')
+  })
+
+  it('what was hidden in chapter 1 comes back in chapter 3', () => {
+    const covered = playAll({ 'marcus-invoice': 'cover' })
+    const fixed = playAll({ 'marcus-invoice': 'fix' })
+    const audit = missionById(FINANCE_STORY, 'audit-week')!
+    expect(
+      FINANCE_STORY.scenes['nina-auditors'].lines(story(covered).flags).join(' '),
+    ).toMatch(/credit note/)
+    expect(
+      FINANCE_STORY.scenes['nina-auditors'].lines(story(fixed).flags).join(' '),
+    ).not.toMatch(/credit note/)
+    expect(
+      FINANCE_STORY.scenes['marcus-audit'].lines(story(covered).flags).join(' '),
+    ).toMatch(/pale/)
+    expect(audit.summary(['audit-truth'])).not.toBe(audit.summary([]))
   })
 })

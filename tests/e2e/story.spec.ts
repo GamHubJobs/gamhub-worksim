@@ -181,3 +181,99 @@ test('free play is unchanged: no story unless chosen, and the Story screen offer
     .click()
   await expect(tracker(page)).toContainText('Check in with Nina')
 })
+
+async function newFinanceCareer(page: Page) {
+  await page.goto('/')
+  await page.getByRole('radio', { name: /Office Administration/ }).check()
+  await page.getByLabel('Your first name').fill('Sam')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await page.evaluate(
+    "window.__worksimSpeed = 12; sessionStorage.setItem('worksim.testSpeed', '12')",
+  )
+  await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
+    timeout: 120_000,
+  })
+}
+
+test('chapters 2 and 3: the supplier review with new people, and an ending that follows the choices', async ({
+  page,
+}) => {
+  test.setTimeout(600_000)
+  await newFinanceCareer(page)
+  await page.evaluate("window.__worksim.storyAt('supplier-review', ['knows-gap'])")
+  await expect(tracker(page)).toContainText('Ask Leila')
+  await play(page, 'backM', 'leila-suppliers', /who chose Brightline/)
+  await play(page, 'admin', 'ben-contracts', /sign it out/)
+  // Dana, the coordinator, in the story for the first time.
+  await play(page, 'coordinator', 'dana-brightline', /export the log/)
+  await talkTo(page, 'manager')
+  await expect(scene(page)).toHaveAttribute('data-scene', 'priya-review', {
+    timeout: 120_000,
+  })
+  await expect(scene(page)).toContainText('Dana’s log')
+  await scene(page)
+    .getByRole('button', { name: /Credit the team/ })
+    .click()
+  await scene(page).getByRole('button', { name: 'Carry on' }).click()
+  await expect(page.getByTestId('story-finished')).toContainText('The supplier review')
+  await page
+    .getByTestId('story-finished')
+    .getByRole('button', { name: 'Carry on' })
+    .click()
+
+  // The last mission: Priya's offer depends on what happened with Marcus and the café.
+  await page.evaluate(
+    "window.__worksim.storyAt('next-step', ['marcus-tells', 'helped-maya', 'audit-truth'])",
+  )
+  await talkTo(page, 'manager')
+  await expect(scene(page)).toHaveAttribute('data-scene', 'priya-offer', {
+    timeout: 120_000,
+  })
+  await expect(scene(page)).toContainText('Marcus came to see me')
+  await expect(scene(page)).toContainText('café on the corner')
+  await page.screenshot({ path: 'docs/screenshots/story/priya-offer.png' })
+  await scene(page)
+    .getByRole('button', { name: /Put Marcus forward/ })
+    .click()
+  await scene(page).getByRole('button', { name: 'Carry on' }).click()
+  await expect(page.getByTestId('story-finished')).toContainText('Marcus stays')
+  await page
+    .getByTestId('story-finished')
+    .getByRole('button', { name: 'Carry on' })
+    .click()
+  await page.getByTestId('story-button').click()
+  await expect(page.getByTestId('story-ending')).toContainText(
+    'The end of “Short Delivery”',
+  )
+  await page.screenshot({ path: 'docs/screenshots/story/the-end.png' })
+})
+
+test('a side mission in town: helping Maya with her books at the café, after work', async ({
+  page,
+}) => {
+  test.setTimeout(600_000)
+  await newFinanceCareer(page)
+  await page.evaluate("window.__worksim.storyAt('bakery-books', ['bakery-offer'])")
+  await expect(tracker(page)).toContainText('Help Maya')
+  // Out of the office, home, and into town (free to go anywhere between missions).
+  await page.evaluate(`window.__worksim.setTime(1, 17 * 60 + 35)`)
+  await page.getByTestId('office-panel').getByRole('button', { name: 'Go home' }).click()
+  await page.getByTestId('day-end').getByRole('button', { name: 'Go home' }).click()
+  const home = page.getByTestId('home')
+  await expect(home).toContainText('Evening at home', { timeout: 30_000 })
+  await home
+    .getByRole('navigation', { name: 'Rooms' })
+    .getByRole('button', { name: 'Front door' })
+    .click()
+  await home.getByRole('button', { name: /Go out into the neighbourhood/ }).click()
+  const city = page.getByTestId('city')
+  await city.getByTestId('place-cafe').click()
+  await expect(city.getByTestId('city-3d').locator('canvas')).toBeVisible({
+    timeout: 60_000,
+  })
+  await expect(tracker(page)).toContainText('Help Maya')
+  await play(page, 'cafe:barista', 'maya-books', /simple system/)
+  await expect(page.getByTestId('story-finished')).toContainText('Shoeboxes of receipts')
+  await expect(page.getByTestId('story-finished')).toContainText('banana bread')
+  await page.screenshot({ path: 'docs/screenshots/story/maya-books.png' })
+})

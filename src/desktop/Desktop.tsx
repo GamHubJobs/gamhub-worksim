@@ -8,7 +8,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { StoryPanel, StoryTracker } from './StoryPanel'
 import { NEW_STORY_KEY } from './Onboarding'
-import { startStory } from '../game/story/engine'
+import { skipTo, startStory } from '../game/story/engine'
 import { useAppServices } from '../app/services'
 import type { ContextItem, Proposal } from '../ai/types'
 import { workContext } from '../ai/workContext'
@@ -446,6 +446,9 @@ export function Desktop({
           ...p,
           work: { ...p.work, record: { ...p.work.record, seed } },
         })),
+      /** Story Mode at a mission, as if the ones before were done (with these flags). */
+      storyAt: (missionId: string, flags: string[] = []) =>
+        act((p) => skipTo(p, missionId, flags)),
       arriveCase: (caseId: string) =>
         act((p) => {
           const def = getCase(caseId)

@@ -13,6 +13,7 @@ import {
   currentObjective,
   endStory,
   missionById,
+  missionsOf,
   progressOf,
   seenFinished,
   startMission,
@@ -141,6 +142,27 @@ function StoryProgress({
   const decided = Object.entries(story.decisions)
   return (
     <div className="mt-4 space-y-5 text-sm">
+      {progress.done === progress.of && (
+        <section
+          aria-label="The end"
+          data-testid="story-ending"
+          className="rounded-lg bg-slate-900 p-4 text-white"
+        >
+          <p className="text-xs font-semibold tracking-wide text-rose-300 uppercase">
+            The end
+          </p>
+          <p className="mt-1">
+            {missionsOf(campaign)
+              .filter((m) => m.type === 'main')
+              .at(-1)!
+              .summary(story.flags)}
+          </p>
+          <p className="mt-2 text-xs text-slate-300">
+            Your career carries on in free play. Side missions you have not done are still
+            open.
+          </p>
+        </section>
+      )}
       <section aria-label="Continue">
         <p className="text-slate-600">
           {progress.done} of {progress.of} main missions done ·{' '}

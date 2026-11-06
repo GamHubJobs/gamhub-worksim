@@ -89,6 +89,16 @@ play without losing anything. Screenshots and in-game evidence for each.
   (the stand-up, then Priya). Covering for Marcus, telling Priya, or fixing the process
   together changes what Priya says when told, what she says at month-end (the auditors
   find the credit note; or the new check caught two more), the summaries and trust.
-- **Limits**: one campaign so far, one chapter; the other careers show "coming soon". No
+- **Limits** (then): one campaign, one chapter; the other careers show "coming soon". No
   cinematic camera yet (the conversation view is used). Scenes are written, not
   generated.
+
+### Story 5 · "Short Delivery", chapters 2 and 3 and the ending
+
+- Chapter 2, the supplier review (Leila, Ben, Dana; a supplier paid for deliveries that
+  never came; whose name goes on the report), a work mission (a taxi claim, as a case),
+  and two side missions earned in chapter 1 (Maya's books at the café; an afternoon with
+  Marcus). Chapter 3, audit week, where chapter 1's choice about Marcus comes back. Three
+  endings from Priya's offer. Played to each ending in unit tests; the review, the ending
+  and the café mission played in the browser.
+- **Limits**: the other five careers' stories are still to come.

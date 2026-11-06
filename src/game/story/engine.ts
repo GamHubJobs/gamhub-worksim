@@ -255,3 +255,35 @@ export function progressOf(
   const main = missionsOf(campaign).filter((m) => m.type === 'main')
   return { done: main.filter((m) => story.done.includes(m.id)).length, of: main.length }
 }
+
+/**
+ * For development and tests: the story as if every mission before this one
+ * (in the campaign's order) were done, with these flags, and this one started.
+ */
+export function skipTo(
+  profile: ProfileData,
+  missionId: string,
+  flags: string[] = [],
+  now = Date.now(),
+): ProfileData {
+  const campaign = campaignFor(profile.careerId)
+  const base = storyOf(profile) ? profile : startStory(profile, now)
+  const story = storyOf(base)
+  if (!campaign || !story) return profile
+  const all = missionsOf(campaign)
+  const index = all.findIndex((m) => m.id === missionId)
+  if (index < 0) return profile
+  const done = all.slice(0, index).map((m) => m.id)
+  const chapter = campaign.chapters.find((c) =>
+    c.missions.some((m) => m.id === missionId),
+  )!
+  const next = withStory(base, {
+    ...story,
+    active: null,
+    done,
+    chapter: chapter.id,
+    flags: [...new Set([...story.flags, ...flags])],
+    finished: null,
+  })
+  return startMission(next, missionId, now)
+}
