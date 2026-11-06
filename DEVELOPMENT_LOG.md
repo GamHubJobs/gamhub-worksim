@@ -189,7 +189,7 @@ working simulations of the professional software used in its field (see
 - New browser tests: rain on a rainy day (heard on the street, and off with Always
   dry); changing a key and resetting the keys. Unit tests for the weather and keys.
 - Fixed while testing: the panel now has more than one button whose name includes "Close", so the sound test picks the exact one.
-- Results: 2,117 unit tests; 168 Chromium browser tests passed (3 skipped: the opt-in screenshots). Before the fix above, the sound test failed twice, and the accessibility check passed on a retry (it is slow under the full run); the sound tests then passed on their own. 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
+- Results: 2,117 unit tests. Chromium browser tests, full run: 166 passed, 1 passed on a retry (the accessibility check, slow under load), 1 failed (the sound settings test, on the ambiguous Close button), 3 skipped (the opt-in screenshots). After the fix the sound tests were rerun on their own: 2 of 2 passed. 5 production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
 
 ---
 
