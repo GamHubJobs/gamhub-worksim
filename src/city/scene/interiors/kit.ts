@@ -26,6 +26,8 @@ export interface InteriorState {
   low: boolean
   /** The last thing the player did here (they are shown there). */
   last: string | null
+  /** Someone waiting here for a date with the player (their id), if anyone. */
+  date?: string | null
 }
 
 export const Interior = createContext<InteriorState>({

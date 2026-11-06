@@ -174,7 +174,7 @@ working simulations of the professional software used in its field (see
 
 **Phone**: [docs/PHONE.md](docs/PHONE.md) (Phone 1 done).
 
-**Relationships, romance and family** (planned): [docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md).
+**Relationships, romance and family** (R1–R3 done; R4–R11 next): [docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md).
 
 **Story Mode** (in progress). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
 
@@ -183,6 +183,49 @@ working simulations of the professional software used in its field (see
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [ ] Story 6–10 The other five careers
 - [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-06 · Relationships 1–3: people, bonds, consent, and dates played
+
+### Built
+
+- **Adults with lives of their own** (`content/adults.ts`): eight people already in the
+  world, all adults, each with interests, dislikes, what they want, boundaries, free
+  evenings, and whether romance with the player could ever happen (for two, it could
+  not).
+- **Bonds** (`game/romance.ts`; `life.bonds` in the save, empty for older saves): stage,
+  closeness, attraction, what the player has found out, what was declined, a date
+  arranged, dates, history.
+- **Consent as one rule**: every step answered yes, no or not yet by who they are and
+  how things stand; a no cannot be asked again for three days; nothing is explicit.
+- **Getting to know someone** (`game/personal.ts`, in the existing conversations):
+  their interests, compliments, flirting, a hug, asking them out.
+- **Dates played in the world** (`game/dates.ts`, `DatePanel.tsx`, `DatePartner.tsx`):
+  they wait at the café or in the park; the player sits down with them (dinner or the
+  bench) and stays seated; three rounds of talk and asking; the bond follows what
+  happened; a good first date means dating; a missed date is remembered. In the phone's
+  calendar and reminders. Development tools: `setBond`, `setLifeMinute`.
+
+### Tests
+
+- Unit tests: `romance.test.ts` (9) and `dates.test.ts` (6).
+- Browser test (`date.spec.ts`): asking Maya out in person, then the date that evening,
+  sitting down to dinner together (paid), talking about what she loves, holding hands,
+  a kiss declined ("not yet") and respected, and the end of the evening: dating.
+- Screenshots: `docs/screenshots/relationships/`.
+- Results: 2,202 unit tests passed. Chromium browser tests, full run: 188 passed, 3
+  skipped, 2 flaky (the Social Planner and the stand-up in person, each passed on its
+  retry), 1 failed: the Accounting Books tool end to end (both attempts, under the full
+  parallel run; both Books tests passed when run alone straight after; Books has failed
+  this way under load before, so its waits are to be lengthened). 5 production-build
+  tests passed. Firefox, WebKit and Edge 8 passed, 1 skipped. Start screen 299 kB.
+
+### Limits
+
+- Affection is described, not yet animated between the two (next: R4). Moving in,
+  marriage, family, challenges and the story are still to come
+  ([docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md)).
 
 ---
 

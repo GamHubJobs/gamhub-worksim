@@ -7,6 +7,7 @@
  * The working day itself is unchanged: life starts when it ends (`work.dayOver`)
  * and hands back to it when the player arrives at the office (`startNextDay`).
  */
+import { missedDates } from './dates'
 import {
   ALARM,
   COMMUTES,
@@ -221,7 +222,11 @@ export function goToBed(profile: ProfileData): ProfileData {
   const work = profile.work
   const next = nextWorkday(work.day)
   const weekend = next - work.day > 1
-  let life: Life = note(overnight(afterNight(work.life, work.day)), 'Went to bed')
+  // A date tonight not gone to is missed (see dates.ts).
+  let life: Life = note(
+    missedDates(overnight(afterNight(work.life, work.day)), work.day),
+    'Went to bed',
+  )
   const bedtime = life.minute
   // The night (and a weekend, if there is one) changes needs.
   let needs = decayed(life.needs, 8 * 60)

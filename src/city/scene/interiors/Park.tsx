@@ -11,6 +11,7 @@ import type { Vector } from '../../../content/office'
 import { Box } from '../../../office/scene/parts'
 import { Walker, type PersonLook } from '../../../office/scene/people'
 import { Npc } from '../../../world/npc/Npc'
+import { DatePartner } from './DatePartner'
 import { local, TOWN_PEOPLE } from '../../../content/townPeople'
 import { prefersReducedMotion } from '../../../ui/motion'
 import { Board, Hotspot } from './common'
@@ -251,6 +252,7 @@ export default function Park() {
       <Hotspot action="park-bench" position={[-3.4, 0, 2.2]} ring={1.1} tag={1.8}>
         <ParkBench position={[0, 0, 0]} rotation={Math.PI} />
       </Hotspot>
+      <DatePartner place="park" />
       <ParkBench position={[3.3, 0, -5.6]} rotation={0.3} />
       <Npc
         who={TOWN_PEOPLE.walter}

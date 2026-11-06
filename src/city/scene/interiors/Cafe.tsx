@@ -12,6 +12,7 @@ import { useWorld } from '../../../world/context'
 import { formatMoney } from '../../../content/life'
 import { Box, Plant } from '../../../office/scene/parts'
 import { Npc } from '../../../world/npc/Npc'
+import { DatePartner } from './DatePartner'
 import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Board, Chair, Hotspot, Lamp, Room, Window } from './common'
 import { menuPainting, signPainting, useInterior } from './kit'
@@ -174,7 +175,7 @@ function TableOrder() {
 }
 
 export default function Cafe() {
-  const { low } = useInterior()
+  const { low, date } = useInterior()
   return (
     <group>
       <Room
@@ -219,22 +220,25 @@ export default function Cafe() {
         </group>
       </Hotspot>
       <Box size={[0.4, 0.25, 0.3]} position={[-1.6, 1.18, -2.8]} color="#1f2937" />
-      <Npc
-        who={TOWN_PEOPLE.barista}
-        reach={2.1}
-        position={[-3.2, 0, -3.7]}
-        rotation={Math.PI}
-        look={{
-          skin: 2,
-          hair: 'bun',
-          hairColor: 1,
-          outfit: 'polo',
-          top: '#14532d',
-          trousers: '#1c1917',
-          smile: true,
-        }}
-        phase={0.4}
-      />
+      {/* Behind the counter, unless she is out on a date with the player. */}
+      {date !== TOWN_PEOPLE.barista.id && (
+        <Npc
+          who={TOWN_PEOPLE.barista}
+          reach={2.1}
+          position={[-3.2, 0, -3.7]}
+          rotation={Math.PI}
+          look={{
+            skin: 2,
+            hair: 'bun',
+            hairColor: 1,
+            outfit: 'polo',
+            top: '#14532d',
+            trousers: '#1c1917',
+            smile: true,
+          }}
+          phase={0.4}
+        />
+      )}
       {/* Shelves of cups and jars behind */}
       {[1.6, 2.1].map((y) => (
         <Box key={y} size={[2.2, 0.05, 0.3]} position={[-4.4, y, -4.2]} color="#78350f" />
@@ -248,6 +252,7 @@ export default function Cafe() {
         <CakeCase />
       </Hotspot>
 
+      <DatePartner place="cafe" />
       {/* Tables */}
       <Hotspot action="cafe-dinner" position={[-3, 0, 1.6]} ring={1.25} tag={2}>
         <Table position={[0, 0, 0]} />

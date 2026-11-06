@@ -19,6 +19,8 @@
 import type { ProfileData } from './career'
 import { decayed, withLife } from './lifeTime'
 import { trustOf } from './relationships'
+import { personalOptions, respondPersonal } from './personal'
+import { adultOf, bondOf, talked, withBond, type Bond } from './romance'
 import { restFor } from './workday'
 
 export type NpcKind =
@@ -93,6 +95,9 @@ export interface Relation {
   today: number
   /** What the player chose last time. */
   last?: string
+  /** For the adults who could become close (see romance.ts): the bond, and the day. */
+  bond?: Bond
+  day?: number
 }
 
 export interface Encounter {
@@ -115,6 +120,8 @@ export interface Outcome {
   action?: string
   /** What changed, for the player. */
   notes: string[]
+  /** The bond afterwards, for the adults who could become close. */
+  bond?: Bond
 }
 
 /** Talks a day with one person that still build anything. */
@@ -306,7 +313,20 @@ const opt = (id: string, label: string, tone: Tone = 'kind'): Option => ({
 })
 
 /** What there is to say, by who they are (never the same list for everyone). */
+/** The options, with the personal ones for the adults who could become close (personal.ts). */
 function optionsFor(who: Who, s: Situation, rel: Relation): Option[] {
+  const base = baseOptions(who, s, rel)
+  const adult = adultOf(who.id)
+  if (!adult || !rel.bond) return base
+  const tail = base.filter((o) => o.id === 'leave' || o.id === 'rude')
+  return [
+    ...base.filter((o) => !tail.includes(o)),
+    ...personalOptions(who, adult, rel.bond),
+    ...tail,
+  ]
+}
+
+function baseOptions(who: Who, s: Situation, rel: Relation): Option[] {
   const n = first(who)
   const rude = opt('rude', `Brush ${n} off`, 'rude')
   const leave = opt('leave', 'Say goodbye', 'neutral')
@@ -424,6 +444,33 @@ function optionsFor(who: Who, s: Situation, rel: Relation): Option[] {
 
 /** What happens when the player says something. */
 export function respond(
+  who: Who,
+  situation: Situation,
+  rel: Relation,
+  optionId: string,
+): Outcome {
+  const adult = adultOf(who.id)
+  if (adult && rel.bond) {
+    const personal = respondPersonal(who, adult, situation, rel, rel.bond, optionId)
+    if (personal) return personal
+    const out = baseRespond(who, situation, rel, optionId)
+    // An ordinary chat (or rudeness) changes the bond too.
+    if (optionId === 'chat' || optionId === 'rude' || optionId === 'join')
+      return {
+        ...out,
+        bond: talked(
+          rel.bond,
+          adult,
+          optionId === 'rude' ? 'rude' : 'chat',
+          rel.today < 1,
+        ),
+      }
+    return out
+  }
+  return baseRespond(who, situation, rel, optionId)
+}
+
+function baseRespond(
   who: Who,
   situation: Situation,
   rel: Relation,
@@ -811,6 +858,9 @@ export function relationOf(profile: ProfileData, id: string): Relation {
     talks: rel?.talks ?? 0,
     today: profile.work.today.talks[id] ?? 0,
     last: rel?.last,
+    ...(adultOf(id)
+      ? { bond: bondOf(profile.work.life, id), day: profile.work.day }
+      : {}),
   }
 }
 
@@ -858,6 +908,11 @@ export function holdEncounter(
 ): ProfileData {
   if (PASSING.has(outcome.memory) && outcome.minutes === 0) return profile
   let next = recordEncounter(profile, ids, outcome)
+  if (outcome.bond)
+    next = {
+      ...next,
+      work: { ...next.work, life: withBond(next.work.life, ids[0], outcome.bond) },
+    }
   if (outcome.minutes <= 0) return next
   if (where === 'office') return restFor(next, 'chat', outcome.minutes)
   const life = next.work.life

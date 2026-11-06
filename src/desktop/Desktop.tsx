@@ -11,6 +11,7 @@ import { PhoneHost } from '../phone/PhoneDevice'
 import type { PlaceId } from '../content/city'
 import { NEW_STORY_KEY } from './Onboarding'
 import { skipTo, startStory } from '../game/story/engine'
+import { bondOf, withBond, type Bond } from '../game/romance'
 import { useAppServices } from '../app/services'
 import type { ContextItem, Proposal } from '../ai/types'
 import { workContext } from '../ai/workContext'
@@ -447,6 +448,18 @@ export function Desktop({
         act((p) => ({
           ...p,
           work: { ...p.work, record: { ...p.work.record, seed } },
+        })),
+      /** The evening clock (minutes since midnight), out of work. */
+      setLifeMinute: (minute: number) =>
+        act((p) => ({ ...p, work: { ...p.work, life: { ...p.work.life, minute } } })),
+      /** A bond with someone, as if things had got that far (see game/romance.ts). */
+      setBond: (id: string, bond: Partial<Bond>) =>
+        act((p) => ({
+          ...p,
+          work: {
+            ...p.work,
+            life: withBond(p.work.life, id, { ...bondOf(p.work.life, id), ...bond }),
+          },
         })),
       /** Story Mode at a mission, as if the ones before were done (with these flags). */
       storyAt: (missionId: string, flags: string[] = []) =>

@@ -18,6 +18,7 @@ import { friendOf } from './social'
 import { campaignFor } from './story/campaigns'
 import { currentObjective, missionById } from './story/engine'
 import type { Who } from './encounters'
+import { whoOf } from './dates'
 
 export type PhoneApp =
   | 'messages'
@@ -115,6 +116,14 @@ export function notices(profile: ProfileData): Notice[] {
           })
       }
   }
+  for (const [id, b] of Object.entries(life.bonds ?? {}))
+    if (b.date && b.date.day === profile.work.day)
+      out.push({
+        id: `date:${id}:${b.date.day}`,
+        app: 'calendar',
+        from: whoOf(id)?.name ?? 'Your date',
+        text: `Tonight at ${formatTime(b.date.minute)}, ${b.date.place === 'park' ? 'the park' : 'Kettle & Crumb'}`,
+      })
   const story = profile.work.story
   const campaign = story && campaignFor(profile.careerId)
   if (story && campaign) {
@@ -167,6 +176,15 @@ export function calendar(profile: ProfileData): CalendarEntry[] {
       })
     }
   const life = profile.work.life
+  for (const [id, b] of Object.entries(life.bonds ?? {}))
+    if (b.date && b.date.day >= day)
+      out.push({
+        day: b.date.day,
+        minute: b.date.minute,
+        title: `A date with ${whoOf(id)?.name.split(' ')[0] ?? 'someone'}`,
+        where: b.date.place === 'park' ? 'The park' : 'Kettle & Crumb',
+        kind: 'plan',
+      })
   if (life.delivery?.status === 'coming')
     out.push({
       day,

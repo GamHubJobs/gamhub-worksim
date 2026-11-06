@@ -35,6 +35,9 @@ import type { InteriorId } from './scene/InteriorScene'
 import { WalkView } from '../world/WalkView'
 import { isRaining, useWeatherSetting } from '../world/weather'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
+import { DatePanel, type DateStep } from '../world/npc/DatePanel'
+import { dateHere, finishDate, whoOf } from '../game/dates'
+import { withLife } from '../game/lifeTime'
 import { StoryScenePanel } from '../world/npc/StoryScenePanel'
 import { campaignFor } from '../game/story/campaigns'
 import { missionById, playScene, sceneFor, sceneLines } from '../game/story/engine'
@@ -168,6 +171,15 @@ export function CityView({
     setStoryScene({ scene, name, mission, lines: sceneLines(profile, scene) })
     return true
   }
+  // A date, if someone is waiting here for the player (see game/dates.ts).
+  const date = dateHere(profile)
+  // The date as it was when the player walked up (it is over in the save when it ends).
+  const [dating, setDating] = useState<{
+    step: DateStep
+    date: NonNullable<typeof date>
+  } | null>(null)
+  const sitAction =
+    dating?.date.bond.date?.place === 'park' ? 'park-bench' : 'cafe-dinner'
   // Talking to someone met here (anyone: staff, customers, people in the street).
   const [encounter, setEncounter] = useState<{ who: Who; situation: Situation } | null>(
     null,
@@ -181,6 +193,10 @@ export function CityView({
         return
       }
       if (storySceneWith(id, n.who.name)) return
+      if (date && date.id === id) {
+        setDating({ step: 'greet', date })
+        return
+      }
       setEncounter({
         who: n.who,
         situation: { availability: n.availability, doing: n.doing, minute },
@@ -193,9 +209,17 @@ export function CityView({
     (action: string | null, completed: boolean) => {
       if (completed && action?.startsWith('person:'))
         meetPerson(action.slice('person:'.length))
-      else if (completed && action) commit(action)
+      else if (completed && action) {
+        commit(action)
+        // Sat down together: the date goes on.
+        if (dating?.step === 'greet' && action === sitAction) {
+          setDating({ ...dating, step: 'talk' })
+          // And stay sitting together while they talk.
+          doThing(sitAction === 'park-bench' ? 'date-bench' : 'date-sit')
+        }
+      }
     },
-    [commit, meetPerson],
+    [commit, meetPerson, dating, sitAction, doThing],
   )
   // Someone clicked on: walk over to them (inside a place, or in the street).
   const [streetRequest, setStreetRequest] = useState<{
@@ -322,6 +346,7 @@ export function CityView({
                       onReady={() => setReadyIn(here.id)}
                       dressed={phase === 'morning' && life.ready.dressed}
                       raining={raining}
+                      date={dating?.date.id ?? date?.id ?? null}
                     />
                   </Suspense>
                 </SceneBoundary>
@@ -382,6 +407,52 @@ export function CityView({
                 void onAct((p) => playScene(p, storyScene.scene.id, choice))
               }
               onClose={() => setStoryScene(null)}
+            />
+          )}
+          {dating && (
+            <DatePanel
+              key={dating.date.id}
+              who={whoOf(dating.date.id)!}
+              adult={dating.date.adult}
+              bond={dating.date.bond}
+              step={dating.step}
+              place={dating.date.bond.date!.place}
+              day={profile.work.day}
+              onSit={() => {
+                setDating({ ...dating, step: 'greet' })
+                doThing(sitAction)
+              }}
+              onFinish={(score, bond) => {
+                const done = finishDate(
+                  profile.work.life,
+                  dating.date.id,
+                  bond,
+                  score,
+                  profile.work.day,
+                  dating.date.bond.date!.place,
+                )
+                void onAct((p) => {
+                  const life = finishDate(
+                    p.work.life,
+                    dating.date.id,
+                    bond,
+                    score,
+                    p.work.day,
+                    dating.date.bond.date!.place,
+                  ).life
+                  // An evening out: time passes, and it is good company.
+                  return withLife(p, {
+                    ...life,
+                    minute: life.minute + 60,
+                    needs: {
+                      ...life.needs,
+                      social: Math.min(100, life.needs.social + 20),
+                    },
+                  })
+                })
+                return done.summary
+              }}
+              onClose={() => setDating(null)}
             />
           )}
           {encounter && (

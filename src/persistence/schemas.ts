@@ -925,6 +925,44 @@ export const LifeSchema = z.object({
   rentWeek: z.number().int().nonnegative().default(0),
   /** What happened at home this evening and morning, for the panel. */
   log: z.array(z.string()).max(30).default([]),
+  /** Bonds with the adults of the world (see game/romance.ts); none for older saves. */
+  bonds: z
+    .record(
+      z.string(),
+      z.object({
+        stage: z.enum([
+          'met',
+          'friends',
+          'close',
+          'dating',
+          'partners',
+          'engaged',
+          'married',
+          'separated',
+        ]),
+        closeness: PercentSchema,
+        attraction: PercentSchema,
+        known: z.array(z.string()).max(12).default([]),
+        declined: z
+          .array(z.object({ step: z.string(), day: z.number().int() }))
+          .max(12)
+          .default([]),
+        date: z
+          .object({
+            day: z.number().int(),
+            minute: z.number().int(),
+            place: z.enum(['cafe', 'park']),
+          })
+          .nullable()
+          .default(null),
+        dates: z.number().int().nonnegative().default(0),
+        history: z
+          .array(z.object({ day: z.number().int(), text: z.string() }))
+          .max(20)
+          .default([]),
+      }),
+    )
+    .default({}),
   /** The phone's settings (see phone/): kept with the career, defaults for older saves. */
   phone: z
     .object({

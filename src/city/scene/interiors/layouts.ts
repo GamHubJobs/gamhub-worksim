@@ -119,6 +119,19 @@ export const CAFE: Layout = {
       object: 'plate',
     },
     {
+      // On a date (see game/dates.ts): sitting together while they talk. Started by the
+      // date, never offered by itself (nothing to reach); moving stands up.
+      id: 'date-sit',
+      action: null,
+      prompt: 'sit with your date',
+      spot: { x: -3, z: 2.35, reach: 0 },
+      anchor: { x: -3, z: 2.35, heading: 0 },
+      stages: [
+        { clip: 'sit', seconds: 1.2, label: 'Sitting down together' },
+        { clip: 'sit-relax', seconds: 600, label: 'On a date' },
+      ],
+    },
+    {
       id: 'dinner',
       action: 'cafe-dinner',
       prompt: 'order dinner',
@@ -335,6 +348,19 @@ export const PARK: Layout = {
       sounds: [{ at: 0.2, id: 'breath' }],
       effects: [
         { kind: 'breath', from: 0, to: 3.2, at: [0, 0.05, -0.3], follow: 'right' },
+      ],
+    },
+    {
+      // On a date (see game/dates.ts): sitting together while they talk. Started by the
+      // date, never offered by itself (nothing to reach); moving stands up.
+      id: 'date-bench',
+      action: null,
+      prompt: 'sit with your date',
+      spot: { x: -3.4, z: 2.05, reach: 0 },
+      anchor: { x: -3.4, z: 2.05, heading: 0 },
+      stages: [
+        { clip: 'sit', seconds: 1.2, label: 'Sitting down together' },
+        { clip: 'sit-relax', seconds: 600, label: 'On a date, on the bench' },
       ],
     },
     {

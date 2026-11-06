@@ -65,3 +65,40 @@ play.
 11. **R11 · Story Mode**: relationship storylines in the campaigns.
 
 Each is built, tested in the game and documented before the next.
+
+## Done
+
+### R1–R3 · People and bonds, conversations, dates
+
+- **Adults** (`content/adults.ts`): eight people already in the world (the café's
+  owner and a regular, two gym members, the garage's salesperson, two colleagues, a
+  neighbour), all adults (27 to 78), each with interests and dislikes, what they want,
+  boundaries (taking things slowly; private, not in front of people; not dating
+  colleagues), free evenings, and whether romance with the player could happen at all
+  (for two of them it could not: a happily married colleague, a retired neighbour).
+- **Bonds** (`game/romance.ts`, `life.bonds` in the save, empty for older saves):
+  stage (getting to know each other, friends, close friends, dating, partners, engaged,
+  married, separated), closeness, attraction, interests found out, what was declined
+  and when, a date arranged, dates so far, and shared history. Trust stays in
+  `work.relationships`, as before.
+- **Consent** (`ask`): every step (a date, holding hands, a hug, a kiss, being a couple,
+  staying over, moving in, a proposal) gets yes, no or not yet, from who they are and
+  how things stand, the same every time. A no cannot be asked again for three days.
+- **Conversations** (`game/personal.ts`, through the existing talking): asking what they
+  love (each answer remembered), compliments, flirting (only once they are friends; a
+  person not interested says so kindly, and it changes nothing), a hug, asking them out
+  (yes, with a day and a place, or not yet, or no). Closeness grows a little a day;
+  attraction only with people open to it, and only from warmth.
+- **Dates, played** (`game/dates.ts`): on the evening arranged, from 6:45 pm, they wait
+  at the café's window table (Maya, if it is her, is not behind the counter that night)
+  or on the park bench. Walking up to them starts it; the player sits down with them
+  (dinner at the café, paid; or the bench) and stays seated; three rounds of what to
+  say (what they love, their day, work) and, asked, holding hands and a goodnight kiss;
+  then how it went. A good first date makes them a couple who are dating. A date not
+  gone to by bedtime is missed, and remembered. Dates are in the phone's calendar, with
+  a reminder that day.
+- **Tests**: `romance.test.ts` (9), `dates.test.ts` (6); browser: `date.spec.ts` (asking
+  Maya out in person, the date at the café that evening, sitting down to dinner
+  together, holding hands, a kiss declined as "not yet" and respected, dating now).
+- **Limits**: hand-holding and the kiss are described, not yet animated between the two
+  (R4); R5 to R11 are still to come.

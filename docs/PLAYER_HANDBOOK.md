@@ -73,6 +73,15 @@ know you and what happened last time. Friendly conversations build trust a littl
 a day per person; a real favour builds more; rudeness costs trust and is remembered.
 Press **Esc** or **Goodbye** to end a conversation. See [People](PEOPLE.md).
 
+### Getting close to someone
+
+Some of the people you meet (at the café, the gym, the garage, the office) could become
+friends, and some of them more. Ask what they love doing, pay a compliment, flirt once
+you are friends, and ask them out. They answer as themselves: yes, no, or not yet, and a
+no is respected. On the evening of a date, go to the café or the park, walk up to them,
+sit down together and talk; what you say, and what you remember about them, decides how
+it goes. Staying single is just as good a way to play.
+
 ### Your phone
 
 Press **P** (or Open your phone) to take out your phone: messages and calls with

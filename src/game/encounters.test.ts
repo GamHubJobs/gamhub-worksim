@@ -191,7 +191,7 @@ describe('what a conversation changes in the save', () => {
       ...p,
       work: { ...p.work, relationships: { backM: { trust: 60, talks: 2 } } },
     }
-    expect(relationOf(old, 'backM')).toEqual({
+    expect(relationOf(old, 'backM')).toMatchObject({
       trust: 60,
       talks: 2,
       today: 0,
