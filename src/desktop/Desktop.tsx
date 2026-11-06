@@ -7,6 +7,8 @@
  */
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { StoryPanel, StoryTracker } from './StoryPanel'
+import { PhoneHost } from '../phone/PhoneDevice'
+import type { PlaceId } from '../content/city'
 import { NEW_STORY_KEY } from './Onboarding'
 import { skipTo, startStory } from '../game/story/engine'
 import { useAppServices } from '../app/services'
@@ -596,6 +598,15 @@ export function Desktop({
         </div>
       </header>
       <StoryTracker profile={profile} act={act} />
+      <PhoneHost
+        profile={profile}
+        act={act}
+        onRespond={(id, accept) => void act((p) => respond(p, id, accept))}
+        onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}
+        onRead={(friend) => void act((p) => readMessages(p, friend))}
+        onOrder={() => void act((p) => doHomeAction(p, 'takeaway'))}
+        onGo={(id) => void act((p) => enterPlace(p, id as PlaceId))}
+      />
       {storyOpen && (
         <StoryPanel profile={profile} act={act} onClose={() => setStoryOpen(false)} />
       )}
@@ -656,9 +667,6 @@ export function Desktop({
             onRide={(riding) => void act((p) => setRiding(p, riding))}
             onAct={act}
             onAction={(id) => void act((p) => doHomeAction(p, id))}
-            onRespond={(id, accept) => void act((p) => respond(p, id, accept))}
-            onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}
-            onRead={(friend) => void act((p) => readMessages(p, friend))}
           />
         ) : dayOver ? (
           <HomeView
@@ -673,10 +681,7 @@ export function Desktop({
             onSell={(slot) => void act((p) => sellFurniture(p, slot))}
             onRecolour={(slot, colour) => void act((p) => recolour(p, slot, colour))}
             onMove={(home) => void act((p) => moveHome(p, home))}
-            onRespond={(id, accept) => void act((p) => respond(p, id, accept))}
             onGoOut={(id) => void act((p) => goOut(p, id))}
-            onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}
-            onRead={(friend) => void act((p) => readMessages(p, friend))}
             onGoOutside={() => void act(goOutside)}
             onCareer={act}
           />

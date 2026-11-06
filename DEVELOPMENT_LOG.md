@@ -172,6 +172,10 @@ working simulations of the professional software used in its field (see
 **Living scenarios**: [docs/SCENARIOS_PLAN.md](docs/SCENARIOS_PLAN.md). S1 (takeaway) and S2
 (meetings in person) done; S3 to S7 next.
 
+**Phone**: [docs/PHONE.md](docs/PHONE.md) (Phone 1 done).
+
+**Relationships, romance and family** (planned): [docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md).
+
 **Story Mode** (in progress). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
 
 - [x] Story 1–4 Engine and save, the Story screen and tracker, missions played in the
@@ -179,6 +183,54 @@ working simulations of the professional software used in its field (see
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [ ] Story 6–10 The other five careers
 - [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-06 · Phone 1: a real smartphone
+
+### Built
+
+- **The phone** (`src/phone/`, `src/game/phone.ts`): a device that rises from the bottom
+  of the screen over any view, with a status bar (the game's clock, signal, battery), a
+  wallpaper, the home screen's clock and date, an app grid with badges and a dock; back
+  and home buttons; P to take it out and put it away (a new control, changeable), Esc,
+  or the button. It replaces the old phone panel at home and in town.
+- **Eleven apps, connected to the game** (no second copy of anything): Messages (the
+  friends' messages and invitations, as before), Contacts (friends and the people met at
+  work and in town; calls that ring, connect and talk with the same trust and memory),
+  Calendar (meetings, plans, the takeaway, the story), Maps (places, where you are, the
+  story's destination, Go there), Bank (the game's money and ledger), Career, Food
+  (restaurants whose orders are the home's takeaway, with its courier), Circle (a social
+  feed), Browser (written websites), Camera (a photo of the 3D view, kept on the device,
+  a gallery), Settings (wallpaper, ringtone, notifications).
+- **Notification banners** for news that arrives while playing (a message, the courier,
+  a meeting in ten minutes, the next story objective), once each, with a sound.
+- **In 3D**: the character takes the phone out, holds it and stands still while it is
+  in use; walking resumes when it is away.
+- **Sounds**: a ringtone in three versions, a call tone; the existing open, close, tap
+  and notification sounds. The save gains `life.phone` (settings and likes, defaults for
+  older saves).
+- Found while testing: redrawing the 3D view on every frame while the phone was out
+  made software-rendered pages too slow to use; it is redrawn with the rest of the place.
+
+### Tests
+
+- Browser tests (`phone.spec.ts`): out with P in the office (held, no walking, an
+  accessibility check of the phone), every app opens and shows the game's state (the
+  stand-up in the calendar, the balance, the restaurants, a photo taken and in the
+  gallery), back and the home bar, a call ringing and connecting, away with P and
+  walking again; settings kept across a reload; food ordered on the phone at home paid
+  and the courier at the door. The friends test now uses the new phone.
+- Screenshots: `docs/screenshots/phone/`.
+- Results: 2,187 unit tests passed. Chromium browser tests, full run: 189 passed, 3
+  skipped (the opt-in screenshots), 1 flaky (work at the computer reflected in the office,
+  passed on its retry), none failed. 5 production-build tests passed. Firefox, WebKit
+  and Edge 8 passed, 1 skipped. Start screen 299 kB (unchanged: the phone loads with the
+  desk).
+
+### Limits
+
+- Calls are short written exchanges; texts go to friends only; one bank account.
 
 ---
 

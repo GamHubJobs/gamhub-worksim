@@ -64,6 +64,8 @@ import {
   type PropKind,
 } from './interaction/activity'
 import type { Control } from './keys'
+import { phoneIsOpen } from '../phone/store'
+import { setCapture } from '../phone/photos'
 import { Prop } from './props'
 import { Particles } from './vfx/Particles'
 
@@ -308,6 +310,8 @@ export function PlayerRig(props: PlayerRigProps) {
   const lastPrompt = useRef<string | null>(null)
   /** What the player could use or talk to now (for tests). */
   const nearNow = useRef<string | null>(null)
+  /** The phone is in the character's hand. */
+  const phoneOut = useRef(false)
   const lastProgress = useRef(-1)
   const [held, setHeld] = useState<{ left?: PropKind; right?: PropKind }>({})
   const heldKey = useRef('')
@@ -434,8 +438,16 @@ export function PlayerRig(props: PlayerRigProps) {
     latest.current.onReady?.()
   }, [])
 
-  // In development, browser tests can find where something is drawn on screen (to click it).
+  // The phone's camera takes a picture of this view.
   const gl = useThree((st) => st.gl)
+  useEffect(() => {
+    setCapture(() => {
+      gl.render(scene, camera)
+      return gl.domElement.toDataURL('image/jpeg', 0.85)
+    })
+    return () => setCapture(null)
+  }, [gl, scene, camera])
+  // In development, browser tests can find where something is drawn on screen (to click it).
   useEffect(() => {
     if (!import.meta.env.DEV) return
     Object.assign(window, {
@@ -515,7 +527,11 @@ export function PlayerRig(props: PlayerRigProps) {
     Object.assign(o, clampOrbit(o))
 
     const m = mode.current
-    const moveKeys = h.has('forward') || h.has('back') || h.has('left') || h.has('right')
+    // The phone is out: the character holds it up and stands still (keys go to the phone).
+    const onPhone = phoneIsOpen() && m.kind === 'free' && ride.current !== 'car'
+    if (onPhone) pressed.splice(0)
+    const moveKeys =
+      !onPhone && (h.has('forward') || h.has('back') || h.has('left') || h.has('right'))
     let s = state.current
 
     if (m.kind === 'free') {
@@ -526,6 +542,11 @@ export function PlayerRig(props: PlayerRigProps) {
         run: h.has('run'),
         crouch: h.has('crouch'),
         jump: pressed.includes('jump'),
+      }
+      if (onPhone) {
+        input.forward = 0
+        input.right = 0
+        input.run = false
       }
       const v = latest.current.vehicles
       // F: on or off the bike, into or out of the car.
@@ -669,6 +690,17 @@ export function PlayerRig(props: PlayerRigProps) {
             crouching: input.crouch,
             airborne: !s.grounded,
           }
+      // Taking the phone out, holding it, putting it away.
+      if (onPhone !== phoneOut.current) {
+        phoneOut.current = onPhone
+        rig.current = null
+        const key = onPhone ? '|phone' : ''
+        heldKey.current = key
+        setHeld(onPhone ? { right: 'phone' } : {})
+        redraw()
+      }
+      // (Held still: redrawn with the rest of the place, not every frame.)
+      if (onPhone) rig.current = clipFrame('phone', clock.current)
     } else if (m.kind === 'going') {
       if (pressed.includes('interact') || moveKeys) stop(false)
       else {

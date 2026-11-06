@@ -249,7 +249,7 @@ export function createEngine(): AudioEngine | null {
     }
   }
 
-  function effect(id: EffectId, surface: Surface = 'pavement') {
+  function effect(id: EffectId, surface: Surface = 'pavement', variant = 0) {
     const t = ctx.currentTime + 0.01
     const to = buses[effectsBus(id)].gain
     // Each sound's own loudness; the bus applies the player's volume.
@@ -478,6 +478,24 @@ export function createEngine(): AudioEngine | null {
         tone(to, 1318, t, 0.5, { gain: 0.03 * v })
         tone(to, 523, t + 0.55, 1.1, { gain: 0.16 * v })
         tone(to, 1046, t + 0.55, 0.6, { gain: 0.03 * v })
+        break
+      case 'ring':
+        // A phone ringing: two short warbling bursts.
+        // Three ringtones: classic, bright (higher, quicker), soft (lower, gentler).
+        for (const at of [0, 0.4, 1.2, 1.6])
+          for (let k = 0; k < 6; k++)
+            tone(
+              to,
+              (k % 2 ? 1240 : 990) * [1, 1.33, 0.66][variant % 3],
+              t + at * [1, 0.8, 1.2][variant % 3] + k * 0.05,
+              0.05,
+              { gain: [0.07, 0.06, 0.05][variant % 3] * v },
+            )
+        break
+      case 'call':
+        // Connected, or ended: a soft double beep.
+        tone(to, 880, t, 0.12, { gain: 0.08 * v })
+        tone(to, 660, t + 0.16, 0.14, { gain: 0.08 * v })
         break
       case 'greet':
         // A short, friendly "mm-hm": a voice-like hum, not words.
@@ -1182,10 +1200,10 @@ export function createEngine(): AudioEngine | null {
   }
 
   return {
-    play(id, { surface, level }) {
+    play(id, { surface, level, variant }) {
       if (ctx.state === 'suspended') void ctx.resume().catch(() => {})
       try {
-        if (level > 0) effect(id, surface)
+        if (level > 0) effect(id, surface, variant)
       } catch {
         // A sound that cannot play is skipped.
       }

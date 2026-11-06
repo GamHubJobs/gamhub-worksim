@@ -53,6 +53,8 @@ export const EFFECTS = {
   chair: 'character',
   beep: 'effects',
   doorbell: 'effects',
+  ring: 'effects',
+  call: 'effects',
   engine: 'character',
   greet: 'voices',
 } as const satisfies Record<string, CategoryId>
@@ -94,6 +96,8 @@ export const MIN_GAP: Record<EffectId, number> = {
   chair: 800,
   beep: 250,
   doorbell: 2500,
+  ring: 2600,
+  call: 500,
   engine: 700,
   greet: 2500,
 }
@@ -111,11 +115,15 @@ export const CAPTIONS: Partial<Record<EffectId, string>> = {
   error: 'Something went wrong',
   phone: 'Phone message',
   doorbell: 'Doorbell',
+  ring: 'Phone ringing',
 }
 
 /** The engine's side (engine.ts), loaded on demand. */
 export interface AudioEngine {
-  play(id: EffectId, options: { surface?: Surface; level: number }): void
+  play(
+    id: EffectId,
+    options: { surface?: Surface; level: number; variant?: number },
+  ): void
   setScene(scene: Scene | null, levels: Levels, calm: boolean): void
   setLevels(levels: Levels, calm: boolean): void
   sting(kind: 'promotion' | 'achievement', level: number): void
@@ -194,7 +202,8 @@ export class AudioManager {
   }
 
   /** Plays a sound, unless the same one played too recently or its kind is off. */
-  play(id: EffectId, options: { surface?: Surface } = {}): boolean {
+  /** `variant` picks one of a sound's versions (the phone's ringtone). */
+  play(id: EffectId, options: { surface?: Surface; variant?: number } = {}): boolean {
     const t = this.now()
     const before = this.last.get(id)
     if (before !== undefined && t - before < MIN_GAP[id]) {

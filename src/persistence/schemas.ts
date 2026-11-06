@@ -925,6 +925,17 @@ export const LifeSchema = z.object({
   rentWeek: z.number().int().nonnegative().default(0),
   /** What happened at home this evening and morning, for the panel. */
   log: z.array(z.string()).max(30).default([]),
+  /** The phone's settings (see phone/): kept with the career, defaults for older saves. */
+  phone: z
+    .object({
+      wallpaper: z.number().int().nonnegative().default(0),
+      ringtone: z.number().int().nonnegative().default(0),
+      /** Banners for new messages, deliveries, meetings and missions. */
+      notifications: z.boolean().default(true),
+      /** Posts liked in the social app (by id, the latest 50). */
+      liked: z.array(z.string()).max(50).default([]),
+    })
+    .prefault({}),
   /** Friends outside work, and the phone (see content/friends.ts and game/social.ts). */
   social: z
     .object({

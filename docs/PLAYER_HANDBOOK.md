@@ -73,6 +73,13 @@ know you and what happened last time. Friendly conversations build trust a littl
 a day per person; a real favour builds more; rudeness costs trust and is remembered.
 Press **Esc** or **Goodbye** to end a conversation. See [People](PEOPLE.md).
 
+### Your phone
+
+Press **P** (or Open your phone) to take out your phone: messages and calls with
+friends, contacts, your calendar, a map, your bank account, career, food delivery, a
+social feed, a browser, a camera and settings. Your character holds it and stands still
+while it is out; press **P** or **Esc** to put it away. See [The phone](PHONE.md).
+
 ### Story Mode
 
 Choose **Story Mode** on the first screen, or press **Story** in the top bar, to play a

@@ -19,13 +19,13 @@ import { formatMoney } from '../content/life'
 import { formatTime, nextWorkday, weekdayName } from '../game/clock'
 import { canEnter, minutesTo } from '../game/city'
 import { canDo, lifePhase } from '../game/life'
-import { unreadCount, type Contact } from '../game/social'
+import { unreadCount } from '../game/social'
 import { CommuteChoices } from '../home/CommuteChoices'
 import { MoneyPanel, NeedsPanel } from '../home/LifePanels'
 import { BIKE, CAR } from '../content/transport'
 import { canDeal, type TransportDeal } from '../game/transport'
 import type { CommuteId } from '../content/life'
-import { Phone } from '../home/Phone'
+import { openPhone } from '../phone/store'
 import { supportsWebGL } from '../office/webgl'
 import { areaAt, standAt, type Area } from './streets'
 import { timeOfDay, type Place } from '../audio/scenes'
@@ -85,9 +85,6 @@ export function CityView({
   onEnter,
   onOutside,
   onAction,
-  onRespond,
-  onContact,
-  onRead,
   onLeave,
   onDeal,
   onRide,
@@ -99,15 +96,11 @@ export function CityView({
   onEnter: (id: PlaceId) => void
   onOutside: () => void
   onAction: (id: string) => void
-  onRespond: (messageId: string, accept: boolean) => void
-  onContact: (friendId: string, how: Contact) => void
-  onRead: (friendId: string) => void
   onLeave: (commute: CommuteId) => void
   onDeal: (deal: TransportDeal) => void
   onRide: (riding: boolean) => void
 }) {
   const [webgl] = useState(supportsWebGL)
-  const [phone, setPhone] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   // Choosing how to get to work, at the end of the street.
   const [travel, setTravel] = useState(false)
@@ -421,16 +414,7 @@ export function CityView({
             {notice}
           </p>
 
-          {phone ? (
-            <Phone
-              profile={profile}
-              onRespond={onRespond}
-              onContact={onContact}
-              onRead={onRead}
-              onClose={() => setPhone(false)}
-              closeLabel="Put your phone away"
-            />
-          ) : outside && travel ? (
+          {outside && travel ? (
             <div
               className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
               data-testid="commute"
@@ -586,10 +570,10 @@ export function CityView({
             </div>
             <button
               type="button"
-              onClick={() => setPhone((open) => !open)}
+              onClick={() => openPhone('messages')}
               className="mt-2 rounded-md border border-slate-300 px-2.5 py-1 text-sm hover:bg-emerald-50"
             >
-              {phone ? 'Put your phone away' : 'Open your phone'}
+              Open your phone
             </button>
           </section>
           <NeedsPanel profile={profile} />

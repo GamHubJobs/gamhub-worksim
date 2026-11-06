@@ -128,7 +128,8 @@ test('friends: an invitation accepted and kept, and a call', async ({ page }) =>
   await endTheDay(page, 5)
   await expect(home(page).getByTestId('phone-summary')).toContainText('1 new')
   await home(page).getByRole('button', { name: 'Open your phone' }).click()
-  const phone = home(page).getByTestId('phone')
+  // The phone (it opens over any screen, on Messages).
+  const phone = page.getByTestId('phone')
   const thread = phone.getByTestId('phone-thread')
   await expect(thread).toContainText('Leo Martins')
   await expect(thread).toContainText('Quick drink at the Kettle & Crown')
@@ -149,7 +150,8 @@ test('friends: an invitation accepted and kept, and a call', async ({ page }) =>
   await expect(
     thread.getByRole('meter', { name: /Friendship with Dan/ }),
   ).toHaveAttribute('aria-valuenow', '55')
-  await phone.getByRole('button', { name: 'Back to the flat' }).click()
+  await phone.getByRole('button', { name: 'Put the phone away' }).click()
+  await expect(phone).toHaveCount(0)
 
   // Out for the drink, from the front door.
   await room(page, 'Front door')

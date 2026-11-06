@@ -19,13 +19,13 @@ import { supportsWebGL } from '../office/webgl'
 import { HomeShop } from './HomeShop'
 import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { CommuteChoices } from './CommuteChoices'
-import { Phone } from './Phone'
+import { openPhone } from '../phone/store'
 import { CareerPanel } from './CareerPanel'
 import { WalkView } from '../world/WalkView'
 import type { Doing } from '../city/scene/interiors/kit'
 import { audio } from '../audio/manager'
 import type { ProfileData } from '../game/career'
-import { canGo, plansTonight, unreadCount, type Contact } from '../game/social'
+import { canGo, plansTonight, unreadCount } from '../game/social'
 import {
   HOME_ACTIONS,
   ROOMS,
@@ -72,10 +72,7 @@ export function HomeView({
   onSell,
   onRecolour,
   onMove,
-  onRespond,
   onGoOut,
-  onContact,
-  onRead,
   onGoOutside,
   onCareer,
 }: {
@@ -87,10 +84,7 @@ export function HomeView({
   onSell: (slot: SlotId) => void
   onRecolour: (slot: SlotId, colour: number) => void
   onMove: (home: HomeId) => void
-  onRespond: (messageId: string, accept: boolean) => void
   onGoOut: (messageId: string) => void
-  onContact: (friendId: string, how: Contact) => void
-  onRead: (friendId: string) => void
   onGoOutside: () => void
   /** Career life on the laptop: applies a rule from game/careerLife.ts. */
   onCareer: (change: (profile: ProfileData) => ProfileData) => Promise<unknown>
@@ -242,14 +236,6 @@ export function HomeView({
             <CareerPanel
               profile={profile}
               onAct={onCareer}
-              onClose={() => setShop(null)}
-            />
-          ) : shop === 'phone' ? (
-            <Phone
-              profile={profile}
-              onRespond={onRespond}
-              onContact={onContact}
-              onRead={onRead}
               onClose={() => setShop(null)}
             />
           ) : shop === 'shop' || shop === 'move' ? (
@@ -432,7 +418,7 @@ export function HomeView({
             </p>
             <button
               type="button"
-              onClick={() => setShop('phone')}
+              onClick={() => openPhone('messages')}
               className="mt-2 rounded-md border border-slate-300 px-2.5 py-1 text-sm hover:bg-amber-50"
             >
               Open your phone
