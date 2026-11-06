@@ -8,6 +8,16 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { StoryPanel, StoryTracker } from './StoryPanel'
 import { PhoneHost } from '../phone/PhoneDevice'
+import {
+  CharacterScreen,
+  GameHud,
+  InventoryScreen,
+  MainMenuScreen,
+  PauseMenu,
+  RelationshipsScreen,
+  type MenuScreen,
+} from './GameHud'
+import { usePauseKey } from './usePauseKey'
 import type { PlaceId } from '../content/city'
 import { NEW_STORY_KEY } from './Onboarding'
 import { skipTo, startStory } from '../game/story/engine'
@@ -235,6 +245,13 @@ export function Desktop({
   const [helpOpen, setHelpOpen] = useState(false)
   const [soundOpen, setSoundOpen] = useState(false)
   const [storyOpen, setStoryOpen] = useState(false)
+  // The pause menu (Esc in the game), and the screen opened from it.
+  const [menu, setMenu] = useState(false)
+  const [screen, setScreen] = useState<MenuScreen | 'main'>(null)
+  usePauseKey(
+    () => setMenu((open) => !open),
+    profile.work.dayOver || view.app === 'office',
+  )
   // A new career started in Story Mode: the story begins as the desk opens.
   useEffect(() => {
     if (sessionStorage.getItem(NEW_STORY_KEY) !== '1') return
@@ -628,8 +645,43 @@ export function Desktop({
 
   if (dayOver || view.app === 'office') {
     return (
-      <div className="flex h-screen flex-col bg-slate-100" data-testid="desktop">
+      <div
+        className="flex h-screen flex-col overflow-hidden bg-slate-100"
+        data-testid="desktop"
+      >
         {header}
+        {/* The game's HUD and menus, over the world (not over the day's summary). */}
+        {!(dayOver && lifePhase(profile) === 'work') && (
+          <GameHud profile={profile} onMenu={() => setMenu(true)} />
+        )}
+        {menu && (
+          <PauseMenu
+            onClose={() => setMenu(false)}
+            onStory={() => setStoryOpen(true)}
+            onSound={() => setSoundOpen(true)}
+            onHelp={() => setHelpOpen(true)}
+            onStorage={onOpenStorage}
+            onMainMenu={() => setScreen('main')}
+            onScreen={setScreen}
+          />
+        )}
+        {screen === 'relationships' && (
+          <RelationshipsScreen profile={profile} onClose={() => setScreen(null)} />
+        )}
+        {screen === 'character' && (
+          <CharacterScreen profile={profile} onClose={() => setScreen(null)} />
+        )}
+        {screen === 'inventory' && (
+          <InventoryScreen profile={profile} onClose={() => setScreen(null)} />
+        )}
+        {screen === 'main' && (
+          <MainMenuScreen
+            profile={profile}
+            onSwitchCareer={(id) => career.switchCareer(id)}
+            onStory={() => setStoryOpen(true)}
+            onClose={() => setScreen(null)}
+          />
+        )}
         {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
         {soundOpen && <AudioSettingsPanel onClose={() => setSoundOpen(false)} />}
         <SoundCaptions />

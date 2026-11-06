@@ -4,6 +4,7 @@
  * going straight there; and what there is to do inside each. Everything also
  * works without 3D, from the list.
  */
+import { GameScreen } from '../world/GameScreen'
 import {
   Component,
   lazy,
@@ -289,8 +290,92 @@ export function CityView({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stableDoings = useMemo(() => doings, [doingsKey])
 
+  // The 3D world, full screen behind the drawer.
+  const world =
+    webgl && !interiorFailed && !outside && INTERIORS.has(here.id) ? (
+      <WalkView
+        key={here.id}
+        helpClass="top-2 left-1/2 -translate-x-1/2"
+        className="h-full rounded-none bg-stone-800 ring-0"
+        testId="city-3d"
+        attributes={{ 'data-interior': here.id }}
+        label={`Inside ${here.name} in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to. Everything here is also in the list below.`}
+      >
+        {(api) => (
+          <SceneBoundary onFail={() => setInteriorFailed(true)}>
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center text-sm text-stone-300">
+                  Going in…
+                </div>
+              }
+            >
+              <InteriorScene
+                place={here.id as InteriorId}
+                dark={dark}
+                morning={phase === 'morning'}
+                doings={stableDoings}
+                controls={api.controls}
+                request={request?.place === here.id ? request : null}
+                onRequest={doThing}
+                onPrompt={api.onPrompt}
+                onProgress={api.onProgress}
+                onDone={onActivityDone}
+                onReady={() => setReadyIn(here.id)}
+                dressed={phase === 'morning' && life.ready.dressed}
+                raining={raining}
+                date={dating?.date.id ?? date?.id ?? null}
+              />
+            </Suspense>
+          </SceneBoundary>
+        )}
+      </WalkView>
+    ) : webgl ? (
+      <WalkView
+        key="street"
+        helpClass="top-2 left-1/2 -translate-x-1/2"
+        className="h-full rounded-none bg-slate-300 ring-0"
+        testId="city-3d"
+        label="The street in 3D. W, A, S and D (or the arrow keys) walk, Shift runs, drag the mouse or press Q and R to look around, E goes in at a door, and F gets on or off your bike or in and out of your car."
+      >
+        {(api) => (
+          <SceneBoundary>
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center text-sm text-slate-600">
+                  Stepping outside…
+                </div>
+              }
+            >
+              <CityScene
+                at={life.city.at}
+                outside={outside}
+                phase={phase}
+                dark={dark}
+                dressed={phase === 'morning' && life.ready.dressed}
+                controls={api.controls}
+                onPrompt={api.onPrompt}
+                onProgress={api.onProgress}
+                onArea={onArea}
+                onDoor={go}
+                onEnter={go}
+                blocked={(id) => canEnter(profile, id)}
+                riding={life.city.riding}
+                car={life.vehicles.car}
+                bike={life.vehicles.bike}
+                onRide={onRide}
+                raining={raining}
+                request={streetRequest}
+                onPerson={meetPerson}
+              />
+            </Suspense>
+          </SceneBoundary>
+        )}
+      </WalkView>
+    ) : null
+
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto bg-[#eef1ec]" data-testid="city">
+    <>
       <AudioScene
         scene={{
           place: outside ? area : INSIDE[life.city.at],
@@ -298,7 +383,7 @@ export function CityView({
           rain: raining,
         }}
       />
-      <div className="mx-auto grid max-w-5xl gap-5 p-5 lg:grid-cols-[1fr_20rem]">
+      <GameScreen testId="city" label="The neighbourhood" world={world || null}>
         <section aria-label="The neighbourhood" className="space-y-4">
           <header className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <p className="text-xs font-medium tracking-wide text-emerald-800 uppercase">
@@ -314,86 +399,6 @@ export function CityView({
                 : here.description}
             </p>
           </header>
-
-          {webgl && !interiorFailed && !outside && INTERIORS.has(here.id) ? (
-            <WalkView
-              key={here.id}
-              className="h-[28rem] bg-stone-800"
-              testId="city-3d"
-              attributes={{ 'data-interior': here.id }}
-              label={`Inside ${here.name} in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to. Everything here is also in the list below.`}
-            >
-              {(api) => (
-                <SceneBoundary onFail={() => setInteriorFailed(true)}>
-                  <Suspense
-                    fallback={
-                      <div className="flex h-full items-center justify-center text-sm text-stone-300">
-                        Going in…
-                      </div>
-                    }
-                  >
-                    <InteriorScene
-                      place={here.id as InteriorId}
-                      dark={dark}
-                      morning={phase === 'morning'}
-                      doings={stableDoings}
-                      controls={api.controls}
-                      request={request?.place === here.id ? request : null}
-                      onRequest={doThing}
-                      onPrompt={api.onPrompt}
-                      onProgress={api.onProgress}
-                      onDone={onActivityDone}
-                      onReady={() => setReadyIn(here.id)}
-                      dressed={phase === 'morning' && life.ready.dressed}
-                      raining={raining}
-                      date={dating?.date.id ?? date?.id ?? null}
-                    />
-                  </Suspense>
-                </SceneBoundary>
-              )}
-            </WalkView>
-          ) : webgl ? (
-            <WalkView
-              key="street"
-              className="h-[28rem] bg-slate-300"
-              testId="city-3d"
-              label="The street in 3D. W, A, S and D (or the arrow keys) walk, Shift runs, drag the mouse or press Q and R to look around, E goes in at a door, and F gets on or off your bike or in and out of your car."
-            >
-              {(api) => (
-                <SceneBoundary>
-                  <Suspense
-                    fallback={
-                      <div className="flex h-full items-center justify-center text-sm text-slate-600">
-                        Stepping outside…
-                      </div>
-                    }
-                  >
-                    <CityScene
-                      at={life.city.at}
-                      outside={outside}
-                      phase={phase}
-                      dark={dark}
-                      dressed={phase === 'morning' && life.ready.dressed}
-                      controls={api.controls}
-                      onPrompt={api.onPrompt}
-                      onProgress={api.onProgress}
-                      onArea={onArea}
-                      onDoor={go}
-                      onEnter={go}
-                      blocked={(id) => canEnter(profile, id)}
-                      riding={life.city.riding}
-                      car={life.vehicles.car}
-                      bike={life.vehicles.bike}
-                      onRide={onRide}
-                      raining={raining}
-                      request={streetRequest}
-                      onPerson={meetPerson}
-                    />
-                  </Suspense>
-                </SceneBoundary>
-              )}
-            </WalkView>
-          ) : null}
 
           {storyScene && (
             <StoryScenePanel
@@ -665,7 +670,7 @@ export function CityView({
             </section>
           )}
         </aside>
-      </div>
-    </div>
+      </GameScreen>
+    </>
   )
 }

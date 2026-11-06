@@ -66,7 +66,7 @@ export function DatePanel({
       role="dialog"
       aria-label={`A date with ${who.name}`}
       data-testid="date"
-      className={`${className} w-[26rem] max-w-[calc(100%-2rem)] rounded-xl bg-white p-4 shadow-2xl ring-2 ring-pink-200 outline-none`}
+      className={`visible ${className} w-[26rem] max-w-[calc(100%-2rem)] rounded-xl bg-white p-4 shadow-2xl ring-2 ring-pink-200 outline-none`}
     >
       <p className="text-xs font-semibold tracking-wide text-pink-700 uppercase">
         A date · {place === 'park' ? 'the park' : 'Kettle & Crumb'}

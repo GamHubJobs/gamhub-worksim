@@ -7,6 +7,7 @@
  * solid, where each activity happens) comes from homeLayout.ts. Loaded only
  * when the player is at home.
  */
+import { lowDpr } from '../../world/lowDpr'
 import { Canvas, useFrame, type RootState } from '@react-three/fiber'
 import { memo, useMemo, useRef, useState, type RefObject } from 'react'
 import type { Mesh, MeshBasicMaterial, WebGLRenderer } from 'three'
@@ -138,7 +139,7 @@ function HomeScene(props: HomeSceneProps) {
 
   return (
     <Canvas
-      dpr={lowPower ? 0.5 : [1, 1.5]}
+      dpr={lowPower ? lowDpr() : [1, 1.5]}
       frameloop="demand"
       camera={{
         position: [layout.start.x + 2, 3.5, layout.start.z + 3.5],

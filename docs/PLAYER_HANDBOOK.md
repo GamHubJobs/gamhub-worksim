@@ -73,6 +73,13 @@ know you and what happened last time. Friendly conversations build trust a littl
 a day per person; a real favour builds more; rudeness costs trust and is remembered.
 Press **Esc** or **Goodbye** to end a conversation. See [People](PEOPLE.md).
 
+### The screen
+
+The 3D world fills the screen. What you can do where you are is in the panel on the left
+(Hide folds it away); how you are, and Phone, Map and Menu, are at the bottom right.
+Press **Esc** for the pause menu: missions, relationships, your character, inventory,
+settings, saving and backups, and the main menu. See [The game screen](GAME_SCREEN.md).
+
 ### Getting close to someone
 
 Some of the people you meet (at the café, the gym, the garage, the office) could become

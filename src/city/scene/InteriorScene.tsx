@@ -6,6 +6,7 @@
  * ringed object, the "Press E" prompt and the list beside the view all start
  * the same activity; its game action is completed when it has been played.
  */
+import { lowDpr } from '../../world/lowDpr'
 import { Canvas, type RootState } from '@react-three/fiber'
 import { lazy, memo, Suspense, useMemo, useRef, useState, type RefObject } from 'react'
 import type { WebGLRenderer } from 'three'
@@ -142,7 +143,7 @@ function InteriorScene(props: InteriorSceneProps) {
   return (
     <Canvas
       key={place}
-      dpr={low ? 0.6 : [1, 1.5]}
+      dpr={low ? lowDpr(0.6) : [1, 1.5]}
       frameloop="demand"
       camera={{
         position: [layout.start.x, 2, layout.start.z + 3],

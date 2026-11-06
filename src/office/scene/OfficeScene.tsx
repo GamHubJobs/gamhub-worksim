@@ -6,6 +6,7 @@
  * (reception, your desk, the manager's office, the break room). Clicking a glowing
  * floor marker or an object moves there.
  */
+import { lowDpr } from '../../world/lowDpr'
 import {
   ContactShadows,
   Environment,
@@ -288,7 +289,7 @@ function OfficeScene(props: OfficeSceneProps) {
   return (
     <Canvas
       // Software 3D draws at a lower resolution: much faster, slightly softer.
-      dpr={lowPower ? 0.5 : [1, 1.5]}
+      dpr={lowPower ? lowDpr() : [1, 1.5]}
       frameloop="demand"
       shadows={full}
       camera={{ position: start.position, fov: 45, near: 0.1, far: 80 }}

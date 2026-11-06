@@ -174,6 +174,8 @@ working simulations of the professional software used in its field (see
 
 **Phone**: [docs/PHONE.md](docs/PHONE.md) (Phone 1 done).
 
+**Game screen**: [docs/GAME_SCREEN.md](docs/GAME_SCREEN.md) (full screen, HUD, pause menu).
+
 **Relationships, romance and family** (R1–R3 done; R4–R11 next): [docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md).
 
 **Story Mode** (in progress). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
@@ -183,6 +185,53 @@ working simulations of the professional software used in its field (see
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [ ] Story 6–10 The other five careers
 - [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-06 · Game screen 1: the world is the screen
+
+### Built
+
+- **Full screen** (`world/GameScreen.tsx`): at home and in town, as at work, the 3D world
+  fills the window below the slim top bar, with no page around it and no scrolling. What
+  can be done there is a drawer over the world (top left), which folds away to a button
+  and stays folded; conversations, story scenes and dates opened from it stay on screen.
+  Without 3D, the drawer is the page, as before.
+- **The HUD** (`desktop/GameHud.tsx`): six small bars (hunger, hygiene, social, fun,
+  energy, stress) and Phone, Map and Menu at the bottom right; prompts at the bottom
+  centre as before; the controls help at the top centre.
+- **The pause menu** (Esc from the world, or Menu): Resume, Map, Missions, Relationships
+  (everyone the player is getting close to: stage, closeness, what they love, the date,
+  shared history), Character, Inventory, Settings, Help, Save & backup, and the main menu
+  (continue, Story Mode, every career). Esc only pauses from the world: an Esc that
+  closes a conversation or a pop-up does just that.
+- **The world is not rebuilt** by menus, the phone or the drawer (tested).
+- **Performance**: in software 3D (no graphics card), the view keeps the old pixel
+  budget (about 120,000 pixels) however big the window, so full screen costs no more
+  than the old small view; with a graphics card, unchanged.
+
+### Tests
+
+- Browser test (`game-screen.spec.ts`): full screen at work, at home and in town (the
+  canvas fills the window below the bar, no scrolling), the HUD, the drawer folding away,
+  Esc and the pause menu, Relationships from it, Resume, the phone, the same 3D view
+  throughout, resizing the window.
+- Found by the full run and fixed: Esc that closed a conversation also opened the pause
+  menu (now decided as the key goes down, and only from the world); hotspots under the
+  drawer (the test folds it away first, as a player would); the larger software-drawn
+  view slowing the whole run (the pixel budget above).
+- Screenshots: `docs/screenshots/game-screen/`.
+- Results: 2,202 unit tests passed. Chromium browser tests, full run: 187 passed, 3
+  skipped, 4 flaky (data tools, the journey, the office arrival, Books; each passed on
+  its retry), 1 failed: the accessibility check of the office found the HUD's key hints
+  (P, Esc) too faint on a see-through button. Fixed (the HUD is now nearly solid), and
+  all 10 accessibility tests then passed. 5 production-build tests passed. Firefox,
+  WebKit and Edge 8 passed, 1 skipped. Start screen 298 kB.
+
+### Limits
+
+- Desktop windows only (tested at 1280 × 720 and 1024 × 700); phones and tablets are not
+  claimed. The office keeps its own panel and Places bar.
 
 ---
 

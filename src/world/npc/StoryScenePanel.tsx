@@ -55,7 +55,7 @@ export function StoryScenePanel({
       aria-label={`${mission}: ${name}`}
       data-testid="story-scene"
       data-scene={scene.id}
-      className={`${className} max-h-[calc(100%-7rem)] w-[28rem] max-w-[calc(100%-2rem)] overflow-y-auto rounded-xl bg-white p-4 shadow-2xl ring-2 ring-rose-200 outline-none`}
+      className={`visible ${className} max-h-[calc(100%-7rem)] w-[28rem] max-w-[calc(100%-2rem)] overflow-y-auto rounded-xl bg-white p-4 shadow-2xl ring-2 ring-rose-200 outline-none`}
     >
       <p className="text-xs font-semibold tracking-wide text-rose-700 uppercase">
         {mission}

@@ -6,6 +6,7 @@
  * a light that suits the hour, and drawing only a few times a second when
  * nothing moves, so it runs on ordinary laptops.
  */
+import { lowDpr } from '../../world/lowDpr'
 import { useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import {
@@ -232,7 +233,7 @@ function CityScene(props: CitySceneProps) {
 
   return (
     <Canvas
-      dpr={lowPower ? 0.5 : [1, 1.5]}
+      dpr={lowPower ? lowDpr() : [1, 1.5]}
       frameloop="demand"
       camera={{ position: [-40, 6, 14], fov: 50, near: 0.1, far: 140 }}
       gl={{ antialias: !lowPower, powerPreference: 'default' }}

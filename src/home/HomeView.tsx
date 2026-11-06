@@ -4,6 +4,7 @@
  * time and may cost money, and how they look after themselves shows at work
  * the next day.
  */
+import { GameScreen } from '../world/GameScreen'
 import {
   Component,
   lazy,
@@ -163,9 +164,47 @@ export function HomeView({
     [commit, stage],
   )
 
+  // The 3D world, full screen behind the drawer.
+  const world = webgl && !sceneFailed && (
+    <WalkView
+      helpClass="top-2 left-1/2 -translate-x-1/2"
+      className="h-full rounded-none bg-slate-200 ring-0"
+      testId="home-3d"
+      label="Your home in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to. Everything here is also in the lists below."
+    >
+      {(api) => (
+        <SceneBoundary onFail={() => setSceneFailed(true)}>
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                Opening the door…
+              </div>
+            }
+          >
+            <HomeScene
+              homeId={life.home.id}
+              furniture={JSON.stringify(life.home.furniture)}
+              phase={phase === 'morning' ? 'morning' : 'evening'}
+              dressed={phase === 'morning' && life.ready.dressed}
+              delivery={deliveryStage(life)}
+              doings={stableDoings}
+              controls={api.controls}
+              request={request}
+              onRequest={doThing}
+              onPrompt={api.onPrompt}
+              onProgress={api.onProgress}
+              onDone={onActivityDone}
+              onReady={() => setReady(true)}
+            />
+          </Suspense>
+        </SceneBoundary>
+      )}
+    </WalkView>
+  )
+
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f1ec]" data-testid="home">
-      <div className="mx-auto grid max-w-5xl gap-5 p-5 lg:grid-cols-[1fr_20rem]">
+    <>
+      <GameScreen testId="home" label="Your flat" world={world || null}>
         <section aria-label="Your flat" className="space-y-4">
           <header className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <p className="text-xs font-medium tracking-wide text-amber-800 uppercase">
@@ -180,42 +219,6 @@ export function HomeView({
                 : 'Your time: eat, rest, see friends. Go to bed in good time for tomorrow.'}
             </p>
           </header>
-
-          {webgl && !sceneFailed && (
-            <WalkView
-              className="h-[28rem] bg-slate-200"
-              testId="home-3d"
-              label="Your home in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to. Everything here is also in the lists below."
-            >
-              {(api) => (
-                <SceneBoundary onFail={() => setSceneFailed(true)}>
-                  <Suspense
-                    fallback={
-                      <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                        Opening the door…
-                      </div>
-                    }
-                  >
-                    <HomeScene
-                      homeId={life.home.id}
-                      furniture={JSON.stringify(life.home.furniture)}
-                      phase={phase === 'morning' ? 'morning' : 'evening'}
-                      dressed={phase === 'morning' && life.ready.dressed}
-                      delivery={deliveryStage(life)}
-                      doings={stableDoings}
-                      controls={api.controls}
-                      request={request}
-                      onRequest={doThing}
-                      onPrompt={api.onPrompt}
-                      onProgress={api.onProgress}
-                      onDone={onActivityDone}
-                      onReady={() => setReady(true)}
-                    />
-                  </Suspense>
-                </SceneBoundary>
-              )}
-            </WalkView>
-          )}
 
           {courier && (
             <EncounterPanel
@@ -488,7 +491,7 @@ export function HomeView({
             </section>
           )}
         </aside>
-      </div>
-    </div>
+      </GameScreen>
+    </>
   )
 }

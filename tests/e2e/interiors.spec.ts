@@ -66,6 +66,9 @@ const hotspot = (page: Page, id: string) =>
 
 async function clickHotspot(page: Page, id: string, testId = 'city-3d') {
   const view = page.getByTestId(testId)
+  // The panel over the world folds away first, so nothing in the room is behind it.
+  const hide = page.getByTestId('drawer').getByRole('button', { name: 'Hide ◂' })
+  if (await hide.isVisible()) await hide.click()
   await expect.poll(() => hotspot(page, id), { timeout: 20_000 }).not.toBeNull()
   // Hover, then click the ring; a click before the view has settled can miss, so
   // try again (up to three times) until the activity starts.
@@ -85,8 +88,11 @@ async function clickHotspot(page: Page, id: string, testId = 'city-3d') {
       .waitFor({ timeout: 4000 })
       .then(() => true)
       .catch(() => false)
-    if (started) return
+    if (started) break
   }
+  // And back again, for the lists.
+  const show = page.getByRole('button', { name: /^▸ / })
+  if (await show.isVisible()) await show.click()
 }
 
 test('every place has its own interior, and the sound to go with it', async ({
