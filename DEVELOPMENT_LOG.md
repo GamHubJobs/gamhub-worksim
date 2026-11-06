@@ -169,6 +169,9 @@ working simulations of the professional software used in its field (see
 
 - [x] P1 Every person in every place can be talked to (E or a click)
 
+**Living scenarios**: [docs/SCENARIOS_PLAN.md](docs/SCENARIOS_PLAN.md). S1 (takeaway) and S2
+(meetings in person) done; S3 to S7 next.
+
 **Story Mode** (in progress). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
 
 - [x] Story 1–4 Engine and save, the Story screen and tracker, missions played in the
@@ -176,6 +179,40 @@ working simulations of the professional software used in its field (see
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [ ] Story 6–10 The other five careers
 - [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-06 · Scenarios 2: meetings attended in person
+
+### Built
+
+- **Meetings are attended in person** (`officeLayout.ts`, `OfficeView.tsx`): joining the
+  stand-up walks the player to their place in the circle at the whiteboard; they listen
+  while the team speaks in turn, give their own update, and only then has the meeting
+  been attended (its content, choices and grading unchanged). Weekly planning and the
+  one-to-one happen in the player's chair in the manager's office. Walking away part way
+  is not attending; a meeting that is not on cannot be joined. Without 3D, as before.
+- **Speaking in turn** (`speakerAt` in `schedule.ts`, used by `Crowd.tsx`): the host
+  every other turn (at the stand-up, presenting at the board), each colleague in
+  between; everyone else listens; nobody speaks while the player gives their update.
+- The stand-up is watched from behind the player, so the circle and the board are seen.
+
+### Tests
+
+- Unit tests: turn-taking (host every other turn, nobody during the player's update,
+  others without the host); the player's place (clear floor, facing the board).
+- Browser tests (`meetings.spec.ts`): attending the stand-up in person (in the circle,
+  listening, the update, then the meeting) and walking away part way (not attended, still
+  open to join). Run at normal speed: in software 3D, sped-up stages pass too quickly
+  to see.
+- Screenshots: `docs/screenshots/meetings/`.
+- Results: 2,187 unit tests passed. Chromium browser tests, full run (52 minutes, the
+  machine slower than usual): 181 passed, 3 skipped, 5 flaky (data tools, the whole
+  journey, Books, the full week and one more, each passed on its retry; the full week
+  and Books were flaky before this change too), 1 failed (content loading, which passed
+  when run alone straight after). 5 production-build tests passed. Firefox, WebKit and
+  Edge: in the full run 1 failed; run again on its own, 8 passed, 1 skipped (as before).
+  Start screen 299 kB.
 
 ---
 

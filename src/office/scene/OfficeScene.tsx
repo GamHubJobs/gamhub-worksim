@@ -224,6 +224,8 @@ export interface OfficeWalk {
   onReady: () => void
   /** The player walked into another area. */
   onArea: (spot: SpotId) => void
+  /** Why something cannot be done now (a meeting that is not on), or null. */
+  blocked?: (action: string | null) => string | null
 }
 
 /**
@@ -542,7 +544,7 @@ function OfficeWalker({
       start={start}
       boxes={OFFICE_BOXES}
       activities={activities}
-      blocked={() => null}
+      blocked={(a) => walk.blocked?.(a.action) ?? null}
       controls={walk.controls}
       request={walk.request}
       onPrompt={walk.onPrompt}

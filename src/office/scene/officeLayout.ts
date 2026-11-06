@@ -196,7 +196,51 @@ export const officeActivities = (): Activity[] => [
     anchor: { x: -11.1, z: -4.2, heading: Math.PI / 2 },
     stages: [{ clip: 'stand', seconds: 1.6, label: 'Reading the notices' }],
   },
+  // Meetings, attended in person (see MEETINGS in content/workday.ts): the player
+  // takes their place, listens while the others speak in turn, gives their own
+  // update, and only then has been there. Walking away part way is not attending.
+  {
+    id: 'meeting:standup',
+    action: 'meeting:standup',
+    prompt: 'join the stand-up',
+    // The player's place in the circle round the whiteboard, facing it.
+    spot: { x: -0.9, z: 4.07, reach: 1.3 },
+    anchor: { x: -0.9, z: 4.07, heading: 0.875 },
+    // Seen from behind the player: the circle and the whiteboard.
+    view: 'behind',
+    stages: [
+      { clip: 'stand', seconds: 1.2, label: 'Joining the stand-up' },
+      { clip: 'stand', seconds: 7, label: 'Listening to the team’s updates' },
+      { clip: 'talk', seconds: 3.5, label: 'Giving your update' },
+      { clip: 'stand', seconds: 2, label: 'Wrapping up' },
+    ],
+  },
+  ...(['planning', 'one-to-one'] as const).map((id): Activity => ({
+    id: `meeting:${id}`,
+    action: `meeting:${id}`,
+    prompt: id === 'planning' ? 'join the weekly planning' : 'start your one-to-one',
+    // The player's chair at the manager's desk.
+    spot: { x: 7.8, z: -2.6, reach: 1.1 },
+    anchor: { x: 7.8, z: -3.3, heading: 0 },
+    stages: [
+      { clip: 'sit', seconds: 1.2, label: 'Taking a seat' },
+      {
+        clip: 'sit',
+        seconds: id === 'planning' ? 7 : 5,
+        label:
+          id === 'planning' ? 'Planning the week together' : 'Talking through your week',
+      },
+      { clip: 'sit', seconds: 2.5, label: 'Agreeing what comes next' },
+    ],
+    sounds: [{ at: 0.4, id: 'chair' }],
+  })),
 ]
 
+/** The meeting an activity attends, if it is one. */
+export const meetingOf = (action: string | null): string | null =>
+  action?.startsWith('meeting:') ? action.slice('meeting:'.length) : null
+
 export const isInteraction = (action: string): action is InteractionId =>
-  !action.startsWith('go:')
+  !action.startsWith('go:') &&
+  !action.startsWith('meeting:') &&
+  !action.startsWith('person:')

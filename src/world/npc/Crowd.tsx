@@ -35,6 +35,7 @@ import {
   doingAt,
   doingNow,
   everyone,
+  speakerAt,
   type Gathering,
   type Intent,
   type Person as Someone,
@@ -159,6 +160,32 @@ export function Crowd(props: CrowdProps) {
       })
     }
     let walking = false
+    // At a meeting, people speak in turn (the host every other turn); while the
+    // player gives their update, everyone listens.
+    const now = world?.now.current
+    const playerSpeaking =
+      !!now?.id?.startsWith('meeting:') && now.t > 8.2 && now.t < 11.7
+    const there = p.people.filter((q) => {
+      const intent = s.intents.get(q.id)
+      return (
+        intent?.kind === 'at' &&
+        intent.reason === 'meeting' &&
+        lives.get(q.id)!.agent.status === 'there'
+      )
+    })
+    const host = there.find((q) => {
+      const intent = s.intents.get(q.id)
+      return (
+        intent?.kind === 'at' &&
+        (intent.place.endsWith(':host') || intent.place === q.own)
+      )
+    })
+    const speaker = speakerAt(
+      there.map((q) => q.id),
+      host?.id ?? null,
+      s.seconds,
+      playerSpeaking,
+    )
     for (const person of p.people) {
       const live = lives.get(person.id)!
       const intent = s.intents.get(person.id)
@@ -244,6 +271,19 @@ export function Crowd(props: CrowdProps) {
         if (intent?.kind === 'at' && intent.reason === 'lunch' && place.clip !== 'eat')
           clip = 'eat'
         if (talking) clip = place.seated ? 'sit-relax' : 'talk'
+        else if (intent?.kind === 'at' && intent.reason === 'meeting')
+          clip =
+            person.id === speaker
+              ? person.id === host?.id && !place.seated
+                ? 'present'
+                : place.seated
+                  ? 'sit-relax'
+                  : 'talk'
+              : place.seated
+                ? place.clip === 'type'
+                  ? 'type'
+                  : 'sit-relax'
+                : 'stand'
         // Sitting down first, on arriving at a seat.
         const frame =
           place.seated && live.clip < 1.2 && !jumped && !STILL

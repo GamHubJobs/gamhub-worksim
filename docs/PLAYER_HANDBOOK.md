@@ -54,6 +54,13 @@ You arrive at reception in a 3D office.
 - The day runs in office time. Meetings, breaks and lunch matter, and so does going
   home on time: your energy and stress change with how you work.
 
+### Meetings
+
+When a meeting is on, **Join** (in the panel) walks you to it: your place in the circle
+at the whiteboard for the stand-up, your chair in the manager's office for planning and
+the one-to-one. Listen while the others speak in turn, give your update, and the meeting
+counts. Walk away part way and it does not.
+
 ### Talking to people
 
 Everyone you see can be talked to, at work and in town: colleagues, the barista, the

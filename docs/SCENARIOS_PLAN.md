@@ -14,29 +14,29 @@ order of work. Each group is built, tested and documented before the next.
 **Partly visible**: some of it is seen, the important part is not.
 **Invisible**: a panel, a dialogue box or a change to the numbers only.
 
-| Scenario                                                                                       | Where         | Now       | What is missing                                                                                 |
-| ---------------------------------------------------------------------------------------------- | ------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| Cooking, eating, washing, the shower, dressing, bed                                            | Home          | Visible   | —                                                                                               |
-| Reading, the TV, games, a call, study, yoga                                                    | Home          | Visible   | —                                                                                               |
-| The gym, the café (order, collect, sit), the park                                              | Neighbourhood | Visible   | —                                                                                               |
-| A week's shopping (basket, aisles, checkout)                                                   | Daily Basket  | Visible   | Carrying the bags home; putting them away                                                       |
-| Buying or selling a bike; leasing a car                                                        | Cog & Kerb    | Visible   | A salesperson handing over the keys                                                             |
-| Riding the bike, driving the car                                                               | Street        | Visible   | —                                                                                               |
-| Sitting at the computer; coffee; lunch; the whiteboard                                         | Office        | Visible   | —                                                                                               |
-| Talking to Nina, Marcus, Tom, the manager                                                      | Office        | Visible   | Turn-taking gestures in longer conversations                                                    |
-| Colleagues' day (stand-up, desks, lunch)                                                       | Office        | Visible   | —                                                                                               |
-| **Takeaway**                                                                                   | Home          | Partly    | No one delivers it: the character "collects" at an empty door; no doorbell, no handover, no bag |
-| **Meetings** (stand-up, planning, one-to-one)                                                  | Office        | Partly    | Colleagues gather, but the player joins from the panel and is counted without being there       |
-| **Workplace events** (Tom's favour, Priya's urgent task, Marcus's error, recognition, tension) | Office        | Partly    | A dialogue box; the colleague does not come to the player                                       |
-| **Promotion**                                                                                  | Office        | Invisible | An email and a record: no conversation with the manager                                         |
-| **Pay rise, salary talk**                                                                      | Home laptop   | Invisible | A panel                                                                                         |
-| **Job applications and interviews**                                                            | Home laptop   | Invisible | No visit to the company, reception, interviewer                                                 |
-| **Side business** (tutoring, crafts, repairs)                                                  | Home laptop   | Invisible | No customer                                                                                     |
-| **Friends' invitations, going out**                                                            | Phone, home   | Partly    | The character goes out; no friends are met                                                      |
-| Grocery delivery                                                                               | —             | Not built | —                                                                                               |
-| Home repairs (a technician)                                                                    | —             | Not built | —                                                                                               |
-| A taxi or a lift                                                                               | —             | Not built | (The bus exists as transport, not as a ride)                                                    |
-| A new colleague joining; office visitors; a broken printer; a parcel; a celebration            | —             | Not built | —                                                                                               |
+| Scenario                                                                                       | Where         | Now          | What is missing                                                                                 |
+| ---------------------------------------------------------------------------------------------- | ------------- | ------------ | ----------------------------------------------------------------------------------------------- |
+| Cooking, eating, washing, the shower, dressing, bed                                            | Home          | Visible      | —                                                                                               |
+| Reading, the TV, games, a call, study, yoga                                                    | Home          | Visible      | —                                                                                               |
+| The gym, the café (order, collect, sit), the park                                              | Neighbourhood | Visible      | —                                                                                               |
+| A week's shopping (basket, aisles, checkout)                                                   | Daily Basket  | Visible      | Carrying the bags home; putting them away                                                       |
+| Buying or selling a bike; leasing a car                                                        | Cog & Kerb    | Visible      | A salesperson handing over the keys                                                             |
+| Riding the bike, driving the car                                                               | Street        | Visible      | —                                                                                               |
+| Sitting at the computer; coffee; lunch; the whiteboard                                         | Office        | Visible      | —                                                                                               |
+| Talking to Nina, Marcus, Tom, the manager                                                      | Office        | Visible      | Turn-taking gestures in longer conversations                                                    |
+| Colleagues' day (stand-up, desks, lunch)                                                       | Office        | Visible      | —                                                                                               |
+| **Takeaway**                                                                                   | Home          | Partly       | No one delivers it: the character "collects" at an empty door; no doorbell, no handover, no bag |
+| **Meetings** (stand-up, planning, one-to-one)                                                  | Office        | Visible (S2) | Colleagues gather, but the player joins from the panel and is counted without being there       |
+| **Workplace events** (Tom's favour, Priya's urgent task, Marcus's error, recognition, tension) | Office        | Partly       | A dialogue box; the colleague does not come to the player                                       |
+| **Promotion**                                                                                  | Office        | Invisible    | An email and a record: no conversation with the manager                                         |
+| **Pay rise, salary talk**                                                                      | Home laptop   | Invisible    | A panel                                                                                         |
+| **Job applications and interviews**                                                            | Home laptop   | Invisible    | No visit to the company, reception, interviewer                                                 |
+| **Side business** (tutoring, crafts, repairs)                                                  | Home laptop   | Invisible    | No customer                                                                                     |
+| **Friends' invitations, going out**                                                            | Phone, home   | Partly       | The character goes out; no friends are met                                                      |
+| Grocery delivery                                                                               | —             | Not built    | —                                                                                               |
+| Home repairs (a technician)                                                                    | —             | Not built    | —                                                                                               |
+| A taxi or a lift                                                                               | —             | Not built    | (The bus exists as transport, not as a ride)                                                    |
+| A new colleague joining; office visitors; a broken printer; a parcel; a celebration            | —             | Not built    | —                                                                                               |
 
 ## 2. One engine for every scenario
 
@@ -73,7 +73,7 @@ sounds and effects. No scenario gets a system of its own.
    rings the bell; the player opens the door; they greet each other, the bag is
    handed over, the food is the player's, the courier leaves; the player unpacks and
    eats. A refresh mid-way resumes; away from home, the bag waits at the door.
-2. **S2 · Meetings attended in person** (office). Colleagues gather (as now); the
+2. **S2 · Meetings attended in person** (office): **done**, see below. Colleagues gather (as now); the
    player walks to the meeting to join it; the host opens it; people speak in turn
    (who is speaking faces the room and gestures); the existing meeting content and
    grading are unchanged; it counts only if the player was there; everyone goes back.
@@ -123,3 +123,21 @@ counted twice, collisions respected, and no loss of speed.
 - **Limits**: the courier walks up the landing, not the street (the street is a separate
   view); the player puts the bag down on closing the door, and picks it up again at the
   table.
+
+### S2 · Meetings attended in person
+
+- **Walked to and attended**: "Join the team stand-up" (or E at the player's place in
+  the circle) walks the player to the whiteboard, among the team. They listen while the
+  others speak in turn (the manager, at the board, every other turn, presenting; each
+  colleague in between, talking; everyone else listening), then give their own update
+  (everyone listens), and only then has the meeting been attended: its content, choices
+  and grading are as before. Weekly planning and the one-to-one are attended in the
+  player's chair in the manager's office. Seen from behind the player, so the circle
+  and the board are in view.
+- **It counts only if the player was there**: walking away part way (moving, or E) is
+  not attending; the meeting stays open to join while it is on, and cannot be joined
+  when it is not. Without 3D, the panel joins at once, as before.
+- **Tests**: unit tests for turn-taking and the player's place (clear floor, facing the
+  board); browser tests for attending in person (in the circle, listening, the update,
+  then the meeting) and for walking away part way (not attended).
+- **Screenshots**: `docs/screenshots/meetings/`.

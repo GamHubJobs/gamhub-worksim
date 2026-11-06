@@ -26,7 +26,7 @@ import { missionById, playScene, sceneFor, sceneLines } from '../game/story/engi
 import type { Scene } from '../game/story/types'
 import { metAs, onTalkRequest, release } from '../world/npc/people'
 import { holdEncounter, relationOf, type Situation, type Who } from '../game/encounters'
-import { isInteraction } from './scene/officeLayout'
+import { isInteraction, meetingOf } from './scene/officeLayout'
 import { fill, getPerson } from '../content/departments'
 import {
   SPOTS,
@@ -36,7 +36,7 @@ import {
   type InteractionId,
   type SpotId,
 } from '../content/office'
-import { LUNCH } from '../content/workday'
+import { getMeeting, LUNCH } from '../content/workday'
 import { unreadCount, type ProfileData } from '../game/career'
 import { formatTime } from '../game/clock'
 import {
@@ -367,9 +367,33 @@ export function OfficeView({
   }
 
   // Stable handlers for the 3D scene, so it does not redraw on every change.
-  const handlers = useRef({ go, doInteract, interact, arrive, meetPerson })
+  /** A meeting can be attended while it is on (see workday.ts), and not otherwise. */
+  function blocked(action: string | null): string | null {
+    const id = meetingOf(action)
+    if (!id || openMeeting(work)?.id === id) return null
+    const m = getMeeting(id)
+    return m ? fill(`The ${m.title.toLowerCase()} is not on now`) : 'Not now'
+  }
+
+  const handlers = useRef({
+    go,
+    doInteract,
+    interact,
+    arrive,
+    meetPerson,
+    joinMeeting,
+    blocked,
+  })
   useEffect(() => {
-    handlers.current = { go, doInteract, interact, arrive, meetPerson }
+    handlers.current = {
+      go,
+      doInteract,
+      interact,
+      arrive,
+      meetPerson,
+      joinMeeting,
+      blocked,
+    }
   })
   const sceneGo = useCallback((next: SpotId) => handlers.current.go(next), [])
   const sceneInteract = useCallback(
@@ -378,8 +402,16 @@ export function OfficeView({
   )
   const onArea = useCallback((next: SpotId) => handlers.current.arrive(next), [])
   const onReady = useCallback(() => setReady(true), [])
+  const sceneBlocked = useCallback(
+    (action: string | null) => handlers.current.blocked(action),
+    [],
+  )
   const onActivityDone = useCallback((action: string | null, completed: boolean) => {
-    if (completed && action?.startsWith('person:'))
+    // Sat or stood through the meeting: now it counts (walking away part way does not).
+    const meeting = meetingOf(action)
+    if (meeting) {
+      if (completed) handlers.current.joinMeeting(meeting)
+    } else if (completed && action?.startsWith('person:'))
       handlers.current.meetPerson(action.slice('person:'.length))
     else if (completed && action && isInteraction(action))
       handlers.current.interact(action)
@@ -426,6 +458,7 @@ export function OfficeView({
                       onDone: onActivityDone,
                       onReady,
                       onArea,
+                      blocked: sceneBlocked,
                     }}
                     spot={spot}
                     computerAlert={unread > 0}
@@ -473,11 +506,16 @@ export function OfficeView({
             <button
               type="button"
               onClick={() =>
-                meetingHere ? joinMeeting(meetingNow.id) : go(meetingNow.spot)
+                // In 3D, the player walks to the meeting and attends it in person.
+                walkable
+                  ? ask(`meeting:${meetingNow.id}`)
+                  : meetingHere
+                    ? joinMeeting(meetingNow.id)
+                    : go(meetingNow.spot)
               }
               className="mt-1.5 w-full rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
             >
-              {meetingHere
+              {meetingHere || walkable
                 ? fill(`Join the ${meetingNow.title.toLowerCase()}`)
                 : fill(`Go to ${getSpot(meetingNow.spot).name}`)}
             </button>

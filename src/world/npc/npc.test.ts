@@ -5,12 +5,19 @@ import {
   OFFICE_PEOPLE,
   OFFICE_PLACES,
 } from '../../office/scene/officeCast'
-import { OFFICE_BOXES } from '../../office/scene/officeLayout'
+import { OFFICE_BOXES, officeActivities } from '../../office/scene/officeLayout'
 import type { Box } from '../character/controller'
 import { blocked } from '../character/controller'
 import { buildGrid } from '../physics/nav'
 import { agent, NPC_RADIUS, placeAt, stepAgent, type Agent, type Goal } from './agent'
-import { doingNow, everyone, wanted, type Intent } from './schedule'
+import {
+  doingNow,
+  everyone,
+  speakerAt,
+  TURN_SECONDS,
+  wanted,
+  type Intent,
+} from './schedule'
 import {
   allNpcs,
   approachPoint,
@@ -292,5 +299,27 @@ describe('seeing someone across a desk', () => {
     const wall: Box = { x: 0.5, z: 0, hx: 0.05, hz: 1, top: 2.9 }
     expect(canSee({ x: 0, z: 0 }, { x: 1.5, z: 0 }, [desk])).toBe(true)
     expect(canSee({ x: 0, z: 0 }, { x: 1.5, z: 0 }, [wall])).toBe(false)
+  })
+})
+
+describe('meetings: speaking in turn', () => {
+  it('the host every other turn, the others in between, nobody while the player speaks', () => {
+    const turns = [0, 1, 2, 3, 4, 5].map((i) =>
+      speakerAt(['manager', 'senior', 'backL'], 'manager', i * TURN_SECONDS + 0.1),
+    )
+    expect(turns).toEqual(['manager', 'senior', 'manager', 'backL', 'manager', 'senior'])
+    expect(speakerAt(['manager', 'senior'], 'manager', 1, true)).toBeNull()
+    expect(speakerAt([], null, 1)).toBeNull()
+    // Without the host there, the others take turns.
+    expect(speakerAt(['senior', 'backL'], 'manager', TURN_SECONDS + 0.1)).toBe('backL')
+  })
+
+  it('the player’s place at the stand-up is clear floor, facing the whiteboard', () => {
+    const a = officeActivities().find((x) => x.id === 'meeting:standup')!
+    expect(blocked(a.anchor.x, a.anchor.z, 0.3, OFFICE_BOXES)).toBe(false)
+    const face = Math.atan2(-(-2.9 - a.anchor.x), -(2.4 - a.anchor.z))
+    expect(a.anchor.heading).toBeCloseTo(face, 2)
+    for (const id of ['meeting:planning', 'meeting:one-to-one'])
+      expect(officeActivities().some((x) => x.id === id)).toBe(true)
   })
 })

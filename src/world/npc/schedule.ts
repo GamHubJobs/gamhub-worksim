@@ -233,3 +233,28 @@ export function doingNow(
       return { availability: 'chatting', with: id }
   return { availability: 'working', doing: 'their work' }
 }
+
+/** Seconds each person speaks for, in turn, at a meeting. */
+export const TURN_SECONDS = 3.5
+
+/**
+ * Who is speaking at a meeting now: the host (who runs it) every other turn,
+ * and each of the others in between, in order; nobody while the player gives
+ * their own update.
+ */
+export function speakerAt(
+  attending: string[],
+  host: string | null,
+  seconds: number,
+  playerSpeaking = false,
+): string | null {
+  if (playerSpeaking || attending.length === 0) return null
+  const others = attending.filter((id) => id !== host)
+  const turns =
+    host && attending.includes(host)
+      ? others.length
+        ? others.flatMap((id) => [host, id])
+        : [host]
+      : others
+  return turns[Math.floor(seconds / TURN_SECONDS) % turns.length] ?? null
+}
