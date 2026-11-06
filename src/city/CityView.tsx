@@ -9,6 +9,7 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useEffect,
   useState,
   type ReactNode,
   useMemo,
@@ -33,6 +34,10 @@ import type { Doing } from './scene/interiors/kit'
 import type { InteriorId } from './scene/InteriorScene'
 import { WalkView } from '../world/WalkView'
 import { isRaining, useWeatherSetting } from '../world/weather'
+import { EncounterPanel } from '../world/npc/EncounterPanel'
+import { metAs, onTalkRequest, release } from '../world/npc/people'
+import { holdEncounter, relationOf, type Situation, type Who } from '../game/encounters'
+import type { ProfileData } from '../game/career'
 
 /** What each place in the neighbourhood sounds like inside. */
 const INSIDE: Record<PlaceId, Place> = {
@@ -82,8 +87,11 @@ export function CityView({
   onLeave,
   onDeal,
   onRide,
+  onAct,
 }: {
   profile: Profile
+  /** Changes the career (for talking to people: trust, memory, time). */
+  onAct: (change: (p: ProfileData) => ProfileData) => unknown
   onEnter: (id: PlaceId) => void
   onOutside: () => void
   onAction: (id: string) => void
@@ -146,12 +154,51 @@ export function CityView({
     },
     [walkable, commit, life.city.at],
   )
+  // Talking to someone met here (anyone: staff, customers, people in the street).
+  const [encounter, setEncounter] = useState<{ who: Who; situation: Situation } | null>(
+    null,
+  )
+  const minute = life.minute
+  const meetPerson = useCallback(
+    (id: string) => {
+      const n = metAs(id)
+      if (!n) {
+        release()
+        return
+      }
+      setEncounter({
+        who: n.who,
+        situation: { availability: n.availability, doing: n.doing, minute },
+      })
+    },
+    [minute],
+  )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
-      if (completed && action) commit(action)
+      if (completed && action?.startsWith('person:'))
+        meetPerson(action.slice('person:'.length))
+      else if (completed && action) commit(action)
     },
-    [commit],
+    [commit, meetPerson],
   )
+  // Someone clicked on: walk over to them (inside a place, or in the street).
+  const [streetRequest, setStreetRequest] = useState<{
+    id: string
+    nonce: number
+  } | null>(null)
+  useEffect(
+    () =>
+      onTalkRequest((id) => {
+        if (outside)
+          setStreetRequest((r) => ({ id: `person:${id}`, nonce: (r?.nonce ?? 0) + 1 }))
+        else if (walkable) doThing(`person:${id}`)
+      }),
+    [outside, walkable, doThing],
+  )
+  // The conversation is over: they go back to what they were doing.
+  useEffect(() => {
+    if (!encounter) release()
+  }, [encounter])
   // Which part of the street the player is in, for the sounds around them.
   const [area, setArea] = useState<Area>(() => areaAt(standAt(life.city.at)[0]))
   const onArea = useCallback((next: Area) => setArea(next), [])
@@ -298,12 +345,36 @@ export function CityView({
                       bike={life.vehicles.bike}
                       onRide={onRide}
                       raining={raining}
+                      request={streetRequest}
+                      onPerson={meetPerson}
                     />
                   </Suspense>
                 </SceneBoundary>
               )}
             </WalkView>
           ) : null}
+
+          {encounter && (
+            <EncounterPanel
+              key={encounter.who.id}
+              className="fixed right-4 bottom-4 z-40"
+              who={encounter.who}
+              situation={encounter.situation}
+              relation={relationOf(profile, encounter.who.id)}
+              onSay={(outcome) => {
+                void onAct((p) => holdEncounter(p, [encounter.who.id], outcome, 'out'))
+                // Ordering from the barista, say: the character goes and does it.
+                if (outcome.action) {
+                  const action = outcome.action
+                  window.setTimeout(() => {
+                    setEncounter(null)
+                    doThing(action)
+                  }, 900)
+                }
+              }}
+              onClose={() => setEncounter(null)}
+            />
+          )}
 
           <p
             role="status"

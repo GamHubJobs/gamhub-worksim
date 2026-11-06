@@ -624,6 +624,8 @@ export const RelationshipSchema = z.object({
   trust: PercentSchema,
   /** Conversations so far. */
   talks: z.number().int().nonnegative(),
+  /** What the player said last time (see game/encounters.ts), so they remember. */
+  last: z.string().optional(),
 })
 
 /** One line in today's activity log, e.g. "Joined the team stand-up". */

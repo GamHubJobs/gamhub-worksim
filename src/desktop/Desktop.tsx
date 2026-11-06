@@ -622,6 +622,7 @@ export function Desktop({
             }}
             onDeal={(which) => void act((p) => deal(p, which))}
             onRide={(riding) => void act((p) => setRiding(p, riding))}
+            onAct={act}
             onAction={(id) => void act((p) => doHomeAction(p, id))}
             onRespond={(id, accept) => void act((p) => respond(p, id, accept))}
             onContact={(friend, how) => void act((p) => contactFriend(p, friend, how))}

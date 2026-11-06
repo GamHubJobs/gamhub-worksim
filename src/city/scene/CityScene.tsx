@@ -25,6 +25,7 @@ import { Bike, Bus, Car } from './vehicles'
 import type { Vector } from '../../content/office'
 import { Box, Plant } from '../../office/scene/parts'
 import { PeopleDetail, Walker, type PersonLook } from '../../office/scene/people'
+import { local } from '../../content/townPeople'
 import { prefersReducedMotion } from '../../ui/motion'
 import type { Box as Solid } from '../../world/character/controller'
 import type { Activity } from '../../world/interaction/activity'
@@ -58,6 +59,9 @@ const PLAYER: PersonLook = {
   trousers: '#334155',
   smile: true,
 }
+
+/** Who the people walking down the street are (talk to them). */
+const PASSER_WHO = Array.from({ length: 12 }, (_, i) => local('street', i))
 
 const PASSERS_BY: Array<{ path: Vector[]; look: PersonLook; speed: number }> = [
   {
@@ -161,6 +165,10 @@ const BUILDINGS: Array<{ x: number; side: 1 | -1; w: number; h: number; color: s
 export interface CitySceneProps {
   /** The place the player is at, or last left. */
   at: PlaceId
+  /** Someone to walk over to (`person:<id>`), with a counter. */
+  request?: { id: string; nonce: number } | null
+  /** Walked up to someone to talk (see world/npc/people.ts). */
+  onPerson?: (id: string) => void
   /** Out in the street (they can walk), or inside a place. */
   outside: boolean
   /** Evening or morning, and whether it is dark. */
@@ -265,6 +273,7 @@ function CityScene(props: CitySceneProps) {
               speed={p.speed}
               pause={2}
               phase={i * 0.7}
+              who={PASSER_WHO[i]}
             />
           ))}
           <StreetPlayer {...props} low={lowPower} />
@@ -364,11 +373,13 @@ function StreetPlayer(props: CitySceneProps & { low: boolean }) {
       activities={DOORS}
       blocked={(a) => (a.action ? props.blocked(a.action.slice(6) as PlaceId) : null)}
       controls={props.controls}
-      request={null}
+      request={props.request ?? null}
       onPrompt={props.onPrompt}
       onProgress={props.onProgress}
       onDone={(a, completed) => {
-        if (completed && a.action) props.onEnter(a.action.slice(6) as PlaceId)
+        if (completed && a.action?.startsWith('person:'))
+          props.onPerson?.(a.action.slice('person:'.length))
+        else if (completed && a.action) props.onEnter(a.action.slice(6) as PlaceId)
       }}
       onReady={props.onReady}
       look={

@@ -22,7 +22,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import type { Group } from 'three'
+import { Vector3, type Group } from 'three'
 import { audio, type Surface } from '../audio/manager'
 import { Person, type Motion, type PersonLook } from '../office/scene/people'
 import { cameraAt, clampOrbit, clearance, type Orbit } from './character/camera'
@@ -43,6 +43,15 @@ import {
 import { buildGrid, findPath, nearestFree, type Grid, type Point } from './physics/nav'
 import { scanSolids, tall } from './physics/solids'
 import { othersThan, removeBody, setBody } from './npc/bodies'
+import {
+  approachPoint,
+  engage,
+  nearestNpc,
+  npc as npcById,
+  release,
+  talkPrompt,
+  type Npc,
+} from './npc/people'
 import { CollisionDebug } from './physics/CollisionDebug'
 import { useCollisionDebug } from './physics/useCollisionDebug'
 import { clipFrame, type RigFrame } from './character/rig'
@@ -153,6 +162,8 @@ type Mode =
     }
 
 const EYE = 1.5
+/** Clear floor needed to stand and talk to someone. */
+const RADIUS_TALK = 0.3
 
 /** In development only, browser tests can play activities faster. */
 function speedUp(): number {
@@ -295,6 +306,8 @@ export function PlayerRig(props: PlayerRigProps) {
     return d < 0.6 || a.stuck > 1 || a.time > 6 + d
   }
   const lastPrompt = useRef<string | null>(null)
+  /** What the player could use or talk to now (for tests). */
+  const nearNow = useRef<string | null>(null)
   const lastProgress = useRef(-1)
   const [held, setHeld] = useState<{ left?: PropKind; right?: PropKind }>({})
   const heldKey = useRef('')
@@ -308,8 +321,42 @@ export function PlayerRig(props: PlayerRigProps) {
     [activities],
   )
 
+  /**
+   * Walking up to someone to talk (see npc/people.ts): they stop and turn to
+   * the player, who stands facing them and says hello; the page then opens the
+   * conversation. Watched over the player's shoulder, so their face is seen.
+   */
+  function talkActivity(n: Npc): Activity {
+    const s = state.current
+    let at = approachPoint(n, s)
+    if (overlapsAny(at.x, at.z, RADIUS_TALK, solids.current.all)) {
+      const f = nearestFree(grid(), at)
+      if (f) at = { ...f, heading: Math.atan2(-(n.x - f.x), -(n.z - f.z)) }
+    }
+    return {
+      id: `person:${n.who.id}`,
+      action: `person:${n.who.id}`,
+      prompt: talkPrompt(n),
+      spot: { x: n.x, z: n.z, reach: n.reach },
+      anchor: at,
+      view: 'behind',
+      stages: [
+        {
+          clip: 'wave',
+          seconds: 0.9,
+          label: `Saying hello to ${n.who.name.split(' ')[0]}`,
+        },
+      ],
+    }
+  }
+
+  function talkTo(n: Npc) {
+    engage(n.with ? [n.who.id, n.with] : [n.who.id])
+    begin(talkActivity(n))
+  }
+
   function begin(a: Activity) {
-    const why = latest.current.blocked(a)
+    const why = a.id.startsWith('person:') ? null : latest.current.blocked(a)
     if (why) {
       latest.current.onPrompt({ text: a.prompt, blocked: why })
       audio.play('error')
@@ -340,6 +387,8 @@ export function PlayerRig(props: PlayerRigProps) {
     route.current = null
     if (overlapsAny(s.x, s.z, 0.3, solids.current.all))
       exit.current = nearestFree(grid(), s)
+    // Walked off before saying hello: they go back to their day.
+    if (!completed && m.activity.id.startsWith('person:')) release()
     latest.current.onDone(m.activity, completed)
   }
 
@@ -347,6 +396,16 @@ export function PlayerRig(props: PlayerRigProps) {
   const request = props.request
   useEffect(() => {
     if (!request) return
+    // Someone clicked on (or chosen): walk over to talk to them.
+    const person = request.id.startsWith('person:')
+      ? npcById(request.id.slice('person:'.length))
+      : undefined
+    if (person) {
+      if (mode.current.kind !== 'free') stop(false)
+      talkTo(person)
+      invalidate()
+      return
+    }
     const a = activities.find((x) => x.id === request.id || x.action === request.id)
     if (a) {
       if (mode.current.kind !== 'free') stop(false)
@@ -374,6 +433,22 @@ export function PlayerRig(props: PlayerRigProps) {
   useEffect(() => {
     latest.current.onReady?.()
   }, [])
+
+  // In development, browser tests can find where something is drawn on screen (to click it).
+  const gl = useThree((st) => st.gl)
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    Object.assign(window, {
+      __worksimProject: (x: number, y: number, z: number) => {
+        const v = new Vector3(x, y, z).project(camera)
+        const r = gl.domElement.getBoundingClientRect()
+        return {
+          x: r.left + ((v.x + 1) / 2) * r.width,
+          y: r.top + ((1 - v.y) / 2) * r.height,
+        }
+      },
+    })
+  }, [camera, gl])
 
   // Read what is solid again when the place's walls change, or on getting into or out of the car.
   useEffect(() => {
@@ -524,10 +599,24 @@ export function PlayerRig(props: PlayerRigProps) {
       }
       clock.current += dt
       // What is near enough to use (not from the car).
-      const near = ride.current === 'car' ? null : nearest(s.x, s.z, spots)
+      const thing = ride.current === 'car' ? null : nearest(s.x, s.z, spots)
+      // Someone to talk to, if nearer than anything to use (and in sight).
+      const person =
+        ride.current === 'car' ? null : nearestNpc(s.x, s.z, solids.current.camera)
+      const talk =
+        person &&
+        (!thing || person.distance < Math.hypot(thing.x - s.x, thing.z - s.z) - 0.15)
+          ? person.npc
+          : null
+      const near = talk ? null : thing
+      nearNow.current = talk ? `person:${talk.who.id}` : (thing?.activity.id ?? null)
       const carNear =
-        !near && !ride.current && v?.car && Math.hypot(v.car.x - s.x, v.car.z - s.z) < 3.2
-      if (carNear || (ride.current && !near)) {
+        !near &&
+        !talk &&
+        !ride.current &&
+        v?.car &&
+        Math.hypot(v.car.x - s.x, v.car.z - s.z) < 3.2
+      if (carNear || (ride.current && !near && !talk)) {
         const text =
           ride.current === 'car'
             ? 'get out of the car'
@@ -539,17 +628,28 @@ export function PlayerRig(props: PlayerRigProps) {
           latest.current.onPrompt({ key: 'F', text, blocked: null })
         }
       }
-      const text = near ? near.activity.prompt : null
-      if (!(carNear || (ride.current && !near)) && text !== lastPrompt.current) {
+      const text = talk ? talkPrompt(talk) : near ? near.activity.prompt : null
+      if (!(carNear || (ride.current && !near && !talk)) && text !== lastPrompt.current) {
         lastPrompt.current = text
         latest.current.onPrompt(
-          near
-            ? {
-                text: near.activity.prompt,
-                blocked: latest.current.blocked(near.activity),
-              }
-            : null,
+          talk
+            ? { text: talkPrompt(talk), blocked: null }
+            : near
+              ? {
+                  text: near.activity.prompt,
+                  blocked: latest.current.blocked(near.activity),
+                }
+              : null,
         )
+      }
+      if (talk && pressed.includes('interact')) {
+        if (ride.current === 'bike' && v) {
+          ride.current = null
+          setRiding(null)
+          v.onChange(null)
+          rig.current = null
+        }
+        talkTo(talk)
       }
       if (near && pressed.includes('interact')) {
         // Off the bike first (a door, a counter).
@@ -679,6 +779,8 @@ export function PlayerRig(props: PlayerRigProps) {
         x: s.x,
         z: s.z,
         mode: mode.current.kind,
+        near: nearNow.current,
+        prompt: lastPrompt.current,
         riding: ride.current,
         inside,
         // Frames found inside something, ever (for tests).

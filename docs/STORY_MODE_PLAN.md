@@ -1,0 +1,59 @@
+# Story Mode: plan
+
+Story Mode turns a career into a continuous, mission-based story: a newcomer in a new
+city, a first job, colleagues with their own motives, decisions with consequences, and
+the freedom to live the rest of the day as the player likes between missions. The
+structure takes its cue from open-world, mission-led games (main and side missions,
+character missions, chapters, choices that come back later). The characters, places,
+missions and writing are all GamHub WorkSim's own; nothing is copied from any game.
+
+## Decisions
+
+- **Same world, same save, separate story.** A story is played in the career's own
+  world (the flat, the street, the office, the people) with all its systems. Its
+  progress is kept in its own part of the save (`profile.story`, optional: saves without
+  it are free play, unchanged). Starting a story never resets the career; leaving it
+  aside never stops free play. Mission rewards are real career outcomes (money, trust,
+  skills, XP) and say so; they are never qualifications.
+- **Missions are played, not read.** Every objective is something done in 3D with the
+  systems that exist: walking somewhere, talking to someone who is physically there
+  (the story scene opens when the player walks up to them), using an activity (getting
+  dressed, the computer, the filing cabinet), attending a meeting, finishing a case in
+  the work tools. Text only frames it.
+- **One engine, data campaigns.** Campaigns, chapters, missions, objectives, scenes and
+  decisions are data; one pure engine works out what is available, what is active, what
+  has been done, and applies choices. Each objective is completed by an event the game
+  already produces (an action done, a place entered, a conversation held, a meeting
+  attended, a case submitted), so the story adds no system of its own.
+- **Branching that matters, kept manageable.** Decisions set story flags; flags change
+  later scenes, which missions are offered and how characters treat the player. A few
+  real branches per chapter, not an explosion of storylines.
+- **One complete campaign first** (Finance & Administration), then the same engine for
+  the other five careers, each with its own story. Not six shallow ones.
+
+## Order of work
+
+1. **Story 1 · Engine and save**: types, the pure engine, the save (additive, with
+   migration tests), the events from the game rules. Unit tests.
+2. **Story 2 · Story Mode screen**: Continue, New story, Chapters, Missions (main,
+   side, done), Progress, Relationships, Decisions; a mission tracker on screen in the
+   3D places (the current objective, and where).
+3. **Story 3 · Played in the world**: story scenes when walking up to the person an
+   objective names (in place of small talk), with choices; the objective's place marked;
+   mission introductions and completion summaries.
+4. **Story 4 · Finance & Administration, chapter 1** (complete and playable): the first
+   day, the missing invoice, a neighbour's bakery (side), month-end; one decision that
+   changes a later scene.
+5. **Story 5 · Chapters 2 and 3** of the same campaign, and its ending.
+6. **Story 6 to 10 · The other five careers**, one at a time, each tested and
+   documented.
+7. **Story 11 · Presentation and polish**: cinematic framing for key scenes (skippable),
+   music cues, accessibility and performance checks.
+
+## Acceptance (from the brief)
+
+Start a new story; play the opening mission physically; meet and talk to recurring
+characters; complete a mission with several physical objectives; make a decision that
+changes a later event; unlock a side mission; explore freely between missions; save and
+restore story progress (and refresh mid-mission); complete a chapter; return to free
+play without losing anything. Screenshots and in-game evidence for each.

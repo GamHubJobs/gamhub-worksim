@@ -28,3 +28,8 @@ export function othersThan(id: string): Box[] {
     if (key !== id) out.push({ x: b.x, z: b.z, hx: b.r, hz: b.r, top: 1.7, round: true })
   return out
 }
+
+/** Where someone is (the player is `player`), if shown. */
+export function bodyOf(id: string): { x: number; z: number } | undefined {
+  return bodies.get(id)
+}

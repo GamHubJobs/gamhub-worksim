@@ -109,6 +109,8 @@ export type ClipId =
   | 'drive'
   | 'push-door'
   | 'run-in-place'
+  /** A hand raised in greeting, waving. */
+  | 'wave'
 
 /** Every clip, as a frame at time t (seconds since it started). */
 export function clipFrame(clip: ClipId, t: number): RigFrame {
@@ -195,6 +197,16 @@ export function clipFrame(clip: ClipId, t: number): RigFrame {
     case 'talk': {
       const g = 0.5 + wave(t, 3.7) * 0.25
       return { ...STAND, shoulderR: [0.04 + g * 0.5, 0, 0.07], elbowR: 0.14 + g * 1.4 }
+    }
+    case 'wave': {
+      // The right arm up beside the head, the hand waving side to side.
+      const up = clamp01(t / 0.3)
+      return {
+        ...STAND,
+        shoulderR: mix3([0.04, 0, 0.07], [0.25, 0, 2.5], up),
+        elbowR: mix(0.14, 0.55 + Math.sin(t * 10) * 0.35, up),
+        headPitch: -0.05,
+      }
     }
     case 'present': {
       // Standing, one arm out to the screen, then back to the audience.

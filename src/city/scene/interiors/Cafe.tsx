@@ -11,7 +11,8 @@ import { PLACE_ACTIONS } from '../../../content/city'
 import { useWorld } from '../../../world/context'
 import { formatMoney } from '../../../content/life'
 import { Box, Plant } from '../../../office/scene/parts'
-import { Person } from '../../../office/scene/people'
+import { Npc } from '../../../world/npc/Npc'
+import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Board, Chair, Hotspot, Lamp, Room, Window } from './common'
 import { menuPainting, signPainting, useInterior } from './kit'
 
@@ -218,7 +219,9 @@ export default function Cafe() {
         </group>
       </Hotspot>
       <Box size={[0.4, 0.25, 0.3]} position={[-1.6, 1.18, -2.8]} color="#1f2937" />
-      <Person
+      <Npc
+        who={TOWN_PEOPLE.barista}
+        reach={2.1}
         position={[-3.2, 0, -3.7]}
         rotation={Math.PI}
         look={{
@@ -254,7 +257,8 @@ export default function Cafe() {
       <Table position={[3, 0, -0.6]} />
       <Table position={[4.4, 0, 2.6]} />
       {!low && <Table position={[0.4, 0, 2.2]} />}
-      <Person
+      <Npc
+        who={TOWN_PEOPLE.cafeReader}
         position={[3, 0, 0.15]}
         seated
         look={{
@@ -267,7 +271,8 @@ export default function Cafe() {
         }}
         phase={1.1}
       />
-      <Person
+      <Npc
+        who={TOWN_PEOPLE.cafeFriend}
         position={[3, 0, -1.35]}
         rotation={Math.PI}
         seated
@@ -283,7 +288,8 @@ export default function Cafe() {
         phase={2.3}
       />
       {!low && (
-        <Person
+        <Npc
+          who={TOWN_PEOPLE.cafeLaptop}
           position={[4.4, 0, 3.35]}
           seated
           look={{

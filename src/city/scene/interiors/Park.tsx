@@ -9,7 +9,9 @@ import { useRef } from 'react'
 import type { Group, Mesh, MeshStandardMaterial } from 'three'
 import type { Vector } from '../../../content/office'
 import { Box } from '../../../office/scene/parts'
-import { Person, Walker, type PersonLook } from '../../../office/scene/people'
+import { Walker, type PersonLook } from '../../../office/scene/people'
+import { Npc } from '../../../world/npc/Npc'
+import { local, TOWN_PEOPLE } from '../../../content/townPeople'
 import { prefersReducedMotion } from '../../../ui/motion'
 import { Board, Hotspot } from './common'
 import { signPainting, useInterior } from './kit'
@@ -169,6 +171,9 @@ function Pond() {
   )
 }
 
+/** Who the people walking in the park are. */
+const VISITOR_WHO = Array.from({ length: 8 }, (_, i) => local('park', i))
+
 const VISITORS: Array<{ path: Vector[]; look: PersonLook; speed: number }> = [
   {
     path: [
@@ -247,7 +252,8 @@ export default function Park() {
         <ParkBench position={[0, 0, 0]} rotation={Math.PI} />
       </Hotspot>
       <ParkBench position={[3.3, 0, -5.6]} rotation={0.3} />
-      <Person
+      <Npc
+        who={TOWN_PEOPLE.walter}
         position={[3.2, 0, -5.4]}
         rotation={0.3 + Math.PI}
         seated
@@ -283,7 +289,15 @@ export default function Park() {
       <LampPost position={[4.8, 0, -4.8]} />
       {!low && <LampPost position={[-5.2, 0, -5.2]} />}
       {(low ? VISITORS.slice(0, 1) : VISITORS).map((v, i) => (
-        <Walker key={i} path={v.path} look={v.look} speed={v.speed} pause={1} phase={i} />
+        <Walker
+          key={i}
+          path={v.path}
+          look={v.look}
+          speed={v.speed}
+          pause={1}
+          phase={i}
+          who={VISITOR_WHO[i]}
+        />
       ))}
     </group>
   )

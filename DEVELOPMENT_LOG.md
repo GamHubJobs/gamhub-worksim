@@ -165,6 +165,79 @@ working simulations of the professional software used in its field (see
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
 
+**Talking to anyone** (in progress). Guide: [docs/PEOPLE.md](docs/PEOPLE.md).
+
+- [x] P1 Every person in every place can be talked to (E or a click)
+
+**Story Mode** (planned). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
+
+---
+
+## 2026-11-06 · People 1: everyone can be talked to
+
+### Built
+
+- **One way to talk to anyone** (`src/world/npc/people.ts`, `src/game/encounters.ts`):
+  every person shown in any place puts themselves in a list with who they are and what
+  they are doing. The player walks up and presses E (only if they are in sight, not
+  through a wall), or clicks them (their name, role and, if busy, what they are doing
+  show on hover). They stop, turn to the player and wave; the player stands facing them
+  (across the counter, for staff) and the camera looks over the player's shoulder.
+- **Who**: the office's eleven people (seven of them named for the first time), the
+  café's barista and customers, the cashier, a shopper and a shop assistant, the gym's
+  front desk, a trainer and members (mid-run on the treadmills, on a bike), a neighbour
+  in the park and people walking there, people walking down the street, the garage's
+  salesperson and mechanic, and the courier at the door.
+- **What to say depends on who and when**: options by kind of work (a colleague, the
+  manager, reception, facilities, a barista, a cashier, shop staff, a salesperson, a
+  mechanic, gym staff, a trainer, a member, a local, a customer, the courier), replies
+  by personality (warm, quiet, chatty, dry, focused), what they are doing (in a meeting,
+  serving, exercising, heading home: they say so; chatting: the player can join, and
+  both answer), how well they know the player (an introduction the first time), what
+  happened last time (wary after rudeness; thanks after a favour) and the time of day.
+- **Consequences without farming**: trust from the first friendly talk of the day only;
+  a favour is worth more but takes 15 minutes, once a day; rudeness and insisting cost
+  trust and are remembered; after three talks a day they get back to work. Staff can do
+  their job from the conversation (the barista's coffee, the cashier's till, the
+  trainer's class). Time passes; out in town a friendly chat helps the social need.
+- **The save**: `work.relationships` gains an optional `last` (what was said last
+  time); older saves load unchanged. A change of trust no longer drops it.
+- The four named colleagues keep their own conversations; when busy, they say so.
+- A **wave** gesture. The conversation box sits at the side, so both people stay in view;
+  Esc ends it from anywhere.
+
+### Tests
+
+- Unit tests: `encounters.test.ts` (15: everyone in every place has something to say
+  and to be asked; options differ by work; introductions and personality; busy people;
+  joining a conversation; rudeness remembered; no farming; favours; staff actions; the
+  time of day; the save, for one person and for a group, in the office and in town;
+  older saves) and 4 more in `npc.test.ts` (nearest in sight, not through a wall;
+  where to stand; who is talking to the player; what someone is doing).
+- Browser tests (`talk.spec.ts`): a colleague asked for, turning and waving, the
+  introduction, saying goodbye, E to talk again, a chat and a second question, back to
+  work; a colleague at the stand-up who stays there and says so; clicking someone walks
+  over to them; a local in the street, the barista, a gym member mid-run, the trainer.
+- Found on the way: when the office's 3D view switched to low graphics under load, the
+  people were rebuilt and a conversation in progress was forgotten. It now carries on.
+- Screenshots: `docs/screenshots/people/`.
+- Also found: the hand-written office floor areas (the desks, low) counted as walls for
+  "can the player see them", so someone across a desk could not be talked to with E.
+  Only things at least 1.5 m tall block the view now (a unit test covers it).
+- Results: 2,171 unit tests passed. Chromium browser tests, full run: 180 passed, 3
+  skipped (the opt-in screenshots), 1 failed: a backup test (a spreadsheet cell after a
+  restore, unrelated to this work) that ran past its 5-second wait twice under the full
+  parallel run; it passed in the run before and alone. Its two waits are now 30 seconds,
+  and all 7 backup tests passed. In the run before, the full-week test failed once
+  and passed on its retry. 5 production-build tests passed. Firefox, WebKit and Edge 8
+  passed, 1 skipped (as before). Start screen 286 kB.
+
+### Limits
+
+- Replies are written, not generated (no AI model is involved).
+- Customers in the café and the shop stay in one place; they have no day of their own
+  yet.
+
 ---
 
 ## 2026-11-06 · Scenarios 1: a takeaway delivered to the door

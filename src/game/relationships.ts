@@ -19,6 +19,7 @@ export function changeTrust(work: WorkState, personId: string, delta: number): W
     relationships: {
       ...work.relationships,
       [personId]: {
+        ...current,
         trust: clamp(trustOf(work, personId) + delta),
         talks: current?.talks ?? 0,
       },

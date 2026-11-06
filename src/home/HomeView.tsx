@@ -38,6 +38,9 @@ import { formatTime, nextWorkday, weekdayName } from '../game/clock'
 import { canDo, lifePhase, sleepHours } from '../game/life'
 import { canGoOut } from '../game/city'
 import { deliveryStage } from '../game/delivery'
+import { holdEncounter, relationOf } from '../game/encounters'
+import { TOWN_PEOPLE } from '../content/townPeople'
+import { EncounterPanel } from '../world/npc/EncounterPanel'
 import type { Profile } from '../persistence/schemas'
 
 const HomeScene = lazy(() => import('./scene/HomeScene'))
@@ -155,11 +158,15 @@ export function HomeView({
     },
     [walkable, commit],
   )
+  // The courier, after handing the takeaway over at the door: a word before they go.
+  const [courier, setCourier] = useState(false)
+  const stage = deliveryStage(life)
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
+      if (completed && action === 'takeaway-door' && stage === 'at-door') setCourier(true)
       if (completed && action) commit(action)
     },
-    [commit],
+    [commit, stage],
   )
 
   return (
@@ -214,6 +221,21 @@ export function HomeView({
                 </SceneBoundary>
               )}
             </WalkView>
+          )}
+
+          {courier && (
+            <EncounterPanel
+              className="fixed right-4 bottom-4 z-40"
+              who={TOWN_PEOPLE.courier}
+              situation={{ availability: 'free', minute: life.minute }}
+              relation={relationOf(profile, TOWN_PEOPLE.courier.id)}
+              onSay={(outcome) =>
+                void onCareer((p) =>
+                  holdEncounter(p, [TOWN_PEOPLE.courier.id], outcome, 'out'),
+                )
+              }
+              onClose={() => setCourier(false)}
+            />
           )}
 
           {shop === 'career' ? (

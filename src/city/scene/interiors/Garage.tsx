@@ -7,7 +7,8 @@
 import { BIKE, CAR } from '../../../content/transport'
 import { formatMoney } from '../../../content/life'
 import { Box, Plant } from '../../../office/scene/parts'
-import { Person } from '../../../office/scene/people'
+import { Npc } from '../../../world/npc/Npc'
+import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Bike, Car } from '../vehicles'
 import { Board, Hotspot, Lamp, Room } from './common'
 import { menuPainting, signPainting, useInterior } from './kit'
@@ -105,7 +106,9 @@ export default function Garage() {
           emissive="#a78bfa"
         />
         <Box size={[0.25, 0.02, 0.32]} position={[0.5, 1.1, 0]} color="#fafafa" />
-        <Person
+        <Npc
+          who={TOWN_PEOPLE.sales}
+          reach={2.1}
           position={[0, 0, -0.75]}
           rotation={Math.PI}
           look={{
@@ -142,7 +145,8 @@ export default function Garage() {
           <meshStandardMaterial color="#18181b" />
         </mesh>
       </group>
-      <Person
+      <Npc
+        who={TOWN_PEOPLE.mechanic}
         position={[-5.2, 0, 1.6]}
         rotation={Math.PI * 0.9}
         look={{

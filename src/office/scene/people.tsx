@@ -13,6 +13,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   type ReactNode,
@@ -34,6 +35,11 @@ import {
 } from 'three'
 import type { Vector } from '../../content/office'
 import { prefersReducedMotion } from '../../ui/motion'
+import type { Who } from '../../game/encounters'
+import { clipFrame } from '../../world/character/rig'
+import { bodyOf } from '../../world/npc/bodies'
+import { engagedFor, removeNpc, setNpc } from '../../world/npc/people'
+import { Talkable } from '../../world/npc/Talkable'
 
 /** With reduced motion, people hold a natural pose and do not move. */
 const STILL = prefersReducedMotion()
@@ -1023,6 +1029,7 @@ export function Walker({
   speed = 0.8,
   pause = 4,
   phase = 0,
+  who,
 }: {
   path: Vector[]
   look: PersonLook
@@ -1030,19 +1037,51 @@ export function Walker({
   /** Seconds standing still at each end of the route. */
   pause?: number
   phase?: number
+  /** Who they are: then they can be talked to (they stop, turn and talk). */
+  who?: Who
 }) {
   const group = useRef<Group>(null)
   const motion = useRef<Motion>({ walking: false })
+  const rig = useRef<RigPose | null>(null)
   const state = useRef({ leg: 0, along: 0, waited: 0, heading: 0 })
+  const invalidate = useThree((st) => st.invalidate)
+  useEffect(() => () => (who ? removeNpc(who.id) : undefined), [who])
 
   // Out and back along the path.
   const route = useMemo(() => [...path, ...path.slice(1, -1).reverse()], [path])
 
   useFrame((_, rawDelta) => {
     const g = group.current
-    if (!g || STILL) return
+    if (!g) return
     const delta = Math.min(rawDelta, 0.1)
     const s = state.current
+    // Someone to talk to: stopped, turned to the player, waving then talking.
+    if (who) {
+      g.getWorldPosition(WORLD)
+      const talking = engagedFor(who.id)
+      setNpc({
+        who,
+        x: WORLD.x,
+        z: WORLD.z,
+        heading: s.heading,
+        reach: 1.5,
+        availability: talking >= 0 ? 'free' : motion.current.walking ? 'walking' : 'free',
+      })
+      const player = bodyOf('player')
+      if (talking >= 0 && player) {
+        const want = Math.atan2(-(player.x - WORLD.x), -(player.z - WORLD.z))
+        s.heading +=
+          Math.atan2(Math.sin(want - s.heading), Math.cos(want - s.heading)) *
+          Math.min(1, delta * 5)
+        g.rotation.y = s.heading
+        motion.current.walking = false
+        rig.current = clipFrame(talking < 1.4 ? 'wave' : 'talk', talking)
+        invalidate()
+        return
+      }
+      rig.current = null
+    }
+    if (STILL) return
     const from = route[s.leg % route.length]
     const to = route[(s.leg + 1) % route.length]
     const dx = to[0] - from[0]
@@ -1094,7 +1133,15 @@ export function Walker({
           depthWrite={false}
         />
       </mesh>
-      <Person look={look} phase={phase} motion={motion} />
+      {who ? (
+        <Talkable id={who.id} name={who.name} role={who.role}>
+          <Person look={look} phase={phase} motion={motion} rig={rig} />
+        </Talkable>
+      ) : (
+        <Person look={look} phase={phase} motion={motion} />
+      )}
     </group>
   )
 }
+
+const WORLD = new Vector3()

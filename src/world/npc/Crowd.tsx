@@ -8,31 +8,32 @@
  * does not freeze. When the clock jumps on, people are already where they
  * should be. With reduced motion, people move straight to their places.
  *
+ * Everyone can be talked to (see people.ts): walking up to someone, or
+ * clicking them, they stop, turn to the player, wave and talk, and go back to
+ * their day afterwards. Someone in a meeting only looks round and lifts a hand.
+ *
  * Cheap: one frame loop for everyone, the schedule worked out twice a second,
  * ways found only when a destination changes, and fast redraws only while
  * someone is walking.
  */
 import { useFrame, useThree } from '@react-three/fiber'
-import {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  type ReactNode,
-  type RefObject,
-} from 'react'
+import { useContext, useEffect, useMemo, useRef, type RefObject } from 'react'
 import type { Group } from 'three'
 import { Person, type Motion, type PersonLook } from '../../office/scene/people'
 import { prefersReducedMotion } from '../../ui/motion'
-import type { Box } from '../character/controller'
+import type { Who } from '../../game/encounters'
+import { turnTowards, type Box } from '../character/controller'
 import { clipFrame, type RigFrame } from '../character/rig'
 import { World } from '../context'
 import { buildGrid, type Point } from '../physics/nav'
 import { scanSolids } from '../physics/solids'
 import { agent, NPC_RADIUS, placeAt, stepAgent, type Agent, type Goal } from './agent'
-import { othersThan, removeBody, setBody } from './bodies'
+import { bodyOf, othersThan, removeBody, setBody } from './bodies'
+import { engagedFor, removeNpc, setNpc } from './people'
+import { Talkable } from './Talkable'
 import {
   doingAt,
+  doingNow,
   everyone,
   type Gathering,
   type Intent,
@@ -51,10 +52,10 @@ export interface CrowdProps {
   /** The game clock: office minutes since midnight. */
   minute: number
   looks: Record<string, PersonLook>
+  /** Who each person is (name, role, kind of work, personality), for talking to them. */
+  who: Record<string, Who>
   /** Who the player is talking to (by the person's talk id), if anyone. */
   talkingTo?: string | null
-  /** Wraps a person (making them clickable, say). */
-  wrap?: (id: string, person: ReactNode) => ReactNode
   low?: boolean
 }
 
@@ -105,7 +106,10 @@ export function Crowd(props: CrowdProps) {
 
   useEffect(
     () => () => {
-      for (const id of lives.keys()) removeBody(id)
+      for (const id of lives.keys()) {
+        removeBody(id)
+        removeNpc(id)
+      }
     },
     [lives],
   )
@@ -160,7 +164,26 @@ export function Crowd(props: CrowdProps) {
       const intent = s.intents.get(person.id)
       const goal = goalFor(intent)
       let a = live.agent
-      if (jumped || STILL || !s.grid) {
+      // Talking to the player: stopped where they are, turned to them (unless
+      // in a meeting, when they only look round and lift a hand).
+      const talkingFor = engagedFor(person.id)
+      const meeting = intent?.kind === 'at' && intent.reason === 'meeting'
+      const held = talkingFor >= 0 && !meeting && a.shown
+      if (held) {
+        const player = bodyOf('player')
+        const seat = intent?.kind === 'at' ? p.places[intent.place] : undefined
+        const seated = a.status === 'there' && !!seat?.seated
+        if (player && !seated)
+          a = {
+            ...a,
+            heading: turnTowards(
+              a.heading,
+              Math.atan2(-(player.x - a.x), -(player.z - a.z)),
+              dt * 5,
+            ),
+            speed: 0,
+          }
+      } else if (jumped || STILL || !s.grid) {
         // Time jumped on (or no moving about): already there.
         if (jumped || STILL || a.goal !== (goal?.key ?? null)) a = placeAt(a, goal)
       } else {
@@ -188,7 +211,34 @@ export function Crowd(props: CrowdProps) {
       if (a.shown) setBody(person.id, a.x, a.z, NPC_RADIUS)
       else removeBody(person.id)
       const place = intent?.kind === 'at' ? p.places[intent.place] : undefined
-      if (a.status === 'there' && place) {
+      // In the list of people the player can talk to, with what they are doing.
+      const who = p.who[person.id]
+      if (a.shown && who) {
+        const now = doingNow(person, intent, a.status === 'walking', s.intents, p.minute)
+        setNpc({
+          who,
+          x: a.x,
+          z: a.z,
+          heading: a.heading,
+          reach: a.status === 'there' && place?.seated ? 1.8 : 1.5,
+          availability: held ? 'free' : now.availability,
+          doing: now.doing,
+          with: now.with,
+          seated: a.status === 'there' && !!place?.seated,
+        })
+      } else removeNpc(person.id)
+      if (held) {
+        // Waves on seeing the player come over, then talks.
+        const seated = a.status === 'there' && !!place?.seated
+        live.rig.current = seated
+          ? clipFrame('sit-relax', talkingFor)
+          : clipFrame(talkingFor < 1.4 ? 'wave' : 'talk', talkingFor)
+        live.motion.current = { walking: false }
+      } else if (talkingFor >= 0 && talkingFor < 1.4 && a.status === 'there') {
+        // In a meeting: a hand lifted, nothing more.
+        live.rig.current = clipFrame('wave', talkingFor)
+        live.motion.current = { walking: false }
+      } else if (a.status === 'there' && place) {
         const talking = !!person.speaker && person.speaker === p.talkingTo
         let clip = doingAt(place, person.id, s.seconds)
         if (intent?.kind === 'at' && intent.reason === 'lunch' && place.clip !== 'eat')
@@ -225,6 +275,8 @@ export function Crowd(props: CrowdProps) {
       )
     // Someone walking: draw again soon (on low graphics, once a second, as the
     // rest of the place; the player moving draws more often anyway).
+    // Someone talking to the player is animated too.
+    if (lives.size && [...lives.keys()].some((id) => engagedFor(id) >= 0)) walking = true
     if (walking && !pending.current) {
       pending.current = true
       window.setTimeout(
@@ -258,7 +310,17 @@ export function Crowd(props: CrowdProps) {
               live.group = g
             }}
           >
-            {props.wrap ? props.wrap(person.id, body) : body}
+            {props.who[person.id] ? (
+              <Talkable
+                id={person.id}
+                name={props.who[person.id].name}
+                role={props.who[person.id].role}
+              >
+                {body}
+              </Talkable>
+            ) : (
+              body
+            )}
           </group>
         )
       })}

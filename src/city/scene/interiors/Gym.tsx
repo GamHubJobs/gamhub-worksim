@@ -12,16 +12,22 @@ import { useWorld } from '../../../world/context'
 import type { Vector } from '../../../content/office'
 import { Box, Plant } from '../../../office/scene/parts'
 import { Person, type Motion, type PersonLook } from '../../../office/scene/people'
+import type { Who } from '../../../game/encounters'
+import { Npc } from '../../../world/npc/Npc'
+import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Board, Hotspot, Lamp, Room } from './common'
 import { signPainting, useInterior } from './kit'
 
 function Treadmill({
   position,
   runner,
+  who,
   player,
 }: {
   position: Vector
   runner?: PersonLook
+  /** Who is running on it. */
+  who?: Who
   /** The one the player can use: its belt moves while they run on it. */
   player?: boolean
 }) {
@@ -65,12 +71,9 @@ function Treadmill({
         emissive="#38bdf8"
       />
       {runner && (
-        <Person
-          position={[0, 0.2, 0]}
-          look={runner}
-          motion={motion}
-          phase={position[0]}
-        />
+        <Npc who={who!} position={[0, 0.2, 0]} availability="exercising">
+          <Person look={runner} motion={motion} phase={position[0]} />
+        </Npc>
       )}
     </group>
   )
@@ -108,7 +111,14 @@ function ExerciseBike({
         <Box size={[0.04, 0.09, 0.45]} position={[0, 0, 0]} color="#7f1d1d" />
       </group>
       {rider && (
-        <Person position={[0, 0.4, 0.3]} seated look={rider} phase={position[0]} />
+        <Npc
+          who={TOWN_PEOPLE.rider}
+          position={[0, 0.4, 0.3]}
+          seated
+          look={rider}
+          phase={position[0]}
+          availability="exercising"
+        />
       )}
     </group>
   )
@@ -350,9 +360,13 @@ export default function Gym() {
       />
 
       {/* Cardio: treadmills and bikes, members working out */}
-      <Treadmill position={[-5, 0, -2.8]} runner={MEMBERS[0]} />
+      <Treadmill position={[-5, 0, -2.8]} runner={MEMBERS[0]} who={TOWN_PEOPLE.runner1} />
       <Treadmill position={[-3.8, 0, -2.8]} player />
-      <Treadmill position={[-2.6, 0, -2.8]} runner={low ? undefined : MEMBERS[1]} />
+      <Treadmill
+        position={[-2.6, 0, -2.8]}
+        runner={low ? undefined : MEMBERS[1]}
+        who={TOWN_PEOPLE.runner2}
+      />
       <ExerciseBike position={[-1.2, 0, -3]} rider={MEMBERS[2]} />
       <ExerciseBike position={[-0.2, 0, -3]} player />
 
@@ -366,7 +380,8 @@ export default function Gym() {
       <Bench position={[-2.5, 0, 0.8]} rotation={0.3} />
       <Barbell rest={[1.4, 1.05, 0.6]} />
       <ShowerCubicle />
-      <Person
+      <Npc
+        who={TOWN_PEOPLE.trainer}
         position={[-2.3, 0, 1.6]}
         rotation={Math.PI}
         look={MEMBERS[3]}
@@ -402,7 +417,9 @@ export default function Gym() {
           color="#0f172a"
           emissive="#38bdf8"
         />
-        <Person
+        <Npc
+          who={TOWN_PEOPLE.gymDesk}
+          reach={2.1}
           position={[0, 0, -0.75]}
           rotation={Math.PI}
           look={{

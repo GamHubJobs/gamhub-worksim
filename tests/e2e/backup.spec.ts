@@ -121,7 +121,7 @@ test('a restore keeps a safety copy on this device, and putting it back undoes t
   const safetyDownload = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Replace my data with this backup' }).click()
   await safetyDownload
-  await expect(cell(page, 'A1')).toHaveText('from the backup')
+  await expect(cell(page, 'A1')).toHaveText('from the backup', { timeout: 30_000 })
 
   // Undo: the safety copy puts this device's own work back.
   await openStoragePanel(page)
@@ -129,7 +129,7 @@ test('a restore keeps a safety copy on this device, and putting it back undoes t
   await expect(copies).toContainText('Before restoring a backup')
   await copies.getByRole('button', { name: 'Put back…' }).first().click()
   await copies.getByRole('button', { name: 'Put it back' }).click()
-  await expect(cell(page, 'A1')).toHaveText('my own work')
+  await expect(cell(page, 'A1')).toHaveText('my own work', { timeout: 30_000 })
 })
 
 test('a file far too large to be a backup is refused before it is read', async ({

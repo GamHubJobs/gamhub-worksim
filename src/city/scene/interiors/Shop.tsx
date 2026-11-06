@@ -9,7 +9,8 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import { Color, Object3D, type InstancedMesh } from 'three'
 import type { Vector } from '../../../content/office'
 import { Box } from '../../../office/scene/parts'
-import { Person } from '../../../office/scene/people'
+import { Npc } from '../../../world/npc/Npc'
+import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Board, Hotspot, Lamp, Room } from './common'
 import { signPainting, useInterior } from './kit'
 
@@ -276,7 +277,9 @@ export default function Shop() {
       {/* The checkout and the cashier */}
       <group position={[3.7, 0, 1.2]} rotation={[0, -Math.PI / 2, 0]}>
         <Checkout />
-        <Person
+        <Npc
+          who={TOWN_PEOPLE.cashier}
+          reach={2.1}
           position={[0.3, 0, -0.8]}
           rotation={Math.PI}
           look={{
@@ -291,7 +294,8 @@ export default function Shop() {
           phase={0.6}
         />
       </group>
-      <Person
+      <Npc
+        who={TOWN_PEOPLE.shopper}
         position={[-2.25, 0, -1.2]}
         rotation={-Math.PI / 2}
         look={{
@@ -305,7 +309,8 @@ export default function Shop() {
         phase={1.4}
       />
       {!low && (
-        <Person
+        <Npc
+          who={TOWN_PEOPLE.shopStaff}
           position={[3.4, 0, -2.8]}
           rotation={Math.PI}
           look={{

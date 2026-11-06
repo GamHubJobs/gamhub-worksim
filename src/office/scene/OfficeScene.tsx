@@ -60,6 +60,7 @@ import {
   OFFICE_PLACES,
   PRINTER,
   STANDING_DESK,
+  officeWho,
 } from './officeCast'
 import { isLow, useGraphicsQuality } from '../../ui/graphics'
 
@@ -270,6 +271,8 @@ function sameProps(a: OfficeSceneProps, b: OfficeSceneProps): boolean {
 }
 
 function OfficeScene(props: OfficeSceneProps) {
+  // Who everyone is (names follow the department).
+  const who = useMemo(() => officeWho(), [])
   const start = getSpot(props.spot).camera
   // What the computer can do, and the player's choice in Settings.
   const [software, setLowPower] = useState(false)
@@ -327,21 +330,7 @@ function OfficeScene(props: OfficeSceneProps) {
           looks={CAST_LOOKS}
           talkingTo={props.talkingTo}
           low={lowPower}
-          wrap={(id, person) => {
-            const talk = OFFICE_PEOPLE.find((p) => p.id === id)?.talk as
-              InteractionId | undefined
-            return talk ? (
-              <Interactive
-                id={talk}
-                labelPosition={[0, 1.95, 0]}
-                onInteract={props.onInteract}
-              >
-                {person}
-              </Interactive>
-            ) : (
-              person
-            )
-          }}
+          who={who}
         />
       </PeopleDetail>
       {SPOTS.map((s) => (

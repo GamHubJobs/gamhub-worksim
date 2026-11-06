@@ -19,6 +19,9 @@ import {
 } from 'react'
 import { audio } from '../audio/manager'
 import { WalkView } from '../world/WalkView'
+import { EncounterPanel } from '../world/npc/EncounterPanel'
+import { metAs, onTalkRequest, release } from '../world/npc/people'
+import { holdEncounter, relationOf, type Situation, type Who } from '../game/encounters'
 import { isInteraction } from './scene/officeLayout'
 import { fill, getPerson } from '../content/departments'
 import {
@@ -138,6 +141,12 @@ export function OfficeView({
       : null,
   )
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * 100))
+  // Talking to someone met in the office (anyone but the conversations below).
+  const [encounter, setEncounter] = useState<{
+    who: Who
+    situation: Situation
+    with?: Who
+  } | null>(null)
   const talking = !!dialogue
   useEffect(() => {
     if (talking) audio.play('greet')
@@ -221,10 +230,46 @@ export function OfficeView({
     }
     const person = PEOPLE_AT[id]
     if (!person) return
+    talkWith(person)
+  }
+
+  /** A conversation with one of the four colleagues the player works with most. */
+  function talkWith(person: ColleagueId) {
     if (person === 'facilities') setTipIndex((n) => n + 1)
     const conversation = conversationWith(profile, person, tipIndex)
     void onAct((p) => holdConversation(p, person, conversation))
     setDialogue(conversation.dialogue)
+  }
+
+  /**
+   * Walked up to someone (see world/npc/people.ts): the four colleagues have
+   * their own conversations when free; everyone else, and anyone busy, the
+   * conversation that fits who they are and what they are doing.
+   */
+  function meetPerson(id: string) {
+    const n = metAs(id)
+    if (!n) {
+      release()
+      return
+    }
+    const named = Object.values(PEOPLE_AT).includes(id as ColleagueId)
+    const busy = ['meeting', 'chatting', 'leaving'].includes(n.availability)
+    setDialogue(null)
+    if (named && !busy) {
+      talkWith(id as ColleagueId)
+      return
+    }
+    const other = n.with ? metAs(n.with)?.who : undefined
+    setEncounter({
+      who: n.who,
+      with: other,
+      situation: {
+        availability: n.availability,
+        doing: n.doing,
+        with: other,
+        minute: work.minute,
+      },
+    })
   }
 
   function haveLunchNow() {
@@ -295,9 +340,9 @@ export function OfficeView({
   }
 
   // Stable handlers for the 3D scene, so it does not redraw on every change.
-  const handlers = useRef({ go, doInteract, interact, arrive })
+  const handlers = useRef({ go, doInteract, interact, arrive, meetPerson })
   useEffect(() => {
-    handlers.current = { go, doInteract, interact, arrive }
+    handlers.current = { go, doInteract, interact, arrive, meetPerson }
   })
   const sceneGo = useCallback((next: SpotId) => handlers.current.go(next), [])
   const sceneInteract = useCallback(
@@ -307,8 +352,18 @@ export function OfficeView({
   const onArea = useCallback((next: SpotId) => handlers.current.arrive(next), [])
   const onReady = useCallback(() => setReady(true), [])
   const onActivityDone = useCallback((action: string | null, completed: boolean) => {
-    if (completed && action && isInteraction(action)) handlers.current.interact(action)
+    if (completed && action?.startsWith('person:'))
+      handlers.current.meetPerson(action.slice('person:'.length))
+    else if (completed && action && isInteraction(action))
+      handlers.current.interact(action)
   }, [])
+  // A click on someone: walk over to talk to them.
+  useEffect(() => onTalkRequest((id) => ask(`person:${id}`)), [])
+  // The conversation is over: whoever it was goes back to their day.
+  const conversing = !!dialogue || !!encounter
+  useEffect(() => {
+    if (!conversing) release()
+  }, [conversing])
 
   const floorPlan = <FloorPlan spot={spot} onGo={go} />
   const meetingHere = meetingNow && meetingNow.spot === spot
@@ -473,6 +528,27 @@ export function OfficeView({
         ))}
       </nav>
 
+      {encounter && (
+        <EncounterPanel
+          key={encounter.who.id}
+          who={encounter.who}
+          situation={encounter.situation}
+          relation={relationOf(profile, encounter.who.id)}
+          onSay={(outcome, option) =>
+            void onAct((p) =>
+              holdEncounter(
+                p,
+                option === 'join' && encounter.with
+                  ? [encounter.who.id, encounter.with.id]
+                  : [encounter.who.id],
+                outcome,
+                'office',
+              ),
+            )
+          }
+          onClose={() => setEncounter(null)}
+        />
+      )}
       {dialogue && (
         <DialogueBox
           dialogue={dialogue}

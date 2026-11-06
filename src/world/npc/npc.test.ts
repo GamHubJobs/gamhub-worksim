@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import {
   DOOR,
   OFFICE_GATHERINGS,
@@ -10,7 +10,21 @@ import type { Box } from '../character/controller'
 import { blocked } from '../character/controller'
 import { buildGrid } from '../physics/nav'
 import { agent, NPC_RADIUS, placeAt, stepAgent, type Agent, type Goal } from './agent'
-import { everyone, wanted, type Intent } from './schedule'
+import { doingNow, everyone, wanted, type Intent } from './schedule'
+import {
+  allNpcs,
+  approachPoint,
+  canSee,
+  engage,
+  engagedFor,
+  engagedIds,
+  nearestNpc,
+  release,
+  removeNpc,
+  setNpc,
+  TALK_DISTANCE,
+} from './people'
+import type { Who } from '../../game/encounters'
 
 const at = (h: number, m = 0) => h * 60 + m
 const MONDAY = 1
@@ -186,5 +200,97 @@ describe('walking there', () => {
     const { a } = walk(start, null, [], 90)
     expect(a.status).toBe('hidden')
     expect(a.shown).toBe(false)
+  })
+})
+
+describe('talking to people: who is near, where to stand', () => {
+  const who = (id: string): Who => ({
+    id,
+    name: `${id} Person`,
+    role: 'Tester',
+    kind: 'colleague',
+    personality: 'warm',
+  })
+  afterEach(() => {
+    for (const n of allNpcs()) removeNpc(n.who.id)
+    release()
+  })
+
+  it('the nearest person in reach and in sight, not through a wall', () => {
+    setNpc({ who: who('a'), x: 1, z: 0, heading: 0, reach: 1.5, availability: 'free' })
+    setNpc({ who: who('b'), x: 0, z: 1.2, heading: 0, reach: 1.5, availability: 'free' })
+    expect(nearestNpc(0, 0, [])?.npc.who.id).toBe('a')
+    // A wall between the player and a: b is the one.
+    const wall: Box = { x: 0.5, z: 0, hx: 0.05, hz: 1, top: 2.9 }
+    expect(nearestNpc(0, 0, [wall])?.npc.who.id).toBe('b')
+    // Too far for anyone.
+    expect(nearestNpc(5, 5, [])).toBeNull()
+  })
+
+  it('the player stands facing them, at talking distance, on the player’s side', () => {
+    const at = approachPoint({ x: 0, z: 0, reach: 1.5 }, { x: 3, z: 0 })
+    expect(at.x).toBeCloseTo(TALK_DISTANCE)
+    expect(at.z).toBeCloseTo(0)
+    // Facing −x, towards them (heading 0 faces −z).
+    expect(Math.sin(at.heading)).toBeCloseTo(1)
+    // Across a counter, as near as the counter allows.
+    const counter = approachPoint({ x: 0, z: 0, reach: 2.1 }, { x: 0, z: 2.5 })
+    expect(counter.z).toBeCloseTo(1.9)
+  })
+
+  it('who is talking to the player, and everyone back to their day after', () => {
+    engage(['a', 'b'])
+    expect(engagedFor('a')).toBeGreaterThanOrEqual(0)
+    expect(engagedIds().sort()).toEqual(['a', 'b'])
+    release()
+    expect(engagedFor('a')).toBe(-1)
+  })
+
+  it('what someone is doing, as the player sees it on walking up', () => {
+    const p = OFFICE_PEOPLE.find((q) => q.id === 'backL')!
+    const none = new Map()
+    expect(
+      doingNow(p, { kind: 'at', place: p.own, reason: 'own' }, false, none, 600)
+        .availability,
+    ).toBe('working')
+    expect(
+      doingNow(p, { kind: 'at', place: 'standup:2', reason: 'meeting' }, false, none, 600)
+        .availability,
+    ).toBe('meeting')
+    expect(
+      doingNow(p, { kind: 'at', place: p.own, reason: 'own' }, true, none, 600)
+        .availability,
+    ).toBe('walking')
+    expect(
+      doingNow(p, { kind: 'at', place: p.own, reason: 'own' }, false, none, p.leaves - 2)
+        .availability,
+    ).toBe('leaving')
+    // Someone has come over for a word: chatting, with them.
+    const visit = new Map([
+      [
+        'backM',
+        {
+          kind: 'at' as const,
+          place: 'visit:backL',
+          reason: 'visit' as const,
+          with: 'backL',
+        },
+      ],
+    ])
+    expect(
+      doingNow(p, { kind: 'at', place: p.own, reason: 'own' }, false, visit, 600),
+    ).toEqual({
+      availability: 'chatting',
+      with: 'backM',
+    })
+  })
+})
+
+describe('seeing someone across a desk', () => {
+  it('a desk or a counter does not block the view; a wall does', () => {
+    const desk: Box = { x: 0.5, z: 0, hx: 0.2, hz: 1, top: 1.1 }
+    const wall: Box = { x: 0.5, z: 0, hx: 0.05, hz: 1, top: 2.9 }
+    expect(canSee({ x: 0, z: 0 }, { x: 1.5, z: 0 }, [desk])).toBe(true)
+    expect(canSee({ x: 0, z: 0 }, { x: 1.5, z: 0 }, [wall])).toBe(false)
   })
 })

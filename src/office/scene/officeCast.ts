@@ -14,7 +14,9 @@
  *   waters the plants.
  * Each has their own hours and habits: some quiet, some sociable.
  */
+import { getPerson } from '../../content/departments'
 import { MEETINGS } from '../../content/workday'
+import type { Who } from '../../game/encounters'
 import type { Gathering, Person, Place } from '../../world/npc/schedule'
 
 /** Facing from a spot towards a point. */
@@ -404,3 +406,35 @@ export const OFFICE_GATHERINGS: Gathering[] = MEETINGS.map((m) => ({
   start: m.start,
   minutes: m.minutes,
 }))
+
+/**
+ * Who the people of the office are, for talking to them: the four the player
+ * works with most (named by the department) and the rest of the team, each
+ * with their own personality, so no two say the same.
+ */
+export function officeWho(): Record<string, Who> {
+  const named = (id: string, kind: Who['kind'], personality: Who['personality']): Who => {
+    const p = getPerson(id)
+    return { id, name: p.name, role: p.role, kind, personality }
+  }
+  const team = (id: string, name: string, personality: Who['personality']): Who => ({
+    id,
+    name,
+    role: OFFICE_PEOPLE.find((p) => p.id === id)!.role,
+    kind: 'colleague',
+    personality,
+  })
+  return {
+    reception: named('reception', 'reception', 'warm'),
+    manager: named('manager', 'manager', 'focused'),
+    senior: named('senior', 'colleague', 'dry'),
+    facilities: named('facilities', 'facilities', 'chatty'),
+    backM: team('backM', 'Leila Haddad', 'chatty'),
+    backR: team('backR', 'Owen Price', 'quiet'),
+    backL: team('backL', 'Grace Mensah', 'focused'),
+    front2: team('front2', 'Carmen Ruiz', 'warm'),
+    coordinator: team('coordinator', 'Dana Kowalski', 'focused'),
+    admin: team('admin', 'Ben Carter', 'dry'),
+    analyst: team('analyst', 'Arjun Mehta', 'warm'),
+  }
+}

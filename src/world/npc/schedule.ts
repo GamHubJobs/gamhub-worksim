@@ -202,3 +202,34 @@ export function doingAt(place: Place, id: string, seconds: number): ClipId {
   const r = hash(id, slot, 'also')
   return r < 0.3 ? place.also[Math.floor(r * 10) % place.also.length] : place.clip
 }
+
+/** What someone is doing, as the player sees it on walking up (see game/encounters.ts). */
+export interface Doing {
+  availability:
+    'free' | 'working' | 'meeting' | 'walking' | 'eating' | 'chatting' | 'leaving'
+  doing?: string
+  /** Who they are talking with, when chatting. */
+  with?: string
+}
+
+/** What someone is doing now, from where they are meant to be and whether they are on the way. */
+export function doingNow(
+  p: Person,
+  intent: Intent | undefined,
+  walking: boolean,
+  intents: ReadonlyMap<string, Intent>,
+  minute: number,
+): Doing {
+  if (!intent || intent.kind === 'away') return { availability: 'free' }
+  if (minute >= p.leaves - 5) return { availability: 'leaving' }
+  if (intent.reason === 'meeting')
+    return { availability: 'meeting', doing: 'the meeting' }
+  if (walking) return { availability: 'walking' }
+  if (intent.reason === 'lunch') return { availability: 'eating', doing: 'their lunch' }
+  if (intent.reason === 'visit') return { availability: 'chatting', with: intent.with }
+  // Someone has come over to their place for a word.
+  for (const [id, other] of intents)
+    if (other.kind === 'at' && other.reason === 'visit' && other.with === p.id)
+      return { availability: 'chatting', with: id }
+  return { availability: 'working', doing: 'their work' }
+}
