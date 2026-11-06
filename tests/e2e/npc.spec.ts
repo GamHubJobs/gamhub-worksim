@@ -26,7 +26,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/')
   await startCareerIfNeeded(page, 'Sam Taylor')
   await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
-    timeout: 30_000,
+    timeout: 90_000,
   })
   await expect.poll(async () => (await npcs(page)).length, { timeout: 20_000 }).toBe(11)
 })

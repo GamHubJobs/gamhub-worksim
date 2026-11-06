@@ -28,6 +28,14 @@ import { formatTime, nextWorkday, weekdayIndex, weekNumber, weekdayName } from '
 import { changeReputation } from './relationships'
 import { log, startNextDay } from './workday'
 import { afterNight, eveningMessages } from './social'
+import {
+  deliveryBlock,
+  eaten,
+  ordered,
+  overnight,
+  received,
+  untilArrival,
+} from './delivery'
 import { canCommute, chargeCarLease } from './transport'
 import { careerEvening, weeklyPay } from './careerLife'
 import { clamp, decayed, earn, note, spend, withLife, withWellbeing } from './lifeTime'
@@ -108,6 +116,9 @@ export function canDo(
   const life = profile.work.life
   const phase = lifePhase(profile)
   if (phase === 'work') return 'You are at work.'
+  // The takeaway's steps go in order: ordered, arrived, eaten.
+  const takeaway = deliveryBlock(life, action.id)
+  if (takeaway) return takeaway
   // Where the player is: at home for home actions, inside the place for the rest.
   if (action.place) {
     const place = getPlace(action.place)!
@@ -139,10 +150,15 @@ export function canDo(
 }
 
 export function doHomeAction(profile: ProfileData, id: string): ProfileData {
-  const action = getHomeAction(id)
-  if (!action || canDo(profile, action)) return profile
+  const found = getHomeAction(id)
+  if (!found || canDo(profile, found)) return profile
   const work = profile.work
   let life = work.life
+  // Waiting for the takeaway lasts until it arrives.
+  const action =
+    id === 'takeaway-wait'
+      ? { ...found, minutes: Math.max(1, untilArrival(life)) }
+      : found
   const needs = decayed(life.needs, action.minutes)
   // A homely place: fun falls more slowly in the evening.
   if (life.phase === 'evening' && !('place' in action))
@@ -162,6 +178,9 @@ export function doHomeAction(profile: ProfileData, id: string): ProfileData {
   }
   life = spend(life, work.day, action.cost ?? 0, action.label)
   life = note(life, action.done)
+  if (id === 'takeaway') life = ordered(life, work.day)
+  if (id === 'takeaway-door') life = received(life)
+  if (id === 'takeaway-eat') life = eaten(life)
   let next = profile
   if (action.skillXp) {
     // Study goes to the career skill the player has least of.
@@ -202,7 +221,7 @@ export function goToBed(profile: ProfileData): ProfileData {
   const work = profile.work
   const next = nextWorkday(work.day)
   const weekend = next - work.day > 1
-  let life: Life = note(afterNight(work.life, work.day), 'Went to bed')
+  let life: Life = note(overnight(afterNight(work.life, work.day)), 'Went to bed')
   const bedtime = life.minute
   // The night (and a weekend, if there is one) changes needs.
   let needs = decayed(life.needs, 8 * 60)

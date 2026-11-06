@@ -352,6 +352,20 @@ export function PlayerRig(props: PlayerRigProps) {
       if (mode.current.kind !== 'free') stop(false)
       begin(a)
       invalidate()
+    } else {
+      // Nothing here to do it with in 3D (no TV for a series, say): done at once,
+      // as without 3D, rather than the button doing nothing.
+      latest.current.onDone(
+        {
+          id: request.id,
+          action: request.id,
+          prompt: request.id,
+          spot: { x: 0, z: 0, reach: -1 },
+          anchor: { x: 0, z: 0, heading: 0 },
+          stages: [],
+        },
+        true,
+      )
     }
     // Only a new request (nonce) starts something.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -639,7 +653,8 @@ export function PlayerRig(props: PlayerRigProps) {
         // During an activity the camera eases round to watch, from the front and
         // side if that view is clear, else from a side or over the shoulder.
         if (!turned) {
-          if (m.view === undefined) m.view = viewFor(m.at, a.anchor.y ?? 0)
+          if (m.view === undefined)
+            m.view = a.view === 'behind' ? m.at.heading : viewFor(m.at, a.anchor.y ?? 0)
           const want = m.view
           o.yaw = turnTowards(o.yaw, want, dt * 1.2)
           o.distance += (3.2 - o.distance) * Math.min(1, dt * 1.5)

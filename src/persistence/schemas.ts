@@ -833,6 +833,22 @@ export const LifeSchema = z.object({
       carWeek: z.number().int().nonnegative().default(0),
     })
     .prefault({}),
+  /**
+   * A takeaway on its way (see game/delivery.ts): paid when ordered, handed over at
+   * the door when it arrives (or left on the doorstep if no one is in), then eaten.
+   * Added later: older saves have none.
+   */
+  delivery: z
+    .object({
+      id: z.string(),
+      /** Home-clock minutes: when it was ordered and when it arrives. */
+      ordered: z.number().int().nonnegative(),
+      due: z.number().int().nonnegative(),
+      /** On its way (or at the door), or in the player's hands, not yet eaten. */
+      status: z.enum(['coming', 'received']),
+    })
+    .nullable()
+    .default(null),
   /** Job hunting, pay talks and a side business (see content/careerLife.ts). */
   career: z
     .object({

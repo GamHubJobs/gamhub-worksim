@@ -20,6 +20,24 @@ export function Prop({ kind }: { kind: PropKind }) {
           </mesh>
         </group>
       )
+    case 'bag':
+      // A paper takeaway bag, held by its handles.
+      return (
+        <group position={[0, -0.2, -0.02]}>
+          <mesh>
+            <boxGeometry args={[0.26, 0.3, 0.16]} />
+            <meshStandardMaterial color="#a16207" roughness={0.9} />
+          </mesh>
+          <mesh position={[0, 0.03, 0.082]}>
+            <planeGeometry args={[0.14, 0.1]} />
+            <meshStandardMaterial color="#fde68a" />
+          </mesh>
+          <mesh position={[0, 0.19, 0]}>
+            <torusGeometry args={[0.06, 0.008, 6, 12, Math.PI]} />
+            <meshStandardMaterial color="#713f12" />
+          </mesh>
+        </group>
+      )
     case 'bottle':
       return (
         <group position={[0, -0.06, -0.035]}>

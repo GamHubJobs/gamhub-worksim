@@ -35,6 +35,8 @@ import { ActivityEffects } from '../../world/vfx/ActivityEffects'
 import { FurnitureModel } from './models'
 import { Fittings } from './fittings'
 import { homeLayout } from './homeLayout'
+import { Courier } from './Courier'
+import type { DeliveryStage } from '../../game/delivery'
 
 const STILL = prefersReducedMotion()
 
@@ -42,11 +44,11 @@ const STILL = prefersReducedMotion()
 const USES: Partial<Record<SlotId, string[]>> = {
   kitchen: ['cook', 'breakfast'],
   coffee: ['coffee'],
-  table: ['takeaway'],
+  table: ['takeaway-eat'],
   shower: ['shower'],
   bed: ['bed'],
   wardrobe: ['dress'],
-  sofa: ['call'],
+  sofa: ['call', 'takeaway', 'takeaway-wait'],
   tv: ['series'],
   console: ['games'],
   desk: ['study'],
@@ -72,6 +74,8 @@ export interface HomeSceneProps {
   onDone: (action: string | null, completed: boolean) => void
   /** The 3D view is ready: activities can be handed to it. */
   onReady?: () => void
+  /** Where a takeaway is (the courier at the door, the bag on the doorstep). */
+  delivery?: DeliveryStage
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -100,8 +104,8 @@ function HomeScene(props: HomeSceneProps) {
   const [w, d] = home.size
   const evening = props.phase === 'evening'
   const layout = useMemo(
-    () => homeLayout(home, furniture, !evening),
-    [home, furniture, evening],
+    () => homeLayout(home, furniture, !evening, props.delivery === 'doorstep'),
+    [home, furniture, evening, props.delivery],
   )
   const byAction = useMemo(
     () => Object.fromEntries(props.doings.map((x) => [x.id, x])),
@@ -217,6 +221,7 @@ function HomeScene(props: HomeSceneProps) {
               startOrbit={{ yaw: 0.6, pitch: 0.55, distance: 4 }}
             />
             <ActivityEffects activities={activities} />
+            <Courier stage={props.delivery ?? 'none'} door={[-w / 2, d / 2 - 0.9]} />
           </PeopleDetail>
         </Interior.Provider>
       </World.Provider>

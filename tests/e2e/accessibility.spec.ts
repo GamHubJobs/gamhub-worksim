@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { openApp, activeWindow } from './helpers.ts'
+import { openApp, activeWindow, sitAtComputer } from './helpers.ts'
 
 /** Runs the automated WCAG 2.1 A/AA checks on what is on screen now. */
 async function audit(page: Page, screen: string, skipRules: string[] = []) {
@@ -20,9 +20,20 @@ async function audit(page: Page, screen: string, skipRules: string[] = []) {
   return problems
 }
 
-test('the main screens pass automated accessibility checks', async ({ page }) => {
-  // About twenty audits: under a full parallel run they take several minutes.
-  test.setTimeout(360_000)
+/** A new Office Administration career, as a new player starts one. */
+async function newCareer(page: Page) {
+  await page.goto('/')
+  await page.getByRole('radio', { name: /Office Administration/ }).check()
+  await page.getByLabel('Your first name').fill('Alex')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+}
+
+// The main screens, in three journeys (they run side by side, each well within its limit).
+
+test('the main screens pass automated accessibility checks: start and the office', async ({
+  page,
+}) => {
+  test.setTimeout(240_000)
   const problems: string[] = []
   await page.goto('/')
   problems.push(...(await audit(page, 'start screen')))
@@ -39,15 +50,16 @@ test('the main screens pass automated accessibility checks', async ({ page }) =>
     .getByRole('button', { name: /Talk to Nina/ })
     .click()
   problems.push(...(await audit(page, 'office conversation')))
-  await page.keyboard.press('Escape')
-  await page
-    .getByRole('navigation', { name: 'Places' })
-    .getByRole('button', { name: 'Your desk' })
-    .click()
-  await page
-    .getByTestId('office-panel')
-    .getByRole('button', { name: /Use your computer/ })
-    .click()
+  expect(problems.join('\n')).toBe('')
+})
+
+test('the main screens pass automated accessibility checks: the work apps', async ({
+  page,
+}) => {
+  test.setTimeout(240_000)
+  const problems: string[] = []
+  await newCareer(page)
+  await sitAtComputer(page)
   await openApp(page, 'WorkSim AI')
   await page.getByRole('button', { name: 'How do I write a good prompt?' }).click()
   await expect(page.getByTestId('ai-answer')).toBeVisible()
@@ -72,6 +84,16 @@ test('the main screens pass automated accessibility checks', async ({ page }) =>
   problems.push(...(await audit(page, 'case result')))
   await openApp(page, 'Career')
   problems.push(...(await audit(page, 'career')))
+  expect(problems.join('\n')).toBe('')
+})
+
+test('the main screens pass automated accessibility checks: readiness and documents', async ({
+  page,
+}) => {
+  test.setTimeout(240_000)
+  const problems: string[] = []
+  await newCareer(page)
+  await sitAtComputer(page)
   await page.evaluate("window.__worksim.skipTo('budget-report')")
   await openApp(page, 'Readiness')
   await page

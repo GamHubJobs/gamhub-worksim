@@ -37,6 +37,7 @@ import { HOURS } from '../content/workday'
 import { formatTime, nextWorkday, weekdayName } from '../game/clock'
 import { canDo, lifePhase, sleepHours } from '../game/life'
 import { canGoOut } from '../game/city'
+import { deliveryStage } from '../game/delivery'
 import type { Profile } from '../persistence/schemas'
 
 const HomeScene = lazy(() => import('./scene/HomeScene'))
@@ -199,6 +200,7 @@ export function HomeView({
                       furniture={JSON.stringify(life.home.furniture)}
                       phase={phase === 'morning' ? 'morning' : 'evening'}
                       dressed={phase === 'morning' && life.ready.dressed}
+                      delivery={deliveryStage(life)}
                       doings={stableDoings}
                       controls={api.controls}
                       request={request}

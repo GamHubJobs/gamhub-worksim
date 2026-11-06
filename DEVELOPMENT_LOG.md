@@ -167,6 +167,42 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-06 · Scenarios 1: a takeaway delivered to the door
+
+### Built
+
+- **The audit and the plan** for living scenarios: `docs/SCENARIOS_PLAN.md` (what is
+  visible, partly visible and invisible now; one engine; the order of work).
+- **A takeaway, as it happens** (`src/game/delivery.ts`, `life.delivery` in the save,
+  added without changing older saves): order and pay once on the phone, wait or do
+  something else, the courier comes along the landing and rings the bell, the door opens,
+  the bag changes hands, the courier leaves, the food is eaten at the table. Left on the
+  doorstep if no one answers; in the fridge if not eaten by bedtime.
+- **The home's front door** is a real doorway with a landing outside, and swings open.
+- **A doorbell** (generated, captioned) and a **takeaway bag** to carry.
+- **Watching from behind** for activities at a doorway.
+- Fixed: a home activity without its furniture in 3D (a series without a TV) did nothing
+  from the list; it now happens at once.
+
+### Tests
+
+- Unit tests (6): older saves, the stages in order, no double order or early answer or
+  eating, handed over then eaten, kept in the save, the fridge at bedtime.
+- Browser tests (`delivery.spec.ts`): ordered, reloaded part way (still on its way,
+  paid once), the courier at the door holding the bag, answered, the courier gone, eaten,
+  paid once; and left on the doorstep, picked up.
+- Screenshots: `docs/screenshots/scenarios/`.
+- Also: the main accessibility check (about twenty screens in one journey) kept running
+  past its limit under the full parallel run, so it is now three journeys (start and the
+  office; the work apps; readiness and documents) that run side by side, auditing the
+  same screens. The office people tests wait longer for the 3D office to load.
+- Results: 2,151 unit tests passed. Chromium browser tests, full run: 177 passed, none
+  failed or needed a retry, 3 skipped (the opt-in screenshots). 5 production-build tests
+  passed (in the run before, one failed and passed on its own rerun). Firefox, WebKit
+  and Edge 8 passed, 1 skipped (as before). Start screen 288 kB (unchanged).
+
+---
+
 ## 2026-11-06 · World 2: the people of the office live their day
 
 ### Cause

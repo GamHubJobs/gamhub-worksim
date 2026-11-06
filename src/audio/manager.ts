@@ -52,6 +52,7 @@ export const EFFECTS = {
   rustle: 'character',
   chair: 'character',
   beep: 'effects',
+  doorbell: 'effects',
   engine: 'character',
   greet: 'voices',
 } as const satisfies Record<string, CategoryId>
@@ -92,6 +93,7 @@ export const MIN_GAP: Record<EffectId, number> = {
   rustle: 600,
   chair: 800,
   beep: 250,
+  doorbell: 2500,
   engine: 700,
   greet: 2500,
 }
@@ -108,6 +110,7 @@ export const CAPTIONS: Partial<Record<EffectId, string>> = {
   warn: 'Warning',
   error: 'Something went wrong',
   phone: 'Phone message',
+  doorbell: 'Doorbell',
 }
 
 /** The engine's side (engine.ts), loaded on demand. */

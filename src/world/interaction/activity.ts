@@ -27,6 +27,8 @@ export type PropKind =
   | 'spoon'
   | 'bottle'
   | 'product'
+  /** A takeaway bag, with handles. */
+  | 'bag'
 
 /** Visual effects (see vfx/). */
 export type VfxKind =
@@ -66,6 +68,8 @@ export interface Activity {
   spot: { x: number; z: number; reach: number }
   /** Where the character is during it, and which way they face. */
   anchor: { x: number; z: number; heading: number; y?: number }
+  /** Watched from behind the character (looking past them, through a doorway), not from the front. */
+  view?: 'behind'
   stages: Stage[]
   /** Sounds at a moment (seconds from the start), optionally repeating. */
   sounds?: Array<{ at: number; id: EffectId; every?: number; until?: number }>

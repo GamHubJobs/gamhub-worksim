@@ -94,16 +94,44 @@ export const HOME_ACTIONS: HomeAction[] = [
     marks: 'ate',
     done: 'Had breakfast',
   },
+  // A takeaway, as it really happens (game/delivery.ts): ordered on the phone and
+  // paid, then a courier brings it to the door, then it is eaten.
   {
     id: 'takeaway',
     room: 'kitchen',
     label: 'Order a takeaway',
     phases: ['evening'],
-    minutes: 40,
+    minutes: 5,
     cost: 1450,
+    until: 22 * HOUR + 30,
+    done: 'Ordered a takeaway: on its way',
+  },
+  {
+    id: 'takeaway-wait',
+    room: 'living',
+    label: 'Wait for the takeaway',
+    phases: ['evening'],
+    // Until it arrives (worked out when waiting).
+    minutes: 25,
+    needs: { fun: 3 },
+    done: 'Waited for the takeaway',
+  },
+  {
+    id: 'takeaway-door',
+    room: 'door',
+    label: 'Answer the door: your takeaway',
+    phases: ['evening'],
+    minutes: 3,
+    done: 'The takeaway arrived',
+  },
+  {
+    id: 'takeaway-eat',
+    room: 'kitchen',
+    label: 'Eat the takeaway',
+    phases: ['evening'],
+    minutes: 30,
     needs: { hunger: 50, fun: 10 },
     marks: 'ate',
-    until: 23 * HOUR,
     done: 'Had a takeaway',
   },
   {

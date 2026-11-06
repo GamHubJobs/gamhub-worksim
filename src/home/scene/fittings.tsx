@@ -8,8 +8,45 @@
 import type { Home } from '../../content/home'
 import { Box } from '../../office/scene/parts'
 import { Hotspot } from '../../city/scene/interiors/common'
+import { useFrame } from '@react-three/fiber'
+import { useRef } from 'react'
+import type { Group } from 'three'
+import { useWorld } from '../../world/context'
+import { DELIVERY_TIMES } from './homeLayout'
 
 const WALL = 2.5
+
+/** Seconds into answering the door that it stands open (see homeLayout's DELIVERY_TIMES). */
+const OPEN = {
+  from: 0.3,
+  to: DELIVERY_TIMES.open + DELIVERY_TIMES.greet + DELIVERY_TIMES.take + 0.6,
+}
+
+/** The front door: shut, except while the player answers it, when it swings open into the hall. */
+function FrontDoor() {
+  const { now } = useWorld()
+  const hinge = useRef<Group>(null)
+  useFrame((_, dt) => {
+    const h = hinge.current
+    if (!h) return
+    const n = now.current
+    const doorstep = n.id === 'takeaway-door'
+    const open = doorstep && n.t > OPEN.from && n.t < OPEN.to ? 1 : 0
+    const target = 1.35 * open
+    h.rotation.y += (target - h.rotation.y) * Math.min(1, dt * 5)
+  })
+  // Hinged at the back edge of the doorway; the leaf spans the opening.
+  return (
+    <group position={[-0.47, 0, -0.475]}>
+      <group ref={hinge}>
+        <group position={[0, 0, 0.475]} rotation={[0, Math.PI / 2, 0]}>
+          <Box size={[0.95, 2.05, 0.08]} position={[0, 1.02, 0]} color="#7c2d12" />
+          <Box size={[0.06, 0.06, 0.1]} position={[0.35, 1.0, 0.06]} color="#d4d4d8" />
+        </group>
+      </group>
+    </group>
+  )
+}
 
 export function Fittings({ home, evening }: { home: Home; evening: boolean }) {
   const [w, d] = home.size
@@ -47,7 +84,32 @@ export function Fittings({ home, evening }: { home: Home; evening: boolean }) {
 
       {/* Tall back and left walls (the camera looks in from the front right) */}
       <Box size={[w, WALL, 0.14]} position={[0, WALL / 2, back]} color="#efe9df" />
-      <Box size={[0.14, WALL, d]} position={[left, WALL / 2, 0]} color="#e8e0d2" />
+      {/* The left wall, with the front doorway (and the landing outside it) */}
+      <Box
+        size={[0.14, WALL, d - 1.4]}
+        position={[left, WALL / 2, -0.7]}
+        color="#e8e0d2"
+      />
+      <Box
+        size={[0.14, WALL, 0.4]}
+        position={[left, WALL / 2, d / 2 - 0.2]}
+        color="#e8e0d2"
+      />
+      <Box
+        size={[0.14, WALL - 2.1, 1.0]}
+        position={[left, 2.1 + (WALL - 2.1) / 2, d / 2 - 0.9]}
+        color="#e8e0d2"
+      />
+      <Box
+        size={[1.9, 0.02, 2.4]}
+        position={[left - 0.95, 0.006, d / 2 - 0.9]}
+        color="#9ca3af"
+      />
+      <Box
+        size={[0.12, WALL, 2.4]}
+        position={[left - 1.9, WALL / 2, d / 2 - 0.9]}
+        color="#cbd5e1"
+      />
       <Box
         size={[0.1, WALL, d * 0.42]}
         position={[bathWall, WALL / 2, back + d * 0.21]}
@@ -179,10 +241,7 @@ export function Fittings({ home, evening }: { home: Home; evening: boolean }) {
         ring={0.5}
         tag={2.4}
       >
-        <group position={[-0.47, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <Box size={[0.95, 2.05, 0.08]} position={[0, 1.02, 0]} color="#7c2d12" />
-          <Box size={[0.06, 0.06, 0.1]} position={[0.35, 1.0, 0.06]} color="#d4d4d8" />
-        </group>
+        <FrontDoor />
       </Hotspot>
       <Box
         size={[0.55, 0.02, 0.9]}

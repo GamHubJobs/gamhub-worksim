@@ -63,6 +63,10 @@ you to your flat.
   you can do there, how long it takes and what it costs: cook, order a takeaway or
   groceries, shower, read, watch a series, call a friend, go for a run, meet friends in
   town, and go to bed.
+- **A takeaway** comes to the door: order it on your phone (it is paid then), and about
+  25 minutes later the doorbell rings. Do something else meanwhile, or wait for it.
+  Answer the door and the courier hands you the bag; then eat it at the table. If you do
+  not answer within a few minutes, it is left on the doorstep for you to pick up.
 - **Needs**: hunger, hygiene, social and fun (high is good), with your energy and
   stress. They fall as time passes; what you do raises them.
 - **Sleep**: the alarm rings at 7:00. Going to bed late means less sleep, and less

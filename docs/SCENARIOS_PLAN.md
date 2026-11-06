@@ -68,7 +68,7 @@ sounds and effects. No scenario gets a system of its own.
 
 ## 3. Order of work
 
-1. **S1 · The engine, and a takeaway delivered** (home). Order on the phone; the
+1. **S1 · A takeaway delivered** (home): **done**, see below. Order on the phone; the
    order is paid once and recorded; a courier is scheduled, rides up the street,
    rings the bell; the player opens the door; they greet each other, the bag is
    handed over, the food is the player's, the courier leaves; the player unpacks and
@@ -98,3 +98,28 @@ people there; the manager announcing a promotion; a visible checkout; a technici
 arriving and repairing; a conversation started by someone else; everyone going back to
 their day. And for each: interrupted part way, restored after a refresh, nothing paid or
 counted twice, collisions respected, and no loss of speed.
+
+## 5. Done
+
+### S1 · A takeaway delivered
+
+- **The rules** (`src/game/delivery.ts`, kept in the save as `life.delivery`): ordering
+  pays once and puts a takeaway on its way (25 minutes); it cannot be ordered again,
+  answered early or eaten before it is in hand; at the door it waits 12 minutes, then is
+  left on the doorstep; once handed over it is the player's; at bedtime an uneaten one
+  goes in the fridge. A reload or a restart carries on from where it was.
+- **In the home**: the order on the phone; waiting with the phone; the courier walking
+  along the landing outside, ringing the bell (a two-note chime, captioned), ringing
+  again while waiting; the front door, now a real doorway, swinging open; saying hello;
+  the bag handed over at the moment the player takes it (the courier lets go); the
+  courier leaving as the door closes; unpacking and eating at the table. The camera
+  watches from behind the player, through the doorway. The courier never comes in.
+- **Found and fixed on the way**: a home activity with nothing to do it with in 3D (a
+  series without a TV, a book without a shelf) did nothing when chosen from the list.
+  It now happens at once, as without 3D.
+- **Tests**: unit tests for every step and the save; browser tests for the whole
+  delivery (with a reload part way, paid once) and for the doorstep.
+- **Screenshots**: `docs/screenshots/scenarios/takeaway-*.png`.
+- **Limits**: the courier walks up the landing, not the street (the street is a separate
+  view); the player puts the bag down on closing the door, and picks it up again at the
+  table.

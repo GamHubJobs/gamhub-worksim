@@ -41,6 +41,9 @@ function at(
   }
 }
 
+/** When things happen as the courier hands over a takeaway (seconds into answering the door). */
+export const DELIVERY_TIMES = { open: 1.2, greet: 2.2, take: 1.4, close: 1.6 }
+
 export interface HomeLayout {
   boxes: Box[]
   activities: Activity[]
@@ -51,6 +54,8 @@ export function homeLayout(
   home: Home,
   furniture: Record<string, { item: string; colour: number }>,
   morning: boolean,
+  /** The takeaway was left on the doorstep (picked up, rather than handed over). */
+  doorstep = false,
 ): HomeLayout {
   const [w, d] = home.size
   const back = -d / 2
@@ -221,24 +226,102 @@ export function homeLayout(
       },
     )
   }
+  // A takeaway: ordered on the phone; then a courier at the door hands it over
+  // (DELIVERY_TIMES, which the courier in HomeScene keeps to); then eaten.
   add(
     'takeaway',
     'order a takeaway',
-    door,
+    seat ?? door,
     [
+      ...(seat ? [{ clip: 'sit' as const, seconds: 1.2, label: 'Sitting down' }] : []),
       {
         clip: 'phone',
-        seconds: 3,
-        label: 'Ordering a takeaway',
+        seconds: 4,
+        label: 'Choosing and ordering a takeaway',
         hold: { right: 'phone' },
       },
-      { clip: 'push-door', seconds: 1.5, label: 'Collecting it at the door' },
+    ],
+    {
+      sounds: [
+        { at: 2, id: 'beep' },
+        { at: 4.6, id: 'phone' },
+      ],
+    },
+  )
+  add('takeaway-wait', 'wait for the takeaway', seat ?? door, [
+    ...(seat ? [{ clip: 'sit' as const, seconds: 1.2, label: 'Sitting down' }] : []),
+    {
+      clip: 'phone',
+      seconds: 5,
+      label: 'Waiting for the takeaway',
+      hold: { right: 'phone' },
+    },
+  ])
+  add(
+    'takeaway-door',
+    doorstep ? 'pick up the takeaway from the doorstep' : 'answer the door',
+    door,
+    doorstep
+      ? [
+          { clip: 'push-door', seconds: DELIVERY_TIMES.open, label: 'Opening the door' },
+          {
+            clip: 'crouch',
+            seconds: 1.4,
+            label: 'Picking up the bag from the doorstep',
+            hold: { right: 'bag' },
+          },
+          {
+            clip: 'push-door',
+            seconds: 1,
+            label: 'Closing the door',
+            hold: { right: 'bag' },
+          },
+        ]
+      : [
+          { clip: 'push-door', seconds: DELIVERY_TIMES.open, label: 'Opening the door' },
+          {
+            clip: 'talk',
+            seconds: DELIVERY_TIMES.greet,
+            label: 'Saying hello to the courier',
+          },
+          {
+            clip: 'reach',
+            seconds: DELIVERY_TIMES.take,
+            label: 'Taking the bag',
+            hold: { right: 'bag' },
+          },
+          {
+            clip: 'push-door',
+            seconds: DELIVERY_TIMES.close,
+            label: 'Saying thanks and closing the door',
+            hold: { right: 'bag' },
+          },
+        ],
+    {
+      view: 'behind',
+      sounds: [
+        { at: 0.3, id: 'door' },
+        { at: doorstep ? 3.2 : 6.3, id: 'door' },
+      ],
+    },
+  )
+  add(
+    'takeaway-eat',
+    'eat the takeaway',
+    tableSeat ?? door,
+    [
+      {
+        clip: 'reach',
+        seconds: 1.6,
+        label: 'Unpacking the takeaway',
+        hold: { right: 'bag' },
+      },
       ...sitThen(tableSeat, 'eat', 8, 'Eating the takeaway', { right: 'fork' }),
     ],
     {
       sounds: [
-        { at: 3.5, id: 'door' },
-        { at: 7, id: 'bite', every: 3.2 },
+        { at: 0.4, id: 'rustle' },
+        { at: 4, id: 'bite', every: 3.2 },
       ],
     },
   )

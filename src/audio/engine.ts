@@ -472,6 +472,13 @@ export function createEngine(): AudioEngine | null {
       case 'beep':
         tone(to, 1900, t, 0.08, { gain: 0.07 * v })
         break
+      case 'doorbell':
+        // Ding-dong: two soft chimes, a third apart, each ringing on.
+        tone(to, 659, t, 0.9, { gain: 0.16 * v })
+        tone(to, 1318, t, 0.5, { gain: 0.03 * v })
+        tone(to, 523, t + 0.55, 1.1, { gain: 0.16 * v })
+        tone(to, 1046, t + 0.55, 0.6, { gain: 0.03 * v })
+        break
       case 'greet':
         // A short, friendly "mm-hm": a voice-like hum, not words.
         murmur(to, t, 0.35, 0.12 * v, 1)
