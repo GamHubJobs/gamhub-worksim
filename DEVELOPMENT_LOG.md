@@ -167,6 +167,60 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-06 · World 2: the people of the office live their day
+
+### Cause
+
+The colleague walking left and right behind the desks was a placeholder: a fixed
+route between two points, out and back forever, with no purpose, no knowledge of the
+furniture or of anyone else. Everyone else in the office was fixed in place.
+
+### Built
+
+- **A schedule for everyone** (`src/world/npc/schedule.ts`, the office's people in
+  `src/office/scene/officeCast.ts`): eleven people, each with a role, a place of their
+  own and a day: arriving, the stand-up round the whiteboard, weekly planning in the
+  manager's office, work at their place, errands with a purpose (the printer, the
+  water cooler, a word with a colleague, the plants, stretching), lunch (the break
+  room, the counter, the desk, or out) and going home. Habits differ by person. It
+  follows the game clock, is the same every time, and no two people share a place.
+- **Walking with a purpose** (`agent.ts`): round the furniture on the shared walking
+  grid, stopping on arrival, sitting down at a seat, waiting for someone in the way and
+  going round them, and after three failed tries stepping on rather than trying forever.
+  People and the player do not walk through one another (`bodies.ts`).
+- **Talking**: someone the player goes to talk to comes back to their place, faces them,
+  and afterwards goes back to what they were doing.
+- **A printer and a standing desk** in the office, for the errands and the coordinator.
+- The pacing colleague is now the office coordinator. Docs: `docs/OFFICE_PEOPLE.md`.
+
+### Tests
+
+- Unit tests (15): every place exists; arriving and going home; the stand-up and
+  planning; lunch by person; no two people at one place, every minute of a week; visits
+  only to someone at their desk; a bounded number of moves a day; coming back to talk;
+  walking in, staying put; going round furniture; waiting for someone in the way; a way
+  that cannot be found is given up on; leaving through the door.
+- Browser tests (`npc.spec.ts`): walking to the stand-up and stopping there, no one
+  moving while it lasts, back to the desks after; lunch and going home; the senior
+  colleague coming back from the stand-up to talk and rejoining it after.
+- Screenshots: `docs/screenshots/npc/`.
+- Fixed while testing: on computers drawing 3D in software, people walking redrew the
+  office five times a second; now once a second, like the rest of the office there (the
+  player moving still draws smoothly). The keyboard-only test now waits for the walk to
+  the desk (it goes round the furniture and people, a few seconds longer than the old
+  straight line). The collision tests count frames inside something in the game, rather
+  than asking many times a second (slow under load), and have longer limits.
+- Results: 2,145 unit tests passed. Chromium browser tests, full run: 170 passed, 2
+  passed on a retry (getting to know colleagues; work reflected in the office), 1 failed
+  (the main accessibility check ran past its 4-minute limit twice under the full run;
+  alone it passes in about a minute; its limit is now 6 minutes, not yet rerun in a full
+  run), 3 skipped (the opt-in screenshots). The first full run also had the keyboard-only
+  test and the collision tests failing, fixed as above and passed on their own. 5
+  production-build tests passed; Firefox, WebKit and Edge 8 passed, 1 skipped (as
+  before). Start screen 288 kB (unchanged).
+
+---
+
 ## 2026-11-06 · World 1: solid things everywhere
 
 ### Cause

@@ -63,7 +63,9 @@ test('a working session with the keyboard only: start, the office, a conversatio
 
   // Read the first email: the computer opens with Mail in front.
   const apps = page.getByRole('navigation', { name: 'Apps' })
-  await expect(page.getByTestId('window-mail')).toHaveAttribute('data-active', 'true')
+  await expect(page.getByTestId('window-mail')).toHaveAttribute('data-active', 'true', {
+    timeout: 45_000,
+  })
   await tabTo(page, page.getByRole('button', { name: /Welcome to Cobalt Ridge/ }))
   await page.keyboard.press('Enter')
   await expect(page.getByTestId('mail-message')).toContainText('Welcome')

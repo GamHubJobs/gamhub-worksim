@@ -334,6 +334,8 @@ export function OfficeView({
                   }
                 >
                   <OfficeScene
+                    day={work.day}
+                    minute={work.minute}
                     walk={{
                       controls: api.controls,
                       request,

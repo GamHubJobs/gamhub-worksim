@@ -21,14 +21,15 @@ async function audit(page: Page, screen: string, skipRules: string[] = []) {
 }
 
 test('the main screens pass automated accessibility checks', async ({ page }) => {
-  test.setTimeout(240_000)
+  // About twenty audits: under a full parallel run they take several minutes.
+  test.setTimeout(360_000)
   const problems: string[] = []
   await page.goto('/')
   problems.push(...(await audit(page, 'start screen')))
   await page.getByRole('radio', { name: /Office Administration/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('office')).toBeVisible()
+  await expect(page.getByTestId('office')).toBeVisible({ timeout: 30_000 })
   problems.push(...(await audit(page, 'office')))
   await page.getByRole('button', { name: 'Help', exact: true }).click()
   problems.push(...(await audit(page, 'help')))

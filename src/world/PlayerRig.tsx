@@ -42,6 +42,7 @@ import {
 } from './character/controller'
 import { buildGrid, findPath, nearestFree, type Grid, type Point } from './physics/nav'
 import { scanSolids, tall } from './physics/solids'
+import { othersThan, removeBody, setBody } from './npc/bodies'
 import { CollisionDebug } from './physics/CollisionDebug'
 import { useCollisionDebug } from './physics/useCollisionDebug'
 import { clipFrame, type RigFrame } from './character/rig'
@@ -375,6 +376,7 @@ export function PlayerRig(props: PlayerRigProps) {
   // Leaving the place mid-activity gives nothing.
   useEffect(
     () => () => {
+      removeBody('player')
       if (mode.current.kind !== 'free') {
         const m = mode.current
         mode.current = { kind: 'free' }
@@ -399,7 +401,9 @@ export function PlayerRig(props: PlayerRigProps) {
       scanAt.current = 3
       rescan()
     }
-    const boxes = solids.current.all
+    // The people about are solid too (they move, so they are not in the scan).
+    const people = othersThan('player')
+    const boxes = people.length ? [...solids.current.all, ...people] : solids.current.all
     const steps = Math.max(1, Math.ceil(dt / 0.04))
     const sub = dt / steps
     const c = controls.current
@@ -645,19 +649,27 @@ export function PlayerRig(props: PlayerRigProps) {
       }
     }
     state.current = s
+    setBody('player', s.x, s.z, 0.3)
     if (mode.current.kind !== 'acting') now.current = { ...now.current, x: s.x, z: s.z }
-    if (import.meta.env.DEV)
-      (window as unknown as { __worksimPlayer?: unknown }).__worksimPlayer = {
+    if (import.meta.env.DEV) {
+      const w = window as unknown as {
+        __worksimPlayer?: { insideFrames?: number }
+      }
+      // Inside something solid (only free walking counts: sitting is meant to be).
+      const inside =
+        mode.current.kind === 'free' &&
+        !exit.current &&
+        overlapsAny(s.x, s.z, 0.27, boxes)
+      w.__worksimPlayer = {
         x: s.x,
         z: s.z,
         mode: mode.current.kind,
         riding: ride.current,
-        // Inside something solid (only free walking counts: sitting is meant to be).
-        inside:
-          mode.current.kind === 'free' &&
-          !exit.current &&
-          overlapsAny(s.x, s.z, 0.27, boxes),
-      }
+        inside,
+        // Frames found inside something, ever (for tests).
+        insideFrames: (w.__worksimPlayer?.insideFrames ?? 0) + (inside ? 1 : 0),
+      } as typeof w.__worksimPlayer
+    }
 
     const g = group.current
     if (g) {

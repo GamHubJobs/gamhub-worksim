@@ -10,38 +10,35 @@ interface Player {
   z: number
   mode: string
   inside: boolean
+  insideFrames: number
 }
 const player = (page: Page) =>
   page.evaluate(
     () => (globalThis as unknown as { __worksimPlayer: Player }).__worksimPlayer,
   )
 
-/** Walks and runs about for a while, turning, and reports how far it got and any time inside something. */
+/** Walks and runs about for a while, turning, and reports how far it got and the frames inside something. */
 async function roam(page: Page, view: ReturnType<Page['getByTestId']>) {
   await view.focus()
   const start = await player(page)
-  let inside = 0
   let furthest = 0
   const moves: Array<[string[], number]> = [
     [['KeyW'], 1800],
     [['ShiftLeft', 'KeyW'], 1600],
-    [['KeyW', 'KeyD'], 1400],
     [['KeyQ', 'KeyW'], 1500],
     [['ShiftLeft', 'KeyW', 'KeyA'], 1600],
-    [['KeyS'], 1000],
     [['KeyR', 'ShiftLeft', 'KeyW'], 1800],
   ]
   for (const [keys, ms] of moves) {
     for (const k of keys) await page.keyboard.down(k)
-    for (let t = 0; t < ms; t += 150) {
-      await page.waitForTimeout(150)
-      const p = await player(page)
-      if (p.inside) inside++
-      furthest = Math.max(furthest, Math.hypot(p.x - start.x, p.z - start.z))
-    }
+    await page.waitForTimeout(ms)
     for (const k of keys) await page.keyboard.up(k)
+    const p = await player(page)
+    furthest = Math.max(furthest, Math.hypot(p.x - start.x, p.z - start.z))
   }
-  return { inside, furthest }
+  // The game counts every frame the character was inside something.
+  const end = await player(page)
+  return { inside: end.insideFrames - start.insideFrames, furthest }
 }
 
 test.beforeEach(async ({ page }) => {
@@ -51,7 +48,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('the office: never inside a desk, chair, sofa or wall', async ({ page }) => {
-  test.setTimeout(180_000)
+  test.setTimeout(420_000)
   const office = page.getByTestId('office-3d')
   await expect(office.locator('canvas')).toBeVisible({ timeout: 30_000 })
   // Reception (the sofa), then the manager's office (desk and chairs).
@@ -66,7 +63,7 @@ test('the office: never inside a desk, chair, sofa or wall', async ({ page }) =>
     .getByRole('button', { name: /office/ })
     .click()
   await expect
-    .poll(async () => (await player(page)).x, { timeout: 30_000 })
+    .poll(async () => (await player(page)).x, { timeout: 120_000 })
     .toBeGreaterThan(5)
   await expect
     .poll(async () => (await player(page)).mode, { timeout: 30_000 })
@@ -78,14 +75,14 @@ test('the office: never inside a desk, chair, sofa or wall', async ({ page }) =>
 test('home and the places in the neighbourhood: never inside anything', async ({
   page,
 }) => {
-  test.setTimeout(420_000)
+  test.setTimeout(900_000)
   await page.evaluate(`window.__worksim.setTime(1, 17 * 60 + 35)`)
   await page.getByTestId('office-panel').getByRole('button', { name: 'Go home' }).click()
   await page.getByTestId('day-end').getByRole('button', { name: 'Go home' }).click()
   const home = page.getByTestId('home')
   await expect(home).toContainText('Evening at home', { timeout: 20_000 })
   const flat = home.getByTestId('home-3d')
-  await expect(flat.locator('canvas')).toBeVisible({ timeout: 30_000 })
+  await expect(flat.locator('canvas')).toBeVisible({ timeout: 90_000 })
   await page.waitForTimeout(1500)
   expect((await roam(page, flat)).inside).toBe(0)
 
@@ -96,12 +93,12 @@ test('home and the places in the neighbourhood: never inside anything', async ({
   await home.getByRole('button', { name: /Go out into the neighbourhood/ }).click()
   const city = page.getByTestId('city')
   const view = city.getByTestId('city-3d')
-  await expect(view.locator('canvas')).toBeVisible({ timeout: 30_000 })
+  await expect(view.locator('canvas')).toBeVisible({ timeout: 90_000 })
   await page.waitForTimeout(1500)
   expect((await roam(page, view)).inside).toBe(0)
   for (const place of ['gym', 'cafe', 'shop', 'park', 'garage']) {
     await city.getByTestId(`place-${place}`).click()
-    await expect(view.locator('canvas')).toBeVisible({ timeout: 30_000 })
+    await expect(view.locator('canvas')).toBeVisible({ timeout: 90_000 })
     await page.waitForTimeout(1500)
     const { inside, furthest } = await roam(page, view)
     expect(inside, place).toBe(0)

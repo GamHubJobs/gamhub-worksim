@@ -51,7 +51,16 @@ const STILL = prefersReducedMotion()
 import { getDeskItem, type DeskItem } from '../../content/desk'
 import { Desk, Floor, OfficeChair } from './furniture'
 import { Box, Place, Plant, Sofa } from './parts'
-import { PeopleDetail, Person, Walker, type PersonLook } from './people'
+import { PeopleDetail, type PersonLook } from './people'
+import { Crowd } from '../../world/npc/Crowd'
+import {
+  DOOR,
+  OFFICE_GATHERINGS,
+  OFFICE_PEOPLE,
+  OFFICE_PLACES,
+  PRINTER,
+  STANDING_DESK,
+} from './officeCast'
 import { isLow, useGraphicsQuality } from '../../ui/graphics'
 
 /**
@@ -164,6 +173,28 @@ const LOOKS = {
   },
 } satisfies Record<string, PersonLook>
 
+/** Who looks like whom, by their place in the office's cast. */
+const CAST_LOOKS: Record<string, PersonLook> = {
+  reception: LOOKS.reception,
+  manager: LOOKS.manager,
+  senior: LOOKS.senior,
+  facilities: LOOKS.facilities,
+  backL: LOOKS.backLeft,
+  backM: LOOKS.backMiddle,
+  backR: LOOKS.backRight,
+  front2: {
+    ...LOOKS.senior,
+    top: '#be123c',
+    skin: 4,
+    hair: 'bob',
+    hairColor: 2,
+    glasses: false,
+  },
+  coordinator: LOOKS.walker,
+  admin: LOOKS.filing,
+  analyst: LOOKS.lunch,
+}
+
 export interface OfficeSceneProps {
   spot: SpotId
   /** Highlights the computer when there is something new to read. */
@@ -175,6 +206,9 @@ export interface OfficeSceneProps {
   onInteract: (interaction: InteractionId) => void
   /** Who the player is talking to (a colleague ID), so they face the player and talk. */
   talkingTo?: string | null
+  /** The office clock, for where everyone is (a day number and minutes since midnight). */
+  day: number
+  minute: number
   /** Walking the office in third person (instead of the camera moving between areas). */
   walk?: OfficeWalk
 }
@@ -275,15 +309,40 @@ function OfficeScene(props: OfficeSceneProps) {
       )}
       <PeopleDetail low={lowPower}>
         <Building playerName={props.playerName} />
-        <Reception onInteract={props.onInteract} talkingTo={props.talkingTo} />
+        <Reception />
         <Workspace
           computerAlert={props.computerAlert}
           desk={props.desk}
           onInteract={props.onInteract}
-          talkingTo={props.talkingTo}
         />
-        <ManagerOffice onInteract={props.onInteract} talkingTo={props.talkingTo} />
-        <BreakRoom onInteract={props.onInteract} talkingTo={props.talkingTo} />
+        <ManagerOffice />
+        <BreakRoom onInteract={props.onInteract} />
+        <Crowd
+          people={OFFICE_PEOPLE}
+          places={OFFICE_PLACES}
+          gatherings={OFFICE_GATHERINGS}
+          door={DOOR}
+          day={props.day}
+          minute={props.minute}
+          looks={CAST_LOOKS}
+          talkingTo={props.talkingTo}
+          low={lowPower}
+          wrap={(id, person) => {
+            const talk = OFFICE_PEOPLE.find((p) => p.id === id)?.talk as
+              InteractionId | undefined
+            return talk ? (
+              <Interactive
+                id={talk}
+                labelPosition={[0, 1.95, 0]}
+                onInteract={props.onInteract}
+              >
+                {person}
+              </Interactive>
+            ) : (
+              person
+            )
+          }}
+        />
       </PeopleDetail>
       {SPOTS.map((s) => (
         <Marker
@@ -753,9 +812,9 @@ function Clock({ position }: { position: Vector }) {
 // Areas
 // ---------------------------------------------------------------------------
 
-type Interact = { onInteract: (id: InteractionId) => void; talkingTo?: string | null }
+type Interact = { onInteract: (id: InteractionId) => void }
 
-function Reception({ onInteract, talkingTo }: Interact) {
+function Reception() {
   return (
     <group>
       {/* Feature wall with the company name */}
@@ -788,19 +847,6 @@ function Reception({ onInteract, talkingTo }: Interact) {
       />
       <Box size={[3.2, 0.12, 0.02]} position={[-6.6, 0.35, 4.56]} color={COLORS.accent} />
       <Box size={[0.5, 0.32, 0.03]} position={[-7.3, 1.28, 3.95]} color={COLORS.screen} />
-      <Interactive
-        id="receptionist"
-        labelPosition={[-6.2, 2.05, 3.4]}
-        onInteract={onInteract}
-      >
-        <Person
-          position={[-6.2, 0, 3.4]}
-          rotation={Math.PI}
-          look={LOOKS.reception}
-          talking={talkingTo === 'reception'}
-          phase={1.3}
-        />
-      </Interactive>
       {/* Waiting area */}
       <Sofa position={[-10.2, 0, 6.6]} rotation={Math.PI / 2} />
       <Box
@@ -905,7 +951,6 @@ function Workspace({
   computerAlert,
   desk,
   onInteract,
-  talkingTo,
 }: Interact & { computerAlert: boolean; desk: string }) {
   const items = desk
     .split(',')
@@ -913,19 +958,11 @@ function Workspace({
   const mug = items.find((i) => i.slot === 'mug')?.color
   const chair = items.find((i) => i.slot === 'chair')?.color ?? '#1d4ed8'
   // Two rows of desks, back to back. The player's desk is front row, middle.
-  const front: Array<[number, string | null]> = [
-    [-1.2, '#0f766e'],
-    [0.6, null],
-    [2.4, null],
-  ]
-  const back: Array<[number, string]> = [
-    [-1.2, '#7c3aed'],
-    [0.6, '#ca8a04'],
-    [2.4, '#0369a1'],
-  ]
+  const front = [-1.2, 0.6, 2.4]
+  const back = [-1.2, 0.6, 2.4]
   return (
     <group>
-      {front.map(([x, shirt], i) =>
+      {front.map((x) =>
         x === 0.6 ? (
           <Interactive
             key={x}
@@ -942,47 +979,13 @@ function Workspace({
           <group key={x}>
             <Desk position={[x, 0, 1.1]} />
             <OfficeChair position={[x, 0, 1.75]} />
-            {shirt &&
-              (i === 0 ? (
-                // The senior colleague sits next to the player.
-                <Interactive
-                  id="senior"
-                  labelPosition={[x, 1.75, 1.65]}
-                  onInteract={onInteract}
-                >
-                  <Person
-                    position={[x, 0, 1.65]}
-                    look={LOOKS.senior}
-                    seated
-                    typing={talkingTo !== 'senior'}
-                    talking={talkingTo === 'senior'}
-                    phase={i * 2.1}
-                  />
-                </Interactive>
-              ) : (
-                <Person
-                  position={[x, 0, 1.65]}
-                  look={{ ...LOOKS.senior, top: shirt, skin: i + 2 }}
-                  seated
-                  typing
-                  phase={i * 2.1}
-                />
-              ))}
           </group>
         ),
       )}
-      {back.map(([x], i) => (
+      {back.map((x) => (
         <group key={x}>
           <Desk position={[x, 0, -0.45]} rotation={Math.PI} />
           <OfficeChair position={[x, 0, -1.1]} rotation={Math.PI} />
-          <Person
-            position={[x, 0, -1.0]}
-            rotation={Math.PI}
-            look={[LOOKS.backLeft, LOOKS.backMiddle, LOOKS.backRight][i]}
-            seated
-            typing={i !== 2}
-            phase={i * 1.7 + 0.5}
-          />
         </group>
       ))}
       {/* Low divider between the rows */}
@@ -1028,30 +1031,58 @@ function Workspace({
           ))}
         </Place>
       </Interactive>
-      {/* A colleague standing at a filing cabinet */}
+      {/* The filing cabinet (the office administrator works here) */}
       <Box
         size={[0.5, 1.1, 0.6]}
         position={[4.3, 0.55, -1.5]}
         color="#cbd5e1"
         radius={0.02}
       />
-      <Person
-        position={[4.3, 0, -0.85]}
-        rotation={Math.PI}
-        look={LOOKS.filing}
-        phase={3.3}
-      />
       <Plant position={[-2.6, 0, -1.6]} />
       <Plant position={[4.4, 0, 3.6]} scale={1.2} />
-      {/* A colleague walking through the office, behind the back row of desks */}
-      <Walker
-        path={[
-          [-2.0, 0, -2.3],
-          [3.5, 0, -2.3],
-        ]}
-        look={LOOKS.walker}
-        phase={0.9}
-      />
+      {/* The printer, by the back windows */}
+      <Place position={[PRINTER.x, 0, PRINTER.z]}>
+        <Box
+          size={[0.75, 0.75, 0.6]}
+          position={[0, 0.375, 0]}
+          color="#e2e8f0"
+          radius={0.03}
+        />
+        <Box
+          size={[0.7, 0.2, 0.55]}
+          position={[0, 0.85, -0.02]}
+          color="#cbd5e1"
+          radius={0.02}
+        />
+        <Box size={[0.4, 0.02, 0.3]} position={[0, 0.96, 0.05]} color="#ffffff" />
+        <Box size={[0.16, 0.06, 0.02]} position={[0.22, 0.86, 0.27]} color="#334155" />
+        <Box
+          size={[0.04, 0.02, 0.01]}
+          position={[0.3, 0.88, 0.28]}
+          color="#22c55e"
+          emissive="#22c55e"
+        />
+      </Place>
+      {/* The coordinator's standing desk, with a laptop and papers */}
+      <Place position={[STANDING_DESK.x, 0, STANDING_DESK.z]}>
+        <Box
+          size={[1.1, 0.04, 0.6]}
+          position={[0, 1.08, 0]}
+          color={COLORS.wood}
+          radius={0.01}
+        />
+        <Box size={[0.08, 1.06, 0.08]} position={[-0.45, 0.53, 0]} color={COLORS.metal} />
+        <Box size={[0.08, 1.06, 0.08]} position={[0.45, 0.53, 0]} color={COLORS.metal} />
+        <Box size={[1.0, 0.04, 0.5]} position={[0, 0.02, 0]} color={COLORS.metal} />
+        <Box size={[0.34, 0.02, 0.24]} position={[-0.15, 1.11, 0.05]} color="#1e293b" />
+        <Box
+          size={[0.34, 0.22, 0.02]}
+          position={[-0.15, 1.22, -0.07]}
+          rotation={0}
+          color={COLORS.screen}
+        />
+        <Box size={[0.22, 0.01, 0.3]} position={[0.3, 1.105, 0.05]} color="#f8fafc" />
+      </Place>
     </group>
   )
 }
@@ -1071,7 +1102,7 @@ function AlertBubble({ position }: { position: Vector }) {
   )
 }
 
-function ManagerOffice({ onInteract, talkingTo }: Interact) {
+function ManagerOffice() {
   return (
     <group>
       {/* Glass walls with a door opening */}
@@ -1114,16 +1145,6 @@ function ManagerOffice({ onInteract, talkingTo }: Interact) {
         color={COLORS.screen}
       />
       <OfficeChair position={[8.4, 0, -5.2]} rotation={Math.PI} color="#0f172a" />
-      <Interactive id="manager" labelPosition={[8.4, 1.9, -5.1]} onInteract={onInteract}>
-        <Person
-          position={[8.4, 0, -5.1]}
-          rotation={Math.PI}
-          look={LOOKS.manager}
-          seated
-          talking={talkingTo === 'manager'}
-          phase={0.7}
-        />
-      </Interactive>
       <OfficeChair position={[7.8, 0, -3.3]} color="#64748b" />
       <OfficeChair position={[9.0, 0, -3.3]} color="#64748b" />
       {/* Bookshelf */}
@@ -1167,7 +1188,7 @@ function ManagerOffice({ onInteract, talkingTo }: Interact) {
   )
 }
 
-function BreakRoom({ onInteract, talkingTo }: Interact) {
+function BreakRoom({ onInteract }: Interact) {
   return (
     <group>
       {/* Half-height divider to the workspace */}
@@ -1202,20 +1223,6 @@ function BreakRoom({ onInteract, talkingTo }: Interact) {
           <meshStandardMaterial color="#ffffff" />
         </mesh>
       </Interactive>
-      {/* Tom by the coffee machine */}
-      <Interactive
-        id="colleague"
-        labelPosition={[-8.4, 2.05, -6.2]}
-        onInteract={onInteract}
-      >
-        <Person
-          position={[-8.4, 0, -6.2]}
-          rotation={Math.PI + 0.5}
-          look={LOOKS.facilities}
-          talking={talkingTo === 'facilities'}
-          phase={2.4}
-        />
-      </Interactive>
       {/* Water cooler */}
       <Place position={[-4.8, 0, -7.4]}>
         <Box
@@ -1246,7 +1253,6 @@ function BreakRoom({ onInteract, talkingTo }: Interact) {
           color="#f59e0b"
         />
       ))}
-      <Person position={[-7.4, 0, -2.6]} look={LOOKS.lunch} seated phase={4.1} />
       {/* Notice board */}
       <Interactive
         id="noticeboard"
