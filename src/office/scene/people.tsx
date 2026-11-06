@@ -537,7 +537,12 @@ export function Person({
   const hipX = 0.095 * width
 
   return (
-    <group ref={outer} position={position} rotation={[0, rotation, 0]}>
+    <group
+      ref={outer}
+      position={position}
+      rotation={[0, rotation, 0]}
+      userData={{ person: true }}
+    >
       <group ref={turn} scale={look.height ?? 1}>
         {/* Lowered, raised or laid down as a whole about the hips (activities) */}
         <group ref={pose} position={[0, HIP.standing, 0]}>
@@ -1074,7 +1079,7 @@ export function Walker({
   })
 
   return (
-    <group ref={group} position={path[0]}>
+    <group ref={group} position={path[0]} userData={{ passable: true }}>
       {/* A soft shadow that goes with them */}
       <mesh
         geometry={GEO.blob}

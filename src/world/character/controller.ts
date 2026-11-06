@@ -4,7 +4,10 @@
  * furniture. Pure, so it is the same on every computer and can be tested.
  *
  * The world is flat; solid things are boxes on the floor plan (x, z) with a
- * height. The character is a circle on the floor (and can step over nothing).
+ * height, turned to any angle, or round (a post, a round table). The character
+ * is an upright capsule: a circle on the floor of its radius, as tall as the
+ * character. Movement is taken in short steps, so running (or a fast frame)
+ * cannot pass through a thin wall.
  */
 export interface Box {
   /** Centre and half-size on the floor plan. */
@@ -14,6 +17,73 @@ export interface Box {
   hz: number
   /** Top of the box (for the camera), metres. */
   top: number
+  /** Turned about the vertical by this angle (radians, as three.js turns things). */
+  yaw?: number
+  /** Round: a circle of radius hx (hz is ignored). */
+  round?: boolean
+}
+
+/** The furthest the character moves before checking for solid things again (metres). */
+const MAX_MOVE = 0.1
+
+/**
+ * How far a circle overlaps a box, and the way out: [push x, push z], or null
+ * if it does not overlap.
+ */
+export function overlap(
+  x: number,
+  z: number,
+  radius: number,
+  b: Box,
+): [number, number] | null {
+  if (b.round) {
+    const dx = x - b.x
+    const dz = z - b.z
+    const d = Math.hypot(dx, dz)
+    const reach = b.hx + radius
+    if (d >= reach) return null
+    if (d < 1e-6) return [reach, 0]
+    return [(dx / d) * (reach - d), (dz / d) * (reach - d)]
+  }
+  // Into the box's own frame (it may be turned).
+  const c = b.yaw ? Math.cos(b.yaw) : 1
+  const s = b.yaw ? Math.sin(b.yaw) : 0
+  const wx = x - b.x
+  const wz = z - b.z
+  const lx = wx * c - wz * s
+  const lz = wx * s + wz * c
+  const cx = Math.max(-b.hx, Math.min(lx, b.hx))
+  const cz = Math.max(-b.hz, Math.min(lz, b.hz))
+  let px: number
+  let pz: number
+  const dx = lx - cx
+  const dz = lz - cz
+  const d2 = dx * dx + dz * dz
+  if (d2 >= radius * radius) return null
+  if (d2 > 1e-12) {
+    const d = Math.sqrt(d2)
+    px = (dx / d) * (radius - d)
+    pz = (dz / d) * (radius - d)
+  } else {
+    // The centre is inside the box: out by the nearest side.
+    const sides: Array<[number, number]> = [
+      [-b.hx - radius - lx, 0],
+      [b.hx + radius - lx, 0],
+      [0, -b.hz - radius - lz],
+      [0, b.hz + radius - lz],
+    ]
+    ;[px, pz] = sides.reduce((p, q) =>
+      Math.abs(q[0]) + Math.abs(q[1]) < Math.abs(p[0]) + Math.abs(p[1]) ? q : p,
+    )
+  }
+  // Back into the world.
+  return [px * c + pz * s, -px * s + pz * c]
+}
+
+/** Whether a circle overlaps any box (by more than a hair). */
+export function blocked(x: number, z: number, radius: number, boxes: Box[]): boolean {
+  for (const b of boxes) if (overlap(x, z, radius - 0.01, b)) return true
+  return false
 }
 
 export interface Input {
@@ -76,33 +146,41 @@ export function collide(
   radius: number,
   boxes: Box[],
 ): [number, number] {
-  for (let pass = 0; pass < 3; pass++) {
+  for (let pass = 0; pass < 4; pass++) {
     let moved = false
     for (const b of boxes) {
-      const cx = Math.max(b.x - b.hx, Math.min(x, b.x + b.hx))
-      const cz = Math.max(b.z - b.hz, Math.min(z, b.z + b.hz))
-      const dx = x - cx
-      const dz = z - cz
-      const d2 = dx * dx + dz * dz
-      if (d2 >= radius * radius) continue
+      const push = overlap(x, z, radius, b)
+      if (!push) continue
       moved = true
-      if (d2 > 1e-9) {
-        const d = Math.sqrt(d2)
-        x = cx + (dx / d) * radius
-        z = cz + (dz / d) * radius
-      } else {
-        // The centre is inside the box: out by the nearest side.
-        const out = [
-          [b.x - b.hx - radius - x, 0],
-          [b.x + b.hx + radius - x, 0],
-          [0, b.z - b.hz - radius - z],
-          [0, b.z + b.hz + radius - z],
-        ].sort((p, q) => Math.hypot(p[0], p[1]) - Math.hypot(q[0], q[1]))[0]
-        x += out[0]
-        z += out[1]
-      }
+      x += push[0]
+      z += push[1]
     }
     if (!moved) break
+  }
+  return [x, z]
+}
+
+/**
+ * Moves a circle from (x, z) by (dx, dz) in steps no longer than MAX_MOVE,
+ * sliding along what it meets, so nothing thin is skipped over, and never
+ * into a gap too narrow for it.
+ */
+export function sweep(
+  x: number,
+  z: number,
+  dx: number,
+  dz: number,
+  radius: number,
+  boxes: Box[],
+): [number, number] {
+  const n = Math.max(1, Math.ceil(Math.hypot(dx, dz) / MAX_MOVE))
+  const wasClear = !blocked(x, z, radius, boxes)
+  for (let i = 0; i < n; i++) {
+    const [nx, nz] = collide(x + dx / n, z + dz / n, radius, boxes)
+    // Squeezed between two things (a gap narrower than the body): no further.
+    if (wasClear && blocked(nx, nz, radius, boxes)) break
+    x = nx
+    z = nz
   }
   return [x, z]
 }
@@ -145,14 +223,18 @@ export function step(
     const dz = (fz * input.forward + rz * input.right) / len
     // Face the way of travel, turning smoothly.
     heading = turnTowards(b.heading, Math.atan2(-dx, -dz), TURN * dt)
-    x += dx * speed * dt
-    z += dz * speed * dt
+    ;[x, z] = sweep(x, z, dx * speed * dt, dz * speed * dt, RADIUS, boxes)
   } else if (speed > 0.05) {
     // Coming to a stop: a little further the way it was going.
-    x += -Math.sin(heading) * speed * dt
-    z += -Math.cos(heading) * speed * dt
-  }
-  ;[x, z] = collide(x, z, RADIUS, boxes)
+    ;[x, z] = sweep(
+      x,
+      z,
+      -Math.sin(heading) * speed * dt,
+      -Math.cos(heading) * speed * dt,
+      RADIUS,
+      boxes,
+    )
+  } else [x, z] = collide(x, z, RADIUS, boxes)
   // Jumping and landing.
   let { y, vy, grounded } = b
   if (input.jump && grounded && !input.crouch) {
@@ -193,7 +275,7 @@ export function walkTo(
   const [x, z] =
     through || d < 0.6
       ? [b.x + (dx / d) * speed * dt, b.z + (dz / d) * speed * dt]
-      : collide(b.x + (dx / d) * speed * dt, b.z + (dz / d) * speed * dt, RADIUS, boxes)
+      : sweep(b.x, b.z, (dx / d) * speed * dt, (dz / d) * speed * dt, RADIUS, boxes)
   return { body: { ...b, x, z, heading, speed }, arrived: false }
 }
 
@@ -252,7 +334,7 @@ export function drive(c: CarState, input: Input, dt: number, boxes: Box[]): CarS
   const heading = c.heading - input.right * CAR.turn * grip * dt
   let x = c.x - Math.sin(heading) * speed * dt
   let z = c.z - Math.cos(heading) * speed * dt
-  const [cx, cz] = collide(x, z, CAR.radius, boxes)
+  const [cx, cz] = sweep(c.x, c.z, x - c.x, z - c.z, CAR.radius, boxes)
   // Hitting something stops the car.
   if (Math.hypot(cx - x, cz - z) > 1e-3) speed *= 0.3
   x = cx

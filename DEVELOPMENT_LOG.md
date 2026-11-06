@@ -167,6 +167,48 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-06 · World 1: solid things everywhere
+
+### Cause
+
+Each place had a hand-written list of solid boxes, separate from the furniture drawn,
+so anything left off the list could be walked through (the manager's visitor chairs,
+the chairs round tables, much of the home); walks to an activity went in a straight
+line and stepped through furniture whenever blocked; and two things close together
+could squeeze the character into the gap between them.
+
+### Built
+
+- **Solid from what is drawn** (`src/world/physics/solids.ts`): the player reads the
+  scene it is in and every object standing between 25 cm and 1.2 m becomes a shape
+  matching it (turned boxes, circles for round things, people as circles). The same in
+  every place, and in any place added later. Read again every few seconds and on getting
+  into or out of the car.
+- **Collisions** (`controller.ts`): turned and round shapes; movement in steps of at
+  most 10 cm; never into a gap narrower than the character; the car the same.
+- **Finding the way** (`src/world/physics/nav.ts`): a grid and A*, used for walking to
+  activities and stages; stepping into place only for the last half metre; trying again
+  when blocked; stepping out of furniture afterwards.
+- **The camera** keeps clear of tall things only.
+- **Debug view** (F8, development only) and screenshots in `docs/screenshots/collision/`.
+
+### Tests
+
+- Unit tests: turned and round shapes, a thin wall at a run, being pushed out of a
+  sofa, the camera's ray, reading a room (sofa, round table, person; not the rug, the
+  lamp or traffic), walking at the sofa from all four sides, finding the way round a
+  wall, a spot inside furniture, no way at all, a gap too narrow.
+- New browser tests (`collision.spec.ts`): the real character walks and runs about,
+  turning, in the office (reception and the manager's office), home, the street, the
+  gym, the café, the shop, the park and the garage, and is never inside anything.
+  The first run found the character squeezed between the manager's chair and the glass
+  wall; fixed (no step into a gap too narrow).
+- Results: 2,130 unit tests passed; the collision tests passed (2 of 2), and the
+  browser tests for the places, the city, transport, life, the office, the workday and
+  the world passed (18 of 18). The full regression runs with the next milestone.
+
+---
+
 ## 2026-11-05 · Character 5: rain and controls
 
 ### Built

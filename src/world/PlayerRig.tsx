@@ -8,6 +8,10 @@
  * pressing E again stops it part way, and nothing is given.
  *
  * Used by every place with a walkable 3D view, so they all behave the same.
+ *
+ * What is solid comes from what is drawn (physics/solids.ts), on top of the
+ * place's own walls; walks to an activity find a way round things
+ * (physics/nav.ts) and only step into place at the very end.
  */
 import { useFrame, useThree } from '@react-three/fiber'
 import {
@@ -34,7 +38,12 @@ import {
   walkTo,
   type Body,
   type Box,
+  blocked as overlapsAny,
 } from './character/controller'
+import { buildGrid, findPath, nearestFree, type Grid, type Point } from './physics/nav'
+import { scanSolids, tall } from './physics/solids'
+import { CollisionDebug } from './physics/CollisionDebug'
+import { useCollisionDebug } from './physics/useCollisionDebug'
 import { clipFrame, type RigFrame } from './character/rig'
 import {
   heldAt,
@@ -160,8 +169,86 @@ function startOf(a: Activity, index: number): number {
 }
 
 export function PlayerRig(props: PlayerRigProps) {
-  const { boxes, ceiling, activities, controls, now, hands } = props
+  const { ceiling, activities, controls, now, hands } = props
   const camera = useThree((s) => s.camera)
+  const scene = useThree((s) => s.scene)
+  // What is solid: the place's walls and everything drawn (read from the scene),
+  // the tall things for the camera, and the walking grid (made when needed).
+  const solids = useRef<{ all: Box[]; camera: Box[]; grid: Grid | null; sig: string }>({
+    all: props.boxes,
+    camera: props.boxes,
+    grid: null,
+    sig: '',
+  })
+  const scanAt = useRef(0.3)
+  const debug = useCollisionDebug()
+  const [shown, setShown] = useState<Box[]>([])
+  function rescan() {
+    const g = group.current
+    if (!g?.parent) return
+    const found = scanSolids(scene, g, g.parent)
+    const all = [...latest.current.boxes, ...found]
+    // The same shapes as before: keep the walking grid.
+    let sig = String(all.length)
+    for (const b of all) sig += `,${b.x.toFixed(2)}:${b.z.toFixed(2)}:${b.hx.toFixed(2)}`
+    if (sig === solids.current.sig) return
+    solids.current = {
+      all,
+      camera: [...latest.current.boxes, ...tall(found)],
+      grid: null,
+      sig,
+    }
+    if (debug) setShown(all)
+    if (import.meta.env.DEV)
+      (window as unknown as { __worksimSolids?: Box[] }).__worksimSolids = all
+  }
+  function grid(): Grid {
+    if (!solids.current.grid) solids.current.grid = buildGrid(solids.current.all, 0.32)
+    return solids.current.grid
+  }
+  // Walking somewhere: the way round things, and the point being walked to.
+  const route = useRef<{ x: number; z: number; points: Point[]; tries: number } | null>(
+    null,
+  )
+  const [path, setPath] = useState<Point[]>([])
+  /**
+   * The next point to walk to on the way to (tx, tz), and whether to step
+   * straight there through furniture (the last bit into place, or when the
+   * way is blocked after trying again).
+   */
+  function waypoint(
+    tx: number,
+    tz: number,
+    s: Body,
+    dt: number,
+  ): { to: Point; ghost: boolean } {
+    let r = route.current
+    if (!r || r.x !== tx || r.z !== tz) {
+      const points = findPath(grid(), s, { x: tx, z: tz }) ?? [{ x: tx, z: tz }]
+      r = route.current = { x: tx, z: tz, points, tries: 0 }
+      approach.current = { x: NaN, z: NaN, best: Infinity, stuck: 0, time: 0 }
+      if (debug) setPath([{ x: s.x, z: s.z }, ...points])
+    }
+    // Past each point on the way.
+    while (
+      r.points.length > 1 &&
+      Math.hypot(r.points[0].x - s.x, r.points[0].z - s.z) < 0.25
+    )
+      r.points.shift()
+    const to = r.points[0]
+    const last = r.points.length === 1
+    const stuck = through(to.x, to.z, s, dt)
+    if (stuck && !last && r.tries < 2) {
+      // Something was in the way (a person): find the way again from here.
+      r.tries++
+      r.points = findPath(grid(), s, { x: tx, z: tz }) ?? [{ x: tx, z: tz }]
+      approach.current = { x: NaN, z: NaN, best: Infinity, stuck: 0, time: 0 }
+      return { to: r.points[0], ghost: false }
+    }
+    return { to, ghost: stuck && (last || r.tries >= 2) }
+  }
+  // After an activity, inside furniture (a chair pulled in): step out to clear floor.
+  const exit = useRef<Point | null>(null)
   const invalidate = useThree((s) => s.invalidate)
   const group = useRef<Group>(null)
   const motion = useRef<Motion>({ walking: false })
@@ -203,8 +290,8 @@ export function PlayerRig(props: PlayerRigProps) {
       a.best = d
       a.stuck = 0
     } else a.stuck += dt
-    // Close by, blocked, or sliding along a wall for too long: step through.
-    return d < 1.2 || a.stuck > 0.4 || a.time > 2.5 + d / 4
+    // Just short of the spot, or no nearer for a while: step through.
+    return d < 0.6 || a.stuck > 1 || a.time > 6 + d
   }
   const lastPrompt = useRef<string | null>(null)
   const lastProgress = useRef(-1)
@@ -246,7 +333,12 @@ export function PlayerRig(props: PlayerRigProps) {
       heldKey.current = ''
       setHeld({})
     }
-    // The character stands up where they are; the next step moves them clear of furniture.
+    // The character stands up where they are, then steps out to clear floor if
+    // that is inside furniture (not pushed out sideways through something else).
+    const s = state.current
+    route.current = null
+    if (overlapsAny(s.x, s.z, 0.3, solids.current.all))
+      exit.current = nearestFree(grid(), s)
     latest.current.onDone(m.activity, completed)
   }
 
@@ -268,6 +360,18 @@ export function PlayerRig(props: PlayerRigProps) {
     latest.current.onReady?.()
   }, [])
 
+  // Read what is solid again when the place's walls change, or on getting into or out of the car.
+  useEffect(() => {
+    scanAt.current = 0.05
+    invalidate()
+  }, [props.boxes, riding, invalidate])
+  // Turning the debug view on shows the shapes read last (read again to show them).
+  useEffect(() => {
+    solids.current.sig = ''
+    scanAt.current = 0.05
+    invalidate()
+  }, [debug, invalidate])
+
   // Leaving the place mid-activity gives nothing.
   useEffect(
     () => () => {
@@ -288,6 +392,14 @@ export function PlayerRig(props: PlayerRigProps) {
       w.__worksimFrames = (w.__worksimFrames ?? 0) + 1
     }
     const dt = Math.min(raw, 1)
+    // What is solid: read soon after the place appears, then every few seconds
+    // (furniture bought, the car parked somewhere else).
+    scanAt.current -= raw
+    if (scanAt.current <= 0) {
+      scanAt.current = 3
+      rescan()
+    }
+    const boxes = solids.current.all
     const steps = Math.max(1, Math.ceil(dt / 0.04))
     const sub = dt / steps
     const c = controls.current
@@ -377,7 +489,15 @@ export function PlayerRig(props: PlayerRigProps) {
           )
         pedal.current += dt * Math.min(1.4, s.speed / 4)
         rig.current = clipFrame('cycle', pedal.current)
+      } else if (exit.current && !moveKeys) {
+        let r = { body: s, arrived: false }
+        for (let k = 0; k < steps && !r.arrived; k++)
+          r = walkTo(r.body, exit.current.x, exit.current.z, sub, boxes, 1.2, true)
+        s = r.body
+        if (r.arrived) exit.current = null
+        redraw()
       } else {
+        exit.current = null
         for (let k = 0; k < steps; k++)
           s = step(s, { ...input, jump: input.jump && k === 0 }, o.yaw, sub, boxes)
         if (!before.grounded && s.grounded) audio.play('step')
@@ -435,14 +555,16 @@ export function PlayerRig(props: PlayerRigProps) {
       if (pressed.includes('interact') || moveKeys) stop(false)
       else {
         const a = m.activity
-        const ghost = through(a.anchor.x, a.anchor.z, s, dt)
+        const { to, ghost } = waypoint(a.anchor.x, a.anchor.z, s, dt)
         let r = { body: s, arrived: false }
         for (let k = 0; k < steps && !r.arrived; k++)
-          r = walkTo(r.body, a.anchor.x, a.anchor.z, sub, boxes, 1.9 * speedUp(), ghost)
+          r = walkTo(r.body, to.x, to.z, sub, boxes, 1.9 * speedUp(), ghost)
         s = r.body
         footsteps(s, dt)
         motion.current = { walking: s.speed > 0.2 }
+        if (r.arrived && (to.x !== a.anchor.x || to.z !== a.anchor.z)) r.arrived = false
         if (r.arrived) {
+          route.current = null
           s = { ...s, heading: turnTowards(s.heading, a.anchor.heading, Math.PI) }
           mode.current = { kind: 'acting', activity: a, t: 0, placed: 0, at: a.anchor }
           motion.current = { walking: false }
@@ -457,13 +579,13 @@ export function PlayerRig(props: PlayerRigProps) {
         if (next && m.placed < current.index) {
           // Walk (carrying what is held) to where this stage happens; the clock waits.
           rig.current = null
-          const ghost = through(next.x, next.z, s, dt)
+          const { to, ghost } = waypoint(next.x, next.z, s, dt)
           let r = { body: s, arrived: false }
           for (let k = 0; k < steps && !r.arrived; k++)
             r = walkTo(
               r.body,
-              next.x,
-              next.z,
+              to.x,
+              to.z,
               sub,
               boxes,
               (current.stage.run ? 3.6 : 1.9) * speedUp(),
@@ -472,7 +594,9 @@ export function PlayerRig(props: PlayerRigProps) {
           s = r.body
           footsteps(s, dt)
           motion.current = { walking: s.speed > 0.2, running: !!current.stage.run }
+          if (r.arrived && (to.x !== next.x || to.z !== next.z)) r.arrived = false
           if (r.arrived) {
+            route.current = null
             m.placed = current.index
             m.at = next
             m.view = undefined
@@ -522,6 +646,18 @@ export function PlayerRig(props: PlayerRigProps) {
     }
     state.current = s
     if (mode.current.kind !== 'acting') now.current = { ...now.current, x: s.x, z: s.z }
+    if (import.meta.env.DEV)
+      (window as unknown as { __worksimPlayer?: unknown }).__worksimPlayer = {
+        x: s.x,
+        z: s.z,
+        mode: mode.current.kind,
+        riding: ride.current,
+        // Inside something solid (only free walking counts: sitting is meant to be).
+        inside:
+          mode.current.kind === 'free' &&
+          !exit.current &&
+          overlapsAny(s.x, s.z, 0.27, boxes),
+      }
 
     const g = group.current
     if (g) {
@@ -546,7 +682,7 @@ export function PlayerRig(props: PlayerRigProps) {
       (lying ? 0.9 : motion.current.crouching ? 1.05 : EYE) + s.y,
       s.z,
     ]
-    const goal = cameraAt(eye, o, boxes, ceiling)
+    const goal = cameraAt(eye, o, solids.current.camera, ceiling)
     const k = 1 - Math.exp(-dt * 9)
     camera.position.set(
       camera.position.x + (goal[0] - camera.position.x) * k,
@@ -610,7 +746,10 @@ export function PlayerRig(props: PlayerRigProps) {
       h + 0.5,
       h,
     ])
-      if (clearance(eye, { yaw, pitch: 0.42, distance: 3.2 }, boxes) >= 2.4) return yaw
+      if (
+        clearance(eye, { yaw, pitch: 0.42, distance: 3.2 }, solids.current.camera) >= 2.4
+      )
+        return yaw
     return h + 0.4
   }
 
@@ -646,6 +785,7 @@ export function PlayerRig(props: PlayerRigProps) {
 
   return (
     <>
+      {debug && <CollisionDebug boxes={shown} spots={spots} path={path} player={state} />}
       {riding === 'car' && (
         <Particles kind="exhaust" at={[0, 0, 0]} active track={tailpipe} />
       )}

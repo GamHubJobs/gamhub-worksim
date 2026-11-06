@@ -709,8 +709,9 @@ function Traffic() {
       g.position.set(along.current[i], 0, z)
     })
   })
+  // Moving traffic stops for the player, so it is not read as solid where it was.
   return (
-    <group>
+    <group userData={{ passable: true }}>
       {VEHICLES.map((v, i) => (
         <group
           key={i}

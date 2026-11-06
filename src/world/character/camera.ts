@@ -38,10 +38,22 @@ export function rayBox(
   to: [number, number, number],
   b: Box,
 ): number {
+  // Into the box's own frame (it may be turned; a round thing is taken as its square).
+  if (b.yaw) {
+    const c = Math.cos(b.yaw)
+    const s = Math.sin(b.yaw)
+    const local = (p: [number, number, number]): [number, number, number] => {
+      const wx = p[0] - b.x
+      const wz = p[2] - b.z
+      return [b.x + wx * c - wz * s, p[1], b.z + wx * s + wz * c]
+    }
+    return rayBox(local(from), local(to), { ...b, yaw: 0 })
+  }
   let t0 = 0
   let t1 = 1
-  const lo = [b.x - b.hx, 0, b.z - b.hz]
-  const hi = [b.x + b.hx, b.top, b.z + b.hz]
+  const hz = b.round ? b.hx : b.hz
+  const lo = [b.x - b.hx, 0, b.z - hz]
+  const hi = [b.x + b.hx, b.top, b.z + hz]
   for (let axis = 0; axis < 3; axis++) {
     const d = to[axis] - from[axis]
     if (Math.abs(d) < 1e-9) {

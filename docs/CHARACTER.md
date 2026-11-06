@@ -44,6 +44,9 @@ src/world/
   WalkView.tsx            the page around a walkable view: keys, mouse, prompt, progress
   props.tsx               things the character holds (a mug, a fork, a card, dumbbells…)
   vfx/                    particles (water, steam, sweat…), wet floors, activity effects
+  physics/solids.ts       what is solid, read from what is drawn
+  physics/nav.ts          the walking grid and finding a way round things
+  physics/CollisionDebug  development view of what is solid (F8)
   context.ts              what room objects can see: the activity now, the hands
 ```
 
@@ -58,9 +61,25 @@ src/world/
   paying, cooking, washing hands, brushing teeth, showering, dressing, lying down,
   sleeping, the bench press, curls, squats, cycling, running on a treadmill, stretching,
   yoga, driving and pushing a door.
-- **Collisions**: each place lists its solid boxes on the floor plan; the character slides
-  along them. Walking to an activity goes round furniture and, once close (or if it
-  stops making progress), steps into place.
+- **Collisions**: what is solid is read from what is drawn, in every place, so nothing
+  that looks solid can be walked through and there is no list to forget. Every object
+  standing on the floor between 25 cm (lower can be stepped over: rugs, kerbs) and
+  1.2 m (higher is overhead: lamps) is solid, with its own shape: a turned box for an
+  upright object, a circle for a round one. People are a circle where they stand. Left
+  out, on purpose: the player, moving traffic (it stops for the player), effects, and
+  anything marked `userData.passable`. Each place's own walls are added on top. The
+  character is an upright capsule 0.6 m across; it slides along what it meets, moves in
+  steps of at most 10 cm (running or a slow frame cannot pass through a thin wall),
+  and never squeezes into a gap narrower than itself. The camera keeps clear of tall
+  things only (walls, shelves), not chairs and tables, so it does not jump about.
+- **Walking to an activity** finds the way round things on a grid of 15 cm cells (A*,
+  then straightened), and steps into place only for the last half metre (sitting on
+  the chair, lying on the bed). If someone is in the way it finds the way again; only
+  if that fails twice does it step through. After an activity, a character inside
+  furniture (the chair pulled in) steps out to clear floor.
+- **Debug view** (development only): F8 in a 3D view shows what is solid (orange), the
+  player's capsule (green), where activities start (yellow) and are done (magenta), and
+  the way being walked (cyan). Screenshots: `docs/screenshots/collision/`.
 - **Activities** are data: a spot and reach, an anchor (where the character goes and
   faces), stages (a clip for some seconds, things held, optionally walking somewhere
   first: a table, the next aisle, the checkout), sounds at their moments, effects in
