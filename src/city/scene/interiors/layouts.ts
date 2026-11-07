@@ -361,6 +361,25 @@ export const PARK: Layout = {
       ],
     },
     {
+      // The wedding (see interiors/Wedding.tsx): under the arch, facing each other.
+      id: 'date-wedding',
+      action: null,
+      prompt: 'the wedding',
+      spot: { x: 7, z: -3.75, reach: 0 },
+      anchor: { x: 7, z: -3.75, heading: 0 },
+      view: 'side',
+      stages: [{ clip: 'stand', seconds: 6, label: 'The ceremony' }],
+    },
+    {
+      id: 'date-dance',
+      action: null,
+      prompt: 'the first dance',
+      spot: { x: 7, z: -3.75, reach: 0 },
+      anchor: { x: 7, z: -3.75, heading: 0 },
+      view: 'side',
+      stages: [{ clip: 'stand', seconds: 9, label: 'Your first dance' }],
+    },
+    {
       // Saying goodnight after a date: standing face to face (see npc/moment.ts).
       id: 'date-goodnight-park',
       action: null,

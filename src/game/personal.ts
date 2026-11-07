@@ -33,6 +33,8 @@ export function personalOptions(
   bond: Bond,
   /** They already live with the player. */
   together = false,
+  /** The family so far (children, one on the way). */
+  family: { children: number; expected: boolean } = { children: 0, expected: false },
 ): Option[] {
   const n = first(who)
   const out: Option[] = []
@@ -51,6 +53,25 @@ export function personalOptions(
   if (dating && !bond.visit)
     out.push(opt('invite-home', `Invite ${n} round for an evening`))
   if (partners && !together) out.push(opt('move-in', `Ask ${n} to move in with you`))
+  const engaged = atLeast(bond.stage, 'engaged')
+  const married = bond.stage === 'married'
+  if (partners && !engaged && together) out.push(opt('propose', `Ask ${n} to marry you`))
+  if (bond.stage === 'engaged' && bond.wedding === null)
+    out.push(opt('set-wedding', 'Set a date for the wedding'))
+  if (married && family.children === 0 && !family.expected) {
+    out.push(opt('family-baby', 'Talk about having a baby together'))
+    out.push(opt('family-adopt', 'Talk about adopting a child'))
+  }
+  if (dating && bond.closeness < 35)
+    out.push(opt('make-amends', 'Talk it through, and say sorry'))
+  if (bond.stage === 'separated' && bond.closeness >= 50)
+    out.push(opt('make-up', 'Ask about giving it another go'))
+  if (dating)
+    out.push({
+      id: 'break-up',
+      label: married ? 'Ask for a divorce' : 'End the relationship',
+      tone: 'neutral',
+    })
   if (bond.closeness >= 40) out.push(opt('hug', `Give ${n} a hug`))
   return out
 }
@@ -220,15 +241,132 @@ export function respondPersonal(
           2,
           [`${n} is coming round to yours this evening, from 7:30 pm.`],
         )
+      // (Moving in changes the home: applied once the conversation is held.)
+      return {
+        ...result(
+          [act('*You ask.*'), say(who, a.line)],
+          next,
+          3,
+          optionId === 'move-in'
+            ? [`${n} is moving in with you. They will pay half the rent.`]
+            : [`You and ${n} are a couple.`],
+        ),
+        effect: optionId === 'move-in' ? 'move-in' : undefined,
+      }
+    }
+    case 'propose': {
+      const a = ask(adult, bond, 'propose', context)
+      const next = answered(bond, 'propose', a, day, who.name)
       return result(
-        [act('*You ask.*'), say(who, a.line)],
+        [act(`*You ask ${n} to marry you.*`), say(who, a.line)],
         next,
-        3,
-        optionId === 'move-in'
-          ? [`${n} is moving in with you. They will pay half the rent.`]
-          : [`You and ${n} are a couple.`],
+        5,
+        a.answer === 'yes' ? [`You and ${n} are engaged.`] : [],
       )
     }
+    case 'set-wedding': {
+      const when = day + 2
+      return result(
+        [
+          say(
+            who,
+            `${weekdayName(when)} evening, in the park? Everyone we love, under the trees.`,
+          ),
+        ],
+        {
+          ...bond,
+          wedding: when,
+          history: [
+            ...bond.history,
+            { day, text: `Set the wedding for ${weekdayName(when)}` },
+          ].slice(-20),
+        },
+        5,
+        [`The wedding: ${weekdayName(when)} evening, in the park, from 6 pm.`],
+      )
+    }
+    case 'family-baby':
+    case 'family-adopt': {
+      const a = ask(adult, bond, 'family', context)
+      const next = answered(bond, 'family', a, day, who.name)
+      const adopt = optionId === 'family-adopt'
+      return {
+        ...result(
+          [act('*You talk about it for a long time.*'), say(who, a.line)],
+          next,
+          30,
+          a.answer === 'yes'
+            ? [
+                adopt
+                  ? 'You have started the adoption, together.'
+                  : 'A baby is on the way.',
+              ]
+            : [],
+        ),
+        effect: a.answer === 'yes' ? (adopt ? 'family-adopt' : 'family-baby') : undefined,
+      }
+    }
+    case 'make-amends':
+      return result(
+        [
+          act('*You sit down and talk properly, and you say sorry, and mean it.*'),
+          say(who, 'Thank you. I needed to hear that. Let’s do better, both of us.'),
+        ],
+        {
+          ...bond,
+          closeness: Math.min(100, bond.closeness + 12),
+          history: [
+            ...bond.history,
+            { day, text: `Talked it through with ${who.name}` },
+          ].slice(-20),
+        },
+        20,
+        [`Things feel better with ${n}.`],
+      )
+    case 'make-up': {
+      const ok = bond.attraction >= 45 && bond.closeness >= 55
+      return result(
+        [
+          act('*You ask, carefully.*'),
+          say(
+            who,
+            ok
+              ? 'I have missed you. Slowly, though. Okay?'
+              : 'I do not think so. I am sorry.',
+          ),
+        ],
+        ok
+          ? {
+              ...bond,
+              stage: 'dating',
+              history: [
+                ...bond.history,
+                { day, text: `Back together with ${who.name}` },
+              ].slice(-20),
+            }
+          : bond,
+        5,
+        ok ? [`You and ${n} are giving it another go.`] : [],
+      )
+    }
+    case 'break-up':
+      return {
+        ...result(
+          [
+            act('*You tell them, as kindly as you can.*'),
+            say(
+              who,
+              bond.closeness >= 50
+                ? 'I… did not see this coming. Okay.'
+                : 'Maybe it is for the best.',
+            ),
+          ],
+          bond,
+          10,
+          [`You and ${n} are no longer together.`],
+        ),
+        effect: 'separate',
+      }
     case 'hug': {
       const a = ask(adult, bond, 'hug', context)
       return result(

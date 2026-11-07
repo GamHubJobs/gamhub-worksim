@@ -28,6 +28,8 @@ export interface InteriorState {
   last: string | null
   /** Someone waiting here for a date with the player (their id), if anyone. */
   date?: string | null
+  /** The player's wedding, here today (their partner's id), if it is. */
+  wedding?: string | null
 }
 
 export const Interior = createContext<InteriorState>({

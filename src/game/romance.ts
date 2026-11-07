@@ -62,6 +62,8 @@ export interface Bond {
   /** An evening at the player's home arranged (the day), and the night they stay (the day). */
   visit: number | null
   stayOver: number | null
+  /** The wedding day, once set. */
+  wedding: number | null
 }
 
 export const NEW_BOND: Bond = {
@@ -75,6 +77,7 @@ export const NEW_BOND: Bond = {
   history: [],
   visit: null,
   stayOver: null,
+  wedding: null,
 }
 
 export function bondOf(life: Life, id: string): Bond {
@@ -98,6 +101,8 @@ export type Step =
   | 'stay-over'
   | 'move-in'
   | 'propose'
+  /** Starting a family, together. */
+  | 'family'
 
 /** Days before something declined can be asked again. */
 export const DECLINE_DAYS = 3
@@ -158,6 +163,7 @@ export function ask(
     'stay-over': { stage: 'partners', attraction: 70, closeness: 70 },
     'move-in': { stage: 'partners', attraction: 75, closeness: 80 },
     propose: { stage: 'partners', attraction: 80, closeness: 88 },
+    family: { stage: 'married', attraction: 70, closeness: 85 },
   }
   const need = needs[step]
   if (at(bond.stage) < at(need.stage) || bond.closeness < need.closeness)
@@ -181,6 +187,11 @@ export function ask(
     return {
       answer: 'not-yet',
       line: 'Not here, with everyone around. I’m a private person.',
+    }
+  if (step === 'family' && !adult.family)
+    return {
+      answer: 'no',
+      line: 'I love you, but I have never wanted children, and I am not going to change my mind. I hope that is all right.',
     }
   if (step === 'propose' && adult.wants !== 'serious' && bond.closeness < 95)
     return {
@@ -221,6 +232,8 @@ function yes(step: Step): string {
       return 'Yes. Let’s do it. Let’s find somewhere together.'
     case 'propose':
       return 'Yes! Yes, of course!'
+    case 'family':
+      return 'I would love that. Let’s do it, together.'
     case 'hug':
       return 'Come here.'
   }

@@ -176,7 +176,7 @@ working simulations of the professional software used in its field (see
 
 **Game screen**: [docs/GAME_SCREEN.md](docs/GAME_SCREEN.md) (full screen, HUD, pause menu).
 
-**Relationships, romance and family** (R1–R3 done; R4–R11 next): [docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md).
+**Relationships, romance and family** (R1–R11 done): [docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md).
 
 **Story Mode** (in progress). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
 
@@ -185,6 +185,58 @@ working simulations of the professional software used in its field (see
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [ ] Story 6–10 The other five careers
 - [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-07 · Relationships 7–11: marriage, a family, hard times, the phone, the story
+
+### Built
+
+- **Engagement and a wedding, played** (`game/family.ts`, `interiors/Wedding.tsx`,
+  `WeddingPanel.tsx`): asking to marry (living together, asked and answered); setting
+  the date; on the evening, in the park, an arch of flowers, two rows of chairs with the
+  player's friends seated, and the partner waiting under the arch. The player walks up:
+  the vows (chosen), "I do", the kiss (asked, as always; the guests cheer), the first
+  dance together, and celebrating. A wedding not gone to is postponed.
+- **A family, if wanted** (optional, asked; someone who never wanted children says so,
+  kindly, and it is respected): a baby "on the way" (no more is shown) or an adoption, the
+  child arriving after a few days and living at home, shown at a child's size, with
+  child-appropriate things to do together (play, a bedtime story, getting ready for
+  school). Children are never part of anything romantic.
+- **Hard times, from what happened** (never random, never because the player works): a
+  low patch can be talked through ("say sorry", +12 closeness); the player can end it
+  (separated or divorced; they move out); a partner who has felt neglected for a long
+  time (closeness under 15, from missed dates and evenings) ends it themselves; and,
+  later, it can be given another go if closeness has recovered.
+- **The phone**: a partner at home asks about dinner each evening; the wedding is in the
+  calendar with a reminder that day.
+- **Story Mode**: a new character mission in "Short Delivery", music night at the café
+  (earned by helping Maya with her books): she asks the player out (yes, rather stay
+  friends, or think about it) and Walter has a word, which follows from the answer.
+- The save gains `life.family` and, per bond, `wedding` (defaults for older saves).
+
+### Tests
+
+- Unit tests (5 more in `romance.test.ts`, 19 in all): proposing and the wedding date
+  and the wedding; a missed wedding postponed; a family optional, asked, only with
+  someone who wants one, the child arriving; breaking up, moving out, and making up;
+  ending it only after long neglect (not at closeness 40), and talking it through. The
+  story's consistency test covers the new mission.
+- Browser tests (`wedding.spec.ts`): the wedding in the park (guests and Maya there, the
+  vows, married, the kiss, the first dance, Married in the Relationships screen); a
+  child at home, played with.
+- Screenshots: `docs/screenshots/relationships/wedding-*.png`, `first-dance.png`,
+  `family.png`.
+- Fixed on the way: the wedding was first placed in the pond.
+- Results: 2,212 unit tests passed. Chromium browser tests, full run: 191 passed, 3
+  skipped, 4 flaky (a backup restore, two tabs, Books, the full week; each passed on its
+  retry), none failed. 5 production-build tests passed. Firefox, WebKit and Edge 8
+  passed, 1 skipped. Start screen 299 kB.
+
+### Limits
+
+- Children do not grow up yet, and have no school day of their own in 3D.
+- Household disagreements about money are not modelled beyond the rent being shared.
 
 ---
 

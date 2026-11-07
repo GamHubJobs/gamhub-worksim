@@ -64,6 +64,8 @@ export interface InteriorSceneProps {
   doings: Doing[]
   /** Someone waiting here for a date with the player (see game/dates.ts). */
   date?: string | null
+  /** The player's wedding, here today (their partner's id). */
+  wedding?: string | null
   /** Keys and mouse, from the page around the view. */
   controls: RefObject<Controls>
   /** An activity asked for from the list or a ringed object. */
@@ -131,8 +133,9 @@ function InteriorScene(props: InteriorSceneProps) {
       low,
       last: null,
       date: props.date ?? null,
+      wedding: props.wedding ?? null,
     }),
-    [byAction, props.onRequest, dark, low, props.date],
+    [byAction, props.onRequest, dark, low, props.date, props.wedding],
   )
   const world = useMemo(() => ({ now, hands, low }), [low])
   const onDone = props.onDone

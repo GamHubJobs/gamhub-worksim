@@ -964,9 +964,27 @@ export const LifeSchema = z.object({
         visit: z.number().int().nullable().default(null),
         /** The night they stay over (the day), if they said yes. */
         stayOver: z.number().int().nullable().default(null),
+        /** The wedding, once a date is set (the day, in the park). */
+        wedding: z.number().int().nullable().default(null),
       }),
     )
     .default({}),
+  /** A family, if the player and their partner chose one (see game/family.ts). */
+  family: z
+    .object({
+      children: z
+        .array(
+          z.object({ name: z.string(), born: z.number().int(), adopted: z.boolean() }),
+        )
+        .max(4)
+        .default([]),
+      /** A child on the way (the day they arrive), and whether adopted. */
+      expected: z
+        .object({ day: z.number().int(), adopted: z.boolean() })
+        .nullable()
+        .default(null),
+    })
+    .prefault({}),
   /** Someone who lives with the player (see game/home life), if anyone. */
   partner: z.object({ id: z.string(), since: z.number().int() }).nullable().default(null),
   /** The phone's settings (see phone/): kept with the career, defaults for older saves. */

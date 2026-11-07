@@ -36,6 +36,7 @@ export function Npc({
   availability = 'free',
   doing,
   clip,
+  scale = 1,
   children,
 }: {
   who: Who
@@ -50,6 +51,8 @@ export function Npc({
   doing?: string
   /** Something they are doing with the player (a hug, holding hands), seated or standing. */
   clip?: { id: ClipId; t: () => number } | null
+  /** Smaller, for a child. */
+  scale?: number
   /** Drawn instead of a standing or seated person (a runner, say). */
   children?: ReactNode
 }) {
@@ -103,7 +106,7 @@ export function Npc({
   })
 
   return (
-    <group ref={outer} position={position} rotation={[0, rotation, 0]}>
+    <group ref={outer} position={position} rotation={[0, rotation, 0]} scale={scale}>
       <group ref={turn}>
         <Talkable id={id} name={who.name} role={who.role} height={seated ? 1.55 : 1.95}>
           {children ??

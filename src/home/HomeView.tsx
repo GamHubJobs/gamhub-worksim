@@ -41,6 +41,7 @@ import { canDo, lifePhase, sleepHours } from '../game/life'
 import { canGoOut } from '../game/city'
 import { deliveryStage } from '../game/delivery'
 import { finishDate, stayTheNight, whoOf } from '../game/dates'
+import { childWho } from '../game/family'
 import { adultOf, ask, atHome, bondOf, type Bond } from '../game/romance'
 import { withLife } from '../game/lifeTime'
 import { DatePanel, type DateStep } from '../world/npc/DatePanel'
@@ -151,6 +152,13 @@ export function HomeView({
     bond: Bond
   } | null>(null)
   const [talking, setTalking] = useState<string | null>(null)
+  /** Someone at home, by id: a partner or visitor, or one of the children. */
+  const personAt = (id: string) => {
+    if (!id.startsWith('child:')) return whoOf(id)
+    const i = Number(id.slice(6))
+    const child = life.family.children[i]
+    return child ? childWho(i, child.name) : undefined
+  }
   // Going to bed with someone there: a fade to the morning (nothing more is shown).
   const [fade, setFade] = useState(false)
   const commit = useCallback(
@@ -184,6 +192,8 @@ export function HomeView({
   /** Walked up to them: an evening together (a visit), or a word (they live here). */
   const meetPerson = useCallback(
     (id: string) => {
+      // One of the player's children.
+      if (id.startsWith('child:')) return setTalking(id)
       if (!here || here.id !== id) return release()
       if (
         !here.living &&
@@ -243,6 +253,7 @@ export function HomeView({
               dressed={phase === 'morning' && life.ready.dressed}
               delivery={deliveryStage(life)}
               partner={evening?.id ?? here?.id ?? null}
+              kids={life.family.children.map((c) => c.name)}
               doings={stableDoings}
               controls={api.controls}
               request={request}
@@ -339,11 +350,11 @@ export function HomeView({
               }}
             />
           )}
-          {talking && whoOf(talking) && (
+          {talking && personAt(talking) && (
             <EncounterPanel
               key={talking}
               className="fixed right-4 bottom-4 z-40"
-              who={whoOf(talking)!}
+              who={personAt(talking)!}
               situation={{ availability: 'free', minute: life.minute }}
               relation={relationOf(profile, talking)}
               onSay={(outcome) =>

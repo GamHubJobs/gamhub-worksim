@@ -469,6 +469,9 @@ export function Desktop({
       /** The evening clock (minutes since midnight), out of work. */
       setLifeMinute: (minute: number) =>
         act((p) => ({ ...p, work: { ...p.work, life: { ...p.work.life, minute } } })),
+      /** Parts of life outside work, as if they were so (a partner, a family). */
+      setLife: (patch: Partial<Profile['work']['life']>) =>
+        act((p) => ({ ...p, work: { ...p.work, life: { ...p.work.life, ...patch } } })),
       /** A bond with someone, as if things had got that far (see game/romance.ts). */
       setBond: (id: string, bond: Partial<Bond>) =>
         act((p) => ({

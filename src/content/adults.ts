@@ -43,6 +43,8 @@ export interface Adult {
   boundaries: Boundary[]
   /** Free evenings for dates (weekdays 0 = Monday). */
   free: number[]
+  /** Whether they would want children, one day. */
+  family: boolean
 }
 
 export const ADULTS: Record<string, Adult> = {
@@ -56,6 +58,7 @@ export const ADULTS: Record<string, Adult> = {
     romance: true,
     boundaries: ['slow'],
     free: [0, 2, 6],
+    family: true,
   },
   'cafe:friend': {
     id: 'cafe:friend',
@@ -67,6 +70,7 @@ export const ADULTS: Record<string, Adult> = {
     romance: true,
     boundaries: [],
     free: [1, 3, 4, 5],
+    family: false,
   },
   'gym:runner1': {
     id: 'gym:runner1',
@@ -78,6 +82,7 @@ export const ADULTS: Record<string, Adult> = {
     romance: true,
     boundaries: ['private'],
     free: [1, 4, 5],
+    family: true,
   },
   'gym:runner2': {
     id: 'gym:runner2',
@@ -89,6 +94,7 @@ export const ADULTS: Record<string, Adult> = {
     romance: true,
     boundaries: ['slow', 'private'],
     free: [0, 3, 6],
+    family: false,
   },
   'garage:sales': {
     id: 'garage:sales',
@@ -100,6 +106,7 @@ export const ADULTS: Record<string, Adult> = {
     romance: true,
     boundaries: [],
     free: [2, 4, 5, 6],
+    family: true,
   },
   analyst: {
     id: 'analyst',
@@ -111,6 +118,7 @@ export const ADULTS: Record<string, Adult> = {
     romance: true,
     boundaries: [],
     free: [1, 3, 4],
+    family: true,
   },
   backM: {
     id: 'backM',
@@ -123,6 +131,7 @@ export const ADULTS: Record<string, Adult> = {
     romance: false,
     boundaries: ['not-at-work'],
     free: [3],
+    family: false,
   },
   'park:walter': {
     id: 'park:walter',
@@ -134,6 +143,7 @@ export const ADULTS: Record<string, Adult> = {
     romance: false,
     boundaries: [],
     free: [0, 1, 2, 3, 4, 5, 6],
+    family: false,
   },
 }
 

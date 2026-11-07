@@ -8,6 +8,7 @@
  * and hands back to it when the player arrives at the office (`startNextDay`).
  */
 import { missedDates } from './dates'
+import { familyNight } from './family'
 import {
   ALARM,
   COMMUTES,
@@ -224,7 +225,11 @@ export function goToBed(profile: ProfileData): ProfileData {
   const weekend = next - work.day > 1
   // A date tonight not gone to is missed (see dates.ts).
   let life: Life = note(
-    missedDates(overnight(afterNight(work.life, work.day)), work.day),
+    // …and the night: a child arriving, a missed wedding, a partner ending it (family.ts).
+    familyNight(
+      missedDates(overnight(afterNight(work.life, work.day)), work.day),
+      work.day,
+    ),
     'Went to bed',
   )
   const bedtime = life.minute

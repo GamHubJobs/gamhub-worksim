@@ -325,6 +325,42 @@ export const FINANCE_STORY: Campaign = {
               : 'You sorted Maya’s year. Next year, she says, she will do it herself. Probably.',
         },
         {
+          id: 'music-night',
+          type: 'character',
+          title: 'Music night at the café',
+          from: 'cafe:barista',
+          after: ['bakery-books'],
+          needs: ['helped-maya'],
+          intro: [
+            'Maya has put a handwritten poster in the café window: live music, Thursday. She has drawn a small heart next to your name on the guest list.',
+          ],
+          objectives: [
+            {
+              id: 'maya',
+              kind: 'talk',
+              person: 'cafe:barista',
+              scene: 'maya-music',
+              label: 'Ask Maya about the poster, at the café (evenings)',
+              where: 'cafe',
+            },
+            {
+              id: 'walter',
+              kind: 'talk',
+              person: 'park:walter',
+              scene: 'walter-word',
+              label: 'Walter wants a word, in the park',
+              where: 'park',
+            },
+          ],
+          reward: { xp: 15, trust: { 'cafe:barista': 3 } },
+          summary: (flags) =>
+            flags.includes('maya-yes')
+              ? 'You are going to the music night with Maya. Walter pretended not to be pleased. He was very pleased.'
+              : flags.includes('maya-friends')
+                ? 'You told Maya you would rather stay friends. She was gracious about it, and still saved you a slice of banana bread.'
+                : 'You will think about it. So, it seems, will the whole street.',
+        },
+        {
           id: 'marcus-thursday',
           type: 'character',
           title: 'Thursday with Marcus',
@@ -434,6 +470,55 @@ export const FINANCE_STORY: Campaign = {
     },
   ],
   scenes: {
+    'maya-music': {
+      id: 'maya-music',
+      person: 'cafe:barista',
+      lines: () => [
+        '*Maya goes a bit pink when she sees you looking at the poster.*',
+        'So… it is a small thing. Local bands, cake, too many fairy lights. I would like it if you came. With me, I mean. If you want.',
+      ],
+      choices: [
+        {
+          id: 'yes',
+          label: 'Say you would love to, as a date',
+          reply: ['*She beams.* Thursday, then. Wear something warm, the window leaks.'],
+          flags: ['maya-yes'],
+          trust: { 'cafe:barista': 3 },
+        },
+        {
+          id: 'friends',
+          label: 'Say, kindly, that you would rather stay friends',
+          reply: ['Oh. Of course. Thank you for being honest. Come anyway? As friends?'],
+          flags: ['maya-friends'],
+        },
+        {
+          id: 'think',
+          label: 'Say you need to think about it',
+          reply: ['That is fair. The offer stands.'],
+          flags: ['maya-think'],
+        },
+      ],
+    },
+    'walter-word': {
+      id: 'walter-word',
+      person: 'park:walter',
+      lines: (flags) => [
+        '*Walter does not look up from his newspaper.*',
+        flags.includes('maya-yes')
+          ? 'I hear you are going to the music night. Good. She has not stopped humming since.'
+          : flags.includes('maya-friends')
+            ? 'She told me. You were kind about it. That matters more than people think.'
+            : 'She is a patient girl, my Maya. But not that patient.',
+      ],
+      choices: [
+        {
+          id: 'thanks',
+          label: 'Thank Walter',
+          reply: ['*He turns a page.* Off you go, then.'],
+          trust: { 'park:walter': 2 },
+        },
+      ],
+    },
     'nina-welcome': {
       id: 'nina-welcome',
       person: 'reception',

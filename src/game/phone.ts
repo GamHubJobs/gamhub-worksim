@@ -116,6 +116,22 @@ export function notices(profile: ProfileData): Notice[] {
           })
       }
   }
+  // A partner at home asks about the evening; the wedding day.
+  if (life.partner && life.phase === 'evening')
+    out.push({
+      id: `partner:${profile.work.day}`,
+      app: 'messages',
+      from: whoOf(life.partner.id)?.name ?? 'Your partner',
+      text: 'Home for dinner tonight? I will cook.',
+    })
+  for (const [id, b] of Object.entries(life.bonds ?? {}))
+    if (b.wedding === profile.work.day)
+      out.push({
+        id: `wedding:${id}:${b.wedding}`,
+        app: 'calendar',
+        from: 'Your wedding',
+        text: 'Tonight in the park, from 6 pm',
+      })
   for (const [id, b] of Object.entries(life.bonds ?? {}))
     if (b.date && b.date.day === profile.work.day)
       out.push({
@@ -176,6 +192,15 @@ export function calendar(profile: ProfileData): CalendarEntry[] {
       })
     }
   const life = profile.work.life
+  for (const [, b] of Object.entries(life.bonds ?? {}))
+    if (b.wedding !== null && b.wedding >= day)
+      out.push({
+        day: b.wedding,
+        minute: 18 * 60,
+        title: 'Your wedding',
+        where: 'The park',
+        kind: 'plan',
+      })
   for (const [id, b] of Object.entries(life.bonds ?? {}))
     if (b.date && b.date.day >= day)
       out.push({

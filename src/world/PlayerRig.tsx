@@ -719,7 +719,12 @@ export function PlayerRig(props: PlayerRigProps) {
           s = { ...s, heading: turnTowards(s.heading, a.anchor.heading, Math.PI) }
           mode.current = { kind: 'acting', activity: a, t: 0, placed: 0, at: a.anchor }
           // Arrived to say goodnight: the moment with the other person starts now.
-          if (a.id.startsWith('date-goodnight')) beginMoment()
+          if (
+            a.id.startsWith('date-goodnight') ||
+            a.id === 'date-wedding' ||
+            a.id === 'date-dance'
+          )
+            beginMoment()
           motion.current = { walking: false }
         }
       }

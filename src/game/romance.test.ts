@@ -6,8 +6,18 @@ import { officeWho } from '../office/scene/officeCast'
 import { newProfileData, type ProfileData } from './career'
 import { holdEncounter, meet, relationOf, respond } from './encounters'
 import { goToBed } from './life'
-import { answered, ask, atHome, bondOf, NEW_BOND, talked, type Bond } from './romance'
+import {
+  answered,
+  ask,
+  atHome,
+  bondOf,
+  NEW_BOND,
+  talked,
+  withBond,
+  type Bond,
+} from './romance'
 import { missedDates, stayTheNight } from './dates'
+import { familyNight, marry } from './family'
 
 const ctx = { day: 10, public: false, colleague: false }
 const maya = ADULTS['cafe:barista']
@@ -257,5 +267,107 @@ describe('living together: the rent', () => {
     const together = paid(friday(true))
     expect(alone).toBeGreaterThan(0)
     expect(together).toBe(Math.round(alone / 2))
+  })
+})
+
+describe('marriage, a family, and when things go wrong', () => {
+  const who = TOWN_PEOPLE.barista
+  const at = { availability: 'free' as const, minute: 19 * 60 }
+  const living = (b: Partial<Bond>): ProfileData => {
+    const p = newProfileData('Alex Rivera', 0)
+    return {
+      ...p,
+      work: {
+        ...p.work,
+        life: {
+          ...p.work.life,
+          partner: { id: who.id, since: 1 },
+          bonds: {
+            [who.id]: {
+              ...NEW_BOND,
+              stage: 'partners',
+              closeness: 92,
+              attraction: 88,
+              ...b,
+            },
+          },
+        },
+      },
+    }
+  }
+  const say = (p: ProfileData, option: string) =>
+    holdEncounter(p, [who.id], respond(who, at, relationOf(p, who.id), option), 'out')
+  const options = (p: ProfileData) =>
+    meet(who, at, relationOf(p, who.id)).options.map((o) => o.id)
+
+  it('a proposal (asked), a wedding date, and the wedding', () => {
+    let p = living({})
+    expect(options(p)).toContain('propose')
+    p = say(p, 'propose')
+    expect(bondOf(p.work.life, who.id).stage).toBe('engaged')
+    p = say(p, 'set-wedding')
+    const day = bondOf(p.work.life, who.id).wedding!
+    expect(day).toBe(p.work.day + 2)
+    const life = marry(p.work.life, who.id, day)
+    expect(bondOf(life, who.id).stage).toBe('married')
+    expect(bondOf(life, who.id).wedding).toBeNull()
+  })
+
+  it('a wedding not gone to is postponed, not forgotten', () => {
+    const p = living({ stage: 'engaged', wedding: 3 })
+    const life = familyNight(p.work.life, 4)
+    expect(bondOf(life, who.id).wedding).toBeNull()
+    expect(bondOf(life, who.id).stage).toBe('engaged')
+    expect(bondOf(life, who.id).history.at(-1)!.text).toMatch(/postponed/)
+  })
+
+  it('a family is optional, asked, and only with someone who wants one', () => {
+    let p = living({ stage: 'married' })
+    expect(options(p)).toEqual(expect.arrayContaining(['family-baby', 'family-adopt']))
+    p = say(p, 'family-adopt')
+    expect(p.work.life.family.expected).toEqual({ day: p.work.day + 3, adopted: true })
+    // They arrive, and are at home.
+    const life = familyNight(p.work.life, p.work.day + 3)
+    expect(life.family.children).toHaveLength(1)
+    expect(life.family.expected).toBeNull()
+    // Someone who never wanted children says so, kindly, and it is respected.
+    const priti = ADULTS['cafe:friend']
+    const married: Bond = { ...NEW_BOND, stage: 'married', closeness: 95, attraction: 90 }
+    expect(ask(priti, married, 'family', ctx)).toMatchObject({ answer: 'no' })
+  })
+
+  it('breaking up is the player’s choice: separated, and they move out; making up is possible', () => {
+    let p = living({})
+    expect(options(p)).toContain('break-up')
+    p = say(p, 'break-up')
+    expect(bondOf(p.work.life, who.id).stage).toBe('separated')
+    expect(p.work.life.partner).toBeNull()
+    p = {
+      ...p,
+      work: {
+        ...p.work,
+        today: { ...p.work.today, talks: {} },
+        life: withBond(p.work.life, who.id, {
+          ...bondOf(p.work.life, who.id),
+          closeness: 60,
+          attraction: 60,
+        }),
+      },
+    }
+    expect(options(p)).toContain('make-up')
+    p = say(p, 'make-up')
+    expect(bondOf(p.work.life, who.id).stage).toBe('dating')
+  })
+
+  it('they end it themselves only after a long neglect, never at random; working does not count', () => {
+    const fine = familyNight(living({ closeness: 40 }).work.life, 5)
+    expect(bondOf(fine, who.id).stage).toBe('partners')
+    const neglected = familyNight(living({ closeness: 10 }).work.life, 5)
+    expect(bondOf(neglected, who.id).stage).toBe('separated')
+    expect(neglected.partner).toBeNull()
+    // A low patch can be talked through first.
+    const p = living({ closeness: 30 })
+    expect(options(p)).toContain('make-amends')
+    expect(bondOf(say(p, 'make-amends').work.life, who.id).closeness).toBe(42)
   })
 })

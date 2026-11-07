@@ -21,6 +21,7 @@ import { decayed, withLife } from './lifeTime'
 import { trustOf } from './relationships'
 import { personalOptions, respondPersonal } from './personal'
 import { adultOf, bondOf, movedIn, talked, withBond, type Bond } from './romance'
+import { separate, startFamily } from './family'
 import { restFor } from './workday'
 
 export type NpcKind =
@@ -40,6 +41,8 @@ export type NpcKind =
   | 'gym-member'
   | 'neighbour'
   | 'courier'
+  /** The player's own child (never anything else). */
+  | 'child'
 
 export type Personality = 'warm' | 'quiet' | 'chatty' | 'dry' | 'focused'
 
@@ -100,6 +103,8 @@ export interface Relation {
   day?: number
   /** They live with the player. */
   together?: boolean
+  /** The family so far. */
+  family?: { children: number; expected: boolean }
 }
 
 export interface Encounter {
@@ -124,6 +129,8 @@ export interface Outcome {
   notes: string[]
   /** The bond afterwards, for the adults who could become close. */
   bond?: Bond
+  /** Something it changes at home (after a yes): moving in, a family, breaking up. */
+  effect?: 'move-in' | 'family-baby' | 'family-adopt' | 'separate'
 }
 
 /** Talks a day with one person that still build anything. */
@@ -303,6 +310,8 @@ function introduction(who: Who, hello: string): string {
       return `Oh! Hello. I'm ${n}. Do I know you?`
     case 'courier':
       return `Hi! Delivery for you.`
+    case 'child':
+      return 'Can we play? Please?'
     default:
       return `${hello}. I'm ${n}.`
   }
@@ -323,7 +332,7 @@ function optionsFor(who: Who, s: Situation, rel: Relation): Option[] {
   const tail = base.filter((o) => o.id === 'leave' || o.id === 'rude')
   return [
     ...base.filter((o) => !tail.includes(o)),
-    ...personalOptions(who, adult, rel.bond, rel.together),
+    ...personalOptions(who, adult, rel.bond, rel.together, rel.family),
     ...tail,
   ]
 }
@@ -432,6 +441,15 @@ function baseOptions(who: Who, s: Situation, rel: Relation): Option[] {
           'neutral',
         ),
         opt('leave', 'Leave them in peace', 'kind'),
+      ]
+    case 'child':
+      return [
+        opt('play', `Play with ${n}`),
+        s.minute >= 18 * 60
+          ? opt('story', `Read ${n} a bedtime story`)
+          : opt('school', `Help ${n} get ready for school`),
+        opt('hug', `Give ${n} a hug`),
+        leave,
       ]
     case 'courier':
       return [
@@ -784,6 +802,32 @@ function baseRespond(
         counts ? 1 : 0,
         2,
       )
+    case 'play':
+      return out(
+        [
+          act(
+            `*You get down on the floor and play with ${n}. There is a lot of laughing.*`,
+          ),
+        ],
+        counts ? 2 : 0,
+        30,
+        { notes: ['Time together.'] },
+      )
+    case 'story':
+      return out(
+        [act(`*You read ${n} a story. They are asleep before the end.*`)],
+        counts ? 2 : 0,
+        20,
+        { notes: ['Time together.'] },
+      )
+    case 'school':
+      return out(
+        [act(`*Shoes, bag, a packed lunch. ${n} is ready, just about.*`)],
+        counts ? 1 : 0,
+        15,
+      )
+    case 'hug':
+      return out([act(`*${n} runs at you for a hug.*`)], counts ? 1 : 0, 1)
     case 'thank':
       return out([say(who, 'No problem at all. Enjoy!')], 0, 1)
     case 'problem':
@@ -865,6 +909,10 @@ export function relationOf(profile: ProfileData, id: string): Relation {
           bond: bondOf(profile.work.life, id),
           day: profile.work.day,
           together: profile.work.life.partner?.id === id,
+          family: {
+            children: profile.work.life.family.children.length,
+            expected: !!profile.work.life.family.expected,
+          },
         }
       : {}),
   }
@@ -916,17 +964,13 @@ export function holdEncounter(
   let next = recordEncounter(profile, ids, outcome)
   if (outcome.bond) {
     let life = withBond(next.work.life, ids[0], outcome.bond)
-    // Said yes to moving in: they live here from today.
-    if (
-      outcome.memory === 'move-in' &&
-      outcome.notes.some((n) => n.includes('moving in'))
-    )
-      life = movedIn(
-        life,
-        ids[0],
-        next.work.day,
-        outcome.lines.find((l) => l.speaker)?.speaker ?? 'them',
-      )
+    const day = next.work.day
+    const name = outcome.lines.find((l) => l.speaker)?.speaker ?? 'them'
+    // What a yes (or the player's own decision) changes at home.
+    if (outcome.effect === 'move-in') life = movedIn(life, ids[0], day, name)
+    if (outcome.effect === 'family-baby') life = startFamily(life, ids[0], day, false)
+    if (outcome.effect === 'family-adopt') life = startFamily(life, ids[0], day, true)
+    if (outcome.effect === 'separate') life = separate(life, ids[0], day)
     next = { ...next, work: { ...next.work, life } }
   }
   if (outcome.minutes <= 0) return next

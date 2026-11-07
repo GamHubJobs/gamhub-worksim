@@ -113,3 +113,11 @@ a yes. New animations: hug, kiss, slow dance, holding hands. (`world/npc/moment.
 Becoming a couple and asking someone round (both asked); an evening at home together on
 the sofa; asking them to stay (a fade to the morning, waking up together); moving in
 (they live there, pay half the rent). A missed visit is remembered.
+
+### R7–R11 · Marriage, a family, hard times, the phone, the story
+
+The proposal (asked), the wedding in the park with guests, vows, a kiss and a first
+dance; an optional family (asked; respected when someone does not want children); hard
+times from what happened (talking it through, breaking up, being left after long
+neglect, making up); the partner's messages and the wedding on the phone; a relationship
+mission in "Short Delivery". Children are never part of anything romantic.

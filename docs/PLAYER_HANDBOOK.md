@@ -87,7 +87,11 @@ friends, and some of them more. Ask what they love doing, pay a compliment, flir
 you are friends, and ask them out. They answer as themselves: yes, no, or not yet, and a
 no is respected. On the evening of a date, go to the café or the park, walk up to them,
 sit down together and talk; what you say, and what you remember about them, decides how
-it goes. Staying single is just as good a way to play.
+it goes. Once you are dating you can become a couple, invite them round, ask them
+to stay, move in together, propose and marry (a wedding in the park, with your friends),
+and, if you both want, start a family. Things can go wrong (missed dates add up), and
+they can be talked through, or ended, by either of you. Staying single is just as good a
+way to play.
 
 ### Your phone
 

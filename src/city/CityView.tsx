@@ -39,6 +39,9 @@ import { EncounterPanel } from '../world/npc/EncounterPanel'
 import { DatePanel, type DateStep } from '../world/npc/DatePanel'
 import { endMoment, startMoment } from '../world/npc/moment'
 import { dateHere, finishDate, whoOf } from '../game/dates'
+import { marry, weddingHere } from '../game/family'
+import { adultOf, ask, bondOf } from '../game/romance'
+import { WeddingPanel } from '../world/npc/WeddingPanel'
 import { withLife } from '../game/lifeTime'
 import { StoryScenePanel } from '../world/npc/StoryScenePanel'
 import { campaignFor } from '../game/story/campaigns'
@@ -173,6 +176,9 @@ export function CityView({
     setStoryScene({ scene, name, mission, lines: sceneLines(profile, scene) })
     return true
   }
+  // The player's wedding, here today (see game/family.ts): kept while it is under way.
+  const weddingNow = weddingHere(life, profile.work.day)
+  const [wedding, setWedding] = useState<string | null>(null)
   // A date, if someone is waiting here for the player (see game/dates.ts).
   const date = dateHere(profile)
   // The date as it was when the player walked up (it is over in the save when it ends).
@@ -195,6 +201,10 @@ export function CityView({
         return
       }
       if (storySceneWith(id, n.who.name)) return
+      if (weddingNow && weddingNow === id) {
+        setWedding(id)
+        return
+      }
       if (date && date.id === id) {
         setDating({ step: 'greet', date })
         return
@@ -205,7 +215,7 @@ export function CityView({
       })
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [minute, profile],
+    [minute, profile, weddingNow],
   )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
@@ -332,6 +342,7 @@ export function CityView({
                 dressed={phase === 'morning' && life.ready.dressed}
                 raining={raining}
                 date={dating?.date.id ?? date?.id ?? null}
+                wedding={wedding ?? weddingNow}
               />
             </Suspense>
           </SceneBoundary>
@@ -419,6 +430,62 @@ export function CityView({
                 void onAct((p) => playScene(p, storyScene.scene.id, choice))
               }
               onClose={() => setStoryScene(null)}
+            />
+          )}
+          {wedding && whoOf(wedding) && (
+            <WeddingPanel
+              who={whoOf(wedding)!}
+              onVows={() => {
+                // Married: their history, and an evening to remember.
+                void onAct((p) => {
+                  const l = marry(p.work.life, wedding, p.work.day)
+                  return withLife(p, {
+                    ...l,
+                    minute: l.minute + 60,
+                    needs: {
+                      ...l.needs,
+                      social: 100,
+                      fun: Math.min(100, l.needs.fun + 30),
+                    },
+                  })
+                })
+              }}
+              onKiss={() => {
+                const b = bondOf(life, wedding)
+                const a = ask(
+                  adultOf(wedding)!,
+                  { ...b, stage: 'married', dates: Math.max(2, b.dates) },
+                  'kiss',
+                  {
+                    day: profile.work.day,
+                    public: false,
+                    colleague: false,
+                  },
+                )
+                startMoment(
+                  {
+                    kind: a.answer === 'yes' ? 'kiss' : 'hug',
+                    with: wedding,
+                    place: 'park',
+                    seconds: 5,
+                  },
+                  true,
+                )
+                doThing('date-wedding')
+                return a.answer === 'yes'
+              }}
+              onDance={() => {
+                startMoment(
+                  { kind: 'dance', with: wedding, place: 'park', seconds: 8 },
+                  true,
+                )
+                doThing('date-dance')
+              }}
+              onClose={() => {
+                endMoment()
+                setWedding(null)
+                release()
+              }}
             />
           )}
           {dating && (
