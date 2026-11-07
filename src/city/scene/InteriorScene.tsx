@@ -187,7 +187,10 @@ function InteriorScene(props: InteriorSceneProps) {
               request={props.request}
               onPrompt={props.onPrompt}
               onProgress={props.onProgress}
-              onDone={(a, completed) => onDone(a.action, completed)}
+              onDone={(a, completed) =>
+                // A date's own steps (sitting together, goodnight) by their id.
+                onDone(a.action ?? (a.id.startsWith('date-') ? a.id : null), completed)
+              }
               look={look}
               surface={layout.surface}
               low={low}

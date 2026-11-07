@@ -111,6 +111,17 @@ export type ClipId =
   | 'run-in-place'
   /** A hand raised in greeting, waving. */
   | 'wave'
+  /** Two people: a hug (arms round each other), facing. */
+  | 'hug'
+  /** Two people: a goodnight kiss, leaning in, hands on the other's arms. */
+  | 'kiss'
+  /** Two people: a slow dance, swaying, arms round each other. */
+  | 'dance'
+  /** Seated across a table, reaching to hold hands. */
+  | 'hold-hands-across'
+  /** Seated side by side, holding hands: the right hand, or the left. */
+  | 'hold-hands-right'
+  | 'hold-hands-left'
 
 /** Every clip, as a frame at time t (seconds since it started). */
 export function clipFrame(clip: ClipId, t: number): RigFrame {
@@ -208,6 +219,77 @@ export function clipFrame(clip: ClipId, t: number): RigFrame {
         headPitch: -0.05,
       }
     }
+    case 'hug': {
+      // Arms forward and round, a gentle squeeze.
+      const k = clamp01(t / 0.5) * (1 + wave(t, 2.6) * 0.04)
+      return {
+        ...STAND,
+        lean: 0.1 * k,
+        shoulderL: mix3([0.04, 0, -0.07], [0.95, 0.85, -0.25], k),
+        shoulderR: mix3([0.04, 0, 0.07], [0.95, -0.85, 0.25], k),
+        elbowL: mix(0.14, 1.45, k),
+        elbowR: mix(0.14, 1.45, k),
+        headYaw: 0.25 * k,
+        headPitch: -0.05,
+      }
+    }
+    case 'kiss': {
+      // Leaning in, hands on the other's arms, the head tipped a little.
+      const k = clamp01(t / 0.7)
+      return {
+        ...STAND,
+        lean: 0.12 * k,
+        shoulderL: mix3([0.04, 0, -0.07], [0.75, 0.25, -0.15], k),
+        shoulderR: mix3([0.04, 0, 0.07], [0.75, -0.25, 0.15], k),
+        elbowL: mix(0.14, 1.0, k),
+        elbowR: mix(0.14, 1.0, k),
+        headYaw: 0.18 * k,
+        headPitch: -0.12 * k,
+      }
+    }
+    case 'dance': {
+      // A slow sway, from foot to foot.
+      const sway = wave(t, 2.4)
+      return {
+        ...STAND,
+        lean: 0.05,
+        hipL: sway * 0.08,
+        hipR: -sway * 0.08,
+        shoulderL: [1.05, 0.45, -0.3],
+        shoulderR: [1.05, -0.45, 0.3],
+        elbowL: 1.3,
+        elbowR: 1.3,
+        headYaw: sway * 0.15,
+        y: Math.abs(sway) * 0.01,
+      }
+    }
+    case 'hold-hands-across':
+      // Leaning a little over the table, the right arm reaching across.
+      return {
+        ...SIT,
+        lean: 0.12,
+        shoulderR: [0.95, -0.1, 0.05],
+        elbowR: 0.35,
+        shoulderL: [0.3, 0, -0.1],
+        elbowL: 1.3,
+        headPitch: -0.05,
+      }
+    case 'hold-hands-right':
+      return {
+        ...SIT,
+        lean: -0.15,
+        shoulderR: [0.25, 0, 0.45],
+        elbowR: 0.35,
+        elbowL: 1.1,
+      }
+    case 'hold-hands-left':
+      return {
+        ...SIT,
+        lean: -0.15,
+        shoulderL: [0.25, 0, -0.45],
+        elbowL: 0.35,
+        elbowR: 1.1,
+      }
     case 'present': {
       // Standing, one arm out to the screen, then back to the audience.
       const point = clamp01(wave(t, 5) * 1.4)

@@ -65,6 +65,7 @@ import {
 } from './interaction/activity'
 import type { Control } from './keys'
 import { phoneIsOpen } from '../phone/store'
+import { beginMoment, momentClips, momentNow } from './npc/moment'
 import { setCapture } from '../phone/photos'
 import { Prop } from './props'
 import { Particles } from './vfx/Particles'
@@ -717,6 +718,8 @@ export function PlayerRig(props: PlayerRigProps) {
           route.current = null
           s = { ...s, heading: turnTowards(s.heading, a.anchor.heading, Math.PI) }
           mode.current = { kind: 'acting', activity: a, t: 0, placed: 0, at: a.anchor }
+          // Arrived to say goodnight: the moment with the other person starts now.
+          if (a.id.startsWith('date-goodnight')) beginMoment()
           motion.current = { walking: false }
         }
       }
@@ -768,6 +771,10 @@ export function PlayerRig(props: PlayerRigProps) {
         if (now0.stage.at && now0.index > m.placed)
           m.t = Math.min(m.t, startOf(a, now0.index))
         rig.current = clipFrame(now0.stage.clip, now0.local)
+        // On a date: holding hands, then a hug or a kiss goodnight, with the other person.
+        const together = a.id.startsWith('date-') ? momentNow() : null
+        if (together)
+          rig.current = clipFrame(momentClips(together.moment).player, together.t)
         s = { ...s, x: m.at.x, z: m.at.z, heading: m.at.heading, speed: 0, y: 0 }
         for (const id of soundsBetween(a, before, m.t)) audio.play(id)
         const hold = heldAt(a, m.t) ?? {}
@@ -786,7 +793,12 @@ export function PlayerRig(props: PlayerRigProps) {
         // side if that view is clear, else from a side or over the shoulder.
         if (!turned) {
           if (m.view === undefined)
-            m.view = a.view === 'behind' ? m.at.heading : viewFor(m.at, a.anchor.y ?? 0)
+            m.view =
+              a.view === 'behind'
+                ? m.at.heading
+                : a.view === 'side'
+                  ? m.at.heading + Math.PI / 2
+                  : viewFor(m.at, a.anchor.y ?? 0)
           const want = m.view
           o.yaw = turnTowards(o.yaw, want, dt * 1.2)
           o.distance += (3.2 - o.distance) * Math.min(1, dt * 1.5)

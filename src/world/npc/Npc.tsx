@@ -11,7 +11,7 @@ import { Euler, Quaternion, Vector3, type Group } from 'three'
 import type { Availability, Who } from '../../game/encounters'
 import { Person, type PersonLook } from '../../office/scene/people'
 import type { Vector } from '../../content/office'
-import { clipFrame, type RigFrame } from '../character/rig'
+import { clipFrame, type ClipId, type RigFrame } from '../character/rig'
 import { bodyOf } from './bodies'
 import { engagedFor, removeNpc, setNpc } from './people'
 import { Talkable } from './Talkable'
@@ -35,6 +35,7 @@ export function Npc({
   reach = 1.5,
   availability = 'free',
   doing,
+  clip,
   children,
 }: {
   who: Who
@@ -47,6 +48,8 @@ export function Npc({
   reach?: number
   availability?: Availability
   doing?: string
+  /** Something they are doing with the player (a hug, holding hands), seated or standing. */
+  clip?: { id: ClipId; t: () => number } | null
   /** Drawn instead of a standing or seated person (a runner, say). */
   children?: ReactNode
 }) {
@@ -79,7 +82,10 @@ export function Npc({
       t.rotation.y += wrap(want - t.rotation.y) * Math.min(1, dt * 5)
       if (Math.abs(t.rotation.y - before) > 0.002) invalidate()
     }
-    if (!children && !seated) {
+    if (clip) {
+      rig.current = clipFrame(clip.id, clip.t())
+      invalidate()
+    } else if (!children && !seated) {
       rig.current =
         talking >= 0 ? clipFrame(talking < 1.4 ? 'wave' : 'talk', talking) : null
       if (talking >= 0) invalidate()
@@ -106,7 +112,7 @@ export function Npc({
                 look={look}
                 seated={seated}
                 phase={phase}
-                rig={seated ? undefined : rig}
+                rig={seated && !clip ? undefined : rig}
               />
             ))}
         </Talkable>

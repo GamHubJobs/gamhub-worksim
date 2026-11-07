@@ -119,6 +119,16 @@ export const CAFE: Layout = {
       object: 'plate',
     },
     {
+      // Saying goodnight after a date: standing face to face (see npc/moment.ts).
+      id: 'date-goodnight',
+      action: null,
+      prompt: 'say goodnight',
+      spot: { x: -4.6, z: 1.6, reach: 0 },
+      anchor: { x: -4.6, z: 1.6, heading: -Math.PI / 2 },
+      view: 'side',
+      stages: [{ clip: 'stand', seconds: 4.5, label: 'Saying goodnight' }],
+    },
+    {
       // On a date (see game/dates.ts): sitting together while they talk. Started by the
       // date, never offered by itself (nothing to reach); moving stands up.
       id: 'date-sit',
@@ -349,6 +359,16 @@ export const PARK: Layout = {
       effects: [
         { kind: 'breath', from: 0, to: 3.2, at: [0, 0.05, -0.3], follow: 'right' },
       ],
+    },
+    {
+      // Saying goodnight after a date: standing face to face (see npc/moment.ts).
+      id: 'date-goodnight-park',
+      action: null,
+      prompt: 'say goodnight',
+      spot: { x: -3.7, z: 1.3, reach: 0 },
+      anchor: { x: -3.7, z: 1.3, heading: -Math.PI / 2 },
+      view: 'side',
+      stages: [{ clip: 'stand', seconds: 4.5, label: 'Saying goodnight' }],
     },
     {
       // On a date (see game/dates.ts): sitting together while they talk. Started by the

@@ -8,7 +8,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { Adult } from '../../content/adults'
 import { dateChoices, dateMoment, type DateMoment } from '../../game/dates'
 import type { Who } from '../../game/encounters'
-import type { Bond } from '../../game/romance'
+import { ask, type Bond } from '../../game/romance'
+import { startMoment } from './moment'
 
 export type DateStep = 'greet' | 'talk'
 
@@ -21,6 +22,7 @@ export function DatePanel({
   day,
   onSit,
   onFinish,
+  onGoodnight,
   onClose,
   className = 'fixed right-4 bottom-4 z-40',
 }: {
@@ -34,6 +36,8 @@ export function DatePanel({
   onSit: () => void
   /** The date is over: how it went, and the bond after it. */
   onFinish: (score: number, bond: Bond) => string
+  /** Saying goodnight: a kiss (if they said yes to one), a hug (if they would like one), or a wave. */
+  onGoodnight: (kind: 'kiss' | 'hug' | 'wave') => void
   onClose: () => void
   className?: string
 }) {
@@ -43,6 +47,7 @@ export function DatePanel({
   const [now, setNow] = useState<Bond>(bond)
   const [last, setLast] = useState<DateMoment | null>(null)
   const [summary, setSummary] = useState<string | null>(null)
+  const [kissed, setKissed] = useState(false)
   const close = useRef(onClose)
   useEffect(() => {
     close.current = onClose
@@ -111,7 +116,19 @@ export function DatePanel({
         {summary ? (
           <button
             type="button"
-            onClick={onClose}
+            onClick={() =>
+              onGoodnight(
+                kissed
+                  ? 'kiss'
+                  : ask(adult, now, 'hug', {
+                        day,
+                        public: place === 'cafe',
+                        colleague: false,
+                      }).answer === 'yes'
+                    ? 'hug'
+                    : 'wave',
+              )
+            }
             className="w-full rounded-md bg-pink-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-pink-800"
           >
             Say goodnight
@@ -153,6 +170,10 @@ export function DatePanel({
                     day,
                     public: place === 'cafe',
                   })
+                  // Holding hands (only after a yes), for the rest of the date.
+                  if (c.id === 'hold-hands' && m.answer?.answer === 'yes')
+                    startMoment({ kind: 'hands', with: who.id, place, seconds: 3600 })
+                  if (c.id === 'kiss' && m.answer?.answer === 'yes') setKissed(true)
                   setLast(m)
                   setNow(m.bond)
                   setScore(score + m.score)

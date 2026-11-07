@@ -188,6 +188,33 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-07 · Relationships 4: affection, shown between the two
+
+### Built
+
+- **New animations** (`rig.ts`): a hug, a kiss, a slow dance, holding hands across a
+  table, and holding hands side by side (each hand).
+- **Two people moving together** (`world/npc/moment.ts`): when the other person says yes
+  to holding hands on a date, both reach across the café table (or hold hands on the park
+  bench) for the rest of the date. Saying goodnight, both stand up and face each other
+  beside the table (or in front of the bench), close: a kiss if they said yes to one, a
+  hug if they would like one (asked), a wave otherwise; it starts when the player gets
+  there, and the date ends when it is over. Seen from the side, so both are in view (a
+  new camera framing for activities).
+- Never without a yes: holding hands and a kiss only after the other person said yes;
+  the goodnight hug is asked like any other.
+
+### Tests
+
+- Unit tests: every new animation gives valid poses (`world.test.ts`).
+- Browser test (`date.spec.ts`, now with these): holding hands across the table, and
+  goodnight standing face to face (a hug: a kiss was "not yet").
+- Screenshots: `docs/screenshots/relationships/holding-hands.png`, `goodnight.png`.
+- Results: 2,202 unit tests passed; the date browser test passed. The full browser run is
+  done with the next milestone.
+
+---
+
 ## 2026-11-06 · Game screen 1: the world is the screen
 
 ### Built

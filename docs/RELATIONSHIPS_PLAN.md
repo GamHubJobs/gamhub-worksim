@@ -100,5 +100,10 @@ Each is built, tested in the game and documented before the next.
 - **Tests**: `romance.test.ts` (9), `dates.test.ts` (6); browser: `date.spec.ts` (asking
   Maya out in person, the date at the café that evening, sitting down to dinner
   together, holding hands, a kiss declined as "not yet" and respected, dating now).
-- **Limits**: hand-holding and the kiss are described, not yet animated between the two
-  (R4); R5 to R11 are still to come.
+- **Limits** (then): affection was described, not animated (done in R4).
+
+### R4 · Affection, shown
+
+Holding hands (across the table, or side by side on the bench) and, saying goodnight, a
+kiss, a hug or a wave, standing face to face, close, seen from the side; each only after
+a yes. New animations: hug, kiss, slow dance, holding hands. (`world/npc/moment.ts`)

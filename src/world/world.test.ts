@@ -174,6 +174,12 @@ describe('animations', () => {
       'push-door',
       'run-in-place',
       'wave',
+      'hug',
+      'kiss',
+      'dance',
+      'hold-hands-across',
+      'hold-hands-right',
+      'hold-hands-left',
     ]
     for (const clip of clips)
       for (const t of [0, 0.7, 3.3, 11]) {

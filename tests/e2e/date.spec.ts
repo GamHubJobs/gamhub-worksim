@@ -102,12 +102,22 @@ test('asking Maya out in person, and the date at the café that evening', async 
   await expect(date).toContainText('You remembered!')
   await date.getByRole('button', { name: 'Ask if you can hold their hand' }).click()
   await expect(date).toContainText('takes your hand')
+  await page.waitForTimeout(1500)
+  await page.screenshot({ path: 'docs/screenshots/relationships/holding-hands.png' })
   // Too soon for a kiss: “not yet”, and that is respected.
   await date.getByRole('button', { name: 'Ask if you can kiss them goodnight' }).click()
   await expect(date).toContainText('Not yet')
   await expect(date).toContainText('completely fine')
   await expect(date.getByTestId('date-summary')).toContainText('dating now')
   await page.screenshot({ path: 'docs/screenshots/relationships/date-end.png' })
+  // Goodnight, standing face to face (a hug: they are close enough, and a kiss was not yet).
+  // (At normal speed, to see it.)
+  await page.evaluate('window.__worksimSpeed = 1')
   await date.getByRole('button', { name: 'Say goodnight' }).click()
-  await expect(date).toHaveCount(0)
+  await expect
+    .poll(() => page.evaluate('window.__worksimPlayer.mode'), { timeout: 30_000 })
+    .toBe('acting')
+  await page.waitForTimeout(1500)
+  await page.screenshot({ path: 'docs/screenshots/relationships/goodnight.png' })
+  await expect(date).toHaveCount(0, { timeout: 20_000 })
 })

@@ -37,6 +37,7 @@ import { WalkView } from '../world/WalkView'
 import { isRaining, useWeatherSetting } from '../world/weather'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
 import { DatePanel, type DateStep } from '../world/npc/DatePanel'
+import { endMoment, startMoment } from '../world/npc/moment'
 import { dateHere, finishDate, whoOf } from '../game/dates'
 import { withLife } from '../game/lifeTime'
 import { StoryScenePanel } from '../world/npc/StoryScenePanel'
@@ -208,7 +209,13 @@ export function CityView({
   )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
-      if (completed && action?.startsWith('person:'))
+      // A date's own steps: only saying goodnight ends it (finished or walked away from).
+      if (action?.startsWith('date-')) {
+        if (action.startsWith('date-goodnight')) {
+          endMoment()
+          setDating(null)
+        }
+      } else if (completed && action?.startsWith('person:'))
         meetPerson(action.slice('person:'.length))
       else if (completed && action) {
         commit(action)
@@ -457,7 +464,17 @@ export function CityView({
                 })
                 return done.summary
               }}
-              onClose={() => setDating(null)}
+              onGoodnight={(kind) => {
+                // Standing up, face to face: a kiss, a hug or a wave; then they go.
+                const place = dating.date.bond.date!.place
+                // It starts when the player gets there, and the date ends when it is done.
+                startMoment({ kind, with: dating.date.id, place, seconds: 4.5 }, true)
+                doThing(place === 'park' ? 'date-goodnight-park' : 'date-goodnight')
+              }}
+              onClose={() => {
+                endMoment()
+                setDating(null)
+              }}
             />
           )}
           {encounter && (
