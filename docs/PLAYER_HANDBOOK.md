@@ -103,7 +103,10 @@ while it is out; press **P** or **Esc** to put it away. See [The phone](PHONE.md
 ### Story Mode
 
 Choose **Story Mode** on the first screen, or press **Story** in the top bar, to play a
-story told in missions (so far for Finance & Administration: "Short Delivery"). The
+story told in missions. Every career has its own: "Short Delivery" (Finance &
+Administration), "The Halden Account" (Accounting), "Ticket Zero" (IT Help Desk),
+"Launch Week" (Digital Marketing), "Signal and Noise" (Data Analysis) and "Release Day"
+(Software Development). The
 tracker at the top right says what to do now and where. Missions are played in person:
 walk up to the person a mission is about and their scene plays, with choices; some need
 work on your computer, a meeting, or a visit somewhere in town. What you decide comes

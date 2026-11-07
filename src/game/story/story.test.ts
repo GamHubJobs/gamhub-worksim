@@ -6,6 +6,7 @@ import { caseFor } from '../caseVariants'
 import { officeWho } from '../../office/scene/officeCast'
 import { TOWN_PEOPLE } from '../../content/townPeople'
 import { FINANCE_STORY } from './campaigns/finance'
+import './campaigns'
 import {
   checkStory,
   currentObjective,

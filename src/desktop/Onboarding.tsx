@@ -2,7 +2,7 @@
 import { useState, type FormEvent } from 'react'
 import { CAREERS } from '../content/careers'
 import { COMPANY } from '../content/company'
-import { campaignFor } from '../game/story/campaigns'
+import { STORY_TITLES } from '../game/story/titles'
 
 /** Asks the desk to begin the story when it first opens (see Desktop). */
 export const NEW_STORY_KEY = 'worksim.newStory'
@@ -16,7 +16,8 @@ export function Onboarding({
   const [careerId, setCareerId] = useState(CAREERS[0].id)
   const [starting, setStarting] = useState(false)
   const [mode, setMode] = useState<'free' | 'story'>('free')
-  const story = campaignFor(careerId)
+  const title = STORY_TITLES[careerId]
+  const story = title ? { title } : undefined
   const [error, setError] = useState<string | null>(null)
 
   async function submit(event: FormEvent) {

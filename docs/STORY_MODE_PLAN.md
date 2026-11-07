@@ -101,4 +101,12 @@ play without losing anything. Screenshots and in-game evidence for each.
   Marcus). Chapter 3, audit week, where chapter 1's choice about Marcus comes back. Three
   endings from Priya's offer. Played to each ending in unit tests; the review, the ending
   and the café mission played in the browser.
-- **Limits**: the other five careers' stories are still to come.
+- **Limits** (then): the other five careers' stories were still to come (done in Story 6–10).
+
+### Story 6–10 · A story for every career
+
+"The Halden Account" (Accounting), "Ticket Zero" (IT Help Desk), "Launch Week" (Digital
+Marketing), "Signal and Noise" (Data Analysis), "Release Day" (Software Development):
+two chapters each, with the career's own cases, its own people, a decision that comes
+back, and endings that follow from it. Each is checked in unit tests (it holds together,
+and can be played to more than one ending).

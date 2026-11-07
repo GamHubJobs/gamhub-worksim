@@ -277,3 +277,25 @@ test('a side mission in town: helping Maya with her books at the café, after wo
   await expect(page.getByTestId('story-finished')).toContainText('banana bread')
   await page.screenshot({ path: 'docs/screenshots/story/maya-books.png' })
 })
+
+test('every career has a story: IT Help Desk, “Ticket Zero”, from the first screen', async ({
+  page,
+}) => {
+  test.setTimeout(400_000)
+  await page.goto('/')
+  await page.getByRole('radio', { name: /IT Help Desk/ }).check()
+  await page.getByRole('radio', { name: /Story Mode: Ticket Zero/ }).check()
+  await page.getByLabel('Your first name').fill('Sam')
+  await page.getByRole('button', { name: 'Start my first day' }).click()
+  await page.evaluate(
+    "window.__worksimSpeed = 12; sessionStorage.setItem('worksim.testSpeed', '12')",
+  )
+  await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
+    timeout: 120_000,
+  })
+  await expect(tracker(page)).toContainText('First login')
+  await play(page, 'manager', 'it-ravi', /worst thing/)
+  await play(page, 'senior', 'it-jess', /ticket zero/)
+  await expect(page.getByTestId('story-finished')).toContainText('First login')
+  await page.screenshot({ path: 'docs/screenshots/story/it-first-login.png' })
+})

@@ -183,8 +183,57 @@ working simulations of the professional software used in its field (see
 - [x] Story 1–4 Engine and save, the Story screen and tracker, missions played in the
       world, Finance & Administration chapter 1
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
-- [ ] Story 6–10 The other five careers
+- [x] Story 6–10 The other five careers
 - [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-07 · Story 6–10: a story for every career
+
+### Built
+
+Five new campaigns (`src/game/story/campaigns/`), each with its own people (the
+department's manager and senior colleague, and others from the office), its career's own
+cases on the computer, two chapters, a side mission, a decision that comes back in the
+second chapter, and endings that follow from it:
+
+- **Accounting, "The Halden Account"**: the firm's oldest client disputes a statement
+  (write it off, as always, or check the ledger); in VAT season, expenses coded to
+  reclaim tax they should not, signed off by a senior colleague (report it, go to the
+  manager together, or let her correct it quietly); the year-end.
+- **IT Help Desk, "Ticket Zero"**: a ticket open for three weeks (restart it again, or
+  find the real cause); a department head's assistant wants admin rights (grant them,
+  install the one tool, or refuse); the phishing email, where that choice decides
+  whether anything gets in.
+- **Digital Marketing, "Launch Week"**: a client changes the brief (agree, or say what it
+  will cost first); a vlogger's paid post (mark it as paid, or not; a second chance with
+  the manager); the client's reaction to the results.
+- **Data Analysis, "Signal and Noise"**: two departments' different numbers for the same
+  month; a director's analysis that is meant to support a decision already made (the
+  full picture, or only the first year; a second chance); the board meeting.
+- **Software Development, "Release Day"**: a vague bug report that is quietly losing
+  data (if the player asks exactly what was typed); an impossible deadline (ship less,
+  tested, or everything with a known problem; a second chance); release day.
+
+Story Mode is offered on the first screen for every career, and the Story screen shows
+each career's own campaign.
+
+### Tests
+
+- Unit tests (`campaigns.test.ts`, 13): six campaigns, one per career, each with its own
+  title and people; for each, every scene, person and case it names exists and every
+  scene is used; at least two chapters and a side mission; played to the end in five
+  different ways of choosing, with at least two different endings.
+- Browser test (`story.spec.ts`): IT Help Desk in Story Mode from the first screen, the
+  first mission played in person.
+- Results: 2,226 unit tests passed. Chromium browser tests, full run: 196 passed, 3
+  skipped, none failed or flaky. Production-build tests: 1 failed in the full run (an
+  offline-update test whose service worker was not ready yet, as before), then 5 passed
+  on their own. Firefox, WebKit and Edge 8 passed, 1 skipped.
+- Found and fixed: the six stories had made the start screen 311 kB, because the code
+  that saves every change imported them. Stories now register when the desk loads, and
+  the first screen has only their titles: 290 kB (from 298 before this work). The story
+  and phone browser tests passed again after the change (8 passed).
 
 ---
 

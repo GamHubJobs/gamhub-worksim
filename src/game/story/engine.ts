@@ -14,7 +14,7 @@ import { caseFor } from '../caseVariants'
 import { firstName } from '../career'
 import { earn } from '../lifeTime'
 import { changeTrust } from '../relationships'
-import { campaignFor } from './campaigns'
+import { campaignFor } from './registry'
 import type { Campaign, Mission, Objective, Scene } from './types'
 
 export function storyOf(profile: ProfileData): Story | undefined {
