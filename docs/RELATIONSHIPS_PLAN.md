@@ -107,3 +107,9 @@ Each is built, tested in the game and documented before the next.
 Holding hands (across the table, or side by side on the bench) and, saying goodnight, a
 kiss, a hug or a wave, standing face to face, close, seen from the side; each only after
 a yes. New animations: hug, kiss, slow dance, holding hands. (`world/npc/moment.ts`)
+
+### R5–R6 · Evenings at home, staying over, moving in
+
+Becoming a couple and asking someone round (both asked); an evening at home together on
+the sofa; asking them to stay (a fade to the morning, waking up together); moving in
+(they live there, pay half the rent). A missed visit is remembered.

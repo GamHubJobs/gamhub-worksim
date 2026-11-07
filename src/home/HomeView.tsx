@@ -10,6 +10,7 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -39,6 +40,12 @@ import { formatTime, nextWorkday, weekdayName } from '../game/clock'
 import { canDo, lifePhase, sleepHours } from '../game/life'
 import { canGoOut } from '../game/city'
 import { deliveryStage } from '../game/delivery'
+import { finishDate, stayTheNight, whoOf } from '../game/dates'
+import { adultOf, ask, atHome, bondOf, type Bond } from '../game/romance'
+import { withLife } from '../game/lifeTime'
+import { DatePanel, type DateStep } from '../world/npc/DatePanel'
+import { endMoment, startMoment } from '../world/npc/moment'
+import { onTalkRequest, release } from '../world/npc/people'
 import { holdEncounter, relationOf } from '../game/encounters'
 import { TOWN_PEOPLE } from '../content/townPeople'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
@@ -136,13 +143,31 @@ export function HomeView({
   const [ready, setReady] = useState(false)
   const walkable = webgl && !sceneFailed && ready
   const [request, setRequest] = useState<{ id: string; nonce: number } | null>(null)
+  // Someone at home with the player (visiting, staying over, living here).
+  const here = atHome(life, profile.work.day)
+  const [evening, setEvening] = useState<{
+    step: DateStep
+    id: string
+    bond: Bond
+  } | null>(null)
+  const [talking, setTalking] = useState<string | null>(null)
+  // Going to bed with someone there: a fade to the morning (nothing more is shown).
+  const [fade, setFade] = useState(false)
   const commit = useCallback(
     (id: string) => {
+      if (id === 'bed' && here) {
+        setFade(true)
+        window.setTimeout(() => {
+          setFade(false)
+          onBed()
+        }, 2600)
+        return
+      }
       if (id === 'bed') return onBed()
       if (id === 'go-out') return onGoOutside()
       onAction(id)
     },
-    [onAction, onBed, onGoOutside],
+    [onAction, onBed, onGoOutside, here],
   )
   const doThing = useCallback(
     (id: string) => {
@@ -156,13 +181,43 @@ export function HomeView({
   // The courier, after handing the takeaway over at the door: a word before they go.
   const [courier, setCourier] = useState(false)
   const stage = deliveryStage(life)
+  /** Walked up to them: an evening together (a visit), or a word (they live here). */
+  const meetPerson = useCallback(
+    (id: string) => {
+      if (!here || here.id !== id) return release()
+      if (
+        !here.living &&
+        life.phase === 'evening' &&
+        bondOf(life, id).visit === profile.work.day
+      )
+        setEvening({ step: 'greet', id, bond: bondOf(life, id) })
+      else setTalking(id)
+    },
+    [here, life, profile.work.day],
+  )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
+      if (action?.startsWith('date-')) {
+        // Only the goodnight ends the evening.
+        if (action === 'date-goodnight-home') {
+          endMoment()
+          setEvening(null)
+          release()
+        }
+        return
+      }
+      if (completed && action?.startsWith('person:'))
+        return meetPerson(action.slice('person:'.length))
       if (completed && action === 'takeaway-door' && stage === 'at-door') setCourier(true)
       if (completed && action) commit(action)
     },
-    [commit, stage],
+    [commit, stage, meetPerson],
   )
+  // A click on them: walk over.
+  useEffect(() => onTalkRequest((id) => doThing(`person:${id}`)), [doThing])
+  useEffect(() => {
+    if (!evening && !talking) release()
+  }, [evening, talking])
 
   // The 3D world, full screen behind the drawer.
   const world = webgl && !sceneFailed && (
@@ -187,6 +242,7 @@ export function HomeView({
               phase={phase === 'morning' ? 'morning' : 'evening'}
               dressed={phase === 'morning' && life.ready.dressed}
               delivery={deliveryStage(life)}
+              partner={evening?.id ?? here?.id ?? null}
               doings={stableDoings}
               controls={api.controls}
               request={request}
@@ -220,6 +276,91 @@ export function HomeView({
             </p>
           </header>
 
+          {evening && whoOf(evening.id) && adultOf(evening.id) && (
+            <DatePanel
+              key={evening.id}
+              who={whoOf(evening.id)!}
+              adult={adultOf(evening.id)!}
+              bond={evening.bond}
+              step={evening.step}
+              place="home"
+              day={profile.work.day}
+              onSit={() => {
+                setEvening({ ...evening, step: 'talk' })
+                doThing('date-sofa')
+              }}
+              onFinish={(score, bond) => {
+                const done = finishDate(
+                  life,
+                  evening.id,
+                  bond,
+                  score,
+                  profile.work.day,
+                  'home',
+                )
+                void onCareer((p) => {
+                  const l = finishDate(
+                    p.work.life,
+                    evening.id,
+                    bond,
+                    score,
+                    p.work.day,
+                    'home',
+                  ).life
+                  return withLife(p, {
+                    ...l,
+                    minute: l.minute + 90,
+                    needs: { ...l.needs, social: Math.min(100, l.needs.social + 20) },
+                  })
+                })
+                setEvening({ ...evening, bond: done.bond })
+                return done.summary
+              }}
+              onStay={() => {
+                const a = ask(adultOf(evening.id)!, evening.bond, 'stay-over', {
+                  day: profile.work.day,
+                  public: false,
+                  colleague: false,
+                })
+                const yes = a.answer === 'yes'
+                if (yes)
+                  void onCareer((p) =>
+                    withLife(p, stayTheNight(p.work.life, evening.id, p.work.day)),
+                  )
+                return { yes, line: a.line }
+              }}
+              onGoodnight={(kind) => {
+                startMoment({ kind, with: evening.id, place: 'home', seconds: 4.5 }, true)
+                doThing('date-goodnight-home')
+              }}
+              onClose={() => {
+                endMoment()
+                setEvening(null)
+              }}
+            />
+          )}
+          {talking && whoOf(talking) && (
+            <EncounterPanel
+              key={talking}
+              className="fixed right-4 bottom-4 z-40"
+              who={whoOf(talking)!}
+              situation={{ availability: 'free', minute: life.minute }}
+              relation={relationOf(profile, talking)}
+              onSay={(outcome) =>
+                void onCareer((p) => holdEncounter(p, [talking], outcome, 'out'))
+              }
+              onClose={() => setTalking(null)}
+            />
+          )}
+          {fade && (
+            <div
+              role="status"
+              data-testid="night-fade"
+              className="night-fade fixed inset-0 z-50 flex items-center justify-center bg-black text-lg text-white/80"
+            >
+              Later that night… and the next morning.
+            </div>
+          )}
           {courier && (
             <EncounterPanel
               className="fixed right-4 bottom-4 z-40"

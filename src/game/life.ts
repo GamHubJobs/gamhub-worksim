@@ -254,8 +254,14 @@ export function goToBed(profile: ProfileData): ProfileData {
       : `Woke up after ${sleepHours(bedtime).toFixed(1)} hours’ sleep`,
   )
   if (weekdayIndex(next) === 0 && life.rentWeek < weekNumber(next)) {
-    const rent = homeOf(life).rent
-    life = spend(life, next, rent, `Rent for week ${weekNumber(next)}`)
+    // Living together: the partner pays half.
+    const rent = Math.round(homeOf(life).rent / (life.partner ? 2 : 1))
+    life = spend(
+      life,
+      next,
+      rent,
+      `Rent for week ${weekNumber(next)}${life.partner ? ' (your half)' : ''}`,
+    )
     life = { ...life, rentWeek: weekNumber(next) }
     life = note(life, `Paid ${formatMoney(rent)} rent`)
   }

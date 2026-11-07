@@ -48,6 +48,11 @@ export interface HomeLayout {
   boxes: Box[]
   activities: Activity[]
   start: { x: number; z: number; heading: number }
+  /** Someone at home with the player: their seat beside the player's, and goodnight at the door. */
+  partner: {
+    seat: Spot | null
+    goodnight: { player: Spot; partner: Spot }
+  }
 }
 
 export function homeLayout(
@@ -480,9 +485,42 @@ export function homeLayout(
   })
 
   const startRoom = morning ? home.rooms.bedroom : home.rooms.living
+  // Someone visiting, or living here: on the sofa beside the player, and goodnight at the door.
+  const partnerSeat: Spot | null = sofa
+    ? { ...at(sofa, 0.05, 0.55), y: -0.12 }
+    : bed
+      ? { ...at(bed, 0, 0.0, -Math.PI / 2), y: 0.02 }
+      : null
+  const goodnight = {
+    player: { x: left + 0.95, z: door.z, heading: Math.PI / 2 },
+    partner: { x: left + 0.45, z: door.z, heading: -Math.PI / 2 },
+  }
+  if (seat)
+    activities.push({
+      // An evening together (see game/dates.ts): sitting with them while they talk.
+      id: 'date-sofa',
+      action: null,
+      prompt: 'sit with them',
+      spot: { x: seat.x, z: seat.z, reach: 0 },
+      anchor: seat,
+      stages: [
+        { clip: 'sit', seconds: 1.2, label: 'Sitting down together' },
+        { clip: 'sit-relax', seconds: 600, label: 'An evening together' },
+      ],
+    })
+  activities.push({
+    id: 'date-goodnight-home',
+    action: null,
+    prompt: 'say goodnight',
+    spot: { x: goodnight.player.x, z: goodnight.player.z, reach: 0 },
+    anchor: goodnight.player,
+    view: 'side',
+    stages: [{ clip: 'stand', seconds: 4.5, label: 'Saying goodnight at the door' }],
+  })
   return {
     boxes,
     activities,
     start: { x: startRoom[0] + 0.4, z: startRoom[1] + 0.9, heading: 0 },
+    partner: { seat: partnerSeat, goodnight },
   }
 }

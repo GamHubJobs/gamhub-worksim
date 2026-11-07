@@ -59,6 +59,9 @@ export interface Bond {
   dates: number
   /** What has happened between them, newest last. */
   history: Array<{ day: number; text: string }>
+  /** An evening at the player's home arranged (the day), and the night they stay (the day). */
+  visit: number | null
+  stayOver: number | null
 }
 
 export const NEW_BOND: Bond = {
@@ -70,6 +73,8 @@ export const NEW_BOND: Bond = {
   date: null,
   dates: 0,
   history: [],
+  visit: null,
+  stayOver: null,
 }
 
 export function bondOf(life: Life, id: string): Bond {
@@ -84,6 +89,8 @@ export function adultOf(id: string): Adult | undefined {
 /** The steps a relationship can take, each one asked. */
 export type Step =
   | 'date'
+  /** An evening round at the player's. */
+  | 'visit'
   | 'hold-hands'
   | 'hug'
   | 'kiss'
@@ -144,6 +151,7 @@ export function ask(
     { stage: Stage; attraction: number; closeness: number }
   > = {
     date: { stage: 'friends', attraction: 25, closeness: 30 },
+    visit: { stage: 'dating', attraction: 40, closeness: 45 },
     'hold-hands': { stage: 'dating', attraction: 40, closeness: 40 },
     kiss: { stage: 'dating', attraction: 55, closeness: 50 },
     exclusive: { stage: 'dating', attraction: 65, closeness: 60 },
@@ -199,6 +207,8 @@ function yes(step: Step): string {
   switch (step) {
     case 'date':
       return 'I would like that. Yes.'
+    case 'visit':
+      return 'An evening at yours? I would love that.'
     case 'hold-hands':
       return '*Their hand finds yours.*'
     case 'kiss':
@@ -313,4 +323,44 @@ export function nextFreeEvening(adult: Adult, day: number): number {
 
 export function withBond(life: Life, id: string, bond: Bond): Life {
   return { ...life, bonds: { ...(life.bonds ?? {}), [id]: bond } }
+}
+
+/** Someone who lives with the player, if anyone. */
+export function partnerOf(life: Life): string | null {
+  return life.partner?.id ?? null
+}
+
+/**
+ * Who is at the player's home now: the partner they live with (whenever the
+ * player is at home), or someone visiting this evening (from 7 pm to 11 pm),
+ * or staying the night and still there in the morning. `day` is the game's
+ * day (in the morning, still the evening before's).
+ */
+export function atHome(life: Life, day: number): { id: string; living: boolean } | null {
+  if (life.city.at !== 'home' || !life.city.inside) return null
+  const partner = partnerOf(life)
+  if (partner) return { id: partner, living: true }
+  for (const [id, b] of Object.entries(life.bonds ?? {})) {
+    // Round for the evening (from 7 pm), or staying the night.
+    if (
+      life.phase === 'evening' &&
+      ((b.visit === day && life.minute >= 19 * 60 && life.minute < 23 * 60) ||
+        b.stayOver === day)
+    )
+      return { id, living: false }
+    // Woken up together (the game's day is still the evening's until work).
+    if (life.phase === 'morning' && b.stayOver !== null && b.stayOver === day)
+      return { id, living: false }
+  }
+  return null
+}
+
+/** Moving in together: they live at the player's home from today, paying half the rent. */
+export function movedIn(life: Life, id: string, day: number, name: string): Life {
+  const b = bondOf(life, id)
+  return withBond({ ...life, partner: { id, since: day } }, id, {
+    ...b,
+    visit: null,
+    history: [...b.history, { day, text: `Moved in with ${name}` }].slice(-20),
+  })
 }

@@ -27,7 +27,13 @@ const act = (text: string): Line => ({ speaker: null, text })
 const opt = (id: string, label: string): Option => ({ id, label, tone: 'kind' })
 
 /** The personal things there are to say, by how well they know each other. */
-export function personalOptions(who: Who, adult: Adult, bond: Bond): Option[] {
+export function personalOptions(
+  who: Who,
+  adult: Adult,
+  bond: Bond,
+  /** They already live with the player. */
+  together = false,
+): Option[] {
   const n = first(who)
   const out: Option[] = []
   void adult
@@ -40,6 +46,11 @@ export function personalOptions(who: Who, adult: Adult, bond: Bond): Option[] {
   if (friends && !bond.date && !atLeast(bond.stage, 'dating'))
     out.push(opt('ask-out', `Ask ${n} out on a date`))
   if (bond.date) out.push(opt('date-check', 'Check your date is still on'))
+  const dating = atLeast(bond.stage, 'dating')
+  if (dating && !partners) out.push(opt('exclusive', `Ask ${n} if you are a couple now`))
+  if (dating && !bond.visit)
+    out.push(opt('invite-home', `Invite ${n} round for an evening`))
+  if (partners && !together) out.push(opt('move-in', `Ask ${n} to move in with you`))
   if (bond.closeness >= 40) out.push(opt('hug', `Give ${n} a hug`))
   return out
 }
@@ -175,6 +186,47 @@ export function respondPersonal(
         ],
         bond,
         1,
+      )
+    }
+    case 'exclusive':
+    case 'invite-home':
+    case 'move-in': {
+      const step = optionId === 'invite-home' ? 'visit' : optionId
+      const a = ask(adult, bond, step, context)
+      const next = answered(bond, step, a, day, who.name)
+      if (a.answer !== 'yes')
+        return result(
+          [act('*You ask.*'), say(who, a.line)],
+          next,
+          2,
+          a.answer === 'no'
+            ? [`${n} said no, for now. You will not ask again for a few days.`]
+            : [],
+        )
+      if (optionId === 'invite-home')
+        return result(
+          [
+            act('*You ask.*'),
+            say(who, a.line),
+            say(who, 'Tonight? I will come round about half seven.'),
+          ],
+          {
+            ...next,
+            visit: day,
+            history: [...next.history, { day, text: `Invited ${who.name} round` }].slice(
+              -20,
+            ),
+          },
+          2,
+          [`${n} is coming round to yours this evening, from 7:30 pm.`],
+        )
+      return result(
+        [act('*You ask.*'), say(who, a.line)],
+        next,
+        3,
+        optionId === 'move-in'
+          ? [`${n} is moving in with you. They will pay half the rent.`]
+          : [`You and ${n} are a couple.`],
       )
     }
     case 'hug': {

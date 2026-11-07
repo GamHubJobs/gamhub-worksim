@@ -23,6 +23,7 @@ export function DatePanel({
   onSit,
   onFinish,
   onGoodnight,
+  onStay,
   onClose,
   className = 'fixed right-4 bottom-4 z-40',
 }: {
@@ -30,7 +31,7 @@ export function DatePanel({
   adult: Adult
   bond: Bond
   step: DateStep
-  place: 'cafe' | 'park'
+  place: 'cafe' | 'park' | 'home'
   day: number
   /** Sit down together (the activity in 3D). */
   onSit: () => void
@@ -38,6 +39,8 @@ export function DatePanel({
   onFinish: (score: number, bond: Bond) => string
   /** Saying goodnight: a kiss (if they said yes to one), a hug (if they would like one), or a wave. */
   onGoodnight: (kind: 'kiss' | 'hug' | 'wave') => void
+  /** At home: ask them to stay the night (they answer; a yes, and they stay). */
+  onStay?: () => { yes: boolean; line: string }
   onClose: () => void
   className?: string
 }) {
@@ -48,6 +51,7 @@ export function DatePanel({
   const [last, setLast] = useState<DateMoment | null>(null)
   const [summary, setSummary] = useState<string | null>(null)
   const [kissed, setKissed] = useState(false)
+  const [stay, setStay] = useState<{ yes: boolean; line: string } | null>(null)
   const close = useRef(onClose)
   useEffect(() => {
     close.current = onClose
@@ -74,7 +78,9 @@ export function DatePanel({
       className={`visible ${className} w-[26rem] max-w-[calc(100%-2rem)] rounded-xl bg-white p-4 shadow-2xl ring-2 ring-pink-200 outline-none`}
     >
       <p className="text-xs font-semibold tracking-wide text-pink-700 uppercase">
-        A date · {place === 'park' ? 'the park' : 'Kettle & Crumb'}
+        {place === 'home'
+          ? 'An evening at yours'
+          : `A date · ${place === 'park' ? 'the park' : 'Kettle & Crumb'}`}
       </p>
       <p className="font-semibold text-slate-900">{who.name}</p>
       <div className="mt-2 space-y-1.5 text-sm text-slate-700" aria-live="polite">
@@ -113,26 +119,55 @@ export function DatePanel({
         )}
       </div>
       <div className="mt-3 space-y-1" role="group" aria-label="What you do">
-        {summary ? (
-          <button
-            type="button"
-            onClick={() =>
-              onGoodnight(
-                kissed
-                  ? 'kiss'
-                  : ask(adult, now, 'hug', {
-                        day,
-                        public: place === 'cafe',
-                        colleague: false,
-                      }).answer === 'yes'
-                    ? 'hug'
-                    : 'wave',
-              )
-            }
-            className="w-full rounded-md bg-pink-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-pink-800"
-          >
-            Say goodnight
-          </button>
+        {summary && stay?.yes ? (
+          <>
+            <p className="mb-1 text-sm">
+              {n}: “{stay.line}”
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full rounded-md bg-pink-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-pink-800"
+            >
+              {n} is staying: carry on
+            </button>
+          </>
+        ) : summary ? (
+          <>
+            {onStay && !stay && (
+              <button
+                type="button"
+                onClick={() => setStay(onStay())}
+                className="mb-1 w-full rounded-md border border-pink-200 px-3 py-1.5 text-sm hover:bg-pink-50"
+              >
+                Ask {n} to stay the night
+              </button>
+            )}
+            {stay && (
+              <p className="mb-1 text-sm">
+                {n}: “{stay.line}”
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() =>
+                onGoodnight(
+                  kissed
+                    ? 'kiss'
+                    : ask(adult, now, 'hug', {
+                          day,
+                          public: place === 'cafe',
+                          colleague: false,
+                        }).answer === 'yes'
+                      ? 'hug'
+                      : 'wave',
+                )
+              }
+              className="w-full rounded-md bg-pink-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-pink-800"
+            >
+              Say goodnight
+            </button>
+          </>
         ) : step === 'greet' ? (
           <>
             <button
@@ -142,7 +177,9 @@ export function DatePanel({
             >
               {place === 'park'
                 ? `Sit on the bench with ${n}`
-                : `Sit down with ${n} for dinner`}
+                : place === 'home'
+                  ? `Sit with ${n} on the sofa`
+                  : `Sit down with ${n} for dinner`}
             </button>
             <button
               type="button"

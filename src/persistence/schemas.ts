@@ -960,9 +960,15 @@ export const LifeSchema = z.object({
           .array(z.object({ day: z.number().int(), text: z.string() }))
           .max(20)
           .default([]),
+        /** An evening at the player's home arranged (the day). */
+        visit: z.number().int().nullable().default(null),
+        /** The night they stay over (the day), if they said yes. */
+        stayOver: z.number().int().nullable().default(null),
       }),
     )
     .default({}),
+  /** Someone who lives with the player (see game/home life), if anyone. */
+  partner: z.object({ id: z.string(), since: z.number().int() }).nullable().default(null),
   /** The phone's settings (see phone/): kept with the career, defaults for older saves. */
   phone: z
     .object({

@@ -13,8 +13,10 @@ export interface Moment {
   kind: MomentKind
   /** Who with (their id). */
   with: string
-  /** Where: at the café table, or on the park bench. */
-  place: 'cafe' | 'park'
+  /** Where: at the café table, on the park bench, or at home (on the sofa). */
+  place: 'cafe' | 'park' | 'home'
+  /** Where the two stand to say goodnight, when not at the café or the park. */
+  spots?: ReturnType<typeof goodnightSpots>
   /** When it started (performance.now()), and how long it lasts (seconds). */
   at: number
   seconds: number
@@ -78,7 +80,7 @@ export function momentClips(m: Moment): { player: ClipId; partner: ClipId } {
  * window table, or in front of the park bench. [player, partner], each with
  * the way they face.
  */
-export function goodnightSpots(place: 'cafe' | 'park') {
+export function goodnightSpots(place: 'cafe' | 'park' | 'home') {
   // Clear of the table (centre −3, 1.6) and in front of the bench (−3.4, 2.2).
   const y = place === 'cafe' ? 1.6 : 1.3
   const x = place === 'cafe' ? -4.6 : -3.7

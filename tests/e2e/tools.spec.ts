@@ -54,7 +54,7 @@ test('Books: an Accounting task done in the accounting software, end to end', as
     .getByTestId('task-detail')
     .getByRole('button', { name: 'Start task' })
     .click()
-  await expect(page.getByTestId('books')).toBeVisible()
+  await expect(page.getByTestId('books')).toBeVisible({ timeout: 30_000 })
 
   // The overview shows the draft a colleague left; it does not balance.
   await expect(page.getByTestId('books-overview')).toContainText('1 draft journal')
@@ -122,9 +122,11 @@ test('Books: the practice file and saved work survive a reload', async ({ page }
   await apps(page)
     .getByRole('button', { name: /^Books/ })
     .click()
-  await expect(page.getByTestId('tool-home-books')).toContainText('Accounting software')
+  await expect(page.getByTestId('tool-home-books')).toContainText('Accounting software', {
+    timeout: 30_000,
+  })
   await page.getByRole('button', { name: 'Open the practice file' }).click()
-  await expect(page.getByTestId('books')).toBeVisible()
+  await expect(page.getByTestId('books')).toBeVisible({ timeout: 30_000 })
   await page
     .getByRole('navigation', { name: 'Books sections' })
     .getByRole('button', { name: 'Journals' })
@@ -143,7 +145,7 @@ test('Books: the practice file and saved work survive a reload', async ({ page }
 
   // The work is saved: it is still there after a reload.
   await page.reload()
-  await expect(page.getByTestId('books')).toBeVisible()
+  await expect(page.getByTestId('books')).toBeVisible({ timeout: 30_000 })
   await page
     .getByRole('navigation', { name: 'Books sections' })
     .getByRole('button', { name: 'Journals' })

@@ -20,7 +20,7 @@ import type { ProfileData } from './career'
 import { decayed, withLife } from './lifeTime'
 import { trustOf } from './relationships'
 import { personalOptions, respondPersonal } from './personal'
-import { adultOf, bondOf, talked, withBond, type Bond } from './romance'
+import { adultOf, bondOf, movedIn, talked, withBond, type Bond } from './romance'
 import { restFor } from './workday'
 
 export type NpcKind =
@@ -98,6 +98,8 @@ export interface Relation {
   /** For the adults who could become close (see romance.ts): the bond, and the day. */
   bond?: Bond
   day?: number
+  /** They live with the player. */
+  together?: boolean
 }
 
 export interface Encounter {
@@ -321,7 +323,7 @@ function optionsFor(who: Who, s: Situation, rel: Relation): Option[] {
   const tail = base.filter((o) => o.id === 'leave' || o.id === 'rude')
   return [
     ...base.filter((o) => !tail.includes(o)),
-    ...personalOptions(who, adult, rel.bond),
+    ...personalOptions(who, adult, rel.bond, rel.together),
     ...tail,
   ]
 }
@@ -859,7 +861,11 @@ export function relationOf(profile: ProfileData, id: string): Relation {
     today: profile.work.today.talks[id] ?? 0,
     last: rel?.last,
     ...(adultOf(id)
-      ? { bond: bondOf(profile.work.life, id), day: profile.work.day }
+      ? {
+          bond: bondOf(profile.work.life, id),
+          day: profile.work.day,
+          together: profile.work.life.partner?.id === id,
+        }
       : {}),
   }
 }
@@ -908,11 +914,21 @@ export function holdEncounter(
 ): ProfileData {
   if (PASSING.has(outcome.memory) && outcome.minutes === 0) return profile
   let next = recordEncounter(profile, ids, outcome)
-  if (outcome.bond)
-    next = {
-      ...next,
-      work: { ...next.work, life: withBond(next.work.life, ids[0], outcome.bond) },
-    }
+  if (outcome.bond) {
+    let life = withBond(next.work.life, ids[0], outcome.bond)
+    // Said yes to moving in: they live here from today.
+    if (
+      outcome.memory === 'move-in' &&
+      outcome.notes.some((n) => n.includes('moving in'))
+    )
+      life = movedIn(
+        life,
+        ids[0],
+        next.work.day,
+        outcome.lines.find((l) => l.speaker)?.speaker ?? 'them',
+      )
+    next = { ...next, work: { ...next.work, life } }
+  }
   if (outcome.minutes <= 0) return next
   if (where === 'office') return restFor(next, 'chat', outcome.minutes)
   const life = next.work.life

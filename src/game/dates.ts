@@ -57,6 +57,20 @@ export function dateHere(
 export function missedDates(life: Life, day: number): Life {
   let next = life
   for (const [id, raw] of Object.entries(life.bonds ?? {})) {
+    // An evening round at the player's that did not happen (they were out).
+    if (raw.visit !== null && raw.visit !== undefined && raw.visit <= day) {
+      const b = bondOf(next, id)
+      const name = whoOf(id)?.name ?? 'them'
+      next = withBond(next, id, {
+        ...b,
+        visit: null,
+        closeness: Math.max(0, b.closeness - 6),
+        history: [
+          ...b.history,
+          { day, text: `${name} came round, but you were not there` },
+        ].slice(-20),
+      })
+    }
     if (!raw.date || raw.date.day > day) continue
     const b = bondOf(next, id)
     const name = whoOf(id)?.name ?? 'them'
@@ -158,7 +172,9 @@ export function dateMoment(
         a.answer === 'yes'
           ? choice === 'kiss'
             ? [`*You ask. ${n} smiles, and you kiss goodnight.*`]
-            : [`*You ask, and ${n} takes your hand across the table.*`]
+            : context.public
+              ? [`*You ask, and ${n} takes your hand across the table.*`]
+              : [`*You ask, and ${n} takes your hand.*`]
           : [
               `*You ask.*`,
               `${n}: “${a.line}”`,
@@ -185,7 +201,7 @@ export function finishDate(
   bond: Bond,
   score: number,
   day: number,
-  place: 'cafe' | 'park',
+  place: 'cafe' | 'park' | 'home',
 ): { life: Life; summary: string; bond: Bond } {
   const name = whoOf(id)?.name ?? 'them'
   const n = name.split(' ')[0]
@@ -197,15 +213,19 @@ export function finishDate(
   const next: Bond = {
     ...bond,
     stage,
-    date: null,
-    dates: bond.dates + 1,
+    date: place === 'home' ? bond.date : null,
+    visit: place === 'home' ? null : bond.visit,
+    dates: bond.dates + (place === 'home' ? 0 : 1),
     closeness: Math.min(100, bond.closeness + (good ? 6 : 2)),
     attraction: Math.min(100, bond.attraction + (good ? 6 : 0)),
     history: [
       ...bond.history,
       {
         day,
-        text: `${first ? 'First date' : 'A date'} with ${name} ${place === 'park' ? 'in the park' : 'at Kettle & Crumb'}${good ? ': it went really well' : ''}`,
+        text:
+          place === 'home'
+            ? `An evening at yours with ${name}${good ? ': a lovely one' : ''}`
+            : `${first ? 'First date' : 'A date'} with ${name} ${place === 'park' ? 'in the park' : 'at Kettle & Crumb'}${good ? ': it went really well' : ''}`,
       },
     ].slice(-20),
   }
@@ -215,4 +235,19 @@ export function finishDate(
       : `A lovely evening. ${n} is already asking when the next one is.`
     : `A nice evening, if a little quiet. ${n} says goodnight warmly.`
   return { life: withBond(life, id, next), summary, bond: next }
+}
+
+/**
+ * Asked to stay the night, and they said yes: they stay (shown as a fade to
+ * the morning; nothing more), and wake up there too.
+ */
+export function stayTheNight(life: Life, id: string, day: number): Life {
+  const b = bondOf(life, id)
+  const name = whoOf(id)?.name ?? 'them'
+  return withBond(life, id, {
+    ...b,
+    visit: null,
+    stayOver: day,
+    history: [...b.history, { day, text: `${name} stayed the night` }].slice(-20),
+  })
 }

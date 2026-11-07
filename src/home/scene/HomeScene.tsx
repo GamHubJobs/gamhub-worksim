@@ -37,6 +37,7 @@ import { FurnitureModel } from './models'
 import { Fittings } from './fittings'
 import { homeLayout } from './homeLayout'
 import { Courier } from './Courier'
+import { HomePartner } from './HomePartner'
 import type { DeliveryStage } from '../../game/delivery'
 
 const STILL = prefersReducedMotion()
@@ -77,6 +78,8 @@ export interface HomeSceneProps {
   onReady?: () => void
   /** Where a takeaway is (the courier at the door, the bag on the doorstep). */
   delivery?: DeliveryStage
+  /** Someone at home with the player (visiting, or living here), by id. */
+  partner?: string | null
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -208,7 +211,9 @@ function HomeScene(props: HomeSceneProps) {
               request={props.request}
               onPrompt={props.onPrompt}
               onProgress={props.onProgress}
-              onDone={(a, completed) => onDone(a.action, completed)}
+              onDone={(a, completed) =>
+                onDone(a.action ?? (a.id.startsWith('date-') ? a.id : null), completed)
+              }
               look={
                 props.dressed
                   ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
@@ -223,6 +228,7 @@ function HomeScene(props: HomeSceneProps) {
             />
             <ActivityEffects activities={activities} />
             <Courier stage={props.delivery ?? 'none'} door={[-w / 2, d / 2 - 0.9]} />
+            {props.partner && <HomePartner id={props.partner} layout={layout} />}
           </PeopleDetail>
         </Interior.Provider>
       </World.Provider>

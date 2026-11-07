@@ -5,7 +5,9 @@ import { LifeSchema } from '../persistence/schemas'
 import { officeWho } from '../office/scene/officeCast'
 import { newProfileData, type ProfileData } from './career'
 import { holdEncounter, meet, relationOf, respond } from './encounters'
-import { answered, ask, bondOf, NEW_BOND, talked, type Bond } from './romance'
+import { goToBed } from './life'
+import { answered, ask, atHome, bondOf, NEW_BOND, talked, type Bond } from './romance'
+import { missedDates, stayTheNight } from './dates'
 
 const ctx = { day: 10, public: false, colleague: false }
 const maya = ADULTS['cafe:barista']
@@ -141,5 +143,119 @@ describe('in conversation, and in the save', () => {
     const { bonds: _b, ...old } = p.work.life
     void _b
     expect(LifeSchema.parse(old).bonds).toEqual({})
+  })
+})
+
+describe('evenings at home, staying over, moving in', () => {
+  const who = TOWN_PEOPLE.barista
+  const at = { availability: 'free' as const, minute: 19 * 60 }
+  const withMaya = (b: Partial<Bond>): ProfileData => {
+    const p = newProfileData('Alex Rivera', 0)
+    return {
+      ...p,
+      work: {
+        ...p.work,
+        life: {
+          ...p.work.life,
+          bonds: {
+            [who.id]: {
+              ...NEW_BOND,
+              stage: 'dating',
+              closeness: 60,
+              attraction: 70,
+              ...b,
+            },
+          },
+        },
+      },
+    }
+  }
+
+  it('dating: they can be asked round, and they come that evening', () => {
+    const p = withMaya({})
+    const rel = relationOf(p, who.id)
+    expect(meet(who, at, rel).options.map((o) => o.id)).toContain('invite-home')
+    const next = holdEncounter(p, [who.id], respond(who, at, rel, 'invite-home'), 'out')
+    expect(bondOf(next.work.life, who.id).visit).toBe(next.work.day)
+    const home = {
+      ...next.work.life,
+      phase: 'evening' as const,
+      minute: 19 * 60 + 40,
+      city: { ...next.work.life.city, at: 'home' as const, inside: true },
+    }
+    expect(atHome(home, next.work.day)).toEqual({ id: who.id, living: false })
+    expect(atHome({ ...home, minute: 18 * 60 }, next.work.day)).toBeNull()
+  })
+
+  it('staying over is asked: not yet while just dating; yes for a couple, and they wake up there', () => {
+    expect(
+      ask(maya, withMaya({}).work.life.bonds![who.id] as Bond, 'stay-over', ctx).answer,
+    ).toBe('not-yet')
+    const couple = {
+      ...NEW_BOND,
+      stage: 'partners' as const,
+      closeness: 80,
+      attraction: 80,
+    }
+    expect(ask(maya, couple, 'stay-over', ctx).answer).toBe('yes')
+    const life = stayTheNight(withMaya(couple).work.life, who.id, 3)
+    const morning = {
+      ...life,
+      phase: 'morning' as const,
+      city: { ...life.city, at: 'home' as const, inside: true },
+    }
+    expect(atHome(morning, 3)).toEqual({ id: who.id, living: false })
+    expect(bondOf(life, who.id).history.at(-1)!.text).toMatch(/stayed the night/)
+  })
+
+  it('a visit not gone to is missed', () => {
+    const life = missedDates(withMaya({ visit: 1 }).work.life, 1)
+    expect(bondOf(life, who.id).visit).toBeNull()
+    expect(bondOf(life, who.id).history.at(-1)!.text).toMatch(/you were not there/)
+  })
+
+  it('moving in, asked as a couple: they live there, and pay half the rent', () => {
+    const p = withMaya({ stage: 'partners', closeness: 85, attraction: 80 })
+    const rel = relationOf(p, who.id)
+    expect(meet(who, at, rel).options.map((o) => o.id)).toContain('move-in')
+    const next = holdEncounter(p, [who.id], respond(who, at, rel, 'move-in'), 'out')
+    expect(next.work.life.partner?.id).toBe(who.id)
+    expect(relationOf(next, who.id).together).toBe(true)
+    expect(
+      meet(who, at, relationOf(next, who.id)).options.map((o) => o.id),
+    ).not.toContain('move-in')
+    // Wherever the player is at home, they are there.
+    const home = {
+      ...next.work.life,
+      city: { ...next.work.life.city, at: 'home' as const, inside: true },
+    }
+    expect(atHome(home, next.work.day)).toEqual({ id: who.id, living: true })
+  })
+})
+
+describe('living together: the rent', () => {
+  it('on Monday morning, half the rent is the player’s when they live with someone', () => {
+    const base = newProfileData('Alex Rivera', 0)
+    const friday = (partner: boolean): ProfileData => ({
+      ...base,
+      work: {
+        ...base.work,
+        day: 5,
+        dayOver: true,
+        life: {
+          ...base.work.life,
+          phase: 'evening',
+          minute: 22 * 60,
+          rentWeek: 1,
+          city: { ...base.work.life.city, at: 'home', inside: true },
+          partner: partner ? { id: 'cafe:barista', since: 1 } : null,
+        },
+      },
+    })
+    const paid = (p: ProfileData) => p.work.life.money - goToBed(p).work.life.money
+    const alone = paid(friday(false))
+    const together = paid(friday(true))
+    expect(alone).toBeGreaterThan(0)
+    expect(together).toBe(Math.round(alone / 2))
   })
 })

@@ -14,68 +14,9 @@ import {
   standing,
   type MomentKind,
 } from '../../../world/npc/moment'
-import type { PersonLook } from '../../../office/scene/people'
+import { DATE_LOOKS as LOOKS } from '../../../content/adultLooks'
 import { Npc } from '../../../world/npc/Npc'
 import { useInterior } from './kit'
-
-/** How each of them looks on an evening out. */
-const LOOKS: Record<string, PersonLook> = {
-  'cafe:barista': {
-    skin: 2,
-    hair: 'bun',
-    hairColor: 1,
-    outfit: 'blouse',
-    top: '#be185d',
-    trousers: '#1c1917',
-    smile: true,
-  },
-  'cafe:friend': {
-    skin: 1,
-    hair: 'long',
-    hairColor: 2,
-    outfit: 'blouse',
-    top: '#0f766e',
-    trousers: '#334155',
-    smile: true,
-  },
-  'gym:runner1': {
-    skin: 3,
-    hair: 'short',
-    hairColor: 0,
-    outfit: 'shirt',
-    top: '#1e3a8a',
-    trousers: '#27272a',
-    smile: true,
-  },
-  'gym:runner2': {
-    skin: 0,
-    hair: 'bob',
-    hairColor: 0,
-    outfit: 'sweater',
-    top: '#7c3aed',
-    trousers: '#1f2937',
-    glasses: true,
-  },
-  'garage:sales': {
-    skin: 4,
-    hair: 'short',
-    hairColor: 0,
-    outfit: 'shirt',
-    top: '#f8fafc',
-    trousers: '#1e293b',
-    beard: true,
-    smile: true,
-  },
-  analyst: {
-    skin: 3,
-    hair: 'side',
-    hairColor: 0,
-    outfit: 'sweater',
-    top: '#b45309',
-    trousers: '#1f2937',
-    smile: true,
-  },
-}
 
 export function DatePartner({ place }: { place: 'cafe' | 'park' }) {
   const { date } = useInterior()

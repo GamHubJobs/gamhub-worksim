@@ -188,6 +188,42 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-07 · Relationships 5–6: evenings at home, staying over, moving in
+
+### Built
+
+- **Becoming a couple** (asked, when dating) and **an evening at yours** (asked, when
+  dating): they come round that evening from 7:30 pm and are in the flat, sitting on the
+  sofa (or the edge of the bed in a flat without one). Walking up to them, the player
+  sits with them; three rounds of talk (holding hands asked and shown, side by side);
+  then, if they are a couple, **asking them to stay the night**: a yes means a fade to
+  the morning (nothing is shown; "Later that night… and the next morning"), and they are
+  there when the player wakes up. Otherwise, goodnight at the front door, face to face.
+  A visit the player was out for is missed, and remembered.
+- **Moving in** (asked, as a couple): they live in the flat from that day, there whenever
+  the player is home, and pay half the rent (the player's half is shown as such on
+  Mondays). The save gains `life.partner` and, per bond, `visit` and `stayOver`
+  (all with defaults: older saves load unchanged).
+- The Relationships screen shows it all in their shared history.
+
+### Tests
+
+- Unit tests (5 more in `romance.test.ts`): asking round and them being there that
+  evening (not before 7 pm); staying over asked ("not yet" while dating, yes as a couple)
+  and waking up together; a missed visit; moving in (they live there, the option goes);
+  half the rent on Monday morning.
+- Browser test (`home-life.spec.ts`): Maya round for the evening, sitting together,
+  holding hands, asked to stay (yes), bed and the fade, the morning with her there,
+  asked to move in (yes), and the Relationships screen showing it.
+- Screenshots: `docs/screenshots/relationships/sofa.png`, `night-fade.png`,
+  `morning.png`.
+- Results: 2,207 unit tests passed. Chromium browser tests, full run: 191 passed, 3
+  skipped, 2 flaky (the stand-up in person and Books, each passed on its retry), none
+  failed. 5 production-build tests passed. Firefox, WebKit and Edge 8 passed, 1 skipped.
+  Start screen 298 kB. The Books tests now wait up to 30 seconds for the tool to open.
+
+---
+
 ## 2026-11-07 · Relationships 4: affection, shown between the two
 
 ### Built
