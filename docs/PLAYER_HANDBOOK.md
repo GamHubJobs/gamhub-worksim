@@ -93,6 +93,12 @@ and, if you both want, start a family. Things can go wrong (missed dates add up)
 they can be talked through, or ended, by either of you. Staying single is just as good a
 way to play.
 
+### The map
+
+Press **M** for the world map (or Map on the HUD, in the pause menu, or the phone). Click a
+place to see what is there and set it as your destination: the route shows on the map and
+on the mini-map at the bottom right. You still walk there. See [The map](MAP.md).
+
 ### Your phone
 
 Press **P** (or Open your phone) to take out your phone: messages and calls with

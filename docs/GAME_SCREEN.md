@@ -9,7 +9,7 @@ with no page around it and no scrolling. Everything else sits over the world:
   folds it away to a small button, and it stays folded (kept on this device).
   Conversations, story scenes and dates opened from it stay on screen either way.
 - **The HUD** (bottom right): six small bars (hunger, hygiene, social, fun, energy,
-  stress) and shortcuts: **Phone** (P), **Map** (the phone's map) and **Menu** (Esc).
+  stress), the **mini-map**, and shortcuts: **Phone** (P), **Map** (M) and **Menu** (Esc).
 - **Prompts** (bottom centre): "Press E to …", only when there is something to do.
 - **The pause menu** (Esc, when no box is open and the mouse is not captured): Resume,
   Map, Missions (Story), Relationships, Character, Inventory, Settings, Help, Save &

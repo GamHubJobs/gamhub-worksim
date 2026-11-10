@@ -7,6 +7,7 @@
  * nothing moves, so it runs on ordinary laptops.
  */
 import { lowDpr } from '../../world/lowDpr'
+import { BUILDINGS } from '../worldMap'
 import { useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import {
@@ -144,24 +145,6 @@ const PASSERS_BY: Array<{ path: Vector[]; look: PersonLook; speed: number }> = [
     speed: 0.8,
   },
 ]
-
-/** Buildings along the street: centre x, which side, width, height and colour. */
-const BUILDINGS: Array<{ x: number; side: 1 | -1; w: number; h: number; color: string }> =
-  [
-    { x: -56, side: -1, w: 14, h: 12, color: '#d6cfc4' },
-    { x: -40, side: -1, w: 16, h: 8, color: '#efe2d3' },
-    { x: -23, side: -1, w: 14, h: 14, color: '#c9b8a6' },
-    { x: 0, side: -1, w: 16, h: 7, color: '#e7e5e4' },
-    { x: 16, side: -1, w: 14, h: 16, color: '#bfb3a3' },
-    { x: 64, side: -1, w: 10, h: 10, color: '#d4cbbd' },
-    { x: -56, side: 1, w: 14, h: 11, color: '#cbbfae' },
-    { x: -40, side: 1, w: 16, h: 18, color: '#b7795a' },
-    { x: -23, side: 1, w: 14, h: 13, color: '#d9cdbd' },
-    { x: 0, side: 1, w: 16, h: 9, color: '#cbd5e1' },
-    { x: 16, side: 1, w: 14, h: 12, color: '#c2b5a3' },
-    { x: 32, side: 1, w: 14, h: 15, color: '#d6c7b1' },
-    { x: 48, side: 1, w: 14, h: 10, color: '#bdb0a0' },
-  ]
 
 export interface CitySceneProps {
   /** The place the player is at, or last left. */
@@ -394,6 +377,7 @@ function StreetPlayer(props: CitySceneProps & { low: boolean }) {
       vehicles={vehicles}
       low={props.low}
       startOrbit={{ yaw: facingStreet(props.at), pitch: 0.3, distance: 5 }}
+      mapped
     />
   )
 }

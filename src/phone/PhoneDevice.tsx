@@ -362,7 +362,7 @@ function AppBody({
     case 'calendar':
       return <CalendarApp profile={profile} />
     case 'maps':
-      return <MapsApp profile={profile} onGo={a.onGo} />
+      return <MapsApp profile={profile} act={a.act} />
     case 'bank':
       return <BankApp profile={profile} />
     case 'jobs':

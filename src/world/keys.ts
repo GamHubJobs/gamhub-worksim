@@ -18,6 +18,7 @@ export type Control =
   | 'zoomIn'
   | 'zoomOut'
   | 'phone'
+  | 'map'
 
 export const CONTROLS: Array<{ id: Control; name: string }> = [
   { id: 'forward', name: 'Walk forward' },
@@ -34,6 +35,7 @@ export const CONTROLS: Array<{ id: Control; name: string }> = [
   { id: 'zoomIn', name: 'Camera closer' },
   { id: 'zoomOut', name: 'Camera further' },
   { id: 'phone', name: 'Take out or put away your phone' },
+  { id: 'map', name: 'Open or close the world map' },
 ]
 
 /** Keys by `KeyboardEvent.code` (the key's place, whatever the keyboard layout). */
@@ -54,6 +56,7 @@ export const DEFAULT_KEYS: Keymap = {
   zoomIn: ['Equal', 'NumpadAdd'],
   zoomOut: ['Minus', 'NumpadSubtract'],
   phone: ['KeyP'],
+  map: ['KeyM'],
 }
 
 export const KEYS_STORAGE = 'worksim.keys.v1'

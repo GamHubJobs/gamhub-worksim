@@ -65,6 +65,7 @@ import {
 } from './interaction/activity'
 import type { Control } from './keys'
 import { phoneIsOpen } from '../phone/store'
+import { mapIsOpen, setPose, setRouter } from './map/store'
 import { beginMoment, momentClips, momentNow } from './npc/moment'
 import { setCapture } from '../phone/photos'
 import { Prop } from './props'
@@ -146,6 +147,8 @@ export interface PlayerRigProps {
   surface?: Surface
   /** Low graphics: fewer frames while moving. */
   low?: boolean
+  /** The street: shown on the maps (where the player is, and the way to the destination). */
+  mapped?: boolean
   now: RefObject<ActivityNow>
   hands: RefObject<Hands>
 }
@@ -439,6 +442,21 @@ export function PlayerRig(props: PlayerRigProps) {
     latest.current.onReady?.()
   }, [])
 
+  // On the maps: where the player is, and the way anywhere (by this place's walking grid).
+  const mapped = props.mapped
+  useEffect(() => {
+    if (!mapped) return
+    setRouter((to) => {
+      const from = state.current
+      const path = findPath(grid(), { x: from.x, z: from.z }, to)
+      return path ? [{ x: from.x, z: from.z }, ...path] : null
+    })
+    return () => {
+      setRouter(null)
+      setPose(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapped])
   // The phone's camera takes a picture of this view.
   const gl = useThree((st) => st.gl)
   useEffect(() => {
@@ -529,7 +547,9 @@ export function PlayerRig(props: PlayerRigProps) {
 
     const m = mode.current
     // The phone is out: the character holds it up and stands still (keys go to the phone).
-    const onPhone = phoneIsOpen() && m.kind === 'free' && ride.current !== 'car'
+    // (Also while the world map is open: the keys are the map's.)
+    const onPhone =
+      (phoneIsOpen() || mapIsOpen()) && m.kind === 'free' && ride.current !== 'car'
     if (onPhone) pressed.splice(0)
     const moveKeys =
       !onPhone && (h.has('forward') || h.has('back') || h.has('left') || h.has('right'))
@@ -837,6 +857,7 @@ export function PlayerRig(props: PlayerRigProps) {
       } as typeof w.__worksimPlayer
     }
 
+    if (props.mapped) setPose({ x: s.x, z: s.z, heading: s.heading })
     const g = group.current
     if (g) {
       const lift = mode.current.kind === 'acting' ? (mode.current.at.y ?? 0) : 0

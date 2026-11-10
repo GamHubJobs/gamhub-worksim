@@ -18,6 +18,8 @@ import { weekdayName } from '../game/clock'
 import { whoOf } from '../game/dates'
 import { bondOf, interestName, STAGE_NAMES } from '../game/romance'
 import { openPhone, usePhone } from '../phone/store'
+import { openMap, useMap } from '../world/map/store'
+import { MiniMap } from '../world/map/MiniMap'
 
 export type MenuScreen = 'relationships' | 'character' | 'inventory' | null
 
@@ -74,7 +76,8 @@ export function GameHud({
   onMenu: () => void
 }) {
   const phone = usePhone()
-  if (phone.open) return null
+  const map = useMap()
+  if (phone.open || map.open) return null
   const button =
     'pointer-events-auto rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-white shadow ring-1 ring-white/15 hover:bg-slate-900'
   return (
@@ -82,12 +85,13 @@ export function GameHud({
       className="pointer-events-none fixed right-3 bottom-3 z-10 flex flex-col items-end gap-2"
       data-testid="hud"
     >
+      <MiniMap profile={profile} />
       <NeedsHud profile={profile} />
       <div className="flex gap-1.5">
         <button type="button" className={button} onClick={() => openPhone(null)}>
           📱 Phone <kbd className="font-sans">P</kbd>
         </button>
-        <button type="button" className={button} onClick={() => openPhone('maps')}>
+        <button type="button" className={button} onClick={openMap}>
           🗺️ Map
         </button>
         <button type="button" className={button} onClick={onMenu}>
@@ -172,7 +176,7 @@ export function PauseMenu({
   }
   const items: Array<[string, () => void]> = [
     ['Resume', onClose],
-    ['Map', go(() => openPhone('maps'))],
+    ['Map', go(openMap)],
     ['Missions', go(onStory)],
     ['Relationships', go(() => onScreen('relationships'))],
     ['Character', go(() => onScreen('character'))],

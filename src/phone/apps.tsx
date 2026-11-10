@@ -13,7 +13,6 @@ import { formatTime, weekdayName } from '../game/clock'
 import { deliveryStage, untilArrival } from '../game/delivery'
 import { holdEncounter, relationOf, respond } from '../game/encounters'
 import { canDo, getHomeAction } from '../game/life'
-import { minutesTo } from '../game/city'
 import {
   calendar,
   canCall,
@@ -28,8 +27,10 @@ import {
   type PhoneContact,
 } from '../game/phone'
 import { CONTACTS, canContact, friendOf, type Contact } from '../game/social'
-import type { PlaceId } from '../content/city'
 import { canTakePhoto, deletePhoto, photos, takePhoto, type Photo } from './photos'
+import { closePhone } from './store'
+import { openMap } from '../world/map/store'
+import { setDestination } from '../game/nav'
 
 type Act = (change: (p: ProfileData) => ProfileData) => unknown
 
@@ -400,84 +401,56 @@ export function CalendarApp({ profile }: { profile: ProfileData }) {
   )
 }
 
-export function MapsApp({
-  profile,
-  onGo,
-}: {
-  profile: ProfileData
-  onGo: (place: string) => void
-}) {
-  const places = mapPlaces(profile)
-  const outside = profile.work.life.phase !== 'work' && !profile.work.life.city.inside
-  const x = (v: number) => 12 + ((v + 45) / 112) * 236
+/**
+ * Maps: a shortcut to the world map (which opens on its own, full screen, and
+ * the phone goes away), with where the player is heading and recent places.
+ */
+export function MapsApp({ profile, act }: { profile: ProfileData; act: Act }) {
+  const nav = profile.work.life.nav
+  const name = (id: string) => mapPlaces(profile).find((p) => p.id === id)?.name ?? id
   return (
-    <div className="space-y-2" data-testid="phone-map">
-      <svg
-        viewBox="0 0 260 110"
-        className="w-full rounded-lg bg-emerald-50"
-        role="img"
-        aria-label="Map of the neighbourhood"
+    <div className="space-y-3" data-testid="phone-map">
+      <button
+        type="button"
+        onClick={() => {
+          closePhone()
+          openMap()
+        }}
+        className="w-full rounded-xl bg-teal-700 px-3 py-4 font-semibold text-white hover:bg-teal-800"
       >
-        <rect x="0" y="48" width="260" height="14" fill="#cbd5e1" />
-        <line x1="0" y1="55" x2="260" y2="55" stroke="#f8fafc" strokeDasharray="6 5" />
-        {places.map((p) => (
-          <g
-            key={p.id}
-            transform={`translate(${x(p.door[0])},${p.door[1] < 0 ? 34 : 76})`}
+        🗺️ Open the map
+      </button>
+      {nav.destination ? (
+        <p className="rounded-lg bg-rose-50 p-2 text-rose-900">
+          Heading to <strong>{name(nav.destination)}</strong>
+          <button
+            type="button"
+            onClick={() => void act((p) => setDestination(p, null))}
+            className="ml-2 text-xs underline"
           >
-            <rect
-              x="-9"
-              y="-9"
-              width="18"
-              height="18"
-              rx="3"
-              fill={p.colour}
-              opacity={0.9}
-            />
-            {p.target && <circle r="13" fill="none" stroke="#e11d48" strokeWidth="2.5" />}
-            {p.here && (
-              <circle
-                cy={p.door[1] < 0 ? 15 : -15}
-                r="4"
-                fill="#2563eb"
-                stroke="white"
-                strokeWidth="1.5"
-              />
-            )}
-          </g>
-        ))}
-      </svg>
-      <ul className="space-y-1">
-        {places.map((p) => (
-          <li
-            key={p.id}
-            className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1.5"
-          >
-            <span>
-              <span className="font-medium">{p.name}</span>
-              <span className="block text-xs text-slate-500">
-                {p.here
-                  ? 'You are here'
-                  : `${minutesTo(profile, p.id as PlaceId)} min away`}
-                {p.target ? ' · your mission' : ''}
-              </span>
-            </span>
-            {outside && !p.here && p.id !== 'office' && (
-              <button
-                type="button"
-                onClick={() => onGo(p.id)}
-                className="rounded-md bg-teal-700 px-2 py-1 text-xs text-white hover:bg-teal-800"
-              >
-                Go there
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-      {!outside && (
-        <p className="text-xs text-slate-500">
-          Out in the street, Go there walks you to a place.
+            Clear
+          </button>
         </p>
+      ) : (
+        <p className="text-xs text-slate-500">No destination. Choose one on the map.</p>
+      )}
+      {nav.recent.length > 0 && (
+        <div>
+          <p className="font-medium">Recent</p>
+          <ul className="mt-1 space-y-1">
+            {nav.recent.map((id) => (
+              <li key={id}>
+                <button
+                  type="button"
+                  onClick={() => void act((p) => setDestination(p, id))}
+                  className={`${button} w-full`}
+                >
+                  {name(id)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )
@@ -848,6 +821,21 @@ export function SettingsApp({ profile, act }: { profile: ProfileData; act: Act }
           type="checkbox"
           checked={phone.notifications}
           onChange={(e) => set({ notifications: e.target.checked })}
+          className="h-5 w-5"
+        />
+      </label>
+      <label className="flex items-center justify-between gap-2">
+        <span>
+          <span className="font-medium">Mini-map</span>
+          <span className="block text-xs text-slate-500">
+            The small map on the screen while you play
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          aria-label="Mini-map"
+          checked={phone.minimap}
+          onChange={(e) => set({ minimap: e.target.checked })}
           className="h-5 w-5"
         />
       </label>

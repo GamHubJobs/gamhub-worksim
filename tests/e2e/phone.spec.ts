@@ -129,8 +129,12 @@ test('settings persist across a reload: the wallpaper and notifications', async 
   await page.keyboard.press('p')
   await app(page, 'Settings').click()
   await phone(page).getByRole('radio', { name: 'Harbour' }).click()
-  await phone(page).getByRole('checkbox').click()
-  await expect(phone(page).getByRole('checkbox')).not.toBeChecked()
+  await phone(page)
+    .getByRole('checkbox', { name: /Notifications/ })
+    .click()
+  await expect(
+    phone(page).getByRole('checkbox', { name: /Notifications/ }),
+  ).not.toBeChecked()
   await expect(phone(page).getByRole('radio', { name: 'Harbour' })).toHaveAttribute(
     'aria-checked',
     'true',
@@ -147,7 +151,9 @@ test('settings persist across a reload: the wallpaper and notifications', async 
     'aria-checked',
     'true',
   )
-  await expect(phone(page).getByRole('checkbox')).not.toBeChecked()
+  await expect(
+    phone(page).getByRole('checkbox', { name: /Notifications/ }),
+  ).not.toBeChecked()
 })
 
 test('food ordered on the phone at home brings the courier to the door', async ({

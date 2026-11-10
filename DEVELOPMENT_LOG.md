@@ -176,6 +176,8 @@ working simulations of the professional software used in its field (see
 
 **Game screen**: [docs/GAME_SCREEN.md](docs/GAME_SCREEN.md) (full screen, HUD, pause menu).
 
+**Map**: [docs/MAP.md](docs/MAP.md) (world map, mini-map, routes).
+
 **Relationships, romance and family** (R1–R11 done): [docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md).
 
 **Story Mode** (in progress). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
@@ -185,6 +187,50 @@ working simulations of the professional software used in its field (see
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [x] Story 6–10 The other five careers
 - [ ] Story 11 Presentation and polish
+
+---
+
+## 2026-11-10 · Map 1: a world map, a mini-map, and a real route
+
+### Built
+
+- **The world map, on its own** (`world/map/`): full screen over the paused game; M, the
+  HUD's Map button, the pause menu, or the phone's Maps app (which puts the phone away
+  first). Drawn from one shared set of neighbourhood data (`city/worldMap.ts`, now also
+  used by the 3D street): road, pavements, crossings, buildings, the park, the places
+  (found, or "not yet found"). Zoom, pan, "Where am I?"; a place's details (what it is,
+  opening hours, distance, activities); set or clear the destination.
+- **A real route**: the street's own walking grid (the character's) works it out from the
+  player to the destination's door, again every second: along the pavements and the
+  road, never through buildings. Shown on both maps; cleared on arriving.
+- **The mini-map** on the HUD: turned with the player, north marked, nearby places, the
+  route, the destination, a pointer when it is off the edge; "In: …" indoors; a click
+  opens the map; off in Settings.
+- **The phone's Maps app** is now a shortcut, with the destination and recent places.
+- Keys do not move the character while the map is open; closing it leaves the player
+  exactly where they were. The save gains `life.nav` and `life.phone.minimap`
+  (defaults for older saves).
+
+### Tests
+
+- Unit tests (`nav.test.ts`, 6): every place's door is on the street's edge and has an
+  icon; the buildings are one shared list; destinations and recent ones; places found by
+  walking past; arriving; older saves.
+- Browser tests (`map.spec.ts`): M opens it (full screen), the keys do not move the
+  player, zoom, a place's details, the destination, the route (every point between the
+  buildings), M closes it with the player exactly where they were, the route on the
+  mini-map, the pause menu's Map, the phone's Maps app (the phone goes, the map opens);
+  and the mini-map turning as the player walks.
+- Screenshots: `docs/screenshots/map/`.
+- Results: 2,232 unit tests passed. Chromium browser tests, full run: 192 passed, 3
+  skipped, 2 flaky (the journey, the full week), 4 failed, all found and fixed: the
+  mini-map's drawn text (N, the place name) was not in its accessible name (it now has a
+  text name, and the drawing is hidden from screen readers); the phone's Settings now has
+  two checkboxes, so its test names the one it means; and the evening-out and Friday
+  tests, whose accessibility checks hit the same mini-map problem. Afterwards: the
+  accessibility check, the evening out, Friday, the map and the phone tests all passed
+  (10 tests). 5 production-build tests passed. Firefox, WebKit and Edge 8 passed,
+  1 skipped. Start screen 290 kB.
 
 ---
 

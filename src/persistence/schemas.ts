@@ -987,6 +987,23 @@ export const LifeSchema = z.object({
     .prefault({}),
   /** Someone who lives with the player (see game/home life), if anyone. */
   partner: z.object({ id: z.string(), since: z.number().int() }).nullable().default(null),
+  /** Finding the way (see world/map): where the player is heading, recent places, places found. */
+  nav: z
+    .object({
+      destination: z
+        .enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage'])
+        .nullable()
+        .default(null),
+      recent: z
+        .array(z.enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage']))
+        .max(5)
+        .default([]),
+      /** Places the player has been to or walked past (the rest show as "not yet found"). */
+      found: z
+        .array(z.enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage']))
+        .default(['home', 'office']),
+    })
+    .prefault({}),
   /** The phone's settings (see phone/): kept with the career, defaults for older saves. */
   phone: z
     .object({
@@ -994,6 +1011,8 @@ export const LifeSchema = z.object({
       ringtone: z.number().int().nonnegative().default(0),
       /** Banners for new messages, deliveries, meetings and missions. */
       notifications: z.boolean().default(true),
+      /** The mini-map on the screen while playing. */
+      minimap: z.boolean().default(true),
       /** Posts liked in the social app (by id, the latest 50). */
       liked: z.array(z.string()).max(50).default([]),
     })

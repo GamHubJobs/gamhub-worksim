@@ -8,6 +8,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { StoryPanel, StoryTracker } from './StoryPanel'
 import { PhoneHost } from '../phone/PhoneDevice'
+import { MapHost } from '../world/map/MapHost'
 import {
   CharacterScreen,
   GameHud,
@@ -631,6 +632,7 @@ export function Desktop({
         </div>
       </header>
       <StoryTracker profile={profile} act={act} />
+      <MapHost profile={profile} act={act} />
       <PhoneHost
         profile={profile}
         act={act}
