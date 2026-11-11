@@ -91,7 +91,7 @@ test('a report task: analyse in Sheets, write in Docs, present in Slides, hand i
     'Findings',
     'Sales was the largest overspend at $3,240 above budget, followed by Operations at $2,870 over. Marketing, IT, HR and Finance all spent less than planned, which almost balanced the overspends. The chart below compares budget and actual spending for each department, and shows that the overspends are concentrated in the two largest operational areas.',
   )
-  await docTools.getByRole('button', { name: 'Insert chart from Sheets' }).click()
+  await docTools.getByRole('button', { name: 'Insert chart from Grid Craft' }).click()
   await page
     .getByTestId('sheets-picker')
     .getByRole('button', { name: /October departmental performance/ })
@@ -118,7 +118,7 @@ test('a report task: analyse in Sheets, write in Docs, present in Slides, hand i
     .getByLabel('Slide text')
     .fill('Total spending: $227,300 (Sales $3,240 over budget)')
   await page.keyboard.press('Escape')
-  await tools.getByRole('button', { name: 'Chart from Sheets' }).click()
+  await tools.getByRole('button', { name: 'Chart from Grid Craft' }).click()
   await page
     .getByTestId('sheets-picker')
     .getByRole('button', { name: /October departmental performance/ })

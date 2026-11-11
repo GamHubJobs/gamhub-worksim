@@ -38,7 +38,7 @@ test('a whole session in the production build: no console errors and no failed r
     'Mail',
     'Tasks',
     'Cases',
-    'Sheets',
+    'Grid Craft',
     'Docs',
     'Slides',
     'Career',

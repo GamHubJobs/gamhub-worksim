@@ -19,7 +19,7 @@ export function SheetsApp({ profile, onOpen }: SheetsAppProps) {
   return (
     <div className="h-full overflow-y-auto bg-slate-50" data-testid="sheets-files">
       <div className="mx-auto max-w-3xl space-y-6 p-6">
-        <h1 className="text-xl font-semibold text-slate-900">Sheets</h1>
+        <h1 className="text-xl font-semibold text-slate-900">Grid Craft</h1>
 
         <section>
           <h2 className="mb-2 text-sm font-medium tracking-wide text-slate-500 uppercase">

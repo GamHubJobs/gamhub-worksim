@@ -505,7 +505,7 @@ export function SlidesEditor({
           />
           {onPickChart && (
             <ToolButton
-              label="Chart from Sheets"
+              label="Chart from Grid Craft"
               onClick={() =>
                 onPickChart((chart) =>
                   addToSlide({

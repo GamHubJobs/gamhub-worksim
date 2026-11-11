@@ -33,7 +33,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: 'apps',
     title: 'The apps',
     text: [
-      '**Mail** brings your tasks, cases and replies. **Tasks** lists your work with its steps and hints. **Sheets**, **Docs** and **Slides** are working office apps; your career also has its own tools, such as Books, Help Desk, Data Studio or Code.',
+      '**Mail** brings your tasks, cases and replies. **Tasks** lists your work with its steps and hints. **Grid Craft**, **Docs** and **Slides** are working office apps; your career also has its own tools, such as Books, Help Desk, Data Studio or Code.',
       'Everything you type is saved automatically, a moment after you stop typing.',
     ],
   },
@@ -124,10 +124,20 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    id: 'gridcraft',
+    title: 'Working in Grid Craft',
+    text: [
+      '**Grid Craft** is the office spreadsheet: formulas (over 500 functions), formatting, sorting and filtering, tables, charts, pivot tables and several sheets. It has the ribbon, the formula bar and the shortcuts you would find in any spreadsheet program.',
+      'Your work is saved by itself a moment after each change, as a real **.xlsx** file. Use **Download .xlsx**, **Download .csv** or **Export PDF** above the sheet for a copy of your own, and **Import a file…** to open a spreadsheet from your computer.',
+      'Tasks are checked on what your cells hold: the values, the formulas and their formats. WorkSim AI can see the cell you are on and explain a formula or an error.',
+      'If Grid Craft cannot run on your device, the basic spreadsheet editor opens the same file instead. To always use the basic editor (it works fully with a screen reader), choose it in **Settings → Office apps**.',
+    ],
+  },
+  {
     id: 'access',
     title: 'Keyboard and accessibility',
     text: [
-      'Everything can be done with the keyboard: Tab and Shift+Tab to move, Enter or Space to choose, Escape to close. In Sheets, the arrow keys move between cells; in Slides, Tab selects elements and the arrow keys move them.',
+      'Everything can be done with the keyboard: Tab and Shift+Tab to move, Enter or Space to choose, Escape to close. In Grid Craft, the arrow keys move between cells; in Slides, Tab selects elements and the arrow keys move them.',
       'If your system asks for less motion, WorkSim switches animations off and keeps the 3D office still, and starts with fewer sounds.',
       'Sound is never needed: important sounds always come with something on screen, and **Sound captions** (in Sound) adds a short note for each.',
     ],

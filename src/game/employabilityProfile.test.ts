@@ -72,7 +72,7 @@ describe('employability profile', () => {
     ])
     // Featured work: only items the player featured, in their chosen order.
     expect(built.featured.map((f) => f.title)).toEqual(['Task 2', 'Task 1'])
-    expect(built.tools).toEqual([{ name: 'Sheets', tasks: 3 }])
+    expect(built.tools).toEqual([{ name: 'Grid Craft', tasks: 3 }])
     expect(built.honesty).toContain('not a record of employment')
   })
 

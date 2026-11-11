@@ -10,7 +10,7 @@ import { cleanTable } from '../../../tools/datastudio/transform'
  *
  * 1. Data Studio: clean the subscriptions export and measure churn by plan.
  * 2. Data Studio: a churn dashboard and the monthly revenue lost.
- * 3. Sheets and Docs: the figures by plan and a findings memo.
+ * 3. Grid Craft and Docs: the figures by plan and a findings memo.
  *
  * Teaches: rates as well as counts, and that the biggest rate is not always
  * the biggest cost (Premium loses fewer customers but more revenue).
@@ -437,7 +437,7 @@ Amara`,
 }
 
 // ---------------------------------------------------------------------------
-// Stage 3: the figures by plan and the findings memo (Sheets and Docs)
+// Stage 3: the figures by plan and the findings memo (Grid Craft and Docs)
 // ---------------------------------------------------------------------------
 
 const header = { bold: true, fill: 'gray' } as const
@@ -469,7 +469,7 @@ export const churnFindings: AssignmentInput = {
 
 Last stage. The head of customer success wants the findings in writing.
 
-**1. The figures (Sheets).** The workbook has each plan’s customers, cancellations and monthly fee. Add the **churn rate** (cancelled ÷ customers, as a %) and the **monthly revenue lost** (cancelled × fee) for each plan, the **totals**, and a chart of revenue lost by plan.
+**1. The figures (Grid Craft).** The workbook has each plan’s customers, cancellations and monthly fee. Add the **churn rate** (cancelled ÷ customers, as a %) and the **monthly revenue lost** (cancelled × fee) for each plan, the **totals**, and a chart of revenue lost by plan.
 
 **2. The memo (Docs).** A short findings memo: the **overall churn rate**, the **total monthly revenue lost**, which plan loses the most customers and which **loses the most revenue** (they are not the same!), and what you recommend.
 

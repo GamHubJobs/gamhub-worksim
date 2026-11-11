@@ -99,7 +99,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     levelId: 'senior-accountant',
     title: 'Close the quarter for the board',
     brief:
-      'Run the Q1 close from start to finish: post the quarter-end adjustments in Books, analyse the quarter against budget in Sheets, and prepare the board pack with the key figures and a written report.',
+      'Run the Q1 close from start to finish: post the quarter-end adjustments in Books, analyse the quarter against budget in Grid Craft, and prepare the board pack with the key figures and a written report.',
     objectives: [
       'Complete the books for the quarter with accruals and income earned',
       'Find the material variances against budget',
@@ -107,8 +107,8 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     ],
     deliverables: [
       'The adjusted books (Books)',
-      'The variance analysis (Sheets)',
-      'The board pack: key figures (Sheets) and the board report (Docs)',
+      'The variance analysis (Grid Craft)',
+      'The board pack: key figures (Grid Craft) and the board report (Docs)',
     ],
     assessment: [
       'Each stage is checked like a task and must pass',
@@ -135,7 +135,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'The cleaned data and churn query (Data Studio)',
       'The churn dashboard (Data Studio)',
-      'The figures by plan (Sheets) and the findings memo (Docs)',
+      'The figures by plan (Grid Craft) and the findings memo (Docs)',
     ],
     assessment: [
       'Each stage is checked like a task and must pass',
@@ -181,7 +181,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'Saved reports and the diagnosis (Site Analytics)',
       'The changed ad account (Ad Campaigns)',
-      'The scorecard (Sheets), the revised plan (Docs) and the slides (Slides)',
+      'The scorecard (Grid Craft), the revised plan (Docs) and the slides (Slides)',
     ],
     stages: ['launch-analytics', 'launch-campaigns', 'launch-plan'],
     assessment: [
@@ -225,9 +225,9 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
       'Present one consistent set of figures',
     ],
     deliverables: [
-      'The consolidated summary (Sheets)',
-      'The budget review (Sheets)',
-      'The key figures (Sheets) and the presentation (Slides)',
+      'The consolidated summary (Grid Craft)',
+      'The budget review (Grid Craft)',
+      'The key figures (Grid Craft) and the presentation (Slides)',
     ],
     stages: ['budget-consolidate', 'budget-review', 'budget-presentation'],
     assessment: [

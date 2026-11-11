@@ -89,7 +89,7 @@ export function SheetsPicker({
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Insert from Sheets"
+      aria-label="Insert from Grid Craft"
       data-testid="sheets-picker"
     >
       <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-2xl">
@@ -128,7 +128,7 @@ export function SheetsPicker({
           ) : mode === 'chart' ? (
             charts.length === 0 ? (
               <p className="text-sm text-slate-600">
-                None of your workbooks has a chart yet. In Sheets, select a table and
+                None of your workbooks has a chart yet. In Grid Craft, select a table and
                 click <strong>Chart</strong> in the toolbar to make one.
               </p>
             ) : (

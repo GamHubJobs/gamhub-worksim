@@ -144,3 +144,59 @@ test('repairing the app files keeps the saves', async ({ page }) => {
   await waitForOfflineReady(page)
   expect(await page.evaluate('caches.keys().then((keys) => keys.length)')).toBe(1)
 })
+
+/** The office apps' caches (see scripts/pwa/sw-template.js). */
+const CRAFT_CACHES = `caches.keys().then((keys) => keys.filter((key) => key.startsWith('craft-apps-')))`
+
+test('Grid Craft, once opened online, opens offline too (from its own cache)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(300_000)
+  const openPractice = async () => {
+    await page
+      .getByRole('navigation', { name: 'Places' })
+      .getByRole('button', { name: 'Your desk' })
+      .click()
+    await page
+      .getByTestId('office-panel')
+      .getByRole('button', { name: /Use your computer/ })
+      .click()
+    await page
+      .getByRole('navigation', { name: 'Apps' })
+      .getByRole('button', { name: /^Grid Craft/ })
+      .click()
+    await page.getByRole('button', { name: /Practice Workbook/ }).click()
+    await expect(page.getByTestId('gridcraft-editor')).toHaveAttribute(
+      'data-phase',
+      'ready',
+      {
+        timeout: 180_000,
+      },
+    )
+  }
+  await page.goto('/')
+  await startCareer(page)
+  await page.reload()
+  await waitForOfflineReady(page)
+  await expect(page.getByTestId('office')).toBeVisible({ timeout: 60_000 })
+  // Not installed with the game: only kept once opened.
+  expect(await page.evaluate(CRAFT_CACHES)).toEqual([])
+  await openPractice()
+  expect(await page.evaluate(CRAFT_CACHES)).toEqual(['craft-apps-gridcraft@0.18.0'])
+
+  await context.setOffline(true)
+  await page.goto('/')
+  await expect(page.getByTestId('offline-status')).toContainText('offline', {
+    timeout: 60_000,
+  })
+  // WorkSim reopens where the player was: the workbook, in Grid Craft, from its cache.
+  await expect(page.getByTestId('gridcraft-editor')).toHaveAttribute(
+    'data-phase',
+    'ready',
+    {
+      timeout: 180_000,
+    },
+  )
+  await context.setOffline(false)
+})

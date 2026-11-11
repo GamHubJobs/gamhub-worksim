@@ -169,7 +169,7 @@ export const CAREERS: Career[] = [
     description:
       'Keep the office running and the money in order: supplies orders, expense claims, invoices, budgets, payments and reports.',
     toolsIntro:
-      'Your work is done in Sheets, our spreadsheet app, with reports in Docs and presentations in Slides.',
+      'Your work is done in Grid Craft, our spreadsheet app, with reports in Docs and presentations in Slides.',
     skills: [
       'formulas',
       'data-analysis',
@@ -213,7 +213,7 @@ CAREERS.push({
   description:
     'Keep the company’s books: record transactions, reconcile the bank, run the fixed-asset register and close the month.',
   toolsIntro:
-    'Your work is done in Sheets, our spreadsheet app, with memos and reports in Docs.',
+    'Your work is done in Grid Craft, our spreadsheet app, with memos and reports in Docs.',
   skills: [
     'bookkeeping',
     'reconciliation',
@@ -323,7 +323,7 @@ CAREERS.push({
   description:
     'Bring in new clients: measure campaigns, plan and write content, test what works and report the results.',
   toolsIntro:
-    'Your work is done in Sheets for the numbers, Docs for copy and reports, and Slides for presentations.',
+    'Your work is done in Grid Craft for the numbers, Docs for copy and reports, and Slides for presentations.',
   skills: [
     'campaign-analytics',
     'copywriting',
@@ -376,7 +376,7 @@ CAREERS.push({
   description:
     'Turn data into decisions: clean messy exports, summarise and analyse, and explain what the numbers mean.',
   toolsIntro:
-    'Your work is done in Sheets for cleaning and analysis, Docs for insight memos and reports, and Slides for presenting findings.',
+    'Your work is done in Grid Craft for cleaning and analysis, Docs for insight memos and reports, and Slides for presenting findings.',
   skills: [
     'data-cleaning',
     'data-analysis',

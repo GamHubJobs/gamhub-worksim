@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Frame, type Page } from '@playwright/test'
 
 async function start(page: Page, career = /Office Administration/) {
   await page.goto('/')
@@ -38,6 +38,93 @@ async function app(page: Page, name: string) {
     .click()
 }
 
+interface GridCraftApi {
+  execute: (command: string, params: object) => Promise<unknown>
+  request: (method: string, params: object) => Promise<{ values: unknown[][] }>
+}
+
+/** Grid Craft (the office spreadsheet) in the window, once the workbook is open in it. */
+async function gridCraft(page: Page): Promise<Frame> {
+  await expect(page.getByTestId('gridcraft-editor')).toHaveAttribute(
+    'data-phase',
+    'ready',
+    {
+      timeout: 180_000,
+    },
+  )
+  return page.frame({ url: /crafts\/gridcraft\/index\.html/ })!
+}
+
+/** Types into a cell of Grid Craft with the keyboard, as a player does. */
+async function typeIn(page: Page, frame: Frame, address: string, ...entries: string[]) {
+  // Into the app (its status bar, away from the cells), then to the cell.
+  const box = (await page.getByTestId('craft-gridcraft').boundingBox())!
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height - 8)
+  await frame.evaluate(
+    (range) =>
+      (globalThis as unknown as { gridcraft: GridCraftApi }).gridcraft.execute(
+        'selection.set',
+        { range },
+      ),
+    address,
+  )
+  const ui = () =>
+    frame.evaluate(() =>
+      (globalThis as unknown as { gridcraft: GridCraftApi }).gridcraft
+        .request('ui.inspect', {})
+        .then((ui) => ui as unknown as { mode: string; editor: { text: string } | null }),
+    )
+  // Playwright's WebKit on Windows draws the app about once a second here, and
+  // its keys reach the canvas unreliably (some are lost at any typing speed).
+  // There the entries go in through the app's command API instead; real Safari
+  // is not tested (docs/CRAFT_APPS.md).
+  if (test.info().project.name === 'webkit') {
+    const [column, row] = [address.replace(/\d+/, ''), Number(address.replace(/\D+/, ''))]
+    for (const [i, entry] of entries.entries())
+      await frame.evaluate(
+        ([cell, input]) =>
+          (globalThis as unknown as { gridcraft: GridCraftApi }).gridcraft.execute(
+            'cell.set',
+            {
+              cell,
+              input,
+            },
+          ),
+        [`${column}${row + i}`, entry] as const,
+      )
+    return
+  }
+  for (const entry of entries) {
+    // Open the cell for typing (F2) and wait until it is open: in a test browser
+    // without a graphics card the app draws about once a second, and keys sent
+    // while it switches to typing can be lost.
+    await page.keyboard.press('F2')
+    await expect
+      .poll(async () => (await ui()).editor !== null, { timeout: 30_000 })
+      .toBe(true)
+    // At a person's pace, then Enter once the app has every key.
+    await page.keyboard.type(entry, { delay: 80 })
+    await expect
+      .poll(async () => (await ui()).editor?.text, { timeout: 30_000 })
+      .toBe(entry)
+    await page.keyboard.press('Enter')
+    // The entry is in once the app is back to Ready (not editing).
+    await expect.poll(async () => (await ui()).mode, { timeout: 30_000 }).toBe('Ready')
+  }
+}
+
+const valueOf = async (frame: Frame, range: string) =>
+  (
+    await frame.evaluate(
+      (range) =>
+        (globalThis as unknown as { gridcraft: GridCraftApi }).gridcraft.request(
+          'sheet.read',
+          { range },
+        ),
+      range,
+    )
+  ).values[0][0]
+
 async function waitUntilSaved(page: Page) {
   await expect(page.getByTestId('save-indicator')).toHaveAttribute(
     'data-state',
@@ -46,7 +133,7 @@ async function waitUntilSaved(page: Page) {
   )
 }
 
-test('the core journey: office, mail, Sheets, Docs, Slides, and saving across a reload', async ({
+test('the core journey: office, mail, Grid Craft, Docs, Slides, and saving across a reload', async ({
   page,
 }) => {
   await start(page)
@@ -60,17 +147,13 @@ test('the core journey: office, mail, Sheets, Docs, Slides, and saving across a 
   await page.getByRole('button', { name: /Welcome to Cobalt Ridge/ }).click()
   await expect(page.getByTestId('mail-message')).toContainText('Welcome')
 
-  // Sheets: a value and a formula.
-  await app(page, 'Sheets')
+  // Grid Craft: a value and a formula, typed.
+  await app(page, 'Grid Craft')
   await page.getByRole('button', { name: /Practice Workbook/ }).click()
-  await page.locator('[data-address="A1"]').click()
-  await page.keyboard.type('1250')
-  await page.keyboard.press('Enter')
-  await page.keyboard.type('=A1*2')
-  await page.keyboard.press('Enter')
-  await expect(page.locator('[data-address="A2"]')).toHaveText('2500', {
-    timeout: 30_000,
-  })
+  let frame = await gridCraft(page)
+  await typeIn(page, frame, 'A1', '1250', '=A1*2')
+  await expect.poll(() => valueOf(frame, 'A1'), { timeout: 30_000 }).toBe(1250)
+  await expect.poll(() => valueOf(frame, 'A2'), { timeout: 30_000 }).toBe(2500)
   await waitUntilSaved(page)
 
   // Docs: a heading and text.
@@ -90,24 +173,23 @@ test('the core journey: office, mail, Sheets, Docs, Slides, and saving across a 
   await expect(page.getByRole('navigation', { name: 'Apps' })).toBeVisible({
     timeout: 60_000,
   })
-  await app(page, 'Sheets')
+  await app(page, 'Grid Craft')
   await page.getByRole('button', { name: /Practice Workbook/ }).click()
-  await expect(page.locator('[data-address="A2"]')).toHaveText('2500', {
-    timeout: 30_000,
-  })
+  frame = await gridCraft(page)
+  expect(await valueOf(frame, 'A2')).toBe(2500)
 })
 
 test('backup and restore between two browser profiles, and switching career', async ({
   page,
   browser,
 }) => {
+  // Two profiles, each drawing Grid Craft without a graphics card (WebKit is the slowest).
+  test.setTimeout(360_000)
   await start(page)
   await toComputer(page)
-  await app(page, 'Sheets')
+  await app(page, 'Grid Craft')
   await page.getByRole('button', { name: /Practice Workbook/ }).click()
-  await page.locator('[data-address="A1"]').click()
-  await page.keyboard.type('kept in the backup')
-  await page.keyboard.press('Enter')
+  await typeIn(page, await gridCraft(page), 'A1', 'kept in the backup')
   await waitUntilSaved(page)
   await page.getByRole('button', { name: /Storage & backup/ }).click()
   const download = page.waitForEvent('download')
@@ -149,12 +231,10 @@ test('backup and restore between two browser profiles, and switching career', as
   })
   await other
     .getByRole('navigation', { name: 'Apps' })
-    .getByRole('button', { name: /^Sheets/ })
+    .getByRole('button', { name: /^Grid Craft/ })
     .click()
   await other.getByRole('button', { name: /Practice Workbook/ }).click()
-  await expect(other.locator('[data-address="A1"]')).toHaveText('kept in the backup', {
-    timeout: 30_000,
-  })
+  expect(await valueOf(await gridCraft(other), 'A1')).toBe('kept in the backup')
   await fresh.close()
 })
 

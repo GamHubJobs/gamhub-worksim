@@ -2,8 +2,13 @@
  * An open workbook: the spreadsheet editor with saving, crash recovery and
  * version history. For an assignment workbook, the task pane shows the
  * instructions and the Submit button.
+ *
+ * The editor is Grid Craft, the office's spreadsheet app, wherever it can run
+ * (see src/apps/craft/crafts.ts); otherwise, or if it fails to start, the
+ * basic editor, so the work can always be done. Version previews are shown
+ * read-only in the basic editor's view.
  */
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppServices } from '../../app/services'
 import type { Career, SubmissionResult } from '../../app/useCareer'
 import { getAssignment } from '../../content/assignments'
@@ -18,6 +23,8 @@ import { AssignmentPane } from './ui/AssignmentPane'
 import { SheetEditor } from './ui/SheetEditor'
 import { VersionHistoryPanel } from '../../ui/VersionHistoryPanel'
 import { useSheetDocument } from './useSheetDocument'
+import { craftAvailable, markFailed, type Installed } from '../craft/crafts'
+import { GridCraftEditor } from './gridcraft/GridCraftEditor'
 
 interface WorkbookWindowProps {
   documentId: string
@@ -41,7 +48,37 @@ export function WorkbookWindow({
 }: WorkbookWindowProps) {
   const { session, registerFlush, onSaved } = useAppServices()
   const sheet = useSheetDocument(documentId)
-  const { state, flush } = sheet
+  const { state, flush: flushSaved } = sheet
+  // Grid Craft, when it can be used here ('checking' until known).
+  const [craft, setCraft] = useState<Installed | null | 'checking'>('checking')
+  const [craftProblem, setCraftProblem] = useState<string | null>(null)
+  useEffect(() => {
+    let current = true
+    void craftAvailable('gridcraft').then((installed) => {
+      if (current) setCraft(installed)
+    })
+    return () => {
+      current = false
+    }
+  }, [])
+  const craftSave = useRef<(() => Promise<boolean>) | null>(null)
+  // Changes Grid Craft holds that are not kept yet: shown as not saved.
+  const [craftPending, setCraftPending] = useState(false)
+  const registerCraftSave = useCallback((save: (() => Promise<boolean>) | null) => {
+    craftSave.current = save
+  }, [])
+  const onCraftFailed = useCallback((reason: string) => {
+    console.warn(reason)
+    markFailed('gridcraft')
+    craftSave.current = null
+    setCraftProblem(reason)
+    setCraft(null)
+  }, [])
+  /** Saves everything: Grid Craft's latest work first, then the file. */
+  const flush = useCallback(async () => {
+    if (craftSave.current && !(await craftSave.current())) return false
+    return flushSaved()
+  }, [flushSaved])
   const [panel, setPanel] = useState<'task' | 'history' | null>(
     assignmentId ? 'task' : null,
   )
@@ -95,7 +132,7 @@ export function WorkbookWindow({
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            onClick={onBack}
+            onClick={() => void flush().finally(onBack)}
             className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
           >
             <Icon name="back" className="h-4 w-4" /> Files
@@ -106,7 +143,13 @@ export function WorkbookWindow({
           >
             {state.status === 'ready' ? state.document.title : 'Opening…'}
           </h1>
-          <SaveIndicator status={sheet.saveStatus} />
+          <SaveIndicator
+            status={
+              craftPending && craft && craft !== 'checking'
+                ? { ...sheet.saveStatus, state: 'pending' }
+                : sheet.saveStatus
+            }
+          />
         </div>
         <div className="flex items-center gap-2">
           {assignment && (
@@ -208,7 +251,32 @@ export function WorkbookWindow({
           {state.status === 'loading' && (
             <p className="text-slate-500">Opening your workbook…</p>
           )}
-          {state.status === 'ready' && (
+          {state.status === 'ready' && craft === 'checking' && (
+            <p className="text-slate-500">Opening your workbook…</p>
+          )}
+          {state.status === 'ready' && craft && craft !== 'checking' && (
+            <GridCraftEditor
+              installed={craft}
+              title={state.document.title}
+              author={profile?.name ?? ''}
+              content={state.content}
+              contentEpoch={sheet.contentEpoch}
+              onReplace={sheet.replace}
+              onFailed={onCraftFailed}
+              registerSave={registerCraftSave}
+              onPending={setCraftPending}
+              hidden={preview !== null}
+            />
+          )}
+          {state.status === 'ready' && craft === null && craftProblem && !preview && (
+            <p
+              role="status"
+              className="mb-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-900"
+            >
+              {craftProblem}
+            </p>
+          )}
+          {state.status === 'ready' && (craft === null || preview) && (
             <SheetEditor
               // Remount when switching between preview and live content, to reset editing.
               key={preview ? `preview-${preview.id}` : 'live'}

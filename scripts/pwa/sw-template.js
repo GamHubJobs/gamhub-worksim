@@ -9,11 +9,19 @@
  *   version is found, and from the cache when offline.
  * - A new version waits until the player chooses to update (the page sends
  *   SKIP_WAITING after saving), so work is never interrupted by an update.
+ * - The office apps (crafts/) are kept in a cache of their own once opened,
+ *   named by their versions: a game update does not download them again, and
+ *   they keep working offline. A new version of an app replaces its cache.
  * - Saves live in IndexedDB, which the service worker never touches.
  */
 const VERSION = '__VERSION__'
 const CACHE = `worksim-${VERSION}`
 const FILES = __FILES__
+const CRAFTS = __CRAFTS__
+const CRAFTS_CACHE = `craft-apps-${Object.entries(CRAFTS)
+  .map(([app, version]) => `${app}@${version}`)
+  .join(',')}`
+const CRAFTS_PATH = new URL('./crafts/', self.location.href).pathname
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -32,7 +40,11 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith('worksim-') && key !== CACHE)
+            .filter(
+              (key) =>
+                (key.startsWith('worksim-') && key !== CACHE) ||
+                (key.startsWith('craft-apps-') && key !== CRAFTS_CACHE),
+            )
             .map((key) => caches.delete(key)),
         ),
       )
@@ -50,6 +62,34 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
+
+  // The office apps: their pages and small files from the network when
+  // possible (and kept), their content-hashed program files from the cache.
+  if (url.pathname.startsWith(CRAFTS_PATH)) {
+    const hashed = /-[0-9a-f]{16}(_bg)?.(wasm|js|ico)$/.test(url.pathname)
+    const fromNetwork = () =>
+      fetch(request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone()
+          caches.open(CRAFTS_CACHE).then((cache) => cache.put(request, copy))
+        }
+        return response
+      })
+    const fromCache = () =>
+      caches
+        .open(CRAFTS_CACHE)
+        .then((cache) =>
+          cache.match(request, { ignoreVary: true, ignoreSearch: !hashed }),
+        )
+    event.respondWith(
+      hashed
+        ? fromCache().then((cached) => cached ?? fromNetwork())
+        : fromNetwork().catch(() =>
+            fromCache().then((cached) => cached ?? Response.error()),
+          ),
+    )
+    return
+  }
 
   // Pages: the network first (to find new versions), the cached page offline.
   if (request.mode === 'navigate') {

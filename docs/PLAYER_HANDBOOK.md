@@ -310,7 +310,7 @@ prompts.
   - **Mail**: summarise an email, list what it asks you to do, outline a reply; review
     your draft, or improve its wording.
   - **Tasks**: how to approach the task, and which step to do first.
-  - **Sheets**: explain a formula or an error, suggest a formula for the selected cell,
+  - **Grid Craft**: explain a formula or an error, suggest a formula for the selected cell,
     and analyse the selected data (totals, unusual values, trends, which chart to use).
   - **Docs**: review your writing, summarise, suggest a report structure, rewrite the
     selected text.
@@ -347,7 +347,7 @@ prompts.
 | Mail         | Tasks, cases and replies arrive here                                                   |
 | Tasks        | Your work, with its steps and hints                                                    |
 | Cases        | Clients, budgets, meetings, incidents and leadership situations                        |
-| Sheets       | A working spreadsheet with formulas, charts and data tools                             |
+| Grid Craft   | The office spreadsheet: formulas, formats, charts, tables, pivot tables; .xlsx files   |
 | Docs, Slides | Reports and presentations                                                              |
 | Career tools | Books, Help Desk, Network, Directory, Ad Campaigns, Analytics, Data Studio, Code, API… |
 | Career       | Your level, what promotion needs, your record, achievements and desk                   |

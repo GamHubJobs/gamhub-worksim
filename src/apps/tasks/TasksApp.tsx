@@ -294,7 +294,7 @@ function TaskDetail({
                       ? 'Ticket queue (Help Desk)'
                       : assignment.kind === 'code'
                         ? 'Project (Code)'
-                        : 'Workbook (Sheets)'
+                        : 'Workbook (Grid Craft)'
                 }
                 onClick={() => void open()}
               />

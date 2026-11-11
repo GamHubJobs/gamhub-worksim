@@ -74,7 +74,7 @@ export async function openApp(
   name:
     | 'Mail'
     | 'Tasks'
-    | 'Sheets'
+    | 'Grid Craft'
     | 'Docs'
     | 'Slides'
     | 'Career'
@@ -108,7 +108,7 @@ export async function openWorkbook(page: Page, path = '/') {
       .first(),
   ).toBeVisible({ timeout: 30_000 })
   if (!(await grid.isVisible())) {
-    await openApp(page, 'Sheets')
+    await openApp(page, 'Grid Craft')
     await page.getByRole('button', { name: /Practice Workbook/ }).click()
   }
   await expect(grid).toBeVisible()

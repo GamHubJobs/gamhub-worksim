@@ -190,6 +190,173 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-11 · Office apps 1: Grid Craft, a real spreadsheet, in the office
+
+The office spreadsheet is now **Grid Craft**: the official web build of GridCraft
+0.18.0, an open-source spreadsheet by the ArtCraft team (MIT OR Apache-2.0), run in
+the desktop's window. The game's own editor stays as the fallback and as the format
+the graders read. Word Craft and Deck Craft come next, in that order. See
+`docs/CRAFT_APPS.md`.
+
+### Inspection and the build
+
+- All three projects (Word, Grid and Deck Craft) are Rust and egui, drawn on a
+  canvas. Each has a web build with a host mode for embedding:
+  - an iframe that sends files in and hands every save back to the host;
+  - a page command API (`window.<app>`) with the app's 400-odd commands, which can
+    also read cells and formulas back.
+- There are no paid services, network calls, telemetry or AI keys. MIT or
+  Apache-2.0; the ArtCraft name and logos are trademarks outside the licence.
+- **Option B (official builds) was used:**
+  - v0.16.0, the inspected source version, has host mode but no command API.
+  - v0.18.0 has both. Its web front end is identical to the extracted `main` source,
+    and its licences are unchanged.
+  - Verified by SHA-256 against the release's SHA256SUMS.txt and GitHub's own record.
+  - The PGP signature could not be checked: the key is not published.
+- `npm run crafts` (run before `dev` and `build`) downloads the pinned release
+  once, checks it and unpacks it to `public/crafts/gridcraft/`. Nothing of it is
+  committed, nor is the extracted source.
+
+### What was built
+
+- **A shared host** (`src/apps/craft/`), for all three apps:
+  - `crafts.ts`: whether an app can run here (installed, WebGPU/WebGL2, the
+    player's choice);
+  - `CraftFrame.tsx`: the iframe, the host messages and the command API.
+- **A converter** (`src/apps/sheets/gridcraft/convert.ts`), both ways:
+  - Grid Craft's workbook into WorkSim's sheets: inputs, formats, widths and
+    charts;
+  - WorkSim's sheets into commands that build them in Grid Craft: values, formats,
+    widths, validations, conditional formats, filters and charts.
+
+  What the player did not touch keeps its exact input, so "unchanged" checks stay
+  fair (`1200.50` is not turned into `1200.5`).
+
+- **The workbook window** opens Grid Craft:
+  - The workbook opens from its kept `.xlsx`, or is built from the sheets (a task's
+    starting workbook).
+  - It is saved 1.5 s after a change, and before Submit and closing. Each save keeps
+    the `.xlsx` (a new, optional `file` field) and the sheets.
+  - Autosave, crash recovery, version history, backups, grading, AI, exports and
+    the Portfolio all work as before.
+  - Download .xlsx, Download .csv, Export PDF, and Import a file… (.xlsx, .xls,
+    .xlsb, .ods, .csv).
+- **WorkSim AI** sees Grid Craft's active cell and selection:
+  - it explains formulas and errors, suggests formulas and analyses data;
+  - a proposed formula is written into Grid Craft only when the player applies it.
+- **The app is called Grid Craft** wherever the player sees it: the dock, the start
+  menu, tasks, careers, help, the Docs and Slides insert buttons, and the Portfolio.
+  The internal id stays `sheets`, so saves do not change.
+- **The basic editor** opens the same workbook when:
+  - Grid Craft is missing;
+  - the device cannot draw it;
+  - it does not start;
+  - the player chooses it in **Settings → Office apps** (it works fully with a
+    screen reader).
+- **Offline:** the app is not part of the game's install (25 MB). It is kept in a
+  cache of its own once opened (`craft-apps-gridcraft@0.18.0`) and opens offline
+  from then on.
+- **Credit and notices:**
+  - the window shows "Grid Craft 0.18.0, based on GridCraft by the ArtCraft team"
+    and links to the NOTICE;
+  - `THIRD_PARTY_NOTICES.md` was added;
+  - no ArtCraft marks are used in WorkSim's own interface.
+- **Saves:** nothing is migrated. `file` is optional; old workbooks open and are
+  built in Grid Craft the first time.
+
+### Tests
+
+- Before writing the tests, all 27 spreadsheet tasks were checked:
+  1. Each model answer was built in the real Grid Craft.
+  2. It was read back.
+  3. It was graded.
+
+  0 differing cells, and the same grade for every task.
+
+- **Unit tests** (`convert.test.ts`, 11):
+  - the round trip through a workbook the real Grid Craft saved, covering every
+    format, colour, width, chart, validation and conditional format WorkSim keeps;
+  - number format codes;
+  - kept inputs;
+  - every starting workbook;
+  - references and fingerprints.
+- **Browser tests** (`gridcraft.spec.ts`, 6):
+  - the first task done in Grid Craft, from its starting workbook to 100% and
+    +100 XP;
+  - the practice workbook across a reload, from the `.xlsx`, and its download;
+  - the live round trip in the installed Grid Craft (`npm run crafts:fixture`
+    remakes the unit tests' fixture after an update);
+  - WorkSim AI: explaining, proposing and applying;
+  - the basic editor when Grid Craft is missing, and when chosen.
+- **PWA** (`offline.spec.ts`): Grid Craft is not cached before it is opened, and
+  opens offline after it has been.
+- The existing tests use the basic editor (development build under test) and were
+  updated for the new name.
+- I checked the screenshots (`docs/screenshots/crafts/`): Grid Craft in the window
+  with the task pane, and the graded result.
+- **Found and fixed by the regression runs:**
+  - **Closing a window could lose the last change.** Grid Craft keeps a change
+    until it saves, 1.5 s later.
+    - Closing any window now saves everything first.
+    - Hiding the tab saves Grid Craft at once.
+    - Closing the tab with a change not yet kept asks first.
+  - **Grid Craft took the keyboard back by itself (Firefox).** Escape and typing
+    went to the sheet behind a dialog.
+    - The host gives the app the keyboard only when the player clicks or tabs into
+      it. Otherwise it returns focus, and passes on a key that slipped through.
+    - Firefox gives no event for this, so the host checks four times a second.
+  - **"Saved" was shown while Grid Craft still held a change.** The indicator now
+    shows the change as pending until the file is kept.
+  - **Repair app files now also clears the office apps' cache.**
+  - **The cross-browser tests (production build) now use Grid Craft.**
+    - Chromium, Edge and Firefox: real typing into the app.
+    - WebKit: Playwright's WebKit on Windows draws the app about once a second
+      without a graphics card, and loses keys at any typing speed. There the
+      entries go in through the app's command API. Real Safari is not tested.
+- Results:
+  - `npm run check`: format, lint and typecheck clean; 2,263 unit tests in 99
+    files, all passed.
+  - **Chromium suite, run 1:** 201 passed, 1 failed, 7 flaky.
+    - The failure was "whole journey". It passed alone, and 3 of 3 when run one at
+      a time; it fails only with three copies at once on this machine, as it did
+      before.
+    - The flaky tests were older ones: backup, content loading, Data Studio ×2,
+      Books, the family at home, the week.
+  - **Chromium suite, run 2,** after the window and focus fixes: 203 passed,
+    1 failed, 5 flaky.
+    - The failure was content loading, which then passed 2 of 2 alone.
+    - Flaky: deliveries, interiors, the family at home and the week (older), and
+      the Grid Craft reload. That last one found the "Saved" indicator problem;
+      after the fix it passed 4 of 4.
+  - **After the last fixes:**
+    - the Grid Craft tests: 6 of 6;
+    - every spreadsheet-related test (Grid Craft, career, desktop, multi-app,
+      sheets data, AI in the apps, keyboard, accessibility, journey): 37 of 38;
+    - the failure was the first Grid Craft task waiting for a brief "pending"
+      state that heavy load had already passed. That check was removed: submitting
+      saves first, and the score proves it. The test then passed 2 of 2 in
+      parallel.
+
+    The full Chromium suite was not run a third time.
+
+  - **PWA:** 6 of 6, after one unrelated "repair" failure in run 2 passed on rerun.
+  - **Firefox, WebKit and Edge:** 8 passed, 1 skipped (service workers in
+    Playwright's WebKit on Windows).
+  - **Production build:** OK. Startup: start screen 3.1 s, office 1.8 s.
+
+### Limits
+
+- Grid Craft's screen reader support in the browser is not confirmed, hence the
+  basic editor in Settings.
+- Functions only Grid Craft has (XLOOKUP, LAMBDA…) work in it, but the graders,
+  which calculate with WorkSim's engine, see an error.
+- Conditional formats, validations and filters made in Grid Craft are kept in the
+  `.xlsx`, but not read into the graded sheets. Dates stay serial numbers.
+- In a test browser without a graphics card each command takes about a second
+  (about 30 ms in a normal browser), so the Grid Craft tests take 1–2 minutes each.
+
+---
+
 ## 2026-11-11 · People 1: real seats, real equipment, nothing done at thin air
 
 The owner reported people sitting in mid-air and moving their hands at nothing. The

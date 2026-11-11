@@ -29,3 +29,9 @@ test-results
 playwright-report
 blob-report
 
+
+# Office apps: downloaded official builds (scripts/crafts/fetch.mjs), never committed
+/public/crafts/
+/.cache/
+# The extracted source of the office apps, kept for reference only
+/artcraft-source/

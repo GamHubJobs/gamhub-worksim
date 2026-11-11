@@ -117,13 +117,15 @@ test('a chart and a table from Sheets go into a report in Docs', async ({ page }
   await body.click()
   await page.keyboard.type('Spending this month')
 
-  await toolbar(page).getByRole('button', { name: 'Insert chart from Sheets' }).click()
+  await toolbar(page)
+    .getByRole('button', { name: 'Insert chart from Grid Craft' })
+    .click()
   const picker = page.getByTestId('sheets-picker')
   await picker.getByRole('button', { name: /Practice Workbook/ }).click()
   await expect(body.getByRole('img', { name: /Spending by category/ })).toBeVisible()
 
   await toolbar(page)
-    .getByRole('button', { name: 'Data: insert a table from Sheets' })
+    .getByRole('button', { name: 'Data: insert a table from Grid Craft' })
     .click()
   await expect(picker.getByTestId('table-preview')).toContainText('Training')
   await picker.getByRole('button', { name: 'Insert table' }).click()

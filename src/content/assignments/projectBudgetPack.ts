@@ -2,7 +2,7 @@ import type { AssignmentInput } from '../schemas'
 
 /**
  * Finance & Admin integrated project (Finance Officer): the year-end budget
- * pack. Three linked stages in Sheets and Slides:
+ * pack. Three linked stages in Grid Craft and Slides:
  *
  * 1. Consolidate three departments' spending with cross-sheet formulas.
  * 2. Compare next year's proposed budgets with this year and flag big rises.

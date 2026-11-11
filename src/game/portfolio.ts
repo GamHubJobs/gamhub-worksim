@@ -48,7 +48,7 @@ export function toolsOf(assignment: Assignment): string[] {
 /** A readable name for a tool or app ID (for lists and reports). */
 export function toolName(id: string): string {
   const apps: Record<string, string> = {
-    sheets: 'Sheets',
+    sheets: 'Grid Craft',
     docs: 'Docs',
     slides: 'Slides',
     helpdesk: 'Help Desk',

@@ -340,7 +340,7 @@ test('a Software Development career: a bug fixed in Code, tested and handed in',
   await openApp(page, 'Tasks')
   // The dock has the career's tools: Code instead of Sheets.
   await expect(apps(page).getByRole('button', { name: /^Code/ })).toBeVisible()
-  await expect(apps(page).getByRole('button', { name: /^Sheets/ })).toHaveCount(0)
+  await expect(apps(page).getByRole('button', { name: /^Grid Craft/ })).toHaveCount(0)
   await expect(page.getByTestId('task-detail')).toContainText('Fix the invoice totals')
   await page
     .getByTestId('task-detail')

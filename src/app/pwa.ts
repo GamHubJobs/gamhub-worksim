@@ -67,7 +67,8 @@ export async function applyUpdate(saveAll: () => Promise<boolean>): Promise<bool
 
 /**
  * Repairs the app files: removes the service worker and its cached files, then
- * reloads from the network. Saves (IndexedDB) are not affected.
+ * reloads from the network. The office apps' caches (craft-apps-…) go too, so a
+ * damaged copy of one is downloaded again. Saves (IndexedDB) are not affected.
  */
 export async function repairAppFiles(): Promise<void> {
   if (offlineSupported()) {
@@ -77,7 +78,9 @@ export async function repairAppFiles(): Promise<void> {
   if (typeof caches !== 'undefined') {
     const keys = await caches.keys()
     await Promise.all(
-      keys.filter((k) => k.startsWith('worksim-')).map((k) => caches.delete(k)),
+      keys
+        .filter((k) => k.startsWith('worksim-') || k.startsWith('craft-apps-'))
+        .map((k) => caches.delete(k)),
     )
   }
   window.location.reload()

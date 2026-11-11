@@ -39,8 +39,11 @@ page lists what is supported and how it is tested.
   compressor stops sudden loud sounds. The Sound panel works with the keyboard.
 
 - **The editors.**
-  - In Sheets, the grid is a proper grid of rows and cells, and the address and value
-    of the active cell (and its formula) are announced as you move.
+  - Grid Craft, the office spreadsheet, is drawn as a picture of its window, and its
+    own screen reader support in the browser has not been confirmed. **Settings →
+    Office apps** switches to the basic spreadsheet editor, which opens the same
+    files. Its grid is a proper grid of rows and cells, and the address and value of
+    the active cell (and its formula) are announced as you move.
   - In Slides, Tab moves to each element on a slide and selects it. Enter edits its
     text, the arrow keys move it, and Delete removes it.
   - The Docs page is a named, multi-line text box.

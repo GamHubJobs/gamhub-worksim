@@ -155,8 +155,25 @@ export const SheetSchema = z.object({
   filter: SheetFilterSchema.optional(),
 })
 
+/**
+ * The workbook as a real file, kept when it is edited in an office app (Grid
+ * Craft): everything the app can do (borders, merged cells, pivot tables…)
+ * is in it. `sheets` is still what is graded; `basis` is the fingerprint of
+ * the sheets it was saved with, so an edit made elsewhere (the basic editor,
+ * a restored version) is noticed and the file rebuilt from the sheets.
+ */
+export const SheetFileSchema = z.object({
+  format: z.literal('xlsx'),
+  app: z.string().min(1).max(40),
+  /** The file, base64-encoded. */
+  data: z.string().max(40_000_000),
+  basis: z.string().max(40),
+})
+
 export const SheetContentSchema = z.object({
   sheets: z.array(SheetSchema).min(1),
+  /** Added with the office apps: absent in workbooks made before them. */
+  file: SheetFileSchema.optional(),
 })
 
 // ---------------------------------------------------------------------------

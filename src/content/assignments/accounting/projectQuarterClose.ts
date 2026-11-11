@@ -6,8 +6,8 @@ import { apply, approved, journal, line, marchBooks } from '../../../tools/books
  * Three linked stages under one brief from the finance director:
  *
  * 1. Books: post the quarter-end adjustments.
- * 2. Sheets: analyse the quarter against budget and flag what to investigate.
- * 3. Sheets and Docs: the board pack (key figures and a written report).
+ * 2. Grid Craft: analyse the quarter against budget and flag what to investigate.
+ * 3. Grid Craft and Docs: the board pack (key figures and a written report).
  *
  * Teaches: running a close from adjustments to the board, materiality
  * (what is worth investigating), and telling one consistent story.
@@ -134,7 +134,7 @@ export const quarterCloseAdjustments: AssignmentInput = {
 {director} has asked us for the **Q1 board pack**, and I’d like you to run the whole close as a project. There are three stages; each one opens when the one before is done:
 
 1. **Adjustments** in Books (this email).
-2. **Variance analysis**: Q1 against budget, in Sheets.
+2. **Variance analysis**: Q1 against budget, in Grid Craft.
 3. **The board pack**: key figures and a short report.
 
 Before we analyse anything, Q1 must be complete in **Books**. Post these at 31 March:
@@ -224,7 +224,7 @@ Daniel`,
 }
 
 // ---------------------------------------------------------------------------
-// Stage 2: variance analysis in Sheets
+// Stage 2: variance analysis in Grid Craft
 // ---------------------------------------------------------------------------
 
 const lines: Array<[string, number, number]> = [
@@ -421,7 +421,7 @@ Daniel`,
 }
 
 // ---------------------------------------------------------------------------
-// Stage 3: the board pack (Sheets and Docs)
+// Stage 3: the board pack (Grid Craft and Docs)
 // ---------------------------------------------------------------------------
 
 const months: Array<[string, number, number]> = [
@@ -450,7 +450,7 @@ export const quarterCloseBoardPack: AssignmentInput = {
 
 Last stage. The board pack has two parts:
 
-**1. Key figures (Sheets).** The workbook has Q1 income and costs by month. Add each month’s **net profit** and **net margin** (profit ÷ income, as a %), and the **Q1 totals** in column E. Add a chart of income and costs by month.
+**1. Key figures (Grid Craft).** The workbook has Q1 income and costs by month. Add each month’s **net profit** and **net margin** (profit ÷ income, as a %), and the **Q1 totals** in column E. Add a chart of income and costs by month.
 
 **2. The board report (Docs).** An executive summary, findings and recommendations. Give **Q1 income**, **Q1 net profit**, and the **professional fees overspend** from your variance analysis; explain that it is mostly the **audit** fee accrual, and say what else you flagged.
 

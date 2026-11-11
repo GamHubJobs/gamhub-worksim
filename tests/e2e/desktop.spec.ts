@@ -37,7 +37,7 @@ test('several apps open at once, and the taskbar switches between them', async (
     .getByRole('button', { name: /^Tasks/ })
     .click()
   await taskbar(page)
-    .getByRole('button', { name: /^Sheets/ })
+    .getByRole('button', { name: /^Grid Craft/ })
     .click()
   await expect(win(page, 'mail')).toBeVisible()
   await expect(win(page, 'tasks')).toBeVisible()
@@ -125,7 +125,7 @@ test('desktop icons open apps with a double-click and can be moved', async ({ pa
   await closeAllWindows(page)
 
   // Keyboard: Enter opens the selected icon.
-  await page.getByRole('option', { name: 'Sheets' }).focus()
+  await page.getByRole('option', { name: 'Grid Craft' }).focus()
   await page.keyboard.press('Enter')
   await expect(win(page, 'sheets')).toBeVisible()
   await closeAllWindows(page)

@@ -24,7 +24,7 @@ const APP_NAMES: Partial<Record<View['app'], string>> = {
   mail: 'Mail',
   tasks: 'Tasks',
   cases: 'Cases',
-  sheets: 'Sheets',
+  sheets: 'Grid Craft',
   docs: 'Docs',
   slides: 'Slides',
   helpdesk: 'Help Desk',

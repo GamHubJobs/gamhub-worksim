@@ -3,7 +3,7 @@ import type { AssignmentInput } from '../schemas'
 /**
  * Assignment 7 (Junior Finance Assistant): the monthly departmental
  * performance report. The first task that uses three apps: analyse the
- * figures in Sheets (variances, a chart), write a report in Docs and prepare
+ * figures in Grid Craft (variances, a chart), write a report in Docs and prepare
  * slides for the management meeting, then email all three to Priya.
  */
 const departments: Array<[string, string, string]> = [
@@ -38,13 +38,13 @@ export const performanceReport: AssignmentInput = {
 
 The directors want our **monthly departmental performance report** for Thursday’s management meeting, and I’d like you to prepare it this month. It has three parts, so it is your biggest piece of work so far.
 
-**1. The analysis (Sheets).** The workbook has each department’s budget and actual spending for October. Work out each department’s variance (actual minus budget), the percentage of budget used, and whether it is over or under budget; add the totals, and make a chart comparing budget and actual by department.
+**1. The analysis (Grid Craft).** The workbook has each department’s budget and actual spending for October. Work out each department’s variance (actual minus budget), the percentage of budget used, and whether it is over or under budget; add the totals, and make a chart comparing budget and actual by department.
 
 **2. The report (Docs).** A short written report with an executive summary, your findings and your recommendations. Give the key figures (total budget, total actual spending, and the biggest overspend), name the departments that went over budget, and include your chart.
 
 **3. The slides (Slides).** Four to eight slides I can present on Thursday, with the chart and the headline figure.
 
-I’ve set up the three files for you; you’ll find them in Sheets, Docs and Slides. When you’re done, **reply to this email and attach all three files**.
+I’ve set up the three files for you; you’ll find them in Grid Craft, Docs and Slides. When you’re done, **reply to this email and attach all three files**.
 
 Thanks,
 
@@ -62,8 +62,8 @@ Priya`,
   steps: [
     {
       id: 'analyse',
-      title: 'Analyse the figures in Sheets',
-      instructions: `In the workbook (Sheets), for each department in rows 2 to ${last}:
+      title: 'Analyse the figures in Grid Craft',
+      instructions: `In the workbook (Grid Craft), for each department in rows 2 to ${last}:
 - **D** Variance: \`=C2-B2\` (positive means over budget)
 - **E** % of budget used: \`=C2/B2\`, formatted with **%**
 - **F** Status: \`=IF(C2>B2, "Over budget", "Within budget")\`

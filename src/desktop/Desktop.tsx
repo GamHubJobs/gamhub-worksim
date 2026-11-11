@@ -191,7 +191,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'tasks', label: 'Tasks', icon: 'tasks' },
     { id: 'cases', label: 'Cases', icon: 'cases' },
     { id: 'ai', label: 'WorkSim AI', icon: 'ai' },
-    { id: 'sheets', label: 'Sheets', icon: 'sheets' },
+    { id: 'sheets', label: 'Grid Craft', icon: 'sheets' },
     { id: 'docs', label: 'Docs', icon: 'docs' },
     { id: 'slides', label: 'Slides', icon: 'slides' },
     { id: 'helpdesk', label: 'Help Desk', icon: 'helpdesk' },
@@ -1249,7 +1249,11 @@ export function Desktop({
                 onFocus={() => setDesk((d) => focusWindow(d, key))}
                 onMinimize={() => setDesk((d) => minimizeWindow(d, key))}
                 onToggleMaximize={() => setDesk((d) => toggleMaximize(d, key))}
-                onClose={() => setDesk((d) => closeWindow(d, key))}
+                // Work an app still holds (Grid Craft saves a moment after a change) is
+                // saved before its window goes.
+                onClose={() =>
+                  void saveAll().finally(() => setDesk((d) => closeWindow(d, key)))
+                }
                 onMove={(x, y) => setDesk((d) => moveWindow(d, key, x, y, area))}
                 onResize={(w, h) => setDesk((d) => resizeWindow(d, key, w, h, area))}
               >

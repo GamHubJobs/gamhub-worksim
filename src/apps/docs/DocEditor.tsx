@@ -474,13 +474,13 @@ function Toolbar({
       {onPickFromSheets && (
         <>
           <ToolbarButton
-            label="Insert chart from Sheets"
+            label="Insert chart from Grid Craft"
             onClick={() => onPickFromSheets('chart')}
           >
             Chart
           </ToolbarButton>
           <ToolbarButton
-            label="Data: insert a table from Sheets"
+            label="Data: insert a table from Grid Craft"
             onClick={() => onPickFromSheets('table')}
           >
             Data

@@ -47,7 +47,7 @@ test('a readiness assessment: a rushed attempt with feedback, and a retake in an
   const detail = view.getByTestId('case-detail')
   await expect(detail.getByTestId('case-deadline')).toContainText('3 h')
   // The practical work is a real task, in the career's own tool.
-  await expect(detail.getByTestId('step-practical')).toContainText('in Sheets')
+  await expect(detail.getByTestId('step-practical')).toContainText('in Grid Craft')
   await expect(detail.getByTestId('step-practical')).not.toContainText('{name}')
 
   // A rushed first attempt: only the decision, through the real form.
@@ -184,7 +184,7 @@ test('passing a readiness assessment with real SQL in Data Studio and a report i
 const CAREER_ASSESSMENTS: Array<
   [career: RegExp, levelTask: string, id: string, tool: string]
 > = [
-  [/Office Administration/, 'budget-report', 'ready-fa-practitioner', 'Sheets'],
+  [/Office Administration/, 'budget-report', 'ready-fa-practitioner', 'Grid Craft'],
   [/Accounting/, 'books-sales-purchases', 'ready-acc-practitioner', 'Books'],
   [/IT Help Desk/, 'directory-leaver', 'ready-it-practitioner', 'Network'],
   [/Digital Marketing/, 'seo-fixes', 'ready-mkt-practitioner', 'Ad Campaigns'],

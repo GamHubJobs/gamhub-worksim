@@ -131,7 +131,7 @@ test('the spreadsheet and slide editors with the keyboard: cells are announced, 
   await page.getByRole('button', { name: 'Start my first day' }).click()
 
   // Sheets: moving with the arrow keys announces each cell.
-  await openApp(page, 'Sheets')
+  await openApp(page, 'Grid Craft')
   await page.getByRole('button', { name: /Practice Workbook/ }).click()
   const grid = page.getByRole('grid')
   await grid.focus()

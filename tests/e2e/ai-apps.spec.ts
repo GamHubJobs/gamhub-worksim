@@ -81,7 +81,7 @@ test('Mail and Tasks: summarise, list requests, and plan the task', async ({ pag
 test('Sheets: explain an error, and apply a suggested formula only when chosen', async ({
   page,
 }) => {
-  await openApp(page, 'Sheets')
+  await openApp(page, 'Grid Craft')
   await page.getByRole('button', { name: /Practice Workbook/ }).click()
   await enterValue(page, 'B2', '100')
   await enterValue(page, 'B3', '250')

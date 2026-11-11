@@ -17,7 +17,7 @@ import {
  *
  * 1. Site Analytics: find why visits don't become bookings.
  * 2. Ad Campaigns: stop the waste and bring the month back on budget.
- * 3. Sheets, Docs and Slides: the launch scorecard and the revised plan.
+ * 3. Grid Craft, Docs and Slides: the launch scorecard and the revised plan.
  *
  * Teaches: diagnosing a funnel before spending more, cutting waste without
  * cutting what works, and presenting a recovery plan.
@@ -359,7 +359,7 @@ export const launchPlan: AssignmentInput = {
 
 Last stage: {director} wants to see the recovery.
 
-**1. The scorecard (Sheets).** The first two weeks by ad set. Add each ad set’s **ROAS** (revenue ÷ spend), a decision (**“Keep”** when ROAS is 1 or more, otherwise “Pause”), the totals and the overall ROAS, and a chart.
+**1. The scorecard (Grid Craft).** The first two weeks by ad set. Add each ad set’s **ROAS** (revenue ÷ spend), a decision (**“Keep”** when ROAS is 1 or more, otherwise “Pause”), the totals and the overall ROAS, and a chart.
 
 **2. The plan (Docs).** What went wrong (the launch page and the wasted spending), what you changed, the **total spend** and **overall ROAS** of the first two weeks, and what happens next.
 
