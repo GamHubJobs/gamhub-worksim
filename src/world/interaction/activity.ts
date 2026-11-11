@@ -29,6 +29,12 @@ export type PropKind =
   | 'product'
   /** A takeaway bag, with handles. */
   | 'bag'
+  /** Papers: a printout, a report. */
+  | 'document'
+  /** A clipboard with a page on it, to write on. */
+  | 'clipboard'
+  /** A small watering can. */
+  | 'watering-can'
 
 /** Visual effects (see vfx/). */
 export type VfxKind =

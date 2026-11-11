@@ -4,6 +4,7 @@
  * (each one runs a real action from the place's list, or says why not).
  * Simple shapes like the office and the street, so they load instantly.
  */
+import { useAnchors, type AnchorSpec } from '../../../world/anchors'
 import { useCursor } from '@react-three/drei'
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -372,6 +373,9 @@ export function Lamp({
 }
 
 /** A simple chair, facing along its rotation. */
+/** The seat's top is 0.485 m up; the sitter faces −z, back to the backrest. */
+const CHAIR_SEAT: AnchorSpec[] = [{ kind: 'seat', at: [0, 0.485, 0.07], top: 0.485 }]
+
 export function Chair({
   position,
   rotation = 0,
@@ -381,8 +385,9 @@ export function Chair({
   rotation?: number
   colour?: string
 }) {
+  const ref = useAnchors(CHAIR_SEAT)
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <group ref={ref} position={position} rotation={[0, rotation, 0]}>
       <Box size={[0.45, 0.05, 0.45]} position={[0, 0.46, 0]} color={colour} />
       <Box size={[0.45, 0.5, 0.05]} position={[0, 0.72, 0.2]} color={colour} />
       {[

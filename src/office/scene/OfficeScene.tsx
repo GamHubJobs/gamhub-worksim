@@ -6,6 +6,8 @@
  * (reception, your desk, the manager's office, the break room). Clicking a glowing
  * floor marker or an object moves there.
  */
+import { Anchors } from '../../world/AnchorPoints'
+import type { AnchorSpec } from '../../world/anchors'
 import { lowDpr } from '../../world/lowDpr'
 import {
   ContactShadows,
@@ -809,6 +811,31 @@ function Clock({ position }: { position: Vector }) {
 
 type Interact = { onInteract: (id: InteractionId) => void }
 
+// Where people use things in the office (see world/anchors.ts), in each thing's own space.
+const PRINTER_ANCHORS: AnchorSpec[] = [
+  { kind: 'printer', at: [0.22, 0.88, 0.3], carry: { left: 'document' } },
+]
+const FILING_ANCHORS: AnchorSpec[] = [
+  { kind: 'shelf', at: [0, 0.95, 0.32], carry: { left: 'document' } },
+]
+const LAPTOP_ANCHORS: AnchorSpec[] = [{ kind: 'keyboard', at: [-0.15, 1.125, 0.1] }]
+const WHITEBOARD_ANCHORS: AnchorSpec[] = [{ kind: 'whiteboard', at: [0, 1.45, 0.1] }]
+const WATER_ANCHORS: AnchorSpec[] = [
+  { kind: 'water', at: [0, 0.95, 0.22], carry: { left: 'cup' } },
+]
+const KITCHEN_ANCHORS: AnchorSpec[] = [
+  { kind: 'coffee-machine', at: [-9.6, 1.05, -7.22], carry: { left: 'cup' } },
+  { kind: 'counter', at: [-10.4, 0.95, -7.2] },
+  { kind: 'counter', at: [-8.4, 0.95, -7.2] },
+]
+const RECEPTION_ANCHORS: AnchorSpec[] = [{ kind: 'counter', at: [-6.4, 1.1, 3.85] }]
+const MANAGER_ANCHORS: AnchorSpec[] = [
+  { kind: 'keyboard', at: [8.4, 0.8, -4.62], heading: Math.PI },
+]
+const BOOKSHELF_ANCHORS: AnchorSpec[] = [
+  { kind: 'shelf', at: [0, 1.0, 0.25], carry: { left: 'document' } },
+]
+
 function Reception() {
   return (
     <group>
@@ -843,6 +870,7 @@ function Reception() {
       />
       <Box size={[3.2, 0.12, 0.02]} position={[-6.6, 0.35, 4.56]} color={COLORS.accent} />
       <Box size={[0.5, 0.32, 0.03]} position={[-7.3, 1.28, 3.95]} color={COLORS.screen} />
+      <Anchors specs={RECEPTION_ANCHORS} />
       {/* Waiting area */}
       <Sofa position={[-10.2, 0, 6.6]} rotation={Math.PI / 2} />
       <Box
@@ -974,14 +1002,14 @@ function Workspace({
         ) : (
           <group key={x}>
             <Desk position={[x, 0, 1.1]} />
-            <OfficeChair position={[x, 0, 1.75]} />
+            <OfficeChair position={[x, 0, 1.68]} />
           </group>
         ),
       )}
       {back.map((x) => (
         <group key={x}>
           <Desk position={[x, 0, -0.45]} rotation={Math.PI} />
-          <OfficeChair position={[x, 0, -1.1]} rotation={Math.PI} />
+          <OfficeChair position={[x, 0, -1.03]} rotation={Math.PI} />
         </group>
       ))}
       {/* Low divider between the rows */}
@@ -998,6 +1026,7 @@ function Workspace({
         onInteract={onInteract}
       >
         <Place position={[-2.9, 0, 2.4]} rotation={0.5}>
+          <Anchors specs={WHITEBOARD_ANCHORS} />
           <Box
             size={[1.5, 0.95, 0.04]}
             position={[0, 1.45, 0]}
@@ -1034,10 +1063,14 @@ function Workspace({
         color="#cbd5e1"
         radius={0.02}
       />
+      <Place position={[4.3, 0, -1.5]}>
+        <Anchors specs={FILING_ANCHORS} />
+      </Place>
       <Plant position={[-2.6, 0, -1.6]} />
       <Plant position={[4.4, 0, 3.6]} scale={1.2} />
       {/* The printer, by the back windows */}
       <Place position={[PRINTER.x, 0, PRINTER.z]}>
+        <Anchors specs={PRINTER_ANCHORS} />
         <Box
           size={[0.75, 0.75, 0.6]}
           position={[0, 0.375, 0]}
@@ -1061,6 +1094,7 @@ function Workspace({
       </Place>
       {/* The coordinator's standing desk, with a laptop and papers */}
       <Place position={[STANDING_DESK.x, 0, STANDING_DESK.z]}>
+        <Anchors specs={LAPTOP_ANCHORS} />
         <Box
           size={[1.1, 0.04, 0.6]}
           position={[0, 1.08, 0]}
@@ -1140,11 +1174,15 @@ function ManagerOffice() {
         rotation={0.8}
         color={COLORS.screen}
       />
+      {/* Her keyboard, in front of her */}
+      <Box size={[0.44, 0.02, 0.14]} position={[8.4, 0.79, -4.62]} color="#1e293b" />
+      <Anchors specs={MANAGER_ANCHORS} />
       <OfficeChair position={[8.4, 0, -5.2]} rotation={Math.PI} color="#0f172a" />
       <OfficeChair position={[7.8, 0, -3.3]} color="#64748b" />
       <OfficeChair position={[9.0, 0, -3.3]} color="#64748b" />
       {/* Bookshelf */}
       <Place position={[10.4, 0, -7.6]}>
+        <Anchors specs={BOOKSHELF_ANCHORS} />
         <Box size={[2.2, 2.0, 0.05]} position={[0, 1.0, -0.18]} color={COLORS.darkWood} />
         {[-1.08, 1.08].map((x) => (
           <Box
@@ -1199,6 +1237,7 @@ function BreakRoom({ onInteract }: Interact) {
         color="#e5e7eb"
         radius={0.04}
       />
+      <Anchors specs={KITCHEN_ANCHORS} />
       {/* Coffee machine */}
       <Interactive id="coffee" labelPosition={[-9.6, 1.75, -7.3]} onInteract={onInteract}>
         <Box
@@ -1221,6 +1260,7 @@ function BreakRoom({ onInteract }: Interact) {
       </Interactive>
       {/* Water cooler */}
       <Place position={[-4.8, 0, -7.4]}>
+        <Anchors specs={WATER_ANCHORS} />
         <Box
           size={[0.4, 1.0, 0.4]}
           position={[0, 0.5, 0]}

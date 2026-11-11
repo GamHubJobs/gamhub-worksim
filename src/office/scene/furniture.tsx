@@ -10,6 +10,7 @@
  * small textures drawn in code (wood grain, keys, a screen), so nothing is
  * downloaded.
  */
+import { useAnchors, type AnchorSpec } from '../../world/anchors'
 import {
   BoxGeometry,
   CanvasTexture,
@@ -366,6 +367,9 @@ const deskGeometry = lazy(() => {
   }
 })
 
+/** The desk's keyboard, for whoever sits at it (on the +z side, facing −z). */
+const DESK_KEYS: AnchorSpec[] = [{ kind: 'keyboard', at: [0, 0.784, 0.08] }]
+
 export function Desk({
   position,
   rotation = 0,
@@ -374,8 +378,9 @@ export function Desk({
 }: Placed & { glow?: boolean; mug?: string }) {
   const g = deskGeometry()
   const m = materials()
+  const ref = useAnchors(DESK_KEYS)
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <group ref={ref} position={position} rotation={[0, rotation, 0]}>
       <mesh geometry={g.top} material={m.wood} />
       <mesh geometry={g.steel} material={m.steel} />
       <mesh geometry={g.pedestal} material={m.pedestal} />
@@ -432,6 +437,9 @@ const chairGeometry = lazy(() => {
   }
 })
 
+/** Where the hips go: on the cushion (its top 0.51 m up), back against the backrest. */
+const CHAIR_SEAT: AnchorSpec[] = [{ kind: 'seat', at: [0, 0.51, 0.08], top: 0.51 }]
+
 export function OfficeChair({
   position,
   rotation = 0,
@@ -439,8 +447,9 @@ export function OfficeChair({
 }: Placed & { color?: string }) {
   const g = chairGeometry()
   const m = materials()
+  const ref = useAnchors(CHAIR_SEAT)
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <group ref={ref} position={position} rotation={[0, rotation, 0]}>
       <mesh geometry={g.plastic} material={m.plastic} />
       <mesh geometry={g.chrome} material={m.chrome} />
       <mesh geometry={g.fabric} material={fabric(color)} />

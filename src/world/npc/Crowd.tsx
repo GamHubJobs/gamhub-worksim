@@ -23,7 +23,18 @@ import { Person, type Motion, type PersonLook } from '../../office/scene/people'
 import { prefersReducedMotion } from '../../ui/motion'
 import type { Who } from '../../game/encounters'
 import { turnTowards, type Box } from '../character/controller'
-import { clipFrame, type RigFrame } from '../character/rig'
+import { clipFrame, type ClipId, type RigFrame } from '../character/rig'
+import { hipHeight, sitting } from '../character/fit'
+import type { PropKind } from '../interaction/activity'
+import {
+  allAnchors,
+  anchorsVersion,
+  claimSeat,
+  releaseSeats,
+  seatsTakenBut,
+} from '../anchors'
+import { activityFrame, check, holdsFor, resolvePlace, type Resolved } from './activities'
+import { Held } from './Held'
 import { World } from '../context'
 import { buildGrid, type Point } from '../physics/nav'
 import { scanSolids } from '../physics/solids'
@@ -67,7 +78,22 @@ interface Live {
   group: Group | null
   /** Seconds at the current place, for sitting down first. */
   clip: number
+  /** The seated place they are on (its key), and seconds getting up from it. */
+  seatedAt: string | null
+  rise: number
+  /** Getting up from the seat this frame (not yet walking, not yet anywhere else). */
+  rising: boolean
+  /** What is in each hand. */
+  held: { left: RefObject<PropKind | null>; right: RefObject<PropKind | null> }
+  /** What they are doing now (for tests and the development view). */
+  clipNow: ClipId | null
 }
+
+/** Seconds to sit down onto a seat, and to get up from it. */
+const SIT_SECONDS = 1.1
+const RISE_SECONDS = 0.9
+const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
+let crowds = 0
 
 export function Crowd(props: CrowdProps) {
   const scene = useThree((s) => s.scene)
@@ -88,6 +114,11 @@ export function Crowd(props: CrowdProps) {
         rig: { current: null },
         group: null,
         clip: 0,
+        seatedAt: null,
+        rise: 0,
+        rising: false,
+        held: { left: { current: null }, right: { current: null } },
+        clipNow: null,
       })
     return map
   }, [props.people])
@@ -102,7 +133,12 @@ export function Crowd(props: CrowdProps) {
     still: 0,
     seconds: 0,
     placed: false,
+    /** The places, checked against the furniture really there (activities.ts). */
+    resolved: new Map<string, Resolved>(),
+    version: -1,
   })
+  const owner = useMemo(() => `crowd:${crowds++}`, [])
+  useEffect(() => () => releaseSeats(owner), [owner])
   const pending = useRef(false)
 
   useEffect(
@@ -141,6 +177,22 @@ export function Crowd(props: CrowdProps) {
     else s.still += dt
     s.minute = p.minute
     s.planIn -= dt
+    if (s.version !== anchorsVersion()) {
+      // The furniture has appeared (or changed): each place's seat and what can be done there.
+      s.version = anchorsVersion()
+      releaseSeats(owner)
+      const anchors = allAnchors()
+      const taken = seatsTakenBut(owner)
+      s.resolved = new Map()
+      for (const [key, place] of Object.entries(p.places)) {
+        const r = resolvePlace(place, anchors, taken)
+        if (r.seat) {
+          taken.add(r.seat.id)
+          claimSeat(r.seat.id, owner)
+        }
+        s.resolved.set(key, r)
+      }
+    }
     if (s.planIn <= 0 || jumped) {
       s.planIn = 0.5
       const errandMinute = p.minute + Math.min(15, Math.floor(s.still / 10))
@@ -160,6 +212,8 @@ export function Crowd(props: CrowdProps) {
       })
     }
     let walking = false
+    // Someone came in or left this frame (the dev snapshot is taken at once).
+    let appeared = false
     // At a meeting, people speak in turn (the host every other turn); while the
     // player gives their update, everyone listens.
     const now = world?.now.current
@@ -170,7 +224,8 @@ export function Crowd(props: CrowdProps) {
       return (
         intent?.kind === 'at' &&
         intent.reason === 'meeting' &&
-        lives.get(q.id)!.agent.status === 'there'
+        lives.get(q.id)!.agent.status === 'there' &&
+        !lives.get(q.id)!.rising
       )
     })
     const host = there.find((q) => {
@@ -196,10 +251,24 @@ export function Crowd(props: CrowdProps) {
       const talkingFor = engagedFor(person.id)
       const meeting = intent?.kind === 'at' && intent.reason === 'meeting'
       const held = talkingFor >= 0 && !meeting && a.shown
+      // Getting up from a seat before walking off (not when time jumps on).
+      const leaving =
+        live.seatedAt !== null &&
+        (goal?.key ?? null) !== live.seatedAt &&
+        !jumped &&
+        !STILL &&
+        !held
+      if (leaving) live.rise += dt
+      const rising = leaving && live.rise < RISE_SECONDS
+      live.rising = rising
+      if (!rising && live.seatedAt !== null && (goal?.key ?? null) !== live.seatedAt) {
+        live.seatedAt = null
+        live.rise = 0
+      }
       if (held) {
         const player = bodyOf('player')
-        const seat = intent?.kind === 'at' ? p.places[intent.place] : undefined
-        const seated = a.status === 'there' && !!seat?.seated
+        const seat = intent?.kind === 'at' ? s.resolved.get(intent.place)?.seat : null
+        const seated = a.status === 'there' && !!seat
         if (player && !seated)
           a = {
             ...a,
@@ -210,6 +279,8 @@ export function Crowd(props: CrowdProps) {
             ),
             speed: 0,
           }
+      } else if (rising) {
+        // Still on the seat, standing up.
       } else if (jumped || STILL || !s.grid) {
         // Time jumped on (or no moving about): already there.
         if (jumped || STILL || a.goal !== (goal?.key ?? null)) a = placeAt(a, goal)
@@ -227,17 +298,41 @@ export function Crowd(props: CrowdProps) {
       }
       if (a.goal !== live.agent.goal || a.status !== live.agent.status) live.clip = 0
       live.clip += dt
+      if (a.shown !== live.agent.shown) appeared = true
       live.agent = a
-      // Drawn where they are, doing what the place is for.
+      const placeKey = rising
+        ? live.seatedAt!
+        : intent?.kind === 'at'
+          ? intent.place
+          : null
+      const place = placeKey ? p.places[placeKey] : undefined
+      const spot = placeKey ? s.resolved.get(placeKey) : undefined
+      // On a seat: arrived at a seated place that has a real seat (or getting up from it).
+      const onSeat = !!spot?.seat && (rising || (a.status === 'there' && !!place))
+      if (onSeat && !rising && placeKey) live.seatedAt = placeKey
+      // How far down onto the seat (sitting down on arriving, getting up on leaving).
+      const down = !onSeat
+        ? 0
+        : rising
+          ? 1 - live.rise / RISE_SECONDS
+          : jumped || STILL
+            ? 1
+            : Math.min(1, live.clip / SIT_SECONDS)
+      // Drawn where they are: on the seat itself once sitting, facing the way it faces.
       const g = live.group
       if (g) {
         g.visible = a.shown
-        g.position.set(a.x, 0, a.z)
-        g.rotation.y = a.heading
+        if (onSeat && spot) {
+          const e = down * down * (3 - 2 * down)
+          g.position.set(a.x + (spot.x - a.x) * e, 0, a.z + (spot.z - a.z) * e)
+          g.rotation.y = a.heading + wrap(spot.heading - a.heading) * e
+        } else {
+          g.position.set(a.x, 0, a.z)
+          g.rotation.y = a.heading
+        }
       }
       if (a.shown) setBody(person.id, a.x, a.z, NPC_RADIUS)
       else removeBody(person.id)
-      const place = intent?.kind === 'at' ? p.places[intent.place] : undefined
       // In the list of people the player can talk to, with what they are doing.
       const who = p.who[person.id]
       if (a.shown && who) {
@@ -247,57 +342,80 @@ export function Crowd(props: CrowdProps) {
           x: a.x,
           z: a.z,
           heading: a.heading,
-          reach: a.status === 'there' && place?.seated ? 1.8 : 1.5,
+          reach: onSeat ? 1.8 : 1.5,
           availability: held ? 'free' : now.availability,
           doing: now.doing,
           with: now.with,
-          seated: a.status === 'there' && !!place?.seated,
+          seated: onSeat,
         })
       } else removeNpc(person.id)
+      let clip: ClipId | null = null
       if (held) {
         // Waves on seeing the player come over, then talks.
-        const seated = a.status === 'there' && !!place?.seated
-        live.rig.current = seated
-          ? clipFrame('sit-relax', talkingFor)
-          : clipFrame(talkingFor < 1.4 ? 'wave' : 'talk', talkingFor)
+        clip = talkingFor < 1.4 ? 'wave' : 'talk'
+        live.rig.current =
+          onSeat && spot
+            ? activityFrame(clip, talkingFor, spot)
+            : clipFrame(clip, talkingFor)
         live.motion.current = { walking: false }
       } else if (talkingFor >= 0 && talkingFor < 1.4 && a.status === 'there') {
         // In a meeting: a hand lifted, nothing more.
-        live.rig.current = clipFrame('wave', talkingFor)
+        clip = 'wave'
+        live.rig.current = spot
+          ? activityFrame('wave', talkingFor, {
+              ...spot,
+              seat: onSeat ? spot.seat : null,
+            })
+          : clipFrame('wave', talkingFor)
         live.motion.current = { walking: false }
-      } else if (a.status === 'there' && place) {
+      } else if (onSeat || (a.status === 'there' && place && spot)) {
+        const r = spot!
+        const can = (c: ClipId) =>
+          r.clips.includes(c) || check(c, onSeat, r, allAnchors()).ok
         const talking = !!person.speaker && person.speaker === p.talkingTo
-        let clip = doingAt(place, person.id, s.seconds)
-        if (intent?.kind === 'at' && intent.reason === 'lunch' && place.clip !== 'eat')
+        clip = doingAt(
+          { ...place!, clip: r.clips[0], also: r.clips.slice(1) },
+          person.id,
+          s.seconds,
+        )
+        if (intent?.kind === 'at' && intent.reason === 'lunch' && r.clips.includes('eat'))
           clip = 'eat'
-        if (talking) clip = place.seated ? 'sit-relax' : 'talk'
+        if (talking) clip = onSeat ? 'sit-relax' : 'talk'
         else if (intent?.kind === 'at' && intent.reason === 'meeting')
           clip =
             person.id === speaker
-              ? person.id === host?.id && !place.seated
+              ? person.id === host?.id && !onSeat && can('present')
                 ? 'present'
-                : place.seated
-                  ? 'sit-relax'
-                  : 'talk'
-              : place.seated
-                ? place.clip === 'type'
+                : 'talk'
+              : onSeat
+                ? r.clips.includes('type')
                   ? 'type'
                   : 'sit-relax'
                 : 'stand'
-        // Sitting down first, on arriving at a seat.
-        const frame =
-          place.seated && live.clip < 1.2 && !jumped && !STILL
-            ? clipFrame('sit', live.clip)
-            : clipFrame(clip, s.seconds + person.id.length)
-        live.rig.current = frame
+        if (!can(clip)) clip = onSeat ? 'sit' : 'stand'
+        const at = { ...r, seat: onSeat ? r.seat : null }
+        const frame = activityFrame(
+          clip,
+          s.seconds + person.id.length,
+          at,
+          r.targets[clip],
+        )
+        live.rig.current = onSeat && down < 1 ? sitting(frame, down) : frame
         live.motion.current = { walking: false }
       } else {
         live.rig.current = null
         live.motion.current = { walking: a.status === 'walking' }
         if (a.status === 'walking') walking = true
       }
+      // What is in their hands: what the activity is done with (nothing while walking).
+      const hold =
+        clip && (!onSeat || down >= 1) ? holdsFor(clip, spot?.targets[clip]) : {}
+      live.held.left.current = hold.left ?? null
+      live.held.right.current = hold.right ?? null
+      live.clipNow = clip
+      if (rising || (onSeat && down < 1)) walking = true
     }
-    if (import.meta.env.DEV && s.planIn === 0.5)
+    if (import.meta.env.DEV && (s.planIn === 0.5 || appeared))
       (window as unknown as { __worksimNpcs?: unknown }).__worksimNpcs = p.people.map(
         (q) => {
           const a = lives.get(q.id)!.agent
@@ -306,10 +424,39 @@ export function Crowd(props: CrowdProps) {
             id: q.id,
             x: a.x,
             z: a.z,
-            status: a.status,
+            status: lives.get(q.id)!.rising ? 'rising' : a.status,
             shown: a.shown,
             place: intent?.kind === 'at' ? intent.place : null,
             reason: intent?.kind === 'at' ? intent.reason : 'away',
+            clip: lives.get(q.id)!.clipNow,
+            seat: lives.get(q.id)!.seatedAt
+              ? (s.resolved.get(lives.get(q.id)!.seatedAt!)?.seat?.id ?? null)
+              : null,
+            held: [
+              lives.get(q.id)!.held.left.current,
+              lives.get(q.id)!.held.right.current,
+            ].filter(Boolean),
+            rejected:
+              intent?.kind === 'at' ? (s.resolved.get(intent.place)?.rejected ?? []) : [],
+            hip: lives.get(q.id)!.rig.current
+              ? hipHeight(lives.get(q.id)!.rig.current!)
+              : null,
+            top: lives.get(q.id)!.seatedAt
+              ? (s.resolved.get(lives.get(q.id)!.seatedAt!)?.seat?.top ?? null)
+              : null,
+            drawn: lives.get(q.id)!.group
+              ? {
+                  x: lives.get(q.id)!.group!.position.x,
+                  z: lives.get(q.id)!.group!.position.z,
+                }
+              : null,
+            target: (() => {
+              const l = lives.get(q.id)!
+              const key = l.seatedAt ?? (intent?.kind === 'at' ? intent.place : null)
+              return key && l.clipNow
+                ? (s.resolved.get(key)?.targets[l.clipNow]?.kind ?? null)
+                : null
+            })(),
           }
         },
       )
@@ -340,6 +487,10 @@ export function Crowd(props: CrowdProps) {
             rig={live.rig}
             talking={!!person.speaker && person.speaker === props.talkingTo}
             phase={i * 1.37}
+            hold={{
+              left: <Held kind={live.held.left} />,
+              right: <Held kind={live.held.right} />,
+            }}
           />
         )
         return (

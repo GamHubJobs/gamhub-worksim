@@ -3,6 +3,7 @@
  * simple shapes. No downloaded models, so the office loads instantly and runs
  * on ordinary computers.
  */
+import { useAnchors, type AnchorSpec } from '../../world/anchors'
 import { RoundedBox } from '@react-three/drei'
 import type { ReactNode } from 'react'
 import type { Vector } from '../../content/office'
@@ -74,9 +75,12 @@ export function Place({
   )
 }
 
+const PLANT: AnchorSpec[] = [{ kind: 'plant', at: [0, 0.8, 0] }]
+
 export function Plant({ position, scale = 1 }: Placed & { scale?: number }) {
+  const ref = useAnchors(PLANT)
   return (
-    <group position={position} scale={scale}>
+    <group ref={ref} position={position} scale={scale}>
       <mesh position={[0, 0.22, 0]}>
         <cylinderGeometry args={[0.2, 0.16, 0.44, 16]} />
         <meshStandardMaterial color={COLORS.pot} roughness={0.9} />
@@ -100,13 +104,21 @@ export function Plant({ position, scale = 1 }: Placed & { scale?: number }) {
   )
 }
 
+/** Two places on a sofa, its cushions 0.45 m up, facing −z. */
+const SOFA_SEATS: AnchorSpec[] = [-0.45, 0.45].map((x) => ({
+  kind: 'seat' as const,
+  at: [x, 0.45, 0.1] as [number, number, number],
+  top: 0.45,
+}))
+
 export function Sofa({
   position,
   rotation,
   color = '#64748b',
 }: Placed & { color?: string }) {
+  const ref = useAnchors(SOFA_SEATS)
   return (
-    <Place position={position} rotation={rotation}>
+    <group ref={ref} position={position} rotation={[0, rotation ?? 0, 0]}>
       <Box size={[2, 0.4, 0.85]} position={[0, 0.25, 0]} color={color} radius={0.06} />
       <Box size={[2, 0.5, 0.2]} position={[0, 0.65, 0.33]} color={color} radius={0.06} />
       {[-0.95, 0.95].map((x) => (
@@ -118,6 +130,6 @@ export function Sofa({
           radius={0.06}
         />
       ))}
-    </Place>
+    </group>
   )
 }

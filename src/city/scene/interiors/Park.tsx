@@ -4,6 +4,7 @@
  * the evening, and people walking and jogging. The path is a hotspot for a
  * walk, the running loop's marker for a run, a bench for sitting a while.
  */
+import { useAnchors, type AnchorSpec } from '../../../world/anchors'
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import type { Group, Mesh, MeshStandardMaterial } from 'three'
@@ -41,9 +42,17 @@ function Tree({ position, scale = 1 }: { position: Vector; scale?: number }) {
   )
 }
 
+/** Two places on a bench, its slats 0.475 m up, facing −z. */
+const BENCH_SEATS: AnchorSpec[] = [-0.4, 0.4].map((x) => ({
+  kind: 'seat' as const,
+  at: [x, 0.475, 0.06] as [number, number, number],
+  top: 0.475,
+}))
+
 function ParkBench({ position, rotation = 0 }: { position: Vector; rotation?: number }) {
+  const ref = useAnchors(BENCH_SEATS)
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <group ref={ref} position={position} rotation={[0, rotation, 0]}>
       {[0, 0.14, 0.28].map((z) => (
         <Box
           key={z}

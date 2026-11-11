@@ -123,8 +123,57 @@ export type ClipId =
   | 'hold-hands-right'
   | 'hold-hands-left'
 
-/** Every clip, as a frame at time t (seconds since it started). */
-export function clipFrame(clip: ClipId, t: number): RigFrame {
+/**
+ * Clips that are only about the arms and head (typing, reading, writing, a
+ * drink, the phone, talking): the same on a seat or on the feet.
+ */
+export const ARMS_ONLY: ReadonlySet<ClipId> = new Set<ClipId>([
+  'type',
+  'read',
+  'write',
+  'eat',
+  'drink',
+  'phone',
+  'talk',
+  'wave',
+])
+
+export type Posture = 'seated' | 'standing'
+
+/**
+ * Every clip, as a frame at time t (seconds since it started). With a
+ * posture, a clip that is only about the arms is done seated or standing as
+ * asked (reading at a standing desk is done standing, not sitting on air);
+ * without one, each clip has its usual posture.
+ */
+export function clipFrame(clip: ClipId, t: number, posture?: Posture): RigFrame {
+  const f = baseFrame(clip, t)
+  if (!posture || !ARMS_ONLY.has(clip) || f.seated === (posture === 'seated')) return f
+  return posture === 'seated'
+    ? {
+        ...f,
+        seated: true,
+        lean: f.lean - 0.06,
+        hipL: SIT.hipL,
+        hipR: SIT.hipR,
+        kneeL: SIT.kneeL,
+        kneeR: SIT.kneeR,
+        y: 0,
+      }
+    : {
+        ...f,
+        seated: false,
+        // Upright, a little over what is in the hands.
+        lean: Math.min(0.2, Math.max(0, f.lean + 0.18)),
+        hipL: 0,
+        hipR: 0,
+        kneeL: 0,
+        kneeR: 0,
+        y: 0,
+      }
+}
+
+function baseFrame(clip: ClipId, t: number): RigFrame {
   switch (clip) {
     case 'stand':
       return STAND
@@ -302,8 +351,7 @@ export function clipFrame(clip: ClipId, t: number): RigFrame {
     }
     case 'reach': {
       // Takes something from a shelf (right hand) and puts it in the basket (left).
-      const k = t % 2.4
-      const out = k < 0.8 ? k / 0.8 : k < 1.4 ? 1 : Math.max(0, 1 - (k - 1.4) / 0.8)
+      const out = reachOut(t)
       return {
         ...STAND,
         lean: out * 0.15,
@@ -553,6 +601,12 @@ function benchFrame(t: number): RigFrame {
     elbowR: mix(0.05, 1.45, down),
     headPitch: 0.1,
   }
+}
+
+/** How far out a reach is at time t: out, a moment there, and back, every 2.4 s. */
+export function reachOut(t: number): number {
+  const k = t % 2.4
+  return k < 0.8 ? k / 0.8 : k < 1.4 ? 1 : Math.max(0, 1 - (k - 1.4) / 0.8)
 }
 
 export function blend(a: RigFrame, b: RigFrame, k: number): RigFrame {

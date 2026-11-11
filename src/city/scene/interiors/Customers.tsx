@@ -13,7 +13,8 @@ import { PLACES } from '../../../content/city'
 import type { Who } from '../../../game/encounters'
 import type { PersonLook } from '../../../office/scene/people'
 import { Crowd } from '../../../world/npc/Crowd'
-import type { Person, Place } from '../../../world/npc/schedule'
+import type { Person } from '../../../world/npc/schedule'
+import { CAFE_PLACES, SHOP_PLACES } from './customerPlaces'
 import { useInterior } from './kit'
 
 type Room = 'cafe' | 'shop'
@@ -27,62 +28,6 @@ const who = (id: string, name: string, kind: Who['kind'], role: string): Who => 
 })
 
 const hours = (room: Room) => PLACES.find((p) => p.id === room)!.open!
-
-const CAFE_PLACES: Record<string, Place> = {
-  counter: {
-    x: -2.4,
-    z: -2.15,
-    heading: 0,
-    clip: 'stand',
-    also: ['phone'],
-    label: 'ordering at the counter',
-  },
-  window: {
-    x: 4.4,
-    z: 1.85,
-    heading: Math.PI,
-    seated: true,
-    clip: 'drink',
-    also: ['read', 'phone'],
-    label: 'having a coffee',
-  },
-  corner: {
-    x: -3,
-    z: 2.35,
-    heading: Math.PI,
-    seated: true,
-    clip: 'eat',
-    also: ['drink'],
-    label: 'having something to eat',
-  },
-}
-
-const SHOP_PLACES: Record<string, Place> = {
-  checkout: {
-    x: 3.05,
-    z: 1.2,
-    heading: -Math.PI / 2,
-    clip: 'stand',
-    also: ['phone'],
-    label: 'paying at the checkout',
-  },
-  aisle: {
-    x: 0.25,
-    z: -1.5,
-    heading: Math.PI / 2,
-    clip: 'reach',
-    also: ['stand'],
-    label: 'looking along the shelves',
-  },
-  back: {
-    x: 2.4,
-    z: -3.45,
-    heading: 0,
-    clip: 'reach',
-    also: ['stand', 'phone'],
-    label: 'choosing from the fridges',
-  },
-}
 
 const customer = (
   room: Room,

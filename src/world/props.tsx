@@ -158,6 +158,51 @@ export function Prop({ kind }: { kind: PropKind }) {
           <meshStandardMaterial color="#9a3412" />
         </mesh>
       )
+    case 'document':
+      return (
+        <group position={[0, -0.06, -0.07]} rotation={[1.05, 0, 0]}>
+          <mesh>
+            <boxGeometry args={[0.21, 0.29, 0.004]} />
+            <meshStandardMaterial color="#f8fafc" />
+          </mesh>
+          {[0.08, 0.04, 0, -0.04].map((y) => (
+            <mesh key={y} position={[0, y, 0.003]}>
+              <boxGeometry args={[0.15, 0.008, 0.001]} />
+              <meshStandardMaterial color="#94a3b8" />
+            </mesh>
+          ))}
+        </group>
+      )
+    case 'clipboard':
+      return (
+        <group position={[0.05, -0.05, -0.12]} rotation={[1.25, 0, -0.35]}>
+          <mesh>
+            <boxGeometry args={[0.23, 0.31, 0.012]} />
+            <meshStandardMaterial color="#92400e" roughness={0.8} />
+          </mesh>
+          <mesh position={[0, -0.01, 0.008]}>
+            <boxGeometry args={[0.2, 0.26, 0.003]} />
+            <meshStandardMaterial color="#f8fafc" />
+          </mesh>
+          <mesh position={[0, 0.14, 0.012]}>
+            <boxGeometry args={[0.08, 0.025, 0.012]} />
+            <meshStandardMaterial color="#9ca3af" metalness={0.5} />
+          </mesh>
+        </group>
+      )
+    case 'watering-can':
+      return (
+        <group position={[0, -0.1, -0.02]}>
+          <mesh>
+            <cylinderGeometry args={[0.07, 0.08, 0.16, 14]} />
+            <meshStandardMaterial color="#15803d" />
+          </mesh>
+          <mesh position={[0, 0.02, -0.12]} rotation={[-1.0, 0, 0]}>
+            <cylinderGeometry args={[0.012, 0.018, 0.2, 8]} />
+            <meshStandardMaterial color="#15803d" />
+          </mesh>
+        </group>
+      )
     case 'pen':
       return (
         <mesh position={[0, -0.04, -0.03]} rotation={[0.4, 0, 0]}>

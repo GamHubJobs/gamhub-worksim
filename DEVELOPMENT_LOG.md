@@ -190,6 +190,113 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-11 · People 1: real seats, real equipment, nothing done at thin air
+
+The owner reported people sitting in mid-air and moving their hands at nothing. The
+details are in [docs/NPC_ACTIVITIES.md](docs/NPC_ACTIVITIES.md).
+
+### Causes found
+
+- Reading, writing, eating and drinking were built on the seated pose, and were used
+  at standing places: the standing desk, reception, the printer, the water cooler,
+  the counter and the filing cabinet. So people there sat on air.
+- Seated hips were at one fixed height, 0.49 m. Real cushions are 0.45–0.51 m up, so
+  seated people sank into them.
+- Seated places were typed-in points near chairs, with no check that a chair was
+  there, which way it faced, or whether it was free. The park bench sitter faced the
+  backrest.
+- Activities had no objects. Typing ignored the keyboard; nothing was held; typing
+  was asked for at the break room table, which has no computer; the exercise bike's
+  rider sat still.
+
+### Built
+
+- **Interaction anchors** (`world/anchors.ts`). Furniture registers its own:
+  - seats, with cushion height and facing: office chairs, café and wedding chairs,
+    sofas, park benches, home dining chairs, bed edges and the exercise bike saddle;
+  - keyboards: office desks, the manager's new keyboard, the standing desk's laptop
+    and a laptop on the café table;
+  - printer, filing cabinet, bookshelf, whiteboard, plants, water cooler, coffee
+    machines, counters, the shop's aisles and fridges, and both sides of the
+    checkout.
+
+  One person per seat.
+
+- **Activities with needs** (`world/npc/activities.ts`). Each activity has a
+  posture, what it needs and what is held. Places are checked against the real
+  anchors; anything that cannot be done is dropped, with the reason recorded.
+- **Fitting to the world** (`character/fit.ts`):
+  - hips on the real cushion, legs solved so the feet are on the floor;
+  - hands put on the keyboard or the thing reached for, by a two-bone arm solution;
+  - sitting down onto the seat, and getting up before walking off;
+  - arm-only activities done standing or seated, as the place allows.
+- **Used by everyone**: the office crowd and the customers (`Crowd.tsx`), people
+  placed in a scene (`Npc.tsx`, with `activity` and `also`), and the player
+  (`fitToWorld`). People now hold what they use: phone, document, clipboard and
+  pen, cup, sandwich, card, watering can, basket, a product.
+- **Places corrected where the check found them wrong:**
+  - the standing desk is now typing on its laptop, and the break room table is
+    reading and a drink;
+  - the kitchen helper faces the coffee machine, and the water cooler is used;
+  - the shop's shopper and the café's corner customer were out of reach of what they
+    used;
+  - the office chairs are 7 cm nearer their desks.
+
+### Tests
+
+- Unit tests (`activities.test.ts`, 12): feet on the floor from every seat height;
+  the arm lands on its target; typing hands on the keys; seats found and never
+  shared; nothing seated without a seat; no typing without a keyboard; held objects;
+  the player; every authored place valid.
+- Browser tests (`activities.spec.ts`) measure the real scenes:
+  - the office over half a minute, mid-morning and at lunch: no rejected activity,
+    no shared seat, seated hips within 2 cm of the cushion and drawn on the seat,
+    standing people at full height, held objects as expected, typing on a keyboard;
+  - the café and the shop: the regulars and staff.
+
+  The first run failed on cups versus mugs, now fixed. The new unit test also found
+  that typists' hands fell 12 cm short of the keys (the typing pose leans back);
+  they now lean forward as far as needed.
+
+- I inspected screenshots of the desks, the standing desk, the manager's office and
+  the break room at lunch: everyone is on a chair, the coordinator stands at the
+  laptop, the manager types at her keyboard, and the lunch table is seated.
+- **Performance fix during testing.** The first full runs showed the long
+  wedding and week tests slowing from about 1–2 minutes to 9–10. Each held-object
+  slot drew every possible object and hid all but one, and the scene people
+  re-fitted their poses whenever their parent re-rendered. Now only the object in
+  use is drawn (`Held.tsx`), and a person is re-fitted only when where they are or
+  what they do changes. The wedding tests now take 1.7 min and 57 s, and the week
+  test 49 s.
+- **A bug found by the reruns.** While someone was getting up from a chair,
+  the snapshot already showed them at their next place, so the meeting counted
+  them as present before they had walked over. The stand-up test caught this 2
+  times out of 3. A person getting up now has their own status (`rising`) and is
+  not counted at a meeting. The dev snapshot is now also taken the moment anyone
+  comes in or leaves, so the café test always sees a customer at the door.
+- Results:
+  - `npm run check`: format, lint and typecheck clean; 2,252 unit tests in 98
+    files, all passed.
+  - Full Chromium suite, run three times:
+    - first run: 1 failed and 9 flaky. I was editing files while it ran, which
+      reloads the page; every failing test passed when rerun alone;
+    - second run (no edits): 197 passed, 0 failed, 6 flaky;
+    - after the performance fix: 197 passed, 0 failed, 6 flaky (city morning,
+      café customers, interiors, stand-up, Books reload, week). Each passed on
+      retry.
+  - The flaky tests rerun:
+    - the stand-up failed 2 times in 3: the bug above, fixed, then 9 of 9;
+    - the café customers: 3 of 3 alone, and passing in a batch after the
+      snapshot fix;
+    - interiors, Books and the week passed in a batch;
+    - the city morning (a menu walk through the gym and the café) failed once
+      more under load, then passed 3 of 3 alone. It is flaky under load and does
+      not involve the people.
+  - PWA build: 5 passed, 1 skipped. Firefox and WebKit: 8 passed. Production
+    build OK. Startup: start screen 2.6 s, office 2.4 s.
+
+---
+
 ## 2026-11-10 · Life 1: children grow up, money talks, customers, the courier outside
 
 ### Built

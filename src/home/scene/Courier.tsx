@@ -12,21 +12,12 @@ import { useRef, useState } from 'react'
 import type { Group } from 'three'
 import { audio } from '../../audio/manager'
 import type { DeliveryStage } from '../../game/delivery'
-import { Person, type Motion, type PersonLook } from '../../office/scene/people'
+import { Person, type Motion } from '../../office/scene/people'
 import { clipFrame, type RigFrame } from '../../world/character/rig'
 import { useWorld } from '../../world/context'
 import { Prop } from '../../world/props'
 import { DELIVERY_TIMES as T } from './homeLayout'
-
-export const COURIER_LOOK: PersonLook = {
-  skin: 3,
-  hair: 'crop',
-  hairColor: 1,
-  outfit: 'polo',
-  top: '#f97316',
-  trousers: '#1f2937',
-  smile: true,
-}
+import { COURIER_LOOK } from './courierLook'
 
 /** Seconds into answering the door when the bag changes hands, and when they leave. */
 const HAND_OVER = T.open + T.greet + T.take * 0.45

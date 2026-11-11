@@ -10,6 +10,8 @@ import { Color, Object3D, type InstancedMesh } from 'three'
 import type { Vector } from '../../../content/office'
 import { Box } from '../../../office/scene/parts'
 import { Npc } from '../../../world/npc/Npc'
+import { Anchors } from '../../../world/AnchorPoints'
+import { useAnchors, type AnchorSpec } from '../../../world/anchors'
 import { Customers } from './Customers'
 import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Board, Hotspot, Lamp, Room } from './common'
@@ -67,8 +69,22 @@ function Aisle({ x, length, sign }: { x: number; length: number; sign: string })
           out.push([x + side * 0.32, y, z])
     return out
   }, [x, length])
+  const ref = useAnchors(
+    useMemo(
+      () =>
+        [-1, 1].flatMap((side) =>
+          [-1.5, -0.5, 0.5, 1.5].map((z) => ({
+            kind: 'shelf' as const,
+            at: [x + side * 0.45, 1.05, z] as [number, number, number],
+            heading: side < 0 ? -Math.PI / 2 : Math.PI / 2,
+            carry: { left: 'basket' as const },
+          })),
+        ),
+      [x],
+    ),
+  )
   return (
-    <group>
+    <group ref={ref}>
       <Box size={[0.4, 1.9, length]} position={[x, 0.95, 0]} color="#e5e7eb" />
       {[0.12, 0.57, 1.02, 1.47].map((y) =>
         [-1, 1].map((side) => (
@@ -223,6 +239,27 @@ function Checkout() {
   )
 }
 
+/** The fridges along the back: a customer's basket, or stock the assistant is putting out. */
+const SHOP_ANCHORS: AnchorSpec[] = [
+  { kind: 'shelf', at: [2.0, 1.1, -3.8], carry: { left: 'basket' } },
+  { kind: 'shelf', at: [3.3, 1.1, -3.8], carry: { left: 'product' } },
+  {
+    kind: 'checkout',
+    at: [3.47, 1.0, 1.35],
+    heading: -Math.PI / 2,
+    carry: { right: 'card' },
+  },
+]
+/** The till, from the cashier's side (in the checkout's own space). */
+const TILL_ANCHORS: AnchorSpec[] = [
+  {
+    kind: 'checkout',
+    at: [0.3, 1.0, -0.38],
+    heading: Math.PI,
+    carry: { left: 'product' },
+  },
+]
+
 export default function Shop() {
   const { low } = useInterior()
   return (
@@ -275,15 +312,19 @@ export default function Shop() {
         ))}
       </Hotspot>
 
+      <Anchors specs={SHOP_ANCHORS} />
       <Customers room="shop" />
       {/* The checkout and the cashier */}
       <group position={[3.7, 0, 1.2]} rotation={[0, -Math.PI / 2, 0]}>
         <Checkout />
+        <Anchors specs={TILL_ANCHORS} />
         <Npc
           who={TOWN_PEOPLE.cashier}
           reach={2.1}
           position={[0.3, 0, -0.8]}
           rotation={Math.PI}
+          activity="reach"
+          also={['stand']}
           look={{
             skin: 3,
             hair: 'ponytail',
@@ -298,8 +339,10 @@ export default function Shop() {
       </group>
       <Npc
         who={TOWN_PEOPLE.shopper}
-        position={[-2.25, 0, -1.2]}
+        position={[-1.95, 0, -1.2]}
         rotation={-Math.PI / 2}
+        activity="reach"
+        also={['stand']}
         look={{
           skin: 1,
           hair: 'short',
@@ -313,8 +356,9 @@ export default function Shop() {
       {!low && (
         <Npc
           who={TOWN_PEOPLE.shopStaff}
-          position={[3.4, 0, -2.8]}
-          rotation={Math.PI}
+          position={[3.3, 0, -3.4]}
+          rotation={0}
+          activity="reach"
           look={{
             skin: 5,
             hair: 'bob',

@@ -55,6 +55,7 @@ import {
 import { CollisionDebug } from './physics/CollisionDebug'
 import { useCollisionDebug } from './physics/useCollisionDebug'
 import { clipFrame, type RigFrame } from './character/rig'
+import { fitToWorld } from './npc/activities'
 import {
   heldAt,
   labelAt,
@@ -795,11 +796,19 @@ export function PlayerRig(props: PlayerRigProps) {
         const now0 = stageAt(a, m.t)
         if (now0.stage.at && now0.index > m.placed)
           m.t = Math.min(m.t, startOf(a, now0.index))
-        rig.current = clipFrame(now0.stage.clip, now0.local)
+        // On the real seat, hands on the real keyboard (see world/npc/activities.ts).
+        rig.current = fitToWorld(
+          clipFrame(now0.stage.clip, now0.local),
+          now0.stage.clip,
+          now0.local,
+          m.at,
+        )
         // On a date: holding hands, then a hug or a kiss goodnight, with the other person.
         const together = a.id.startsWith('date-') ? momentNow() : null
-        if (together)
-          rig.current = clipFrame(momentClips(together.moment).player, together.t)
+        if (together) {
+          const clip = momentClips(together.moment).player
+          rig.current = fitToWorld(clipFrame(clip, together.t), clip, together.t, m.at)
+        }
         s = { ...s, x: m.at.x, z: m.at.z, heading: m.at.heading, speed: 0, y: 0 }
         for (const id of soundsBetween(a, before, m.t)) audio.play(id)
         const hold = heldAt(a, m.t) ?? {}

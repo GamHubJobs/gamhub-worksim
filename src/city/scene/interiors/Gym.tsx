@@ -5,6 +5,7 @@
  * are a hotspot for a workout, the studio for a class, the changing-room door
  * for a shower.
  */
+import { useAnchors, type AnchorSpec } from '../../../world/anchors'
 import { useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
 import { Vector3, type Group, type Mesh } from 'three'
@@ -79,6 +80,9 @@ function Treadmill({
   )
 }
 
+/** The saddle (0.86 m up): whoever rides faces the handlebars (−z). */
+const BIKE_SADDLE: AnchorSpec[] = [{ kind: 'seat', at: [0, 0.86, 0.3], top: 0.86 }]
+
 function ExerciseBike({
   position,
   rider,
@@ -96,8 +100,9 @@ function ExerciseBike({
       (player && now.current.id === 'bike' && now.current.t > 1 && now.current.t < 15)
     if (on && wheel.current) wheel.current.rotation.x += dt * 7
   })
+  const ref = useAnchors(BIKE_SADDLE)
   return (
-    <group position={position}>
+    <group ref={ref} position={position}>
       <Box size={[0.3, 0.1, 1.1]} position={[0, 0.05, 0]} color="#27272a" />
       <Box size={[0.08, 0.7, 0.08]} position={[0, 0.45, 0.3]} color="#52525b" />
       <Box size={[0.3, 0.08, 0.35]} position={[0, 0.82, 0.3]} color="#111827" />
@@ -113,8 +118,9 @@ function ExerciseBike({
       {rider && (
         <Npc
           who={TOWN_PEOPLE.rider}
-          position={[0, 0.4, 0.3]}
+          position={[0, 0, 0.3]}
           seated
+          activity="cycle"
           look={rider}
           phase={position[0]}
           availability="exercising"

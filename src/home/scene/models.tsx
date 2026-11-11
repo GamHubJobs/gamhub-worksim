@@ -3,6 +3,8 @@
  * office's), in the colour the player chose. Each model stands on the floor
  * at the origin, facing +z (towards the camera side of the room).
  */
+import type { ReactNode } from 'react'
+import { useAnchors, type AnchorSpec } from '../../world/anchors'
 import type { SlotId } from '../../content/home'
 import { Desk } from '../../office/scene/furniture'
 import { Box, Plant, Sofa } from '../../office/scene/parts'
@@ -33,6 +35,27 @@ function Cylinder({
   )
 }
 
+/** Sitting on the edge of a bed (its mattress 0.55 m up), facing out either side. */
+const bedEdge = (w: number): AnchorSpec[] =>
+  [-1, 1].map((side) => ({
+    kind: 'seat' as const,
+    at: [side * (w / 2 - 0.2), 0.55, 0.3] as [number, number, number],
+    heading: side > 0 ? -Math.PI / 2 : Math.PI / 2,
+    top: 0.55,
+  }))
+const BED_EDGE = bedEdge(1)
+const BED_EDGE_DOUBLE = bedEdge(1.5)
+/** The table's two chairs (seats 0.475 m up), facing the table. */
+const TABLE_CHAIRS: AnchorSpec[] = [
+  { kind: 'seat', at: [0, 0.475, 0.72], top: 0.475 },
+  { kind: 'seat', at: [0, 0.475, -0.72], heading: Math.PI, top: 0.475 },
+]
+
+function Seats({ specs, children }: { specs: AnchorSpec[]; children: ReactNode }) {
+  const ref = useAnchors(specs)
+  return <group ref={ref}>{children}</group>
+}
+
 export function FurnitureModel({
   slot,
   item,
@@ -47,7 +70,7 @@ export function FurnitureModel({
       const double = item === 'bed-comfy'
       const w = double ? 1.5 : 1
       return (
-        <group>
+        <Seats specs={double ? BED_EDGE_DOUBLE : BED_EDGE}>
           <Box
             size={[w + 0.1, 0.3, 2.1]}
             position={[0, 0.2, 0]}
@@ -73,7 +96,7 @@ export function FurnitureModel({
             color="#8a6a4a"
             radius={0.02}
           />
-        </group>
+        </Seats>
       )
     }
     case 'sofa':
@@ -107,7 +130,7 @@ export function FurnitureModel({
       )
     case 'table':
       return (
-        <group>
+        <Seats specs={TABLE_CHAIRS}>
           <Box
             size={[1.1, 0.05, 0.75]}
             position={[0, 0.74, 0]}
@@ -134,7 +157,7 @@ export function FurnitureModel({
               />
             </group>
           ))}
-        </group>
+        </Seats>
       )
     case 'desk':
       return (

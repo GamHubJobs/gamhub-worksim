@@ -12,6 +12,8 @@ import { useWorld } from '../../../world/context'
 import { formatMoney } from '../../../content/life'
 import { Box, Plant } from '../../../office/scene/parts'
 import { Npc } from '../../../world/npc/Npc'
+import { Anchors } from '../../../world/AnchorPoints'
+import { useAnchors, type AnchorSpec } from '../../../world/anchors'
 import { Customers } from './Customers'
 import { DatePartner } from './DatePartner'
 import { TOWN_PEOPLE } from '../../../content/townPeople'
@@ -53,6 +55,37 @@ function Table({ position }: { position: [number, number, number] }) {
     </group>
   )
 }
+
+/** Behind the counter: the espresso machine (from the barista's side); in front: the till. */
+const COUNTER_ANCHORS: AnchorSpec[] = [
+  {
+    kind: 'coffee-machine',
+    at: [-3.6, 1.3, -3.1],
+    heading: Math.PI,
+    carry: { left: 'cup' },
+  },
+  { kind: 'counter', at: [-2.0, 1.06, -2.42] },
+]
+
+/** A laptop, open towards +z (whoever sits there types on it). */
+function Laptop({ position }: { position: [number, number, number] }) {
+  const ref = useAnchors(LAPTOP_KEYS)
+  return (
+    <group ref={ref} position={position}>
+      <Box size={[0.34, 0.02, 0.24]} position={[0, 0.01, 0]} color="#334155" />
+      <Box
+        size={[0.34, 0.22, 0.015]}
+        position={[0, 0.12, -0.12]}
+        rotation={0}
+        color="#1e293b"
+      />
+      <Box size={[0.3, 0.18, 0.005]} position={[0, 0.12, -0.11]} color="#bae6fd" />
+    </group>
+  )
+}
+const LAPTOP_KEYS: AnchorSpec[] = [
+  { kind: 'keyboard', at: [0, 0.03, 0.03], heading: Math.PI },
+]
 
 function Cup({ position }: { position: [number, number, number] }) {
   return (
@@ -221,6 +254,7 @@ export default function Cafe() {
         </group>
       </Hotspot>
       <Box size={[0.4, 0.25, 0.3]} position={[-1.6, 1.18, -2.8]} color="#1f2937" />
+      <Anchors specs={COUNTER_ANCHORS} />
       {/* Behind the counter, unless she is out on a date with the player. */}
       {date !== TOWN_PEOPLE.barista.id && (
         <Npc
@@ -228,6 +262,8 @@ export default function Cafe() {
           reach={2.1}
           position={[-3.2, 0, -3.7]}
           rotation={Math.PI}
+          activity="reach"
+          also={['stand']}
           look={{
             skin: 2,
             hair: 'bun',
@@ -268,6 +304,8 @@ export default function Cafe() {
         who={TOWN_PEOPLE.cafeReader}
         position={[3, 0, 0.15]}
         seated
+        activity="read"
+        also={['drink']}
         look={{
           skin: 4,
           hair: 'curly',
@@ -283,6 +321,8 @@ export default function Cafe() {
         position={[3, 0, -1.35]}
         rotation={Math.PI}
         seated
+        activity="drink"
+        also={['talk']}
         look={{
           skin: 1,
           hair: 'long',
@@ -294,11 +334,14 @@ export default function Cafe() {
         }}
         phase={2.3}
       />
+      {!low && <Laptop position={[4.4, 0.77, 2.95]} />}
       {!low && (
         <Npc
           who={TOWN_PEOPLE.cafeLaptop}
           position={[4.4, 0, 3.35]}
           seated
+          activity="type"
+          also={['drink']}
           look={{
             skin: 0,
             hair: 'side',
