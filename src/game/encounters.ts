@@ -21,6 +21,8 @@ import { decayed, withLife } from './lifeTime'
 import { trustOf } from './relationships'
 import { personalOptions, respondPersonal } from './personal'
 import { adultOf, bondOf, movedIn, talked, withBond, type Bond } from './romance'
+import { stageOf } from './children'
+import { moneyTalkDue } from './money'
 import { separate, startFamily } from './family'
 import { restFor } from './workday'
 
@@ -53,6 +55,8 @@ export interface Who {
   role: string
   kind: NpcKind
   personality: Personality
+  /** For the player's children: how old they are (what there is to do depends on it). */
+  age?: number
 }
 
 /** What they are doing when the player comes up. */
@@ -105,6 +109,8 @@ export interface Relation {
   together?: boolean
   /** The family so far. */
   family?: { children: number; expected: boolean }
+  /** Living together, money is tight, and it has not been talked about this week (money.ts). */
+  money?: boolean
 }
 
 export interface Encounter {
@@ -238,7 +244,11 @@ function opening(who: Who, s: Situation, rel: Relation, hello: string): Line[] {
   // The courier, just handed the bag over, turning back on the way out.
   if (who.kind === 'courier')
     return [
-      act(`*${n} turns back on the landing.*`),
+      act(
+        s.doing === 'in the street'
+          ? `*${n} hands you the bag at your building's door.*`
+          : `*${n} turns back on the landing.*`,
+      ),
       say(
         who,
         rel.talks
@@ -246,6 +256,8 @@ function opening(who: Who, s: Situation, rel: Relation, hello: string): Line[] {
           : 'All there? Shout if anything is wrong with it.',
       ),
     ]
+  // The player's own child, as they are at their age.
+  if (who.kind === 'child') return childOpening(who)
   // They turn, and show how they feel about the player.
   if (rel.last === 'rude') lines.push(act(`*${n} turns, a little warily.*`))
   else if (rel.trust >= 70) lines.push(act(`*${n} turns with a real smile.*`))
@@ -280,6 +292,67 @@ function opening(who: Who, s: Situation, rel: Relation, hello: string): Line[] {
   }
   lines.push(say(who, pick(who, byPersonality[who.personality], rel.talks)))
   return lines
+}
+
+function childOpening(who: Who): Line[] {
+  const n = first(who)
+  switch (stageOf(who.age ?? 6)) {
+    case 'baby':
+      return [act(`*${n} waves both arms at you and gurgles.*`)]
+    case 'toddler':
+      return [act(`*${n} toddles over.*`), say(who, 'Can we play? Please?')]
+    case 'child':
+      return [act(`*${n} runs over.*`), say(who, 'Guess what! Guess what happened!')]
+    default:
+      return [act(`*${n} looks up from their phone.*`), say(who, 'Hey. What’s up?')]
+  }
+}
+
+function childOptions(who: Who, s: Situation): Option[] {
+  const n = first(who)
+  const leave = opt('leave', 'Leave them to it', 'kind')
+  const evening = s.minute >= 18 * 60
+  const morning = s.minute < 9 * 60
+  switch (stageOf(who.age ?? 6)) {
+    case 'baby':
+      return [
+        opt('cuddle', `Hold ${n} for a while`),
+        opt('feed', `Give ${n} a bottle`),
+        opt('sing', `Sing ${n} a lullaby`),
+        leave,
+      ]
+    case 'toddler':
+      return [
+        opt('play', `Play with ${n}`),
+        evening
+          ? opt('story', `Read ${n} a bedtime story`)
+          : opt('blocks', `Build a tower of blocks with ${n}`),
+        opt('hug', `Give ${n} a hug`),
+        leave,
+      ]
+    case 'child':
+      return [
+        opt('play', `Play with ${n}`),
+        morning
+          ? opt('school', `Help ${n} get ready for school`)
+          : opt('day', `Ask ${n} about their day`),
+        evening
+          ? opt('story', `Read ${n} a bedtime story`)
+          : opt('homework', `Help ${n} with homework`),
+        opt('hug', `Give ${n} a hug`),
+        leave,
+      ]
+    default:
+      return [
+        morning
+          ? opt('school', `Make sure ${n} is up for school`)
+          : opt('day', `Ask ${n} how school was`),
+        opt('homework', `Help ${n} with homework`),
+        opt('games', `Play a video game with ${n}`),
+        opt('hug', `Offer ${n} a hug`),
+        leave,
+      ]
+  }
 }
 
 function introduction(who: Who, hello: string): string {
@@ -332,7 +405,7 @@ function optionsFor(who: Who, s: Situation, rel: Relation): Option[] {
   const tail = base.filter((o) => o.id === 'leave' || o.id === 'rude')
   return [
     ...base.filter((o) => !tail.includes(o)),
-    ...personalOptions(who, adult, rel.bond, rel.together, rel.family),
+    ...personalOptions(who, adult, rel.bond, rel.together, rel.family, rel.money),
     ...tail,
   ]
 }
@@ -443,14 +516,7 @@ function baseOptions(who: Who, s: Situation, rel: Relation): Option[] {
         opt('leave', 'Leave them in peace', 'kind'),
       ]
     case 'child':
-      return [
-        opt('play', `Play with ${n}`),
-        s.minute >= 18 * 60
-          ? opt('story', `Read ${n} a bedtime story`)
-          : opt('school', `Help ${n} get ready for school`),
-        opt('hug', `Give ${n} a hug`),
-        leave,
-      ]
+      return childOptions(who, s)
     case 'courier':
       return [
         opt('thank', 'Thank them'),
@@ -827,7 +893,86 @@ function baseRespond(
         15,
       )
     case 'hug':
-      return out([act(`*${n} runs at you for a hug.*`)], counts ? 1 : 0, 1)
+      return out(
+        [
+          act(
+            stageOf(who.age ?? 6) === 'teen'
+              ? `*${n} rolls their eyes, then hugs you anyway.*`
+              : `*${n} runs at you for a hug.*`,
+          ),
+        ],
+        counts ? 1 : 0,
+        1,
+      )
+    case 'cuddle':
+      return out(
+        [act(`*You hold ${n}. They grab your finger and do not let go.*`)],
+        counts ? 2 : 0,
+        20,
+        { notes: ['Time together.'] },
+      )
+    case 'feed':
+      return out(
+        [act(`*${n} drinks the lot, then falls asleep on you.*`)],
+        counts ? 1 : 0,
+        15,
+      )
+    case 'sing':
+      return out(
+        [act(`*You sing, badly. ${n} does not mind at all, and drifts off.*`)],
+        counts ? 2 : 0,
+        10,
+        { notes: ['Time together.'] },
+      )
+    case 'blocks':
+      return out(
+        [
+          act(
+            `*The tower gets very tall. ${n} knocks it down, delighted, and wants another.*`,
+          ),
+        ],
+        counts ? 2 : 0,
+        20,
+        { notes: ['Time together.'] },
+      )
+    case 'day':
+      return out(
+        [
+          say(
+            who,
+            stageOf(who.age ?? 6) === 'teen'
+              ? pick(who, [
+                  'Fine. Actually, kind of good. We did a debate and I won.',
+                  'Long. Can I tell you about it after food?',
+                ])
+              : pick(who, [
+                  'We had a fire drill and I was first out!',
+                  'I made a volcano. It actually erupted.',
+                ]),
+          ),
+        ],
+        counts ? 2 : 0,
+        10,
+        { notes: ['Time together.'] },
+      )
+    case 'homework':
+      return out(
+        [
+          act(
+            `*You sit with ${n} and work through it together. They get the last one on their own.*`,
+          ),
+        ],
+        counts ? 2 : 0,
+        30,
+        { notes: ['Time together.'] },
+      )
+    case 'games':
+      return out(
+        [act(`*${n} beats you, easily, and is very kind about it. Mostly.*`)],
+        counts ? 2 : 0,
+        30,
+        { notes: ['Time together.'] },
+      )
     case 'thank':
       return out([say(who, 'No problem at all. Enjoy!')], 0, 1)
     case 'problem':
@@ -913,6 +1058,13 @@ export function relationOf(profile: ProfileData, id: string): Relation {
             children: profile.work.life.family.children.length,
             expected: !!profile.work.life.family.expected,
           },
+          money:
+            profile.work.life.partner?.id === id &&
+            moneyTalkDue(
+              profile.work.life,
+              bondOf(profile.work.life, id),
+              profile.work.day,
+            ),
         }
       : {}),
   }

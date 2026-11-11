@@ -12,6 +12,7 @@ import { useWorld } from '../../../world/context'
 import { formatMoney } from '../../../content/life'
 import { Box, Plant } from '../../../office/scene/parts'
 import { Npc } from '../../../world/npc/Npc'
+import { Customers } from './Customers'
 import { DatePartner } from './DatePartner'
 import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Board, Chair, Hotspot, Lamp, Room, Window } from './common'
@@ -253,6 +254,7 @@ export default function Cafe() {
       </Hotspot>
 
       <DatePartner place="cafe" />
+      <Customers room="cafe" />
       {/* Tables */}
       <Hotspot action="cafe-dinner" position={[-3, 0, 1.6]} ring={1.25} tag={2}>
         <Table position={[0, 0, 0]} />

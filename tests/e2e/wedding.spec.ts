@@ -98,7 +98,7 @@ test('a family at home: playing with your child', async ({ page }) => {
     "window.__worksim.setBond('cafe:barista', { stage: 'married', closeness: 90, attraction: 85 })",
   )
   await page.evaluate(
-    "window.__worksim.setLife({ partner: { id: 'cafe:barista', since: 1 }, family: { children: [{ name: 'Ada', born: 1, adopted: true }], expected: null } })",
+    "window.__worksim.setLife({ partner: { id: 'cafe:barista', since: 1 }, family: { children: [{ name: 'Ada', born: -55, adopted: true }], expected: null } })",
   )
   await expect(page.getByTestId('home-3d').locator('canvas')).toBeVisible({
     timeout: 60_000,

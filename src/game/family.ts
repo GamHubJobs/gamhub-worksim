@@ -8,6 +8,7 @@
  * anything romantic. Nothing here is required by the career. Pure.
  */
 import type { Life } from '../persistence/schemas'
+import { ADOPTED_AGE, DAYS_PER_YEAR } from './children'
 import { whoOf } from './dates'
 import type { Who } from './encounters'
 import { bondOf, withBond, type Bond } from './romance'
@@ -51,13 +52,14 @@ export function startFamily(life: Life, id: string, day: number, adopted: boolea
 }
 
 /** Each child, as a person at home (for talking to them: playing, a story, school). */
-export function childWho(i: number, name: string): Who {
+export function childWho(i: number, name: string, age = 6): Who {
   return {
     id: `child:${i}`,
     name,
-    role: 'Your child',
+    role: age < 1 ? 'Your baby' : `Your child, ${age}`,
     kind: 'child',
     personality: 'chatty',
+    age,
   }
 }
 
@@ -77,7 +79,12 @@ export function familyNight(life: Life, day: number): Life {
       family: {
         children: [
           ...next.family.children,
-          { name, born: day, adopted: expected.adopted },
+          {
+            name,
+            // An adopted child comes home already a little one, not a baby.
+            born: expected.adopted ? day - ADOPTED_AGE * DAYS_PER_YEAR : day,
+            adopted: expected.adopted,
+          },
         ],
         expected: null,
       },

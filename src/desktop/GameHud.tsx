@@ -9,6 +9,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import type { Profile } from '../persistence/schemas'
 import { CareersSection } from '../apps/career/CareersSection'
+import { describe } from '../game/children'
 import { audio } from '../audio/manager'
 import { ADULTS } from '../content/adults'
 import { getFurniture } from '../content/home'
@@ -289,6 +290,26 @@ export function RelationshipsScreen({
             )
           })}
         </ul>
+      )}
+      {(life.family.children.length > 0 || life.family.expected) && (
+        <section aria-label="Family" className="mt-4" data-testid="family">
+          <p className="font-semibold text-slate-900">Family</p>
+          <ul className="mt-1 space-y-1">
+            {life.family.children.map((c) => (
+              <li key={c.name} className="rounded-lg bg-amber-50 px-3 py-2">
+                <span className="font-medium">{c.name}</span>,{' '}
+                {describe(c, profile.work.day, life.minute)}
+              </li>
+            ))}
+            {life.family.expected && (
+              <li className="rounded-lg bg-amber-50 px-3 py-2">
+                {life.family.expected.adopted
+                  ? 'A child to adopt, coming home soon'
+                  : 'A baby on the way'}
+              </li>
+            )}
+          </ul>
+        </section>
       )}
     </Overlay>
   )

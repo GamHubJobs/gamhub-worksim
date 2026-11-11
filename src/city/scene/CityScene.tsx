@@ -27,7 +27,10 @@ import { Bike, Bus, Car } from './vehicles'
 import type { Vector } from '../../content/office'
 import { Box, Plant } from '../../office/scene/parts'
 import { PeopleDetail, Walker, type PersonLook } from '../../office/scene/people'
-import { local } from '../../content/townPeople'
+import { local, TOWN_PEOPLE } from '../../content/townPeople'
+import { COURIER_LOOK } from '../../home/scene/Courier'
+import { Npc } from '../../world/npc/Npc'
+import { Prop } from '../../world/props'
 import { prefersReducedMotion } from '../../ui/motion'
 import type { Box as Solid } from '../../world/character/controller'
 import type { Activity } from '../../world/interaction/activity'
@@ -146,6 +149,9 @@ const PASSERS_BY: Array<{ path: Vector[]; look: PersonLook; speed: number }> = [
   },
 ]
 
+/** Where the courier waits, by the home's door on the street. */
+const COURIER_AT = { x: -38.6, z: 6.7 }
+
 export interface CitySceneProps {
   /** The place the player is at, or last left. */
   at: PlaceId
@@ -180,6 +186,11 @@ export interface CitySceneProps {
   onRide: (riding: boolean) => void
   /** It is raining today. */
   raining?: boolean
+  /**
+   * The takeaway came while the player was out: the courier waits at the
+   * building's door in the street (see game/delivery.ts), to hand it over there.
+   */
+  courier?: boolean
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -260,6 +271,21 @@ function CityScene(props: CitySceneProps) {
               who={PASSER_WHO[i]}
             />
           ))}
+          {props.courier && props.outside && (
+            <group>
+              <Npc
+                who={TOWN_PEOPLE.courier}
+                position={[COURIER_AT.x, 0, COURIER_AT.z]}
+                rotation={0}
+                look={COURIER_LOOK}
+                reach={1.7}
+                doing="waiting with your takeaway"
+              />
+              <group position={[COURIER_AT.x + 0.4, 0.2, COURIER_AT.z]}>
+                <Prop kind="bag" />
+              </group>
+            </group>
+          )}
           <StreetPlayer {...props} low={lowPower} />
           {props.raining && props.outside && (
             <Rain low={lowPower} wet={{ size: [150, 10], at: [0, 0] }} />

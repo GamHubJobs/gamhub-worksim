@@ -5,6 +5,7 @@
  * and the restaurants that deliver. Pure, so it can be tested.
  */
 import { FRIENDS, PLANS } from '../content/friends'
+import { moneyTalkDue } from './money'
 import { MEETINGS } from '../content/workday'
 import { TOWN_PEOPLE } from '../content/townPeople'
 import { PLACES } from '../content/city'
@@ -123,6 +124,14 @@ export function notices(profile: ProfileData): Notice[] {
       app: 'messages',
       from: whoOf(life.partner.id)?.name ?? 'Your partner',
       text: 'Home for dinner tonight? I will cook.',
+    })
+  // Money is tight: they would like to talk about it (money.ts).
+  if (life.partner && moneyTalkDue(life, life.bonds?.[life.partner.id], profile.work.day))
+    out.push({
+      id: `money:${profile.work.day}`,
+      app: 'messages',
+      from: whoOf(life.partner.id)?.name ?? 'Your partner',
+      text: 'Can we talk about money when you are home? Things are a bit tight.',
     })
   for (const [id, b] of Object.entries(life.bonds ?? {}))
     if (b.wedding === profile.work.day)

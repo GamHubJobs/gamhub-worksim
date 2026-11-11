@@ -39,6 +39,7 @@ import { homeLayout } from './homeLayout'
 import { Courier } from './Courier'
 import { HomePartner } from './HomePartner'
 import { Npc } from '../../world/npc/Npc'
+import { scaleOf } from '../../game/children'
 import { childWho } from '../../game/family'
 import type { PersonLook } from '../../office/scene/people'
 
@@ -106,7 +107,8 @@ export interface HomeSceneProps {
   /** Someone at home with the player (visiting, or living here), by id. */
   partner?: string | null
   /** The player's children, by name (at home with them). */
-  kids?: string[]
+  /** The children at home now (not at school, not grown up), by their place in the family. */
+  kids?: { i: number; name: string; age: number }[]
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -256,15 +258,15 @@ function HomeScene(props: HomeSceneProps) {
             <ActivityEffects activities={activities} />
             <Courier stage={props.delivery ?? 'none'} door={[-w / 2, d / 2 - 0.9]} />
             {props.partner && <HomePartner id={props.partner} layout={layout} />}
-            {(props.kids ?? []).map((name, i) => (
+            {(props.kids ?? []).map(({ i, name, age }) => (
               <Npc
                 key={name}
-                who={childWho(i, name)}
+                who={childWho(i, name, age)}
                 position={[layout.start.x + 0.7 + i * 0.6, 0, layout.start.z - 0.6]}
                 rotation={Math.PI}
                 look={CHILD_LOOKS[i % CHILD_LOOKS.length]}
                 phase={i}
-                scale={0.62}
+                scale={scaleOf(age)}
                 reach={1.3}
               />
             ))}

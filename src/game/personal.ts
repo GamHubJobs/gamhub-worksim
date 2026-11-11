@@ -6,6 +6,7 @@
  */
 import type { Adult } from '../content/adults'
 import { weekdayName } from './clock'
+import { BRUSHED_TEXT, BUDGET_TEXT } from './money'
 import type { Line, Option, Outcome, Relation, Situation, Who } from './encounters'
 import {
   answered,
@@ -35,6 +36,8 @@ export function personalOptions(
   together = false,
   /** The family so far (children, one on the way). */
   family: { children: number; expected: boolean } = { children: 0, expected: false },
+  /** Money is tight at home, and they want to talk about it (money.ts). */
+  money = false,
 ): Option[] {
   const n = first(who)
   const out: Option[] = []
@@ -61,6 +64,10 @@ export function personalOptions(
   if (married && family.children === 0 && !family.expected) {
     out.push(opt('family-baby', 'Talk about having a baby together'))
     out.push(opt('family-adopt', 'Talk about adopting a child'))
+  }
+  if (together && money) {
+    out.push(opt('money-budget', 'Sit down and agree a budget together'))
+    out.push({ id: 'money-brush', label: 'Say it will be fine', tone: 'neutral' })
   }
   if (dating && bond.closeness < 35)
     out.push(opt('make-amends', 'Talk it through, and say sorry'))
@@ -306,6 +313,37 @@ export function respondPersonal(
         effect: a.answer === 'yes' ? (adopt ? 'family-adopt' : 'family-baby') : undefined,
       }
     }
+    case 'money-budget':
+      return result(
+        [
+          say(who, 'Money is a bit tight at the moment. Can we look at it together?'),
+          act(
+            '*You go through it all at the table: the rent, the food, the rest. A plan you both agree on.*',
+          ),
+          say(who, 'That feels so much better. Thank you for taking it seriously.'),
+        ],
+        {
+          ...bond,
+          closeness: Math.min(100, bond.closeness + 8),
+          history: [...bond.history, { day, text: BUDGET_TEXT }].slice(-20),
+        },
+        20,
+        [`Closer to ${n}.`],
+      )
+    case 'money-brush':
+      return result(
+        [
+          say(who, 'Money is a bit tight at the moment. Can we look at it together?'),
+          say(who, 'Oh. Right. Fine, I suppose.'),
+          act(`*${n} goes quiet. They wanted to talk about it.*`),
+        ],
+        {
+          ...bond,
+          closeness: Math.max(0, bond.closeness - 6),
+          history: [...bond.history, { day, text: BRUSHED_TEXT }].slice(-20),
+        },
+        2,
+      )
     case 'make-amends':
       return result(
         [

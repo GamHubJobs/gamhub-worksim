@@ -41,6 +41,7 @@ import { canDo, lifePhase, sleepHours } from '../game/life'
 import { canGoOut } from '../game/city'
 import { deliveryStage } from '../game/delivery'
 import { finishDate, stayTheNight, whoOf } from '../game/dates'
+import { ageOf, homeNow } from '../game/children'
 import { childWho } from '../game/family'
 import { adultOf, ask, atHome, bondOf, type Bond } from '../game/romance'
 import { withLife } from '../game/lifeTime'
@@ -157,7 +158,7 @@ export function HomeView({
     if (!id.startsWith('child:')) return whoOf(id)
     const i = Number(id.slice(6))
     const child = life.family.children[i]
-    return child ? childWho(i, child.name) : undefined
+    return child ? childWho(i, child.name, ageOf(child, day)) : undefined
   }
   // Going to bed with someone there: a fade to the morning (nothing more is shown).
   const [fade, setFade] = useState(false)
@@ -253,7 +254,11 @@ export function HomeView({
               dressed={phase === 'morning' && life.ready.dressed}
               delivery={deliveryStage(life)}
               partner={evening?.id ?? here?.id ?? null}
-              kids={life.family.children.map((c) => c.name)}
+              kids={life.family.children.flatMap((c, i) =>
+                homeNow(c, day, life.minute)
+                  ? [{ i, name: c.name, age: ageOf(c, day) }]
+                  : [],
+              )}
               doings={stableDoings}
               controls={api.controls}
               request={request}

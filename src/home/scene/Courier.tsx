@@ -18,7 +18,7 @@ import { useWorld } from '../../world/context'
 import { Prop } from '../../world/props'
 import { DELIVERY_TIMES as T } from './homeLayout'
 
-const LOOK: PersonLook = {
+export const COURIER_LOOK: PersonLook = {
   skin: 3,
   hair: 'crop',
   hairColor: 1,
@@ -115,7 +115,7 @@ export function Courier({
     <>
       <group ref={group} visible={false} userData={{ passable: true }}>
         <Person
-          look={LOOK}
+          look={COURIER_LOOK}
           motion={motion}
           rig={rig}
           talking={false}

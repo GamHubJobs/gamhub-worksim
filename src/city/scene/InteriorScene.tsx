@@ -81,6 +81,9 @@ export interface InteriorSceneProps {
   dressed: boolean
   /** It is raining today (seen in the park). */
   raining?: boolean
+  /** The game day and clock (customers come and go by it). */
+  day?: number
+  minute?: number
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -134,8 +137,19 @@ function InteriorScene(props: InteriorSceneProps) {
       last: null,
       date: props.date ?? null,
       wedding: props.wedding ?? null,
+      day: props.day,
+      minute: props.minute,
     }),
-    [byAction, props.onRequest, dark, low, props.date, props.wedding],
+    [
+      byAction,
+      props.onRequest,
+      dark,
+      low,
+      props.date,
+      props.wedding,
+      props.day,
+      props.minute,
+    ],
   )
   const world = useMemo(() => ({ now, hands, low }), [low])
   const onDone = props.onDone

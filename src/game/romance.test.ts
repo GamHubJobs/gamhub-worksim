@@ -18,6 +18,7 @@ import {
 } from './romance'
 import { missedDates, stayTheNight } from './dates'
 import { familyNight, marry } from './family'
+import { notices } from './phone'
 
 const ctx = { day: 10, public: false, colleague: false }
 const maya = ADULTS['cafe:barista']
@@ -369,5 +370,30 @@ describe('marriage, a family, and when things go wrong', () => {
     const p = living({ closeness: 30 })
     expect(options(p)).toContain('make-amends')
     expect(bondOf(say(p, 'make-amends').work.life, who.id).closeness).toBe(42)
+  })
+
+  it('money talks: raised when money is tight at home; a budget brings them closer, brushing it off does not', () => {
+    const tight = (p: ProfileData): ProfileData => ({
+      ...p,
+      work: { ...p.work, life: { ...p.work.life, money: 80, phase: 'evening' } },
+    })
+    // Plenty of money: nothing to talk about.
+    expect(options(living({}))).not.toContain('money-budget')
+    const p = tight(living({ closeness: 70 }))
+    expect(options(p)).toEqual(expect.arrayContaining(['money-budget', 'money-brush']))
+    expect(notices(p).some((n) => n.id.startsWith('money:'))).toBe(true)
+    const budget = say(p, 'money-budget')
+    expect(bondOf(budget.work.life, who.id).closeness).toBe(78)
+    // Talked about: not again this week.
+    expect(options(budget)).not.toContain('money-budget')
+    expect(notices(budget).some((n) => n.id.startsWith('money:'))).toBe(false)
+    const brushed = say(p, 'money-brush')
+    expect(bondOf(brushed.work.life, who.id).closeness).toBe(64)
+    // A week later it comes up again.
+    const later = { ...budget, work: { ...budget.work, day: budget.work.day + 7 } }
+    expect(options(later)).toContain('money-budget')
+    // Single, and short of money: no one brings it up.
+    const single = tight(newProfileData('Alex Rivera', 0))
+    expect(notices(single).some((n) => n.id.startsWith('money:'))).toBe(false)
   })
 })

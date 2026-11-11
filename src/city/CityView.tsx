@@ -39,6 +39,8 @@ import { EncounterPanel } from '../world/npc/EncounterPanel'
 import { DatePanel, type DateStep } from '../world/npc/DatePanel'
 import { endMoment, startMoment } from '../world/npc/moment'
 import { dateHere, finishDate, whoOf } from '../game/dates'
+import { deliveryStage, received } from '../game/delivery'
+import { TOWN_PEOPLE } from '../content/townPeople'
 import { marry, weddingHere } from '../game/family'
 import { adultOf, ask, bondOf } from '../game/romance'
 import { WeddingPanel } from '../world/npc/WeddingPanel'
@@ -193,6 +195,8 @@ export function CityView({
     null,
   )
   const minute = life.minute
+  // The takeaway came while the player was out: the courier waits in the street.
+  const courierWaiting = outside && deliveryStage(life) === 'at-door'
   const meetPerson = useCallback(
     (id: string) => {
       const n = metAs(id)
@@ -201,6 +205,15 @@ export function CityView({
         return
       }
       if (storySceneWith(id, n.who.name)) return
+      // The courier, waiting at the door in the street: the takeaway is the player's now.
+      if (id === TOWN_PEOPLE.courier.id && courierWaiting) {
+        onAct((p) => ({ ...p, work: { ...p.work, life: received(p.work.life) } }))
+        setEncounter({
+          who: n.who,
+          situation: { availability: 'free', doing: 'in the street', minute },
+        })
+        return
+      }
       if (weddingNow && weddingNow === id) {
         setWedding(id)
         return
@@ -215,7 +228,7 @@ export function CityView({
       })
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [minute, profile, weddingNow],
+    [minute, profile, weddingNow, courierWaiting],
   )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
@@ -343,6 +356,8 @@ export function CityView({
                 raining={raining}
                 date={dating?.date.id ?? date?.id ?? null}
                 wedding={wedding ?? weddingNow}
+                day={profile.work.day}
+                minute={life.minute}
               />
             </Suspense>
           </SceneBoundary>
@@ -385,6 +400,7 @@ export function CityView({
                 raining={raining}
                 request={streetRequest}
                 onPerson={meetPerson}
+                courier={courierWaiting}
               />
             </Suspense>
           </SceneBoundary>

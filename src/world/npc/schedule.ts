@@ -57,6 +57,33 @@ export interface Person {
   talk?: string
   /** Who they are in a conversation (the speaker's id), so they face the player and talk. */
   speaker?: string
+  /**
+   * A customer: not there all day, but coming in again and again (every
+   * `every` minutes from `arrives` + `offset`, for `stay` minutes), in
+   * through the door and out again; first at `before` (the counter) and last
+   * at `after` (the checkout), for a few minutes each, and at their own place
+   * (a table, an aisle) in between.
+   */
+  visits?: Visits
+}
+
+export interface Visits {
+  every: number
+  stay: number
+  offset: number
+  before?: { place: string; minutes: number }
+  after?: { place: string; minutes: number }
+}
+
+/** A customer's visit at a minute: how far into it, or null when they are not in. */
+export function visitAt(p: Person, minute: number): { t: number; left: number } | null {
+  const v = p.visits
+  if (!v) return null
+  const since = minute - p.arrives - v.offset
+  if (since < 0) return null
+  const t = since % v.every
+  const end = Math.min(v.stay, p.leaves - (minute - t))
+  return t < end ? { t, left: end - t } : null
 }
 
 export interface Gathering {
@@ -117,6 +144,18 @@ export function wanted(
   errandMinute = minute,
 ): Intent {
   if (minute < p.arrives || minute >= p.leaves) return { kind: 'away' }
+  if (p.visits) {
+    // A customer: in for a while, through the door, and out again (by the
+    // errand clock, so they come and go while the player is about).
+    const visit = visitAt(p, errandMinute)
+    if (!visit) return { kind: 'away' }
+    const { before, after } = p.visits
+    if (before && visit.t < before.minutes)
+      return { kind: 'at', place: before.place, reason: 'errand' }
+    if (after && visit.left <= after.minutes)
+      return { kind: 'at', place: after.place, reason: 'errand' }
+    return { kind: 'at', place: p.own, reason: 'own' }
+  }
   const weekday = (((day - 1) % 7) + 7) % 7
   for (const g of gatherings) {
     const place = p.meetings[g.id]
@@ -221,6 +260,8 @@ export function doingNow(
   minute: number,
 ): Doing {
   if (!intent || intent.kind === 'away') return { availability: 'free' }
+  // A customer: free to talk, unless on the way in or out.
+  if (p.visits) return { availability: walking ? 'walking' : 'free' }
   if (minute >= p.leaves - 5) return { availability: 'leaving' }
   if (intent.reason === 'meeting')
     return { availability: 'meeting', doing: 'the meeting' }

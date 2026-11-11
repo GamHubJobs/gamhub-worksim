@@ -190,6 +190,51 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-10 · Life 1: children grow up, money talks, customers, the courier outside
+
+### Built
+
+- **Children grow up** (`game/children.ts`): a year every two game weeks (baby, toddler,
+  school child, teenager, grown up at 18 and living away). They are drawn at their size;
+  school-age children are at school on weekdays from 8:45 to 15:30, and not at home then.
+  What there is to do with them depends on their age (a lullaby, a bottle, a tower of
+  blocks, a story, their day, homework, a video game). An adopted child comes home aged
+  four. The Relationships screen gains a Family section. Older saves keep working (a
+  child's `born` day was already saved).
+- **Money talks** (`game/money.ts`): living together, with less than £150, the partner
+  sends a message and wants to talk. Agreeing a budget together brings you closer (+8);
+  brushing it off does not (−6). At most once a week, and never for a player who is
+  single. Kept in the bond's history, so nothing new in the save.
+- **Café and shop customers with a routine**: a schedule person can now have repeating
+  visits (`visits` in `world/npc/schedule.ts`). Two walk-in customers in each place
+  (one on low graphics) come in through the door all the time it is open, go to the
+  counter first (café) or the checkout last (shop), sit or browse in between, and leave.
+  They are walked round the furniture by the office's crowd system and can be talked to.
+  The regulars, including the people the player can get close to, stay where they were.
+- **The courier in the street**: if the takeaway arrives while the player is out in the
+  street, the courier waits by the building's door with the bag; walking up to them hands
+  it over.
+
+### Tests
+
+- Unit tests: `children.test.ts` (ages and stages, school hours, what there is to do at
+  each age, adoption), `customers.test.ts` (visits, the counter and the checkout, coming
+  and going while the clock stands still), and a money-talk test in `romance.test.ts`.
+- Browser tests (`everyday.spec.ts`): a seven-year-old at home and an eighteen-year-old
+  living away, and the Family section; a café customer seen coming in at the door and
+  walking to the counter (sampled in the page ten times a second); the courier waiting
+  in the street, the bag handed over, and the courier gone. The wedding test's child is
+  now four, so that "Play with Ada" is still offered.
+- Results: 2,240 unit tests passed (97 files). Chromium browser tests, full run: 199
+  passed, 3 skipped, 0 failed, 2 flaky (Data Studio and Books, unrelated, passed on
+  retry). Before the full run the new tests were fixed twice: the evening clock had
+  passed 6 pm, so the child test now asks about their day (offered at any hour), and
+  the café test samples in the page rather than polling (it missed the short walk).
+  5 production-build tests passed. Firefox, WebKit and Edge 8 passed, 1 skipped.
+  Start screen 291 kB.
+
+---
+
 ## 2026-11-10 · Map 1: a world map, a mini-map, and a real route
 
 ### Built

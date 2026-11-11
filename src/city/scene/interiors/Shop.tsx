@@ -10,6 +10,7 @@ import { Color, Object3D, type InstancedMesh } from 'three'
 import type { Vector } from '../../../content/office'
 import { Box } from '../../../office/scene/parts'
 import { Npc } from '../../../world/npc/Npc'
+import { Customers } from './Customers'
 import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Board, Hotspot, Lamp, Room } from './common'
 import { signPainting, useInterior } from './kit'
@@ -274,6 +275,7 @@ export default function Shop() {
         ))}
       </Hotspot>
 
+      <Customers room="shop" />
       {/* The checkout and the cashier */}
       <group position={[3.7, 0, 1.2]} rotation={[0, -Math.PI / 2, 0]}>
         <Checkout />

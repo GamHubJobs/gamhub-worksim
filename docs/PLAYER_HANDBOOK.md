@@ -93,6 +93,17 @@ and, if you both want, start a family. Things can go wrong (missed dates add up)
 they can be talked through, or ended, by either of you. Staying single is just as good a
 way to play.
 
+Children grow up: a year passes every two game weeks, from a baby to a toddler, a school
+child and a teenager, and what you can do together changes with them (a lullaby, a tower
+of blocks, homework, a video game). On weekdays school-age children are at school from a
+quarter to nine until half past three; at eighteen they are grown up and living away.
+If money runs low while you live together, your partner will want to talk about it:
+agreeing a budget together brings you closer, brushing it off does not.
+
+In the café and the shop, customers come and go all day: in through the door, to the
+counter or round the aisles, and out again. If your takeaway arrives while you are out
+in the street, the courier waits at your building's door: walk up to collect it.
+
 ### The map
 
 Press **M** for the world map (or Map on the HUD, in the pause menu, or the phone). Click a

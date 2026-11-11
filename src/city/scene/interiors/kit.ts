@@ -30,6 +30,9 @@ export interface InteriorState {
   date?: string | null
   /** The player's wedding, here today (their partner's id), if it is. */
   wedding?: string | null
+  /** The game day and clock, for the customers' comings and goings. */
+  day?: number
+  minute?: number
 }
 
 export const Interior = createContext<InteriorState>({
