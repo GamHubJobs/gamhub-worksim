@@ -26,6 +26,7 @@ import type {
   TicketsContent,
 } from '../../persistence/schemas'
 import { getWorkspace } from '../../tools/ui'
+import { deviceByName, onNetwork } from '../../tools/network/simulation'
 import { Icon, type IconName } from '../../ui/Icon'
 import { KnowledgeBasePanel } from './KnowledgeBasePanel'
 import { OverviewPanel } from './OverviewPanel'
@@ -41,11 +42,12 @@ interface HelpDeskWindowProps {
   onOpenTask: (assignmentId: string) => void
 }
 
-type Tab = 'overview' | 'queue' | 'knowledge' | SystemId
+type Tab = 'overview' | 'queue' | 'knowledge' | 'remote' | SystemId
 
 const SYSTEM_ICONS: Record<SystemId, IconName> = {
   network: 'network',
   directory: 'directory',
+  devices: 'device',
 }
 
 /** Now, for ticket histories: the real time and the office clock. */
@@ -56,6 +58,38 @@ function officeMoment(work?: { day: number; minute: number }): Moment {
       ? `${weekdayName(work.day)} (day ${work.day}), ${formatTime(work.minute)}`
       : '',
   }
+}
+
+/**
+ * Whether a computer can be reached for remote support: with Network Tools in
+ * the queue, it must be up and on the network there; otherwise its own status
+ * (Devices) decides.
+ */
+function reachableIn(content: TicketsContent): ((device: string) => boolean) | undefined {
+  const network = content.environment?.network
+  if (!network) return undefined
+  return (name) => {
+    const device = deviceByName(network, name)
+    return !device || (device.up && onNetwork(network, device))
+  }
+}
+
+/** The tickets about a device or account (named in their conditions). */
+function relatedTickets(content: TicketsContent, entity: string) {
+  return content.tickets
+    .filter((t) =>
+      t.conditions.some(
+        (c) =>
+          ('device' in c && c.device === entity) ||
+          ('from' in c && c.from === entity) ||
+          ('user' in c && c.user === entity),
+      ),
+    )
+    .map((t) => ({
+      id: t.id,
+      title: t.subject,
+      open: t.status !== 'resolved' && t.status !== 'closed',
+    }))
 }
 
 /** The newest automatic updates to tickets (resolved, reopened), for the bar above. */
@@ -92,7 +126,9 @@ export function HelpDeskWindow({
   const [article, setArticle] = useState<string | null>(null)
   const [focus, setFocus] = useState<string | undefined>(undefined)
   const environment = state.status === 'ready' ? state.content.environment : undefined
-  const systems = (['network', 'directory'] as const).filter((id) => environment?.[id])
+  const systems = (['network', 'directory', 'devices'] as const).filter(
+    (id) => environment?.[id],
+  )
 
   const moment = () => officeMoment(profile?.work)
 
@@ -198,8 +234,14 @@ export function HelpDeskWindow({
                   }
                 : null
           if (!shown) return null
-          const isSystem = tab !== 'queue' && tab !== 'overview' && tab !== 'knowledge'
-          const Workspace = isSystem ? getWorkspace(tab) : null
+          // The system a section shows (Remote Desktop is a section of Devices).
+          const system: SystemId | null =
+            tab === 'remote'
+              ? 'devices'
+              : tab === 'queue' || tab === 'overview' || tab === 'knowledge'
+                ? null
+                : tab
+          const Workspace = system ? getWorkspace(system) : null
           const open = shown.content.tickets.filter(
             (t) => t.status !== 'resolved' && t.status !== 'closed',
           ).length
@@ -219,11 +261,28 @@ export function HelpDeskWindow({
               ? [
                   {
                     name: 'Systems',
-                    items: systems.map((id) => ({
-                      id: id as Tab,
-                      label: SYSTEM_NAMES[id],
-                      icon: SYSTEM_ICONS[id],
-                    })),
+                    items: systems.flatMap((id) =>
+                      id === 'devices'
+                        ? [
+                            {
+                              id: 'devices' as Tab,
+                              label: 'Device Management',
+                              icon: 'device' as IconName,
+                            },
+                            {
+                              id: 'remote' as Tab,
+                              label: 'Remote Desktop',
+                              icon: 'remote' as IconName,
+                            },
+                          ]
+                        : [
+                            {
+                              id: id as Tab,
+                              label: SYSTEM_NAMES[id],
+                              icon: SYSTEM_ICONS[id],
+                            },
+                          ],
+                    ),
                   },
                 ]
               : []),
@@ -325,7 +384,7 @@ export function HelpDeskWindow({
                     openArticle={article}
                     onOpenArticle={setArticle}
                   />
-                ) : !isSystem || !Workspace || !shown.content.environment?.[tab] ? (
+                ) : !system || !Workspace || !shown.content.environment?.[system] ? (
                   <TicketsEditor
                     key={`${shown.key}-${focus ?? ''}`}
                     content={shown.content}
@@ -342,16 +401,19 @@ export function HelpDeskWindow({
                   <Suspense
                     fallback={
                       <p className="p-6 text-sm text-slate-600">
-                        Opening {SYSTEM_NAMES[tab]}…
+                        Opening {SYSTEM_NAMES[system]}…
                       </p>
                     }
                   >
                     <Workspace
                       key={`${shown.key}-${tab}`}
-                      state={shown.content.environment[tab]}
+                      state={shown.content.environment[system]}
                       readOnly={!shown.live}
-                      lockedSections={lockedSections[tab] ?? {}}
+                      lockedSections={lockedSections[system] ?? {}}
                       now={() => moment().at}
+                      initialSection={tab === 'remote' ? 'remote' : undefined}
+                      reachable={reachableIn(shown.content)}
+                      related={(entity) => relatedTickets(shown.content, entity)}
                       onUpdate={
                         shown.live
                           ? (change) => {
@@ -359,7 +421,7 @@ export function HelpDeskWindow({
                               queue.update((latest) =>
                                 applyEnvironmentChange(
                                   latest,
-                                  tab,
+                                  system,
                                   // The tool changes its own state; the tickets react to it.
                                   change,
                                   when,

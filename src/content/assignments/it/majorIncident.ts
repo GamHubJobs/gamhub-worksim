@@ -51,7 +51,7 @@ export const majorIncident: AssignmentInput = {
   version: 1,
   careerId: 'it-support',
   levelId: 'senior-support-analyst',
-  order: 10,
+  order: 11,
   title: 'Major incident: email outage',
   summary:
     'Run the service desk side of a company-wide outage, then report it and brief management.',

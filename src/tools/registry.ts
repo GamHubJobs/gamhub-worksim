@@ -9,6 +9,7 @@ import { analytics } from './analytics/definition'
 import { apiClient } from './api/definition'
 import { campaigns } from './campaigns/definition'
 import { dataStudio } from './datastudio/definition'
+import { devices } from './devices/definition'
 import { directory } from './directory/definition'
 import { network } from './network/definition'
 import { seo } from './seo/definition'
@@ -18,6 +19,7 @@ import type { AnyTool, CareerTool } from './types'
 const TOOLS: AnyTool[] = [
   books,
   directory,
+  devices,
   network,
   social,
   seo,

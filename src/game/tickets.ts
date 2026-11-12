@@ -18,6 +18,8 @@ function startingEnvironment(assignment: Assignment): TicketEnvironment | undefi
     out.network = getTool('network')!.state.parse(environment.network.start)
   if (environment.directory)
     out.directory = getTool('directory')!.state.parse(environment.directory.start)
+  if (environment.devices)
+    out.devices = getTool('devices')!.state.parse(environment.devices.start)
   return out
 }
 
@@ -70,7 +72,7 @@ export function gradeEnvironment(
 ): CheckResult[] {
   const environment = assignment.queue?.environment
   if (!environment) return []
-  return (['network', 'directory'] as const).flatMap((id) => {
+  return (['network', 'directory', 'devices'] as const).flatMap((id) => {
     const task = environment[id]
     const tool = getTool(id)
     if (!task || !tool || task.checks.length === 0) return []
@@ -221,6 +223,9 @@ export function applyTicketSolution(
                   environment.directory.solution,
                 ),
               }
+            : {}),
+          ...(environment.devices
+            ? { devices: getTool('devices')!.state.parse(environment.devices.solution) }
             : {}),
         }
       : queue.environment

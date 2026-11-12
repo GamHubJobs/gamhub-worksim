@@ -190,6 +190,122 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 4: devices, Remote Desktop and Device Management
+
+The company's computers become simulated state that IT support fixes
+remotely. Tickets about a computer resolve when the computer itself works.
+
+### What was built
+
+- **A Devices tool** (`src/tools/devices/`, registered like Network Tools and
+  Directory, used inside the Help Desk):
+  - **Each device has** an owner (the same people as the office and Directory),
+    department, type, OS, model, IP, status, memory, storage (with temporary
+    files), network settings, apps, services, processes, updates, an event log
+    and a print queue.
+  - **The company fleet:** 11 devices, one per person in the office, a shared
+    printer, and a laptop that is away (offline).
+- **Actions** (`model.ts`, pure, logged). Each needs a remote session to that
+  device:
+  - **Connect:** the device must be online, and reachable in Network Tools
+    when the queue has it.
+  - **End a process:** never a Windows one; it says why.
+  - **Disk Cleanup:** temporary files only, so free space really changes.
+  - **Services:** start, restart or stop. A disabled service is set back to
+    automatic; restarting the Print Spooler clears stuck jobs.
+  - **Apps:**
+    - repair (fixes damaged files only);
+    - install or reinstall, which needs approved software, the Windows
+      Installer service and free space;
+    - uninstall.
+  - **Network:** back to the company standard (automatic, no proxy).
+  - **Updates:** retry them (needs the update service and space).
+  - **Restart:** finishes updates, ends runaway processes, and ends the
+    session.
+  - **Disconnect.**
+- **Seven new ticket conditions** (`incidents.ts`), checked against the
+  devices: not overloaded, free space, an app working, a service running,
+  standard network settings, up to date, print queue clear.
+  - Device changes are events: the tickets about that device react, resolve,
+    or reopen if the fault comes back.
+  - The change goes into the ticket's history ("Change made: End process
+    SyncHelper on LT-0170").
+- **Device Management:** every device, with:
+  - search (name, user, IP);
+  - filters by department and status ("with issues");
+  - sortable columns, a storage bar and an issues count;
+  - a detail panel: specifications, issues worked out from its state, its
+    incidents (tickets naming it), installed apps, and its history.
+
+  A "Remote connect" button opens Remote Desktop.
+
+- **Remote Desktop:**
+  - **Connecting:** choose a computer, test the connection (a reply, or why
+    not), connect.
+  - **The remote screen:** desktop icons, utility windows that can be stacked,
+    and a taskbar.
+  - **Nine utilities:** System Information, Task Manager (processor and memory,
+    processes, End task), Storage (Disk Cleanup), Services, Apps & features,
+    Network settings, Windows Update, Event Viewer (the error that explains a
+    crash or failed install), Printers.
+  - **Confirmations:** consequential actions (End task, Uninstall, Restart)
+    ask once more, in place.
+- **In the Help Desk:**
+  - the sidebar's Systems group shows Device Management and Remote Desktop;
+  - guidance gives hints for every device condition (the tool, then the
+    utility, then the concept);
+  - colleagues are held up by "their computer" or "the printer", say so, and
+    are seen at "a computer that keeps freezing";
+  - the screen tells colleagues apart from devices.
+- **The task "Slow laptops and stubborn apps"** (IT order 9; the five later IT
+  tasks move down one): six tickets.
+  - Grace: a stuck sync tool and a full disk.
+  - Owen: an app with damaged files.
+  - Dana: the print spooler and a stuck job.
+  - Ben: an old proxy typed in by hand.
+  - Arjun: a failed install (installer service disabled).
+  - Leila: failing updates (update service disabled, then a restart).
+
+  Graded on each fix, disk cleanup, disconnecting, and replies to Grace and
+  Ben.
+
+### Tests
+
+- **Unit and integration** (`tools/devices/devices.test.ts`, 17):
+  - every action's rules (session, reachability, Windows processes,
+    temporary files only, repair or reinstall, approved software and the
+    installer, updates and the restart, the spooler);
+  - issues from state;
+  - the tickets' checks describing the device;
+  - automatic resolution only once the cause is fixed;
+  - Resolved refused before;
+  - reopening;
+  - guidance from the device's state;
+  - colleagues' lines;
+  - the model answer at 100%;
+  - a session left open, and a claimed fix, marked down;
+  - save and reload; older queues load.
+- **Browser** (`tests/e2e/deskops-devices.spec.ts`):
+  - Device Management filtered to issues, and Grace's laptop in detail;
+  - an offline laptop that cannot be reached;
+  - connect to Grace's laptop: Task Manager refuses to end a Windows process,
+    ends the stuck tool (96% to 10%), Disk Cleanup (18 to 39.5 GB);
+  - her ticket resolves by itself;
+  - disconnect;
+  - the history and the device after a reload.
+- **Visual check** with screenshots:
+  - the desktop icons were cut off;
+  - now a 3 × 3 grid, with the windows beside it.
+- **Results after:** `npm run check` clean (107 files, 2,416 tests). The Help Desk browser tests (14 spec files, 76 tests) passed; one (the IT story) passed on retry and again when run alone. Production build passed.
+
+### Limits
+
+- **Utility windows** stack in place; they cannot be dragged.
+- **The remote screen is the computer's tools,** not the user's documents.
+- **Device conditions are used by the new task;** earlier tasks are unchanged.
+
+---
+
 ## 2026-11-12 · IT Help Desk 3: guidance, hints, Knowledge Base, and the operations shell
 
 The Help Desk becomes an IT operations application, with guidance that knows

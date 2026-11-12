@@ -30,6 +30,14 @@ import type {
 } from '../persistence/schemas'
 import type { DirectoryState } from '../tools/directory/schema'
 import { sessionForTicket, viewSession } from '../tools/directory/security'
+import {
+  cpuOf,
+  findDevice,
+  freeGb,
+  serviceRunning,
+  standardNetwork,
+} from '../tools/devices/model'
+import type { DevicesState } from '../tools/devices/schema'
 import type { NetworkState } from '../tools/network/schema'
 import {
   deviceByName,
@@ -44,6 +52,7 @@ export type SystemId = keyof TicketEnvironment
 export const SYSTEM_NAMES: Record<SystemId, string> = {
   network: 'Network Tools',
   directory: 'Directory',
+  devices: 'Devices',
 }
 
 /** Which system a condition is checked in. */
@@ -54,6 +63,14 @@ export function systemOf(condition: TicketCondition): SystemId {
     case 'can-reach':
     case 'dns-record':
       return 'network'
+    case 'device-performance':
+    case 'disk-free':
+    case 'app-working':
+    case 'device-service':
+    case 'network-standard':
+    case 'updates-installed':
+    case 'print-queue-clear':
+      return 'devices'
     default:
       return 'directory'
   }
@@ -239,6 +256,124 @@ function evaluateDirectory(
   }
 }
 
+function evaluateDevices(
+  condition: TicketCondition,
+  state: DevicesState,
+): Omit<ConditionResult, 'condition'> {
+  if (!('device' in condition))
+    return { label: 'A device check', passed: false, state: 'This cannot be checked.' }
+  const device = findDevice(state, condition.device)
+  const name = condition.device
+  const missing = (label: string) => ({
+    label,
+    passed: false,
+    state: `${name} is not in the device inventory.`,
+  })
+  switch (condition.type) {
+    case 'device-performance': {
+      const label = `${name} is not overloaded (processor under ${condition.maxCpu}%)`
+      if (!device) return missing(label)
+      const cpu = cpuOf(device)
+      const top = [...device.processes].sort((a, b) => b.cpu - a.cpu)[0]
+      return cpu <= condition.maxCpu
+        ? { label, passed: true, state: `${name}’s processor is at ${cpu}%.` }
+        : {
+            label,
+            passed: false,
+            state: `${name}’s processor is at ${cpu}%${top ? ` (${top.name} uses ${top.cpu}%)` : ''}.`,
+          }
+    }
+    case 'disk-free': {
+      const label = `${name} has at least ${condition.minGb} GB free`
+      if (!device) return missing(label)
+      const free = freeGb(device)
+      return free >= condition.minGb
+        ? { label, passed: true, state: `${name} has ${free} GB free.` }
+        : { label, passed: false, state: `${name} has only ${free} GB free.` }
+    }
+    case 'app-working': {
+      const label = `${condition.app} works on ${name}`
+      if (!device) return missing(label)
+      const app = device.apps.find((a) => a.name === condition.app)
+      if (!app || app.state === 'not-installed')
+        return {
+          label,
+          passed: false,
+          state: `${condition.app} is not installed on ${name}.`,
+        }
+      if (app.state === 'install-failed')
+        return {
+          label,
+          passed: false,
+          state: `${condition.app} failed to install on ${name}.`,
+        }
+      return app.state === 'crashing'
+        ? { label, passed: false, state: `${condition.app} keeps crashing on ${name}.` }
+        : {
+            label,
+            passed: true,
+            state: `${condition.app} ${app.version} works on ${name}.`,
+          }
+    }
+    case 'device-service': {
+      const label = `${condition.service} is running on ${name}`
+      if (!device) return missing(label)
+      return serviceRunning(device, condition.service)
+        ? { label, passed: true, state: `${condition.service} is running on ${name}.` }
+        : { label, passed: false, state: `${condition.service} has stopped on ${name}.` }
+    }
+    case 'network-standard': {
+      const label = `${name} uses the company’s network settings`
+      if (!device) return missing(label)
+      return standardNetwork(state, device)
+        ? {
+            label,
+            passed: true,
+            state: `${name} uses the standard (automatic) settings.`,
+          }
+        : {
+            label,
+            passed: false,
+            state: `${name}’s network settings were changed by hand${device.network.proxy ? ` (proxy ${device.network.proxy})` : ''}.`,
+          }
+    }
+    case 'updates-installed': {
+      const label = `${name} is up to date`
+      if (!device) return missing(label)
+      const failed = device.updates.find((u) => u.state === 'failed')
+      if (failed)
+        return { label, passed: false, state: `Update ${failed.id} failed on ${name}.` }
+      if (device.updates.some((u) => u.state === 'pending'))
+        return {
+          label,
+          passed: false,
+          state: `Updates are waiting to install on ${name}.`,
+        }
+      return device.restartPending
+        ? {
+            label,
+            passed: false,
+            state: `${name} needs a restart to finish its updates.`,
+          }
+        : { label, passed: true, state: `${name} is up to date.` }
+    }
+    case 'print-queue-clear': {
+      const label = `Nothing is stuck in ${name}’s print queue`
+      if (!device) return missing(label)
+      const stuck = device.printQueue.find((j) => j.stuck)
+      return stuck
+        ? {
+            label,
+            passed: false,
+            state: `“${stuck.document}” is stuck in ${name}’s print queue.`,
+          }
+        : { label, passed: true, state: `${name}’s print queue is clear.` }
+    }
+    default:
+      return { label: 'A device check', passed: false, state: 'This cannot be checked.' }
+  }
+}
+
 /** Checks one condition against the systems as they are now. */
 export function evaluateCondition(
   condition: TicketCondition,
@@ -258,7 +393,9 @@ export function evaluateCondition(
   const result =
     system === 'network'
       ? evaluateNetwork(condition, state as NetworkState)
-      : evaluateDirectory(condition, state as DirectoryState)
+      : system === 'devices'
+        ? evaluateDevices(condition, state as DevicesState)
+        : evaluateDirectory(condition, state as DirectoryState)
   return { condition, ...result }
 }
 
@@ -367,11 +504,42 @@ export function directoryChanges(
   return changes
 }
 
+/** What changed on the company's devices (their state, and the changes the player made). */
+export function devicesChanges(
+  before: DevicesState,
+  after: DevicesState,
+): SystemChange[] {
+  const changes: SystemChange[] = []
+  const old = new Map(before.devices.map((d) => [d.name, d]))
+  for (const device of after.devices)
+    if (!same(old.get(device.name), device))
+      changes.push({ system: 'devices', entities: [device.name] })
+  const last = before.log.reduce((max, e) => Math.max(max, e.seq), 0)
+  for (const entry of after.log.filter((e) => e.seq > last)) {
+    if (entry.action === 'Connect' || entry.action === 'Disconnect') continue
+    changes.push({
+      system: 'devices',
+      entities: [entry.device],
+      action: [entry.action, entry.detail, `on ${entry.device}`]
+        .filter(Boolean)
+        .join(' '),
+    })
+  }
+  return changes
+}
+
 /** The devices, records or accounts a condition is about. */
 function entitiesOf(condition: TicketCondition): string[] {
   switch (condition.type) {
     case 'device-up':
     case 'service-running':
+    case 'device-performance':
+    case 'disk-free':
+    case 'app-working':
+    case 'device-service':
+    case 'network-standard':
+    case 'updates-installed':
+    case 'print-queue-clear':
       return [condition.device]
     case 'can-reach':
       return [condition.from, condition.host]
@@ -574,7 +742,9 @@ export function applyEnvironmentChange<S extends SystemId>(
   const changes =
     system === 'network'
       ? networkChanges(before as NetworkState, updated as NetworkState)
-      : directoryChanges(before as DirectoryState, updated as DirectoryState)
+      : system === 'devices'
+        ? devicesChanges(before as DevicesState, updated as DevicesState)
+        : directoryChanges(before as DirectoryState, updated as DirectoryState)
   if (changes.length === 0) return { ...content, environment, tickets }
   return {
     ...content,
@@ -738,6 +908,8 @@ function whatIsOut(ticket: Ticket, environment: TicketEnvironment | undefined): 
       c.type === 'can-reach' && !!network && !!deviceByName(network, c.from)?.accessPoint,
   )
   if (onWifi) return 'the Wi-Fi'
+  if (ticket.conditions.some((c) => c.type === 'print-queue-clear')) return 'the printer'
+  if (ticketSystems(ticket).includes('devices')) return 'their computer'
   return ticketSystems(ticket).includes('network') ? 'the network' : 'their account'
 }
 

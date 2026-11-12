@@ -238,6 +238,63 @@ function directoryHints(
   }
 }
 
+function deviceHints(focus: ConditionResult): Hint[] {
+  const c = focus.condition
+  if (!('device' in c)) return []
+  const name = c.device
+  const where = `In the Help Desk, find ${name} in Device Management (who uses it, its issues), then connect to it with Remote Desktop and use its own tools.`
+  const hints = (next: string, article: string): Hint[] =>
+    make(
+      [
+        `${focus.state} Look for the cause on the computer itself, not the symptom the user sees.`,
+        where,
+        next,
+        concept(article),
+      ],
+      'devices',
+      article,
+    )
+  switch (c.type) {
+    case 'device-performance':
+      return hints(
+        `Open Task Manager on ${name}: which process uses most of the processor? If it is not part of Windows, it can be ended.`,
+        'kb-slow-pc',
+      )
+    case 'disk-free':
+      return hints(
+        `Open Storage on ${name}: how much of the used space is temporary files? Disk Cleanup removes them safely.`,
+        'kb-low-storage',
+      )
+    case 'app-working':
+      return hints(
+        `Open the Event Viewer on ${name} for the error, then Apps & features. A damaged app is repaired; an install needs the Windows Installer service running (Services).`,
+        'kb-app-crash',
+      )
+    case 'device-service':
+      return hints(
+        `Open Services on ${name}: is ${c.service} running? Start it, then check what depended on it.`,
+        c.service === 'Print Spooler' ? 'kb-printer' : 'kb-install',
+      )
+    case 'network-standard':
+      return hints(
+        `Open Network settings on ${name} and compare them with the company standard (automatic, no proxy).`,
+        'kb-config',
+      )
+    case 'updates-installed':
+      return hints(
+        `Open Windows Update on ${name} for the error, then Services: the Windows Update service must run. After installing, a restart finishes the job.`,
+        'kb-updates',
+      )
+    case 'print-queue-clear':
+      return hints(
+        `Open Printers on ${name}: is a job stuck, and is the Print Spooler running?`,
+        'kb-printer',
+      )
+    default:
+      return []
+  }
+}
+
 /** Hints for a ticket without conditions (triage, a reply): from the knowledge base. */
 function classicHints(ticket: Ticket): Hint[] {
   const match: KbArticle | undefined = searchKnowledge(
@@ -285,7 +342,9 @@ export function guidanceFor(ticket: Ticket, content: TicketsContent): Guidance {
     focus.condition.type === 'can-reach' ||
     focus.condition.type === 'dns-record'
       ? networkHints(focus, content)
-      : directoryHints(focus, ticket, content)
+      : 'device' in focus.condition
+        ? deviceHints(focus)
+        : directoryHints(focus, ticket, content)
   return {
     status: 'working',
     focus,

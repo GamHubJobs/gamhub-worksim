@@ -37,6 +37,14 @@ function subjectOf(result: ConditionResult, environment?: TicketEnvironment): st
       return c.from
     case 'dns-record':
       return `DNS record ${c.name}`
+    case 'device-performance':
+    case 'disk-free':
+    case 'app-working':
+    case 'device-service':
+    case 'network-standard':
+    case 'updates-installed':
+    case 'print-queue-clear':
+      return c.device
     default: {
       const name = environment?.directory?.users.find((u) => u.id === c.user)?.name
       return `${name ?? c.user}’s account`

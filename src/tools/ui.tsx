@@ -13,6 +13,12 @@ export interface ToolWorkspaceProps<State> {
   lockedSections: Record<string, string>
   /** The time now (ms), for tools whose rules depend on it (e.g. a verification expiring). */
   now?: () => number
+  /** The section to open first (tools with several sections). */
+  initialSection?: string
+  /** Whether a device can be reached on the network (from Network Tools, when present). */
+  reachable?: (device: string) => boolean
+  /** Tickets about something in the tool (a device, an account), for its detail view. */
+  related?: (entity: string) => Array<{ id: string; title: string; open: boolean }>
 }
 
 // oxlint-disable-next-line no-explicit-any -- each tool has its own state type
@@ -21,6 +27,7 @@ type Workspace = LazyExoticComponent<ComponentType<ToolWorkspaceProps<any>>>
 const WORKSPACES: Record<string, Workspace> = {
   books: lazy(() => import('./books/BooksWorkspace')),
   directory: lazy(() => import('./directory/DirectoryWorkspace')),
+  devices: lazy(() => import('./devices/DevicesWorkspace')),
   network: lazy(() => import('./network/NetworkWorkspace')),
   social: lazy(() => import('./social/SocialWorkspace')),
   seo: lazy(() => import('./seo/SeoWorkspace')),

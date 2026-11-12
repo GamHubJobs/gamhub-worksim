@@ -9,6 +9,7 @@
 import { z } from 'zod'
 import { GitSchema } from '../game/code/git'
 import { DirectoryStateSchema } from '../tools/directory/schema'
+import { DevicesStateSchema } from '../tools/devices/schema'
 import { NetworkStateSchema } from '../tools/network/schema'
 import { isId } from '../lib/ids'
 
@@ -432,6 +433,33 @@ export const TicketConditionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('password-reset'), user: SystemName }),
   /** Directory: the user is in the group (and so has its access). */
   z.object({ type: z.literal('in-group'), user: SystemName, group: SystemName }),
+  // Devices (tools/devices): the user's computer itself works.
+  /** The processor is not overloaded (at most this %). */
+  z.object({
+    type: z.literal('device-performance'),
+    device: SystemName,
+    maxCpu: z.number().min(1).max(100),
+  }),
+  /** At least this much free storage (GB). */
+  z.object({
+    type: z.literal('disk-free'),
+    device: SystemName,
+    minGb: z.number().min(0),
+  }),
+  /** The app is installed and does not crash. */
+  z.object({ type: z.literal('app-working'), device: SystemName, app: SystemName }),
+  /** A Windows service is running on the device. */
+  z.object({
+    type: z.literal('device-service'),
+    device: SystemName,
+    service: SystemName,
+  }),
+  /** Its network settings are the company standard. */
+  z.object({ type: z.literal('network-standard'), device: SystemName }),
+  /** No update failed or pending, and no restart pending. */
+  z.object({ type: z.literal('updates-installed'), device: SystemName }),
+  /** Nothing stuck in its print queue. */
+  z.object({ type: z.literal('print-queue-clear'), device: SystemName }),
 ])
 
 export const TICKET_ACTIVITY_KINDS = [
@@ -511,6 +539,7 @@ export const TicketSchema = z.object({
 export const TicketEnvironmentSchema = z.object({
   network: NetworkStateSchema.optional(),
   directory: DirectoryStateSchema.optional(),
+  devices: DevicesStateSchema.optional(),
 })
 
 export const TicketsContentSchema = z.object({

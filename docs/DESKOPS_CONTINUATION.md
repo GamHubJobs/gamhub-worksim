@@ -45,9 +45,9 @@ every phase.
 | ----- | --------------------------------------------------------------- | -------------- |
 | 1     | Tickets resolved by the systems' real state                     | Done `409dd6e` |
 | 2     | Identity verification and access control                        | Done `63cf341` |
-| 3     | Guidance, progressive hints (XP), Knowledge Base, AI context    | Done           |
-| 4     | Device inventory, Remote Desktop, device troubleshooting        | In progress    |
-| 5     | Chat, voicemail, support calls, communication assessment        | To do          |
+| 3     | Guidance, progressive hints (XP), Knowledge Base, AI context    | Done `8403f51` |
+| 4     | Device inventory, Remote Desktop, device troubleshooting        | Done           |
+| 5     | Chat, voicemail, support calls, communication assessment        | In progress    |
 | 6     | Security operations: console, investigations, incident response | To do          |
 | 7     | Cross-department incidents, consequences, prioritisation        | To do          |
 | 8     | SLAs (office time), reports, workload, manager reviews          | To do          |
@@ -55,25 +55,46 @@ every phase.
 
 ## Next steps
 
-Phase 4 (devices). Drafted, not yet in the repository: a Devices tool
-(`src/tools/devices/`: schema, model with the actions, data with the company's
-fleet, definition with the checks, DevicesWorkspace with Device Management and
-Remote Desktop) and the task `content/assignments/it/deviceSupport.ts` ("Slow
-laptops and stubborn apps", IT order 9).
+Phase 5 (communications). Drafted outside the repository (the session's
+scratchpad, `p5/`); if that is lost, rebuild it from this plan:
 
-1. Add the device conditions to `TicketConditionSchema`: `device-performance`,
-   `disk-free`, `app-working`, `device-service`, `network-standard`,
-   `updates-installed`, `print-queue-clear`.
+- **A Communications tool** (`src/tools/comms/`):
+  - **schema:** channels, messages, voicemails and calls. A call is a dialogue
+    tree whose options carry qualities: tone, questions, clarity, jargon,
+    empathy, updates, closing.
+  - **model:** mark read, send, listen, create a ticket from a voicemail or
+    call, link to a ticket, mark handled, answer, say, notes, and
+    `assessCall`.
+  - **definition:** checks `call` (minScore), `routed` (new, or a ticket ID)
+    and `chat` (mentions).
+  - **CommsWorkspace:** Chat, Voicemail and Calls, using the browser's own
+    speech for audio, with the transcript always shown.
+- **Task `serviceDeskComms.ts`** ("Phones, voicemail and chat", IT order 10):
+  - **Systems:** comms and devices.
+  - **Voicemail:** Grace's, linked to INC-3401; Dana's, a new ticket.
+  - **Calls:** Ben, a frustrated caller whose call becomes ticket INC-3411,
+    tied to DT-0181's Office Suite; Arjun, an unverified password reset.
+  - **Chat:** an update in #finance.
+
+Wiring:
+
+1. `TicketEnvironment` and `QueueSchema.environment` gain `comms`.
 2. In `incidents.ts`:
-   - `SystemId` gains `devices`;
-   - `evaluateDevices`, `devicesChanges` and `entitiesOf` cover it.
-3. Wiring:
-   - `TicketEnvironment` and `QueueSchema.environment` gain `devices`;
-   - `tickets.ts` builds and solves it;
-   - register the tool and its workspace.
-4. `ToolWorkspaceProps` gains `initialSection`, `reachable` and `related`.
-5. The Help Desk sidebar adds Device Management and Remote Desktop.
-6. Guidance hints for the device conditions; colleagues' lines for "their
-   computer"; renumber the later IT tasks (9 onwards move by one).
-7. Tests: unit (model, conditions, guidance), integration (the task's model
-   answer at 100%), browser (Remote Desktop fixes resolve tickets).
+   - **Tickets from communications:** a voicemail or call with
+     `ticket === opens.id` adds that ticket to the queue (once), with its
+     conditions validated by `TicketConditionSchema`. Linking adds a history
+     note to the existing ticket.
+   - **Follow-ups:** when a ticket becomes resolved or reopened, the requester
+     sends a direct message (one per ticket and event).
+3. `applyTicketSolution` materialises the tickets from the comms solution.
+4. `ToolWorkspaceProps` gains `tickets`, `presence` and `officeTime`.
+   Presence comes from the office schedule (`OFFICE_PEOPLE`: hours, lunch,
+   meetings).
+5. The shell gets a Communications group: Chat, Voicemail, Calls.
+6. Renumber the later IT tasks (10 onwards move by one).
+7. Tests:
+   - unit: model, assessment, routing, follow-ups;
+   - the model answer at 100%;
+   - browser: voicemail link and create, a call to its assessment, a chat
+     update, then fixing Ben's PC resolving his ticket, which brings a thank
+     you.

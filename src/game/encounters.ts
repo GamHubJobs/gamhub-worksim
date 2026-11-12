@@ -93,6 +93,10 @@ export interface Situation {
 
 /** What someone held up by a fault says about it, or says once it is fixed. */
 export function troubleLine(trouble: NonNullable<Situation['trouble']>): string {
+  if (trouble.state === 'restored' && trouble.what === 'their computer')
+    return 'My computer is working properly again, thank you! I didn’t even have to leave my desk.'
+  if (trouble.state === 'restored' && trouble.what === 'the printer')
+    return 'Printing works again, thank you! Just in time.'
   if (trouble.state === 'restored')
     return trouble.what === 'their account'
       ? trouble.stage === 'verified'
@@ -111,6 +115,10 @@ export function troubleLine(trouble: NonNullable<Situation['trouble']>): string 
     case 'verified':
       return 'IT has verified me; they just need to unlock the account now.'
   }
+  if (trouble.what === 'their computer')
+    return 'My computer is playing up, so I can barely get anything done. Is my ticket with you?'
+  if (trouble.what === 'the printer')
+    return 'I can’t print anything, and I need it this morning. Is my ticket with you?'
   if (trouble.what === 'the Wi-Fi')
     return 'My laptop has dropped off the Wi-Fi, so I can’t get anything done. Is my ticket with you?'
   if (trouble.what === 'their account')
@@ -123,6 +131,8 @@ export function troubleDoing(
   trouble: NonNullable<Situation['trouble']>,
 ): string | undefined {
   if (trouble.state === 'restored') return undefined
+  if (trouble.what === 'their computer') return 'a computer that keeps freezing'
+  if (trouble.what === 'the printer') return 'a print queue that will not move'
   return trouble.what === 'their account'
     ? 'a sign-in screen that will not let them in'
     : 'a laptop that will not connect'
