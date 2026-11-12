@@ -26,8 +26,8 @@ own files on your device. Then, without a connection:
 - all your work is saved on this device as usual;
 - every app and tool works, including the 3D office, Slides, Code, SQL and the
   profession tools;
-- Grid Craft and Word Craft, the office spreadsheet and word processor, work once
-  they have been opened online. Each is downloaded the first time it is opened, not
+- Grid Craft, Word Craft and Deck Craft, the office spreadsheet, word processor and
+  presentation app, work once they have been opened online. Each is downloaded the first time it is opened, not
   with the rest of WorkSim, as they are large. Until then, the basic editors open
   the same files;
 - you can download a backup file and export portfolio PDFs and ZIP files.

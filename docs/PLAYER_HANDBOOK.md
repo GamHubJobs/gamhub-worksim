@@ -349,7 +349,7 @@ prompts.
 | Cases        | Clients, budgets, meetings, incidents and leadership situations                        |
 | Grid Craft   | The office spreadsheet: formulas, formats, charts, tables, pivot tables; .xlsx files   |
 | Word Craft   | The office word processor: styles, tables, pictures, references; .docx files           |
-| Slides       | Presentations                                                                          |
+| Deck Craft   | The office presentation app: layouts, themes, charts, animations, slide show; .pptx    |
 | Career tools | Books, Help Desk, Network, Directory, Ad Campaigns, Analytics, Data Studio, Code, API… |
 | Career       | Your level, what promotion needs, your record, achievements and desk                   |
 | Readiness    | The practical assessments for your level                                               |

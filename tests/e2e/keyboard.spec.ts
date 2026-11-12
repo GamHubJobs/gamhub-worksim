@@ -144,8 +144,8 @@ test('the spreadsheet and slide editors with the keyboard: cells are announced, 
   await page.keyboard.press('ArrowRight')
   await expect(page.getByTestId('cell-announcer')).toHaveText('B2: empty')
 
-  // Slides: Tab selects an element; the arrow keys move it; Enter edits it.
-  await openApp(page, 'Slides')
+  // The basic Slides editor: Tab selects an element; the arrow keys move it; Enter edits it.
+  await openApp(page, 'Deck Craft')
   await page.getByRole('button', { name: /Monthly business review/ }).click()
   const canvas = page.getByTestId('slide-canvas')
   const title = canvas.getByRole('button', { name: /^Text: \[Month\] business review/ })

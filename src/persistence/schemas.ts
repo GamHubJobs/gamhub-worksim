@@ -156,14 +156,14 @@ export const SheetSchema = z.object({
 })
 
 /**
- * The workbook as a real file, kept when it is edited in an office app (Grid
- * Craft): everything the app can do (borders, merged cells, pivot tables…)
+ * The workbook (or document, or presentation) as a real file, kept when it is
+ * edited in an office app (Grid Craft, Word Craft, Deck Craft): everything the app can do (borders, merged cells, pivot tables…)
  * is in it. `sheets` is still what is graded; `basis` is the fingerprint of
  * the sheets it was saved with, so an edit made elsewhere (the basic editor,
  * a restored version) is noticed and the file rebuilt from the sheets.
  */
 export const CraftFileSchema = z.object({
-  format: z.enum(['xlsx', 'docx']),
+  format: z.enum(['xlsx', 'docx', 'pptx']),
   app: z.string().min(1).max(40),
   /** The file, base64-encoded. */
   data: z.string().max(40_000_000),
@@ -368,6 +368,11 @@ export const SlideSchema = z.object({
 export const SlidesContentSchema = z.object({
   theme: z.enum(SLIDE_THEMES),
   slides: z.array(SlideSchema).min(1).max(200),
+  /**
+   * The presentation as a real .pptx, when it is edited in Deck Craft
+   * (see CraftFileSchema). Added with the office apps: absent before them.
+   */
+  file: CraftFileSchema.optional(),
 })
 
 export const SlidesDocumentSchema = DocumentBaseSchema.extend({

@@ -203,7 +203,7 @@ test('Start and search open apps', async ({ page }) => {
   await page.getByPlaceholder('Type here to search').fill('sli')
   await page
     .getByRole('listbox', { name: 'Search results' })
-    .getByRole('option', { name: /Slides/ })
+    .getByRole('option', { name: /Deck Craft/ })
     .click()
   await expect(win(page, 'slides')).toBeVisible()
 

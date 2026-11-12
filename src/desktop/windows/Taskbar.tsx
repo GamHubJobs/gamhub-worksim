@@ -62,10 +62,14 @@ export function Taskbar({
     }
   }, [startOpen, query])
 
-  const results = query.trim()
+  // By name, or by what the app is ("slides" finds Deck Craft, "docs" Word Craft).
+  const wanted = query.trim().toLowerCase()
+  const results = wanted
     ? apps.filter(
         (a) =>
-          !a.lockedUntil && a.label.toLowerCase().includes(query.trim().toLowerCase()),
+          !a.lockedUntil &&
+          (a.label.toLowerCase().includes(wanted) ||
+            a.key.toLowerCase().includes(wanted)),
       )
     : []
 

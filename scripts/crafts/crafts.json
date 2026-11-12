@@ -16,5 +16,14 @@
     "folder": "wordcraft-web-0.18.0",
     "source": "https://github.com/storytold/wordcraft/tree/v0.18.0",
     "license": "MIT OR Apache-2.0"
+  },
+  "deckcraft": {
+    "title": "Deck Craft",
+    "version": "0.18.1",
+    "url": "https://github.com/storytold/deckcraft/releases/download/v0.18.1/deckcraft-web-0.18.1.zip",
+    "sha256": "3196e537fcfab538aaa2e88584bc74e29bb584459b916ab584ac22fbafe32db5",
+    "folder": "deckcraft-web-0.18.1",
+    "source": "https://github.com/storytold/deckcraft/tree/v0.18.1",
+    "license": "MIT OR Apache-2.0"
   }
 }

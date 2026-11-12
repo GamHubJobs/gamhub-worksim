@@ -19,6 +19,16 @@ export interface CraftApi {
   request: (method: string, params?: object) => Promise<unknown>
   /** The document's structure (sheets, used ranges, selection, …). */
   inspect: () => Promise<unknown>
+  /**
+   * Hands the app a file by the host message (`<app>:open`), as File › Open
+   * would: the file keeps its name, so the app's own Save hands it back under it.
+   */
+  open: (name: string, bytes: Uint8Array) => void
+  /**
+   * Gives the app the keyboard, as the player clicking into it would (for a
+   * slide show started from the bar above the app).
+   */
+  focus: () => void
 }
 
 interface PageApi {
@@ -56,6 +66,8 @@ export function CraftFrame({
 }: CraftFrameProps) {
   const frame = useRef<HTMLIFrameElement>(null)
   const handlers = useRef({ onReady, onSave, onDirty, onFailed })
+  /** Lets focus into the app (set by the focus guard below). */
+  const letIn = useRef(() => {})
   useEffect(() => {
     handlers.current = { onReady, onSave, onDirty, onFailed }
   })
@@ -94,6 +106,15 @@ export function CraftFrame({
         execute: (command, params) => checked(page.execute(command, params ?? {})),
         request: (method, params) => checked(page.request(method, params ?? {})),
         inspect: () => checked(page.docInspect()),
+        focus: () => letIn.current(),
+        open: (name, bytes) => {
+          const copy = bytes.slice().buffer
+          target?.postMessage(
+            { type: `${app}:open`, name, bytes: copy },
+            window.location.origin,
+            [copy],
+          )
+        },
       })
     }
 
@@ -169,6 +190,16 @@ export function CraftFrame({
     }, 250)
     const invite = () => {
       invited = true
+    }
+    letIn.current = () => {
+      invited = true
+      iframe.focus()
+      iframe.contentWindow?.focus()
+      // The app hears keys once its canvas has been given focus (focusing the
+      // frame is not enough, seen in Deck Craft's slide show).
+      const canvas = iframe.contentDocument?.querySelector('canvas')
+      canvas?.blur()
+      canvas?.focus()
     }
     // A key that reaches the app before focus is given back goes where the
     // player was (so Escape closes the dialog in front, not a cell edit).

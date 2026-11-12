@@ -76,7 +76,7 @@ export async function openApp(
     | 'Tasks'
     | 'Grid Craft'
     | 'Word Craft'
-    | 'Slides'
+    | 'Deck Craft'
     | 'Career'
     | 'Readiness'
     | 'Portfolio'

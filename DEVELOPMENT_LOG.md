@@ -190,6 +190,158 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · Office apps 3: Deck Craft, a real presentation app, in the office
+
+The office presentation app is now **Deck Craft**: the official web build of
+DeckCraft 0.18.1 by the ArtCraft team (MIT OR Apache-2.0), in the presentation
+window. The basic Slides editor stays as the fallback and as the format the graders
+read. With Grid Craft and Word Craft, all three office apps are now the real ones.
+See `docs/CRAFT_APPS.md`.
+
+### The build
+
+- DeckCraft 0.18.1's web release (published 2026-11-12, the latest) is pinned in
+  `crafts.json`. Its checksum was checked against its SHA256SUMS.txt.
+- It has the same host mode and page command API as the others
+  (`window.deckcraft`, 383 commands).
+- **What was learned by trying it:**
+  - In the browser, saving or exporting to a path is not available. A file comes to
+    the page only by Deck Craft's own Save, Print, or `file.saveBytes`.
+  - It opens each file beside the ones already open.
+  - Its Save hands back the file the page sent, under that name. A presentation it
+    made itself is saved as a `.deckcraft`, after asking for a name.
+
+### What was built
+
+- **The converter** (`src/apps/slides/deckcraft/convert.ts`):
+  - **WorkSim's slides are built by command:**
+    - each slide in its layout, the text in the layout's placeholders;
+    - the other text boxes, shapes, pictures and charts where they were;
+    - the notes and the theme.
+  - **Deck Craft's work is read back by its own inspection of each slide**
+    (`slide.inspect`):
+    - the titles, and the text of placeholders, text boxes, shapes and tables;
+    - charts, with their data;
+    - the notes, the layout and the theme.
+
+    That is what the graders read: slide titles, text, charts and the number of
+    slides.
+
+  - Charts from Grid Craft go in as real Deck Craft charts, so charts made in Deck
+    Craft count too.
+- **The presentation window** opens Deck Craft:
+  - The presentation opens from the kept `.pptx` (a new, optional `file` field), or
+    is built from WorkSim's slides (templates, task files, older presentations).
+  - Either way it is handed to Deck Craft as `<title>.pptx` by the host message, so
+    Deck Craft's own Ctrl+S keeps it too.
+  - It is saved after each change, before submitting and closing, and when the tab is
+    hidden.
+  - **In the bar above:**
+    - **Present** and **Present from this slide** run Deck Craft's own slide show,
+      full screen; Escape ends it;
+    - Insert chart / table from Grid Craft;
+    - Download .pptx and Export PDF;
+    - Import a file….
+  - **WorkSim AI** sees the presentation and the selected text, and types a proposal
+    in only when the player applies it.
+- **Named Deck Craft** wherever the player sees it:
+  - the dock and the start menu (searching "slides" still finds it);
+  - task, project and career text (the chart hints now name the new button);
+  - Help, with a new topic.
+
+  The id stays `slides`.
+
+- **Settings → Office apps** now chooses the basic editors for all three apps.
+
+### Found and fixed on the way
+
+- **Word Craft never reopened its kept .docx** (found by Deck Craft's reload test).
+  - Saving checks content against its schema, which writes each object's keys in
+    the schema's order. The fingerprint stored with the file was taken before that.
+  - So it never matched, and every reopen rebuilt the document from WorkSim's copy,
+    without its pictures, footnotes, comments, headers and footers.
+  - Fingerprints now ignore the order of keys (`fingerprintValue`). A browser test
+    checks that the kept .docx matches.
+  - For existing saves nothing gets worse: they rebuild once more, as they did each
+    time before, and are then kept.
+  - Grid Craft was checked the same way and was not affected; it is unchanged.
+- **The slide show did not hear the keyboard** after Present. Two causes:
+  - The focus guard (from Grid Craft) gives the app the keyboard only on a click
+    or Tab.
+  - Deck Craft hears keys only once its canvas has been focused; focusing the frame
+    is not enough.
+
+  The shared frame now has `focus()`, which lets the app in as a click would and
+  focuses its canvas. Present uses it; the other apps are unchanged.
+
+- **An imported .pptx** opened under its own name. It now opens as this
+  presentation's file, under its title.
+- **Charts from Grid Craft without a title** showed Deck Craft's placeholder "Chart
+  Title". It is now cleared.
+
+### Tests
+
+- **Unit tests** (`deckcraft/convert.test.ts`, 7; `lib/fingerprint.test.ts`, 2):
+  - building every slide in its layout, with real charts;
+  - a part that cannot be built;
+  - reading back titles, text, tables, charts, notes and slides;
+  - pictures from WorkSim;
+  - IDs and fingerprints, also after the save schema.
+- **Browser tests** (`deckcraft.spec.ts`, 7):
+  - **a template, edited:**
+    - slides added, duplicated, moved and deleted;
+    - a chart, notes, a transition and an animation;
+    - kept as .pptx and read as the graders read it;
+    - reopened from the .pptx with the transition and the animation;
+  - the slide show, moved on with the keyboard, Escape ends it, and Present from
+    this slide;
+  - Download .pptx and Export PDF (real files), and a .pptx imported;
+  - WorkSim AI's review;
+  - a presentation from before Deck Craft;
+  - the basic editor when Deck Craft is missing, and when chosen.
+- **The report task, connected** (`wordcraft.spec.ts`), now with its slides in Deck
+  Craft: the analysis in Grid Craft, the report in Word Craft, the slides in Deck
+  Craft with the chart from the picker, handed in by email, graded 100%.
+- **Cross-browser:** the journey opens a presentation in Deck Craft in Chromium,
+  Edge, Firefox and WebKit.
+- I checked the screenshots (`docs/screenshots/crafts/deckcraft-*.png`).
+- **Results:**
+  - `npm run check`: format, lint and types clean; 102 test files, 2,278 tests
+    passed.
+  - `deckcraft.spec.ts` on its own: 7 of 7 passed.
+  - With `wordcraft.spec.ts` beside it, two Word Craft tests timed out under the
+    load: the AI reply was late, and Word Craft was still starting. Both passed
+    when run again on their own; the connected office was graded 100%.
+  - **The full regression:**
+    - Chromium: 211 passed, 7 flaky (passed on retry), 3 skipped, 4 failed, in 1.5 h.
+    - The 4 failures were each run again on their own, and each passed: Grid Craft's
+      reload test, Grid Craft's AI test, the first week, and Word Craft's basic-editor
+      setting. All four were timeouts under load (a cell typed into, the save
+      indicator, the desktop appearing).
+    - Of the flaky tests, Deck Craft's slide show failed first because the desktop
+      took more than 20 s to appear; on its own it passed.
+    - PWA: 5 passed, 1 failed. My test expected the wrong cache name: the apps are
+      listed alphabetically (`craft-apps-deckcraft@0.18.1,gridcraft@0.18.0,wordcraft@0.18.0`).
+      Corrected in the test and the docs, it passed.
+    - Cross-browser: 8 passed, 1 skipped (Chromium, Edge, Firefox and WebKit).
+    - The build passed. Startup: the start screen in 2,581 ms (291 kB), the office
+      in 2,344 ms.
+
+### Limits
+
+- Read into WorkSim's slides: titles, text, charts, notes, layout and theme. Kept in
+  the .pptx only: animations, transitions, pictures added in Deck Craft, SmartArt,
+  media, comments and formatting.
+- Text formatting is not read back.
+- A theme other than WorkSim's four keeps WorkSim's theme in its copy.
+- Full screen depends on the browser allowing it. Without it, the show fills the
+  window.
+- Presenter view with a second screen was not tested.
+- Screen reader support of the canvas app is not confirmed; the basic editors are in
+  Settings.
+
+---
+
 ## 2026-11-12 · Office apps 2: Word Craft, a real word processor, in the office
 
 The office word processor is now **Word Craft**: the official web build of WordCraft

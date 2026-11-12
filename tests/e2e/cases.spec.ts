@@ -313,7 +313,9 @@ test('meetings: prepare in Slides, join at the right time, then the actions', as
   ).toBeDisabled()
 
   // Preparation happens in the real Slides app.
-  await detail.getByRole('button', { name: /Start “Spending update” in Slides/ }).click()
+  await detail
+    .getByRole('button', { name: /Start “Spending update” in Deck Craft/ })
+    .click()
   await expect(page.getByTestId('slide-canvas')).toBeVisible()
   await openApp(page, 'Cases')
   await page

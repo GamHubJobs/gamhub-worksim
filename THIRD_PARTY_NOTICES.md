@@ -33,5 +33,20 @@ shown in the game as "Word Craft".
   in `crafts/wordcraft/`.
 - **Trademarks:** the same notice as for Grid Craft applies.
 
+## Deck Craft (the office presentation app)
+
+GamHub WorkSim runs **DeckCraft 0.18.1** by the ArtCraft team, unmodified. It is
+shown in the game as "Deck Craft".
+
+- **Source:** https://github.com/storytold/deckcraft (tag `v0.18.1`).
+- **Build used:** the official web release, `deckcraft-web-0.18.1.zip`, with SHA-256
+  `3196e537fcfab538aaa2e88584bc74e29bb584459b916ab584ac22fbafe32db5`.
+- **Licence:** MIT OR Apache-2.0, copyright (c) 2026 the ArtCraft Team and the
+  DeckCraft contributors.
+- **Notices shipped with the app:** the full licence texts and the NOTICE (which
+  lists the bundled fonts and their licences) are served with it, in
+  `crafts/deckcraft/`.
+- **Trademarks:** the same notice as for Grid Craft applies.
+
 The app files are not part of this repository. `npm run crafts` downloads them from
 the release above and checks them (see `docs/CRAFT_APPS.md`).

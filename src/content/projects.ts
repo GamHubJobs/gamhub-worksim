@@ -158,7 +158,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'The triaged queue and the update to users (Help Desk)',
       'Findings, fixes and evidence (Network Tools)',
-      'The resolved queue, the incident review (Word Craft) and the briefing (Slides)',
+      'The resolved queue, the incident review (Word Craft) and the briefing (Deck Craft)',
     ],
     stages: ['outage-triage', 'outage-diagnosis', 'outage-review'],
     assessment: [
@@ -181,7 +181,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'Saved reports and the diagnosis (Site Analytics)',
       'The changed ad account (Ad Campaigns)',
-      'The scorecard (Grid Craft), the revised plan (Word Craft) and the slides (Slides)',
+      'The scorecard (Grid Craft), the revised plan (Word Craft) and the slides (Deck Craft)',
     ],
     stages: ['launch-analytics', 'launch-campaigns', 'launch-plan'],
     assessment: [
@@ -227,7 +227,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'The consolidated summary (Grid Craft)',
       'The budget review (Grid Craft)',
-      'The key figures (Grid Craft) and the presentation (Slides)',
+      'The key figures (Grid Craft) and the presentation (Deck Craft)',
     ],
     stages: ['budget-consolidate', 'budget-review', 'budget-presentation'],
     assessment: [

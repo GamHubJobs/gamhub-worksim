@@ -66,7 +66,7 @@ Email is down for the whole company: Outlook, webmail, and mail from outside. Th
 
 1. **The queue**: tickets are pouring in. Triage them (this is as critical as it gets), keep them open, and send one clear update to Maria, who reported it first, saying what we know, what users can do meanwhile, and when the next update will be.
 2. **The report**: it’s now fixed. The engineers’ timeline and cause are in the knowledge base. Write the **incident report in Word Craft**: summary, timeline, impact, root cause and actions to stop it happening again.
-3. **The briefing**: {director} wants a short **briefing in Slides** for the management meeting.
+3. **The briefing**: {director} wants a short **briefing in Deck Craft** for the management meeting.
 
 Reply with all three files when you’re done.
 
@@ -98,7 +98,7 @@ Ravi`,
       id: 'briefing',
       title: 'Prepare the briefing',
       instructions:
-        'In **Slides**, open **Email outage briefing**: 3 to 6 slides, including a timeline and next steps.',
+        'In **Deck Craft**, open **Email outage briefing**: 3 to 6 slides, including a timeline and next steps.',
     },
     {
       id: 'send',

@@ -46,7 +46,8 @@ page lists what is supported and how it is tested.
     the active cell (and its formula) are announced as you move.
   - In Slides, Tab moves to each element on a slide and selects it. Enter edits its
     text, the arrow keys move it, and Delete removes it.
-  - Word Craft, the office word processor, is drawn the same way. The same setting
+  - Word Craft, the office word processor, and Deck Craft, the presentation app, are
+    drawn the same way. The same setting
     switches to the basic Docs editor, whose page is a named, multi-line text box.
 - **Dark panels.** Text on the dark consoles of the Code and Network tools meets the
   contrast ratio too.

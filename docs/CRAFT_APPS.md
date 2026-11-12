@@ -1,15 +1,15 @@
-# The office apps: Grid Craft and Word Craft (and next, Deck Craft)
+# The office apps: Grid Craft, Word Craft and Deck Craft
 
 The office computer runs real productivity software. Each app is the official,
 unmodified web build of an open-source project by the ArtCraft team, run in a window
 of the desktop. The player's files are kept in their WorkSim save, like every other
 file.
 
-| App        | Built from                                                         | Status      |
-| ---------- | ------------------------------------------------------------------ | ----------- |
-| Grid Craft | [GridCraft](https://github.com/storytold/gridcraft) 0.18.0         | In the game |
-| Word Craft | [WordCraft](https://github.com/storytold/wordcraft) 0.18.0         | In the game |
-| Deck Craft | [DeckCraft](https://github.com/storytold/deckcraft) (Slides today) | Next        |
+| App        | Built from                                                 | Status      |
+| ---------- | ---------------------------------------------------------- | ----------- |
+| Grid Craft | [GridCraft](https://github.com/storytold/gridcraft) 0.18.0 | In the game |
+| Word Craft | [WordCraft](https://github.com/storytold/wordcraft) 0.18.0 | In the game |
+| Deck Craft | [DeckCraft](https://github.com/storytold/deckcraft) 0.18.1 | In the game |
 
 ## Where the apps come from
 
@@ -44,6 +44,9 @@ file.
 - v0.16.0, the version of the extracted source, has host mode but not the page
   command API. v0.18.0 has both. Its `apps/gridcraft-web/src` is identical to the
   extracted `main` source.
+- **Deck Craft is 0.18.1** (published 2026-11-12), the latest release. It differs
+  from 0.18.0 only in a fix to the desktop Flatpak's updates; its web build was
+  checked against its `SHA256SUMS.txt` the same way.
 
 ## What the apps share (src/apps/craft/)
 
@@ -65,6 +68,16 @@ file.
   a chart inserted during a save was never kept, until the second way was added.
 
 - `CraftShell.tsx`: the bar above the app and the cover while it opens.
+- **The kept file and its fingerprint.** Each kept file records a fingerprint of
+  the content it was saved with (`basis`). The file is opened as it is only while
+  that still matches; otherwise the content is built in the app again.
+  - The fingerprint ignores the order of keys (`fingerprintValue`, in
+    `src/lib/fingerprint.ts`). Saving checks content against its schema, which
+    writes each object's keys in the schema's order.
+  - Word Craft's fingerprint did not, until Deck Craft's tests found it. The .docx
+    never matched, so every reopen rebuilt the document from WorkSim's copy,
+    without its pictures, footnotes and comments. Grid Craft's workbooks were not
+    affected.
 
 ## How a workbook is opened, saved and graded
 
@@ -199,24 +212,94 @@ Document window (DocWindow.tsx)
 - **Word Craft starts on File › Home** when it has nothing open, and opening a file
   by command leaves it there. The adapter closes it after each open.
 
+## Deck Craft: how a presentation is opened, saved and graded
+
+```
+Presentation window (SlidesWindow.tsx)
+ ├─ craftAvailable('deckcraft')
+ ├─ yes → DeckCraftEditor ── CraftFrame (?host=parent)
+ │          ├─ open:  everything open is closed (file.close); the kept .pptx is
+ │          │         handed over by the host message (deckcraft:open), so it keeps
+ │          │         its name; or WorkSim's slides are built by command
+ │          │         (buildDeck), saved to bytes (file.saveBytes) and handed over
+ │          ├─ save:  file.save → the .pptx comes back (deckcraft:save); each slide
+ │          │         read by slide.inspect → deckToSlides → slides
+ │          ├─ from Grid Craft: a chart as insert.chart, with its data; a table as
+ │          │         insert.table, filled cell by cell
+ │          ├─ Present: show.fromStart / show.fromCurrent, full screen
+ │          └─ AI:    the presentation and the selected text; text applied with
+ │                    text.insert
+ └─ no / failed → the basic Slides editor, the same file
+```
+
+- **Two forms of the same file,** as for the others: `slides` (graded, read by AI,
+  exports and the Portfolio) and `file`, the real `.pptx`.
+- **Read by inspection.** Deck Craft describes each slide (`slide.inspect`): its
+  layout, every shape with its kind, placeholder, box and text, chart data, table
+  cells and the notes. `deckToSlides` turns that into WorkSim's slides:
+  - title placeholders → title text, subtitle placeholders → subtitle text, other
+    placeholders → body text (the slide number, date and footer are left out);
+  - text boxes and shapes, with their text;
+  - charts, with their type, categories and series, so the "charts" checks count
+    them, including charts made in Deck Craft;
+  - tables, as text (a row to a line), so their figures count as the slide's text;
+  - pictures: only those that came from WorkSim (found by their alternative
+    text); others stay in the .pptx;
+  - the notes, the layout and the theme (Deck Craft's DeckCraft, Nocturne, Meadow
+    and Ember are WorkSim's corporate, midnight, fresh and warm).
+- **Built by command.** Starting slides (templates, task files, a presentation made
+  in the basic editor) are built in a new presentation: each slide in its layout,
+  the text in the layout's placeholders, the other elements where they were, the
+  notes and the theme.
+- **Kept as a .pptx.** Deck Craft's own Save (Ctrl+S) hands back the file the page
+  sent, under its name. So every presentation is handed to Deck Craft as
+  `<title>.pptx`, by the host message:
+  - a built one, as its bytes (`file.saveBytes`);
+  - an imported outline or `.deckcraft` file, after it is opened.
+
+  If the player saves it as a `.deckcraft` (Save As), the next save opens it again
+  as the .pptx.
+
+- **Opening in place.** Deck Craft opens a file beside the ones already open. The
+  adapter closes them first, so the window holds one presentation.
+- **Checked by:**
+  - the browser tests: titles, text, charts with their data, notes and the number
+    of slides, as the graders read them;
+  - the report task done in Grid Craft, Word Craft and Deck Craft and graded at 100%.
+- **Above the presentation:**
+  - Present and Present from this slide: Deck Craft's own slide show, full screen.
+    Leaving full screen ends the show, and ending it leaves full screen. Its keys
+    work (arrows, Space, a number then Enter, B, W, Escape).
+  - Insert chart from Grid Craft and Insert table from Grid Craft (the shared
+    picker);
+  - Download .pptx and Export PDF (Deck Craft's Print, handed over as a PDF);
+  - Import a file… (.pptx, .potx, .ppsx, .deckcraft, and outlines in .txt, .md and
+    .rtf).
+- **Adding, duplicating, deleting and moving slides,** themes, layouts, shapes,
+  pictures, tables, charts, SmartArt, animations and transitions are Deck Craft's
+  own. All of it is kept in the .pptx.
+- **The basic editor's Present** is used only with the basic editor. Version
+  previews show in the basic editor's view.
+
 ## Offline
 
 - The service worker leaves the apps out of the game's install. Each is tens of
   megabytes, and most players open only some.
 - Each app is kept in a cache of its own once opened, named after the apps' versions
-  (`craft-apps-gridcraft@0.18.0,wordcraft@0.18.0`). A game update does not download it again, and it
+  (`craft-apps-deckcraft@0.18.1,gridcraft@0.18.0,wordcraft@0.18.0`). A game update does not download it again, and it
   works offline from then on.
 - An app never opened online is not available offline. The basic editor is used
   instead.
 
 ## Licences and credit
 
-- **The code:** GridCraft and WordCraft are MIT OR Apache-2.0. Each app's
-  `LICENSE-MIT`, `LICENSE-APACHE`, `NOTICE` and `ATTRIBUTION.md` (including the
-  fonts' licences, and WordCraft's `OFL-*.txt`) are served with it in
-  `public/crafts/<app>/`.
+- **The code:** GridCraft, WordCraft and DeckCraft are MIT OR Apache-2.0. Each
+  app's `LICENSE-MIT`, `LICENSE-APACHE` and `NOTICE` are served with it in
+  `public/crafts/<app>/`. So are GridCraft's and WordCraft's `ATTRIBUTION.md` (with
+  the fonts' licences) and WordCraft's `OFL-*.txt`. DeckCraft's web build ships no
+  attribution file; its NOTICE names the bundled fonts and their licences.
 - **The credit:** each window shows "Grid Craft 0.18.0, based on GridCraft by the
-  ArtCraft team" (or Word Craft…) with a link to the NOTICE. See also `THIRD_PARTY_NOTICES.md`.
+  ArtCraft team" (or Word Craft…, Deck Craft…) with a link to the NOTICE. See also `THIRD_PARTY_NOTICES.md`.
 - **The marks:** the ArtCraft name and logos are trademarks, outside the licence.
   - WorkSim uses neither in its own interface, icons or texts.
   - The unmodified official build is used as it is, so any marks inside it are there
@@ -255,8 +338,27 @@ Document window (DocWindow.tsx)
   - WorkSim AI's rewrite applied only after review;
   - the report task across Grid Craft and Word Craft, graded at 100%;
   - the basic editor when Word Craft is missing, and when chosen.
-- **Cross-browser** (`tests/browsers/`): typing into Grid Craft and Word Craft in
-  Chromium, Edge and Firefox.
+- **Deck Craft unit tests,** `src/apps/slides/deckcraft/convert.test.ts`:
+  - every slide built in its layout, the text in its placeholders;
+  - charts built as real charts, and the other elements where they were;
+  - a part that cannot be built is reported, and the rest built;
+  - reading back titles, text, tables, charts, notes and the slide count;
+  - pictures from WorkSim kept;
+  - IDs and fingerprints from save to save, also after the save schema.
+- **Deck Craft browser tests,** `tests/e2e/deckcraft.spec.ts`:
+  - a template built in Deck Craft;
+  - slides added, duplicated, moved and deleted, with a chart, notes, a transition
+    and an animation;
+  - kept as .pptx, read as the graders read it, and reopened from the .pptx with
+    the transition and animation;
+  - the slide show, moved on with the keyboard and ended with Escape;
+  - Download .pptx, Export PDF, and a .pptx imported;
+  - WorkSim AI's review;
+  - a presentation from before Deck Craft;
+  - the basic editor when Deck Craft is missing, and when chosen.
+    The report task in `wordcraft.spec.ts` does its slides in Deck Craft.
+- **Cross-browser** (`tests/browsers/`): typing into Grid Craft and Word Craft, and a
+  presentation opening in Deck Craft, in Chromium, Edge and Firefox (and WebKit).
 
 In a test browser without a graphics card each command takes about a second; in a
 normal browser about 30 ms.
@@ -305,3 +407,15 @@ normal browser about 30 ms.
     charts inserted from Grid Craft count.
   - WebKit types into Word Craft through the command API in the tests, as for Grid
     Craft.
+- **Deck Craft:**
+  - Only titles, text (of placeholders, text boxes, shapes and tables), charts, the
+    notes, the layout and the theme are read into WorkSim's slides. Animations,
+    transitions, pictures added in Deck Craft, SmartArt, media, comments and
+    formatting are kept in the .pptx, but not read.
+  - Text formatting is not read back: WorkSim's slides get each role's usual size.
+  - A theme other than the four WorkSim has keeps WorkSim's theme in its copy.
+  - A slide's layout is read as the nearest of WorkSim's six.
+  - Building WorkSim's slides sets the text, boxes, sizes, bold, italic, alignment,
+    colour and bullets of text boxes; placeholders take the theme's styles.
+  - Presenter view in the browser is Deck Craft's own (drawn in the page). It was
+    not tested with a second screen.

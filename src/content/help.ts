@@ -33,7 +33,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: 'apps',
     title: 'The apps',
     text: [
-      '**Mail** brings your tasks, cases and replies. **Tasks** lists your work with its steps and hints. **Grid Craft**, **Word Craft** and **Slides** are working office apps; your career also has its own tools, such as Books, Help Desk, Data Studio or Code.',
+      '**Mail** brings your tasks, cases and replies. **Tasks** lists your work with its steps and hints. **Grid Craft**, **Word Craft** and **Deck Craft** are working office apps; your career also has its own tools, such as Books, Help Desk, Data Studio or Code.',
       'Everything you type is saved automatically, a moment after you stop typing.',
     ],
   },
@@ -144,10 +144,20 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    id: 'deckcraft',
+    title: 'Working in Deck Craft',
+    text: [
+      '**Deck Craft** is the office presentation app: layouts and themes, text, shapes, pictures, tables, charts, SmartArt, transitions and animations, speaker notes, and a slide show with presenter view, with the ribbon and shortcuts of any presentation program. Add, duplicate, delete and drag slides in the slide list on the left.',
+      'Your work is saved by itself a moment after each change, as a real **.pptx** file. Above the presentation: **Present** (or **Present from this slide**) runs the slide show full screen, and Escape ends it; **Insert chart from Grid Craft** and **Insert table from Grid Craft** bring in your analysis; **Download .pptx** and **Export PDF** give you a copy; **Import a file…** opens a .pptx or an outline (.txt, .md, .rtf) from your computer.',
+      'Presentations are checked on their slide titles, the figures and words on the slides, their charts and the number of slides: give every slide a title in its title box. WorkSim AI can review your presentation, suggest an outline or help with speaker notes.',
+      'If Deck Craft cannot run on your device, the basic Slides editor opens the same file. To always use the basic editors (they work fully with a screen reader), choose them in **Settings → Office apps**.',
+    ],
+  },
+  {
     id: 'access',
     title: 'Keyboard and accessibility',
     text: [
-      'Everything can be done with the keyboard: Tab and Shift+Tab to move, Enter or Space to choose, Escape to close. In Grid Craft, the arrow keys move between cells; in Slides, Tab selects elements and the arrow keys move them.',
+      'Everything can be done with the keyboard: Tab and Shift+Tab to move, Enter or Space to choose, Escape to close. In Grid Craft, the arrow keys move between cells; in the basic Slides editor (Settings → Office apps), Tab selects elements and the arrow keys move them.',
       'If your system asks for less motion, WorkSim switches animations off and keeps the 3D office still, and starts with fewer sounds.',
       'Sound is never needed: important sounds always come with something on screen, and **Sound captions** (in Sound) adds a short note for each.',
     ],

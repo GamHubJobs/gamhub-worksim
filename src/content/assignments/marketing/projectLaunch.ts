@@ -17,7 +17,7 @@ import {
  *
  * 1. Site Analytics: find why visits don't become bookings.
  * 2. Ad Campaigns: stop the waste and bring the month back on budget.
- * 3. Grid Craft, Word Craft and Slides: the launch scorecard and the revised plan.
+ * 3. Grid Craft, Word Craft and Deck Craft: the launch scorecard and the revised plan.
  *
  * Teaches: diagnosing a funnel before spending more, cutting waste without
  * cutting what works, and presenting a recovery plan.
@@ -391,7 +391,7 @@ Sofia`,
       id: 'plan',
       title: 'The plan and the slides',
       instructions:
-        'In **Word Craft**, open **Health Check: revised launch plan**; in **Slides**, **Health Check: recovery**.',
+        'In **Word Craft**, open **Health Check: revised launch plan**; in **Deck Craft**, **Health Check: recovery**.',
     },
     {
       id: 'send',
@@ -552,7 +552,7 @@ Sofia`,
           title: 'A chart on a slide',
           points: 10,
           why: 'The chart shows where the money went.',
-          hint: 'In Slides, click Chart in the toolbar and choose your chart.',
+          hint: 'In Deck Craft, click **Insert chart from Grid Craft** above the presentation and choose your chart.',
         },
       ],
     },

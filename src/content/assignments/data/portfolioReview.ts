@@ -102,7 +102,7 @@ Totals in row ${total} (SUM for B, C, E and G; the same formulas for D and F). F
       id: 'deck',
       title: 'Prepare the board slides',
       instructions:
-        'In **Slides**, open **Portfolio review for the board**: 4 to 8 slides with the chart, the headline figures and your recommendation.',
+        'In **Deck Craft**, open **Portfolio review for the board**: 4 to 8 slides with the chart, the headline figures and your recommendation.',
     },
     {
       id: 'send',
@@ -355,7 +355,7 @@ Totals in row ${total} (SUM for B, C, E and G; the same formulas for D and F). F
           title: 'Chart on a slide',
           points: 5,
           why: 'The chart is what the board will remember.',
-          hint: 'Add your chart with Chart in the Slides toolbar.',
+          hint: 'Insert your chart with **Insert chart from Grid Craft**, above the presentation.',
         },
         {
           id: 'deck-figures',

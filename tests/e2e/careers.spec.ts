@@ -46,7 +46,7 @@ test('an Accounting career: its own manager, tools and a first task done end to 
   // The dock has the tools this career uses.
   await sitAtComputer(page)
   await expect(apps(page).getByRole('button', { name: /^Word Craft/ })).toBeVisible()
-  await expect(apps(page).getByRole('button', { name: /^Slides/ })).toHaveCount(0)
+  await expect(apps(page).getByRole('button', { name: /^Deck Craft/ })).toHaveCount(0)
 
   // The welcome email describes this department.
   await openApp(page, 'Mail')

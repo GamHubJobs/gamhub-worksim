@@ -50,7 +50,7 @@ export function toolName(id: string): string {
   const apps: Record<string, string> = {
     sheets: 'Grid Craft',
     docs: 'Word Craft',
-    slides: 'Slides',
+    slides: 'Deck Craft',
     helpdesk: 'Help Desk',
     code: 'Code',
     cases: 'Cases',

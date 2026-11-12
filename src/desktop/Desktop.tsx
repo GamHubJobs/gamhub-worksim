@@ -193,7 +193,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'ai', label: 'WorkSim AI', icon: 'ai' },
     { id: 'sheets', label: 'Grid Craft', icon: 'sheets' },
     { id: 'docs', label: 'Word Craft', icon: 'docs' },
-    { id: 'slides', label: 'Slides', icon: 'slides' },
+    { id: 'slides', label: 'Deck Craft', icon: 'slides' },
     { id: 'helpdesk', label: 'Help Desk', icon: 'helpdesk' },
     { id: 'code', label: 'Code', icon: 'code' },
     { id: 'career', label: 'Career', icon: 'career' },
@@ -841,6 +841,7 @@ export function Desktop({
             key={v.document}
             documentId={v.document}
             ownerId={profile.id}
+            author={profile.name}
             onBack={() => setView({ app: 'slides' })}
           />
         ) : (

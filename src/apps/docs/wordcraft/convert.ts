@@ -16,7 +16,7 @@
  * do (styles, fonts, pictures, footnotes, track changes…) is kept in the
  * .docx file.
  */
-import { fingerprintText } from '../../../lib/fingerprint'
+import { fingerprintValue } from '../../../lib/fingerprint'
 import type { ChartSpec, DocContent, RichNode } from '../../../persistence/schemas'
 import { FONT_SIZES } from '../editor'
 
@@ -279,8 +279,9 @@ export function finishDoc(
 /**
  * A short fingerprint of a document's text and structure, to know whether the
  * kept .docx file still matches it (it does not after an edit in the basic
- * editor, or a version restored from before Word Craft).
+ * editor, or a version restored from before Word Craft). Whatever the order of
+ * the keys, which saving changes (fingerprintValue).
  */
 export function docFingerprint(content: DocContent): string {
-  return fingerprintText(JSON.stringify([content.body, content.page]))
+  return fingerprintValue([content.body, content.page])
 }

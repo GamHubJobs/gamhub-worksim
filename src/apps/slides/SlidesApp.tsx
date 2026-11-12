@@ -1,4 +1,4 @@
-/** Slides: the player's files. Opening one shows it in its own window. */
+/** Deck Craft: the player's files. Opening one shows it in its own window. */
 import { createDocument } from '../../persistence/documentsRepo'
 import { FileBrowser } from '../shared/FileBrowser'
 import { getSlidesTemplate, SLIDES_TEMPLATES } from './model'
@@ -16,7 +16,7 @@ export function SlidesApp({ playerName, linked, ownerId, onOpen }: SlidesAppProp
   return (
     <FileBrowser
       kind="slides"
-      heading="Slides"
+      heading="Deck Craft"
       icon="slides"
       iconColors="bg-amber-100 text-amber-700"
       templates={SLIDES_TEMPLATES}

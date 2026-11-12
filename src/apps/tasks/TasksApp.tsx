@@ -309,7 +309,7 @@ function TaskDetail({
                     kind={
                       deliverable.kind === 'doc'
                         ? 'Report (Word Craft)'
-                        : 'Presentation (Slides)'
+                        : 'Presentation (Deck Craft)'
                     }
                     onClick={() => onOpenFile(deliverable.kind, id)}
                   />

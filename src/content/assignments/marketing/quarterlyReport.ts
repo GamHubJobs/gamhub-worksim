@@ -100,7 +100,7 @@ Sofia`,
       id: 'deck',
       title: 'Prepare the slides',
       instructions:
-        'In **Slides**, open **Q1 campaign review**: 4 to 8 slides with the chart, the total revenue and your recommendation.',
+        'In **Deck Craft**, open **Q1 campaign review**: 4 to 8 slides with the chart, the total revenue and your recommendation.',
     },
     {
       id: 'send',
@@ -312,7 +312,7 @@ Sofia`,
           title: 'Chart on a slide',
           points: 5,
           why: 'The chart is what the room will remember.',
-          hint: 'Add your chart with Chart in the Slides toolbar.',
+          hint: 'Insert your chart with **Insert chart from Grid Craft**, above the presentation.',
         },
         {
           id: 'deck-revenue',

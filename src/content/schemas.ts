@@ -66,7 +66,7 @@ export const FileCheckBaseSchema = z.object({
 const AlternativesSchema = z.array(z.string().min(1)).min(1)
 
 /**
- * A check on a report (Word Craft) or presentation (Slides). Reports are checked
+ * A check on a report (Word Craft) or presentation (Deck Craft). Reports are checked
  * for structure, correct figures and key facts, the way a manager reads them.
  */
 export const FileCheckSchema = z.discriminatedUnion('type', [
@@ -221,7 +221,7 @@ export const DeliverableSchema = z.object({
   kind: z.enum(['doc', 'slides']),
   /** The file created for the player when the task starts. */
   title: z.string().min(1),
-  /** The Word Craft or Slides template it starts from. */
+  /** The Word Craft or Deck Craft template it starts from. */
   template: z.string().min(1),
   checks: z.array(FileCheckSchema).min(1),
 })

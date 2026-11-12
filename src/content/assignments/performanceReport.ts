@@ -42,9 +42,9 @@ The directors want our **monthly departmental performance report** for Thursday�
 
 **2. The report (Word Craft).** A short written report with an executive summary, your findings and your recommendations. Give the key figures (total budget, total actual spending, and the biggest overspend), name the departments that went over budget, and include your chart.
 
-**3. The slides (Slides).** Four to eight slides I can present on Thursday, with the chart and the headline figure.
+**3. The slides (Deck Craft).** Four to eight slides I can present on Thursday, with the chart and the headline figure.
 
-I’ve set up the three files for you; you’ll find them in Grid Craft, Word Craft and Slides. When you’re done, **reply to this email and attach all three files**.
+I’ve set up the three files for you; you’ll find them in Grid Craft, Word Craft and Deck Craft. When you’re done, **reply to this email and attach all three files**.
 
 Thanks,
 
@@ -90,7 +90,7 @@ Insert your chart with **Chart** in the toolbar. Aim for 150 to 600 words.`,
     {
       id: 'slides',
       title: 'Prepare the slides',
-      instructions: `Open **Slides** and **October performance review**. Keep 4 to 8 slides: a title slide, the headline figures, the chart (use **Chart** in the toolbar), what went well and what needs attention, and next steps. Delete slides you don’t need.`,
+      instructions: `Open **Deck Craft** and **October performance review**. Keep 4 to 8 slides: a title slide, the headline figures, the chart (use **Insert chart from Grid Craft**, above the presentation), what went well and what needs attention, and next steps. Delete slides you don’t need.`,
     },
     {
       id: 'send',
@@ -288,7 +288,7 @@ Insert your chart with **Chart** in the toolbar. Aim for 150 to 600 words.`,
           title: 'Chart on a slide',
           points: 10,
           why: 'In a meeting, the chart is what people remember.',
-          hint: 'In Slides, click Chart in the toolbar and choose your chart.',
+          hint: 'In Deck Craft, click **Insert chart from Grid Craft** above the presentation and choose your chart.',
         },
         {
           id: 'slides-figures',

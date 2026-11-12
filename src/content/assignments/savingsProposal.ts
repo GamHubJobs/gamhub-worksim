@@ -79,7 +79,7 @@ Add the totals for last year and this year in row 11 (B11 is a label; C11 and D1
     {
       id: 'slides',
       title: 'Prepare the slides',
-      instructions: `In **Slides**, prepare **Supplier savings proposal** (5 to 10 slides) with the chart and the savings figure.`,
+      instructions: `In **Deck Craft**, prepare **Supplier savings proposal** (5 to 10 slides) with the chart and the savings figure.`,
     },
     {
       id: 'send',
@@ -292,7 +292,7 @@ Add the totals for last year and this year in row 11 (B11 is a label; C11 and D1
           title: 'Chart on a slide',
           points: 5,
           why: 'One good chart carries a presentation.',
-          hint: 'Add your chart with Chart in the Slides toolbar.',
+          hint: 'Insert your chart with **Insert chart from Grid Craft**, above the presentation.',
         },
         {
           id: 'deck-saving',

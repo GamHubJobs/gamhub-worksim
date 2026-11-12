@@ -2,7 +2,7 @@ import type { AssignmentInput } from '../schemas'
 
 /**
  * Finance & Admin integrated project (Finance Officer): the year-end budget
- * pack. Three linked stages in Grid Craft and Slides:
+ * pack. Three linked stages in Grid Craft and Deck Craft:
  *
  * 1. Consolidate three departments' spending with cross-sheet formulas.
  * 2. Compare next year's proposed budgets with this year and flag big rises.
@@ -465,9 +465,9 @@ Priya`,
     },
     {
       id: 'slides',
-      title: 'Slides',
+      title: 'Deck Craft',
       instructions:
-        'In **Slides**, open **Budget round: next year**: 4 to 7 slides with the total increase, your chart, the two requests to review and your recommendation.',
+        'In **Deck Craft**, open **Budget round: next year**: 4 to 7 slides with the total increase, your chart, the two requests to review and your recommendation.',
     },
     {
       id: 'send',
@@ -575,7 +575,7 @@ Priya`,
           title: 'A chart on a slide',
           points: 15,
           why: 'In a meeting, the chart is what people remember.',
-          hint: 'In Slides, click Chart in the toolbar and choose your chart.',
+          hint: 'In Deck Craft, click **Insert chart from Grid Craft** above the presentation and choose your chart.',
         },
         {
           id: 'slides-figures',

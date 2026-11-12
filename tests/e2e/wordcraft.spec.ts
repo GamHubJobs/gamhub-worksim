@@ -73,7 +73,7 @@ async function savedDoc(page: Page, title: string) {
         resolve(found ? found.content : null)
       }
     }
-  })`)) as { body: Node; file?: { format: string } } | null
+  })`)) as { body: Node; file?: { format: string; basis: string } } | null
 }
 
 const textOf = (node: Node): string =>
@@ -151,6 +151,14 @@ test('a new document in Word Craft: written, styled, kept as a .docx and read fo
   expect(textOf(heading)).toBe('Budget review')
   expect(textOf(paragraph).replace(/\s+/g, ' ')).toContain('Costs rose by 12% to £1,350')
   expect(JSON.stringify(paragraph)).toContain('"bold"')
+  // The kept .docx matches the document as saved, so it is what opens next
+  // time (not a copy rebuilt from the document, without what only it holds).
+  const fingerprint = await page.evaluate(async (content) => {
+    const load = (path: string) => import(/* @vite-ignore */ path)
+    const { docFingerprint } = await load('/src/apps/docs/wordcraft/convert.ts')
+    return docFingerprint(content) as string
+  }, saved)
+  expect(saved.file?.basis).toBe(fingerprint)
 
   // After a reload it opens again, from the kept .docx.
   await page.reload()
@@ -417,33 +425,37 @@ test('the connected office: analysis in Grid Craft, the report in Word Craft wit
   const report = (await savedDoc(page, 'October performance report'))!
   expect(all(report.body, 'chart')).toHaveLength(1)
 
-  // 3. The slides (the basic Slides editor until Deck Craft).
+  // 3. The slides, in Deck Craft: the headline figure on slide 3, and the
+  // chart from Grid Craft with the button above the presentation.
   await apps.getByRole('button', { name: /^Tasks/ }).click()
   await page
     .getByTestId('task-files')
     .getByRole('button', { name: /October performance review/ })
     .click()
-  const thumbnails = page.getByRole('navigation', { name: 'Slides' })
-  await thumbnails.getByRole('button', { name: 'Slide 3', exact: true }).click()
-  const tools = page.getByRole('toolbar', { name: 'Slide tools' })
-  await tools.getByRole('button', { name: 'Text box' }).click()
-  await page
-    .getByLabel('Slide text')
-    .fill('Total spending: $227,300 (Sales $3,240 over budget)')
-  await page.keyboard.press('Escape')
-  await tools.getByRole('button', { name: 'Chart from Grid Craft' }).click()
+  const deckEditor = page.getByTestId('deckcraft-editor')
+  await expect(deckEditor).toHaveAttribute('data-phase', 'ready', { timeout: 180_000 })
+  const deck = page.frame({ url: /crafts\/deckcraft\/index\.html/ })!
+  const slides = (command: string, params: object) =>
+    deck.evaluate(
+      ([command, params]) =>
+        (globalThis as unknown as { deckcraft: PageApi }).deckcraft.execute(
+          command,
+          params,
+        ),
+      [command, params] as const,
+    )
+  await slides('slide.go', { index: 2 })
+  await slides('insert.textBox', {
+    rect: [60, 130, 840, 60],
+    text: 'Total spending: $227,300 (Sales $3,240 over budget)',
+  })
+  await deckEditor.getByRole('button', { name: 'Insert chart from Grid Craft' }).click()
   await page
     .getByTestId('sheets-picker')
     .getByRole('button', { name: /October departmental performance/ })
     .click()
-  await expect(page.getByTestId('slide-canvas').getByTestId('element-chart')).toHaveCount(
-    1,
-  )
-  await expect(page.getByTestId('save-indicator').first()).toHaveAttribute(
-    'data-state',
-    'saved',
-    { timeout: 30_000 },
-  )
+  await waitUntilKept(page)
+  await page.screenshot({ path: 'docs/screenshots/crafts/deckcraft-task-slides.png' })
 
   // 4. Hand in by email: graded on the workbook, the report and the slides.
   await apps.getByRole('button', { name: /^Tasks/ }).click()

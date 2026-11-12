@@ -133,9 +133,11 @@ async function waitUntilSaved(page: Page) {
   )
 }
 
-test('the core journey: office, mail, Grid Craft, Word Craft, Slides, and saving across a reload', async ({
+test('the core journey: office, mail, Grid Craft, Word Craft, Deck Craft, and saving across a reload', async ({
   page,
 }) => {
+  // Three office apps drawn without a graphics card (WebKit is the slowest).
+  test.setTimeout(480_000)
   await start(page)
   // The office works with or without 3D (some test browsers have no WebGL).
   await expect(page.getByTestId('office-panel').getByRole('heading')).toHaveText(
@@ -201,10 +203,27 @@ test('the core journey: office, mail, Grid Craft, Word Craft, Slides, and saving
     .toContain(typed)
   await waitUntilSaved(page)
 
-  // Slides: a presentation opens and its slides show.
-  await app(page, 'Slides')
+  // Deck Craft: a presentation opens with its slides, built from the template.
+  await app(page, 'Deck Craft')
   await page.getByRole('button', { name: /Monthly business review/ }).click()
-  await expect(page.getByTestId('slide-canvas')).toContainText('business review')
+  await expect(page.getByTestId('deckcraft-editor')).toHaveAttribute(
+    'data-phase',
+    'ready',
+    { timeout: 240_000 },
+  )
+  const deck = page.frame({ url: /crafts\/deckcraft\/index\.html/ })!
+  const titles = await deck.evaluate(() =>
+    (
+      globalThis as unknown as {
+        deckcraft: { docInspect: () => Promise<{ slides: Array<{ title: string }> }> }
+      }
+    ).deckcraft
+      .docInspect()
+      .then((d) => d.slides.map((s) => s.title)),
+  )
+  expect(titles).toHaveLength(6)
+  expect(titles[0]).toContain('business review')
+  await waitUntilSaved(page)
 
   // Everything is still there after a reload.
   await page.reload()

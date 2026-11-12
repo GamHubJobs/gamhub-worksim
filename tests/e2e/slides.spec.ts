@@ -16,7 +16,7 @@ test('a presentation can be built, rearranged, presented and reopened', async ({
 }) => {
   await page.goto('/')
   await startCareerIfNeeded(page, 'Alex Morgan')
-  await openApp(page, 'Slides')
+  await openApp(page, 'Deck Craft')
   await page.getByRole('button', { name: /Monthly business review/ }).click()
 
   // The template: six slides, the first one a title slide with the player's name.

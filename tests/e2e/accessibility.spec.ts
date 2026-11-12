@@ -139,7 +139,7 @@ test('the editors pass automated accessibility checks', async ({ page }) => {
   await page.getByRole('button', { name: /Blank document/ }).click()
   await expect(page.getByTestId('doc-body')).toBeVisible()
   problems.push(...(await audit(page, 'docs document', EDITOR_SKIP)))
-  await openApp(page, 'Slides')
+  await openApp(page, 'Deck Craft')
   await page.getByRole('button', { name: /Monthly business review/ }).click()
   await expect(page.getByTestId('slide-canvas')).toBeVisible()
   problems.push(...(await audit(page, 'slides deck', EDITOR_SKIP)))
