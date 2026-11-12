@@ -2,7 +2,7 @@
  * An open ticket queue: the Help Desk inside the shared document window, with
  * the task pane and submitting the work for a task.
  */
-import { useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import type { Career, SubmissionResult } from '../../app/useCareer'
 import { getAssignment } from '../../content/assignments'
 import { getPerson } from '../../content/departments'
@@ -12,20 +12,59 @@ import { useSavedDocument } from '../shared/useSavedDocument'
 import { AssignmentPane } from '../sheets/ui/AssignmentPane'
 import { SubmissionResults } from '../tasks/SubmissionResults'
 import { TicketsEditor } from './TicketsEditor'
+import { formatTime, weekdayName } from '../../game/clock'
+import {
+  applyEnvironmentChange,
+  disruptionsOf,
+  SYSTEM_NAMES,
+  type Moment,
+  type SystemId,
+} from '../../game/incidents'
+import type {
+  Disruption,
+  TicketActivity,
+  TicketsContent,
+} from '../../persistence/schemas'
+import { getWorkspace } from '../../tools/ui'
 
 interface HelpDeskWindowProps {
   documentId: string
   /** The task the queue belongs to. */
   assignmentId: string | null
   career: Career
+  /** Per tool ID: its sections still locked for the player. */
+  lockedSections?: Record<string, Record<string, string>>
   onBack: () => void
   onOpenTask: (assignmentId: string) => void
+}
+
+type Tab = 'queue' | SystemId
+
+/** Now, for ticket histories: the real time and the office clock. */
+function officeMoment(work?: { day: number; minute: number }): Moment {
+  return {
+    at: Date.now(),
+    time: work
+      ? `${weekdayName(work.day)} (day ${work.day}), ${formatTime(work.minute)}`
+      : '',
+  }
+}
+
+/** The newest automatic updates to tickets (resolved, reopened), for the bar above. */
+function latestUpdates(
+  content: TicketsContent,
+): Array<TicketActivity & { ticket: string }> {
+  return content.tickets
+    .flatMap((t) => t.activity.map((entry) => ({ ...entry, ticket: t.id })))
+    .filter((entry) => entry.kind === 'resolved' || entry.kind === 'reopened')
+    .sort((a, b) => a.at - b.at)
 }
 
 export function HelpDeskWindow({
   documentId,
   assignmentId,
   career,
+  lockedSections = {},
   onBack,
   onOpenTask,
 }: HelpDeskWindowProps) {
@@ -40,6 +79,39 @@ export function HelpDeskWindow({
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<SubmissionResult | null>(null)
   const manager = assignment ? getPerson(assignment.from) : null
+  const [tab, setTab] = useState<Tab>('queue')
+  const environment = state.status === 'ready' ? state.content.environment : undefined
+  const systems = (['network', 'directory'] as const).filter((id) => environment?.[id])
+
+  const moment = () => officeMoment(profile?.work)
+
+  // Tickets that changed by themselves since the queue was opened (fixed, or broken again).
+  const seen = useRef<number | null>(null)
+  const [update, setUpdate] = useState<(TicketActivity & { ticket: string }) | null>(null)
+  const content = state.status === 'ready' ? state.content : null
+  useEffect(() => {
+    if (!content) return
+    const updates = latestUpdates(content)
+    const newest = updates.at(-1)
+    if (seen.current === null) seen.current = newest?.at ?? 0
+    else if (newest && newest.at > seen.current) {
+      seen.current = newest.at
+      setUpdate(newest)
+    }
+  }, [content])
+
+  // The colleagues held up by the tickets follow the systems (see game/incidents.ts).
+  const { syncDisruptions } = career
+  const assignmentKey = assignment?.id ?? null
+  const hasSystems = !!content?.environment
+  const held =
+    content && assignmentKey
+      ? JSON.stringify(disruptionsOf(content, assignmentKey))
+      : null
+  useEffect(() => {
+    if (held && assignmentKey && hasSystems)
+      void syncDisruptions(assignmentKey, JSON.parse(held) as Disruption[])
+  }, [held, assignmentKey, hasSystems, syncDisruptions])
 
   async function submit() {
     if (!assignment) return
@@ -99,21 +171,105 @@ export function HelpDeskWindow({
           ) : undefined
         }
       >
-        {(preview) =>
-          preview?.kind === 'tickets' ? (
-            <TicketsEditor
-              key={`preview-${preview.id}-${preview.rev}`}
-              content={preview.content}
-              readOnly
-            />
-          ) : state.status === 'ready' ? (
-            <TicketsEditor
-              key={`live-${queue.contentEpoch}`}
-              content={state.content}
-              onUpdate={queue.update}
-            />
-          ) : null
-        }
+        {(preview) => {
+          const shown =
+            preview?.kind === 'tickets'
+              ? {
+                  content: preview.content,
+                  live: false,
+                  key: `preview-${preview.id}-${preview.rev}`,
+                }
+              : state.status === 'ready'
+                ? {
+                    content: state.content,
+                    live: true,
+                    key: `live-${queue.contentEpoch}`,
+                  }
+                : null
+          if (!shown) return null
+          const Workspace = tab === 'queue' ? null : getWorkspace(tab)
+          return (
+            <div className="flex min-h-0 flex-1 flex-col">
+              {systems.length > 0 && (
+                <div
+                  className="flex shrink-0 items-center gap-1 border-b border-slate-200 bg-white px-3 py-1.5"
+                  role="tablist"
+                  aria-label="Help Desk and the company’s systems"
+                >
+                  {(['queue', ...systems] as Tab[]).map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      role="tab"
+                      aria-selected={tab === id}
+                      onClick={() => setTab(id)}
+                      className={`rounded-md px-3 py-1 text-sm ${
+                        tab === id
+                          ? 'bg-blue-50 font-medium text-blue-900'
+                          : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {id === 'queue' ? 'Ticket queue' : SYSTEM_NAMES[id]}
+                    </button>
+                  ))}
+                  {update && (
+                    <p
+                      role="status"
+                      className={`ml-3 min-w-0 flex-1 truncate text-sm ${
+                        update.kind === 'resolved' ? 'text-emerald-800' : 'text-red-800'
+                      }`}
+                      title={`${update.ticket}: ${update.text}`}
+                      data-testid="ticket-update"
+                    >
+                      {update.kind === 'resolved' ? '✓' : '!'} {update.ticket}:{' '}
+                      {update.text}
+                    </p>
+                  )}
+                </div>
+              )}
+              {tab === 'queue' || !Workspace || !shown.content.environment?.[tab] ? (
+                <TicketsEditor
+                  key={shown.key}
+                  content={shown.content}
+                  readOnly={!shown.live}
+                  onUpdate={shown.live ? queue.update : undefined}
+                  moment={moment}
+                />
+              ) : (
+                <Suspense
+                  fallback={
+                    <p className="p-6 text-sm text-slate-600">
+                      Opening {SYSTEM_NAMES[tab]}…
+                    </p>
+                  }
+                >
+                  <Workspace
+                    key={`${shown.key}-${tab}`}
+                    state={shown.content.environment[tab]}
+                    readOnly={!shown.live}
+                    lockedSections={lockedSections[tab] ?? {}}
+                    onUpdate={
+                      shown.live
+                        ? (change) => {
+                            const when = moment()
+                            queue.update((latest) =>
+                              applyEnvironmentChange(
+                                latest,
+                                tab,
+                                // The tool changes its own state; the tickets react to it.
+                                change,
+                                when,
+                              ),
+                            )
+                          }
+                        : undefined
+                    }
+                  />
+                </Suspense>
+              )}
+            </div>
+          )
+        }}
       </DocumentFrame>
 
       {confirming && assignment && manager && (

@@ -62,6 +62,9 @@ payment changes the bank, and the reports always agree, as in real software.
 - **Network Tools**: a diagnostics console (`ping`, `ipconfig`, `nslookup`,
   `tracert`, `ports`) over a simulated office network in which faults can be planted
   and found.
+- **Tickets tied to the systems**: a ticket can carry conditions on Network Tools
+  and Directory, and resolves only when the problem is really fixed (see
+  [STATE_AWARE_TICKETS.md](STATE_AWARE_TICKETS.md)).
 
 ### Digital Marketing: **Campaigns**, **Social Planner**, **Site Analytics**, **SEO Audit**
 

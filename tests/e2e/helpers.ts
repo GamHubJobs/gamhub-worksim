@@ -81,6 +81,7 @@ export async function openApp(
     | 'Readiness'
     | 'Portfolio'
     | 'Cases'
+    | 'Help Desk'
     | 'WorkSim AI',
 ) {
   await sitAtComputer(page)

@@ -4,7 +4,7 @@
  * blueprints, and a test checks every file against them.
  */
 import { z } from 'zod'
-import { CellFormatSchema } from '../persistence/schemas'
+import { CellFormatSchema, TicketConditionSchema } from '../persistence/schemas'
 
 /** "Order!E2:E11" or "Order!E13": a sheet name and a cell or range. */
 export const SheetRangeSchema = z
@@ -133,6 +133,15 @@ export const TicketCheckSchema = z.discriminatedUnion('type', [
     mentions: z.array(AlternativesSchema).default([]),
     minWords: z.number().int().nonnegative().default(20),
   }),
+  /**
+   * The ticket's problem is really fixed: its conditions pass in the systems
+   * as the player left them, and it is resolved or closed. The status alone
+   * earns nothing.
+   */
+  FileCheckBaseSchema.extend({
+    type: z.literal('fixed'),
+    ticket: z.string(),
+  }),
 ])
 
 /**
@@ -197,6 +206,13 @@ export const CodeCheckSchema = z.discriminatedUnion('type', [
   }),
 ])
 
+/** One of the systems a ticket queue is tied to: its starting state, a model answer, checks. */
+const EnvironmentToolSchema = z.object({
+  start: z.unknown(),
+  solution: z.unknown(),
+  checks: z.array(z.unknown()).default([]),
+})
+
 /** The starting ticket queue of a Help Desk task. */
 export const QueueSchema = z.object({
   title: z.string().min(1),
@@ -211,9 +227,25 @@ export const QueueSchema = z.object({
         received: z.string(),
         subject: z.string(),
         body: z.string(),
+        /** The office colleague who raised it (an office person ID). */
+        requester: z.string().optional(),
+        /** What must be true in the systems for it to be fixed (see game/incidents.ts). */
+        conditions: z.array(TicketConditionSchema).default([]),
       }),
     )
     .min(1),
+  /**
+   * The company's systems the queue is tied to, for tickets with conditions:
+   * per tool ID ('network', 'directory'), the starting state (the faults),
+   * a model answer, and that tool's own checks on the player's work in it.
+   * Each tool's schemas validate them (see the content loader).
+   */
+  environment: z
+    .object({
+      network: EnvironmentToolSchema.optional(),
+      directory: EnvironmentToolSchema.optional(),
+    })
+    .optional(),
 })
 
 /** A report or presentation the player hands in with the workbook. */

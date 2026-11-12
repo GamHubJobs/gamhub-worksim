@@ -14,6 +14,7 @@ import {
 } from './actions'
 import { network } from './definition'
 import { FAULT_NAMES, FAULTS, type Fault, type NetworkState } from './schema'
+import { onNetwork } from './simulation'
 
 type Props = ToolWorkspaceProps<NetworkState>
 type Act = (fn: (s: NetworkState) => { state: NetworkState; problems: string[] }) => void
@@ -292,6 +293,11 @@ function NetworkMap({
                           {d.description}
                         </span>
                       )}
+                      {d.accessPoint && (
+                        <span className="block text-xs text-slate-500">
+                          Wi-Fi through {d.accessPoint}
+                        </span>
+                      )}
                       {d.services.length > 0 && (
                         <span className="block text-xs text-slate-500">
                           Services:{' '}
@@ -301,12 +307,16 @@ function NetworkMap({
                     </td>
                     <td className={`${cell} w-28`}>
                       <span
-                        className={`inline-flex items-center gap-1 text-xs font-medium ${d.up ? 'text-emerald-700' : 'text-red-700'}`}
+                        className={`inline-flex items-center gap-1 text-xs font-medium ${onNetwork(state, d) ? 'text-emerald-700' : 'text-red-700'}`}
                       >
                         <span
-                          className={`h-2 w-2 rounded-full ${d.up ? 'bg-emerald-500' : 'bg-red-500'}`}
+                          className={`h-2 w-2 rounded-full ${onNetwork(state, d) ? 'bg-emerald-500' : 'bg-red-500'}`}
                         />
-                        {d.up ? 'Responding' : 'No response'}
+                        {!d.up
+                          ? 'No response'
+                          : onNetwork(state, d)
+                            ? 'Responding'
+                            : 'No network'}
                       </span>
                     </td>
                     {editable && (

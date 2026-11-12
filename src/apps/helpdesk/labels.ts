@@ -33,4 +33,28 @@ export const STATUS_NAMES: Record<TicketStatus, string> = {
   pending: 'Pending (waiting for the user)',
   escalated: 'Escalated (to a specialist team)',
   resolved: 'Resolved',
+  assigned: 'Assigned',
+  reopened: 'Reopened',
+  closed: 'Closed',
+}
+
+/** The statuses of ordinary tickets, as before tickets were tied to the systems. */
+export const CLASSIC_STATUSES: TicketStatus[] = [
+  'new',
+  'open',
+  'pending',
+  'escalated',
+  'resolved',
+]
+
+/** Status names in the lifecycle of a ticket tied to the systems (see game/incidents.ts). */
+export const LIFECYCLE_NAMES: Record<TicketStatus, string> = {
+  new: 'Open (not assigned)',
+  assigned: 'Assigned',
+  open: 'In progress',
+  pending: 'Waiting for information',
+  escalated: 'Escalated',
+  resolved: 'Resolved (problem fixed)',
+  reopened: 'Reopened (the fault came back)',
+  closed: 'Closed',
 }

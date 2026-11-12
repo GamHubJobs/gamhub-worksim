@@ -7,13 +7,21 @@ import { useState } from 'react'
 import { PriorityMatrix } from './PriorityMatrix'
 import {
   TICKET_PRIORITIES,
-  TICKET_STATUSES,
   type Ticket,
   type TicketPriority,
   type TicketsContent,
   type TicketStatus,
 } from '../../persistence/schemas'
-import { PRIORITY_INFO, STATUS_NAMES } from './labels'
+import { CLASSIC_STATUSES, LIFECYCLE_NAMES, PRIORITY_INFO, STATUS_NAMES } from './labels'
+import {
+  assignToMe,
+  evaluateTicket,
+  isMonitored,
+  MONITORED_CHOICES,
+  requestStatus,
+  type Moment,
+} from '../../game/incidents'
+import { TicketSystemsPanel } from './TicketSystemsPanel'
 import { AskAiMenu } from '../ai/AskAiMenu'
 import { useAiContext } from '../ai/hub'
 import { ticketAiContext } from './aiContext'
@@ -22,7 +30,12 @@ interface TicketsEditorProps {
   content: TicketsContent
   readOnly?: boolean
   onUpdate?: (change: (content: TicketsContent) => TicketsContent) => void
+  /** Now, for a ticket's history (the office clock, and who requesters are). */
+  moment?: () => Moment
 }
+
+const statusName = (ticket: Ticket, status: TicketStatus) =>
+  isMonitored(ticket) ? LIFECYCLE_NAMES[status] : STATUS_NAMES[status]
 
 function updateTicket(
   content: TicketsContent,
@@ -39,12 +52,17 @@ export function TicketsEditor({
   content,
   readOnly = false,
   onUpdate,
+  moment = () => ({ at: Date.now(), time: '' }),
 }: TicketsEditorProps) {
   const editable = !readOnly && !!onUpdate
   const [selectedId, setSelectedId] = useState(content.tickets[0]?.id ?? '')
   const [filter, setFilter] = useState<'all' | TicketStatus>('all')
   const [kbOpen, setKbOpen] = useState<number | null>(null)
   const [showKb, setShowKb] = useState(content.knowledge.length > 0)
+  /** Why the last status chosen was not taken (for a ticket tied to the systems). */
+  const [refusal, setRefusal] = useState<{ ticket: string; reasons: string[] } | null>(
+    null,
+  )
   const ticket = content.tickets.find((t) => t.id === selectedId) ?? content.tickets[0]
   const shown = content.tickets.filter((t) => filter === 'all' || t.status === filter)
 
@@ -58,6 +76,29 @@ export function TicketsEditor({
     if (editable && ticket)
       onUpdate?.((latest) => updateTicket(latest, ticket.id, changes))
   }
+
+  /**
+   * Choosing a status. A ticket tied to the systems is checked first: if the
+   * problem is still there it stays as it is, and the reason is shown.
+   */
+  const chooseStatus = (status: TicketStatus) => {
+    if (!editable || !ticket) return
+    if (!isMonitored(ticket)) return change({ status })
+    const when = moment()
+    const result = requestStatus(content, ticket.id, status, when)
+    setRefusal(result.refused ? { ticket: ticket.id, reasons: result.refused } : null)
+    onUpdate?.((latest) => requestStatus(latest, ticket.id, status, when).content)
+  }
+
+  const statusChoices = (t: Ticket): TicketStatus[] => {
+    if (!isMonitored(t)) return CLASSIC_STATUSES
+    return MONITORED_CHOICES.includes(t.status)
+      ? MONITORED_CHOICES
+      : [t.status, ...MONITORED_CHOICES]
+  }
+  const statusesInQueue = [
+    ...new Set([...CLASSIC_STATUSES, ...content.tickets.map((t) => t.status)]),
+  ]
 
   return (
     <div className="flex min-h-0 flex-1" data-testid="helpdesk">
@@ -74,7 +115,7 @@ export function TicketsEditor({
             className="rounded border border-slate-200 px-1 py-0.5 text-xs"
           >
             <option value="all">All</option>
-            {TICKET_STATUSES.map((status) => (
+            {statusesInQueue.map((status) => (
               <option key={status} value={status}>
                 {STATUS_NAMES[status].split(' (')[0]}
               </option>
@@ -102,8 +143,14 @@ export function TicketsEditor({
                         {t.priority}
                       </span>
                     )}
-                    <span className="rounded bg-slate-100 px-1.5 text-slate-600">
-                      {STATUS_NAMES[t.status].split(' (')[0]}
+                    <span
+                      className={`rounded px-1.5 ${
+                        isMonitored(t) && evaluateTicket(t, content.environment).fixed
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {statusName(t, t.status).split(' (')[0]}
                     </span>
                   </span>
                 </div>
@@ -209,18 +256,48 @@ export function TicketsEditor({
                 <select
                   aria-label="Status"
                   value={ticket.status}
-                  disabled={!editable}
-                  onChange={(e) => change({ status: e.target.value as TicketStatus })}
+                  disabled={!editable || ticket.status === 'closed'}
+                  onChange={(e) => chooseStatus(e.target.value as TicketStatus)}
                   className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
                 >
-                  {TICKET_STATUSES.map((s) => (
+                  {statusChoices(ticket).map((s) => (
                     <option key={s} value={s}>
-                      {STATUS_NAMES[s]}
+                      {statusName(ticket, s)}
                     </option>
                   ))}
                 </select>
               </label>
             </section>
+
+            {refusal?.ticket === ticket.id && (
+              <div
+                role="alert"
+                className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+                data-testid="status-refused"
+              >
+                <p className="font-semibold">The status was not changed.</p>
+                <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                  {refusal.reasons.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {isMonitored(ticket) && (
+              <TicketSystemsPanel
+                ticket={ticket}
+                environment={content.environment}
+                onAssign={
+                  editable && ticket.assignee !== 'you' && ticket.status !== 'closed'
+                    ? () => {
+                        const when = moment()
+                        onUpdate?.((latest) => assignToMe(latest, ticket.id, when))
+                      }
+                    : undefined
+                }
+              />
+            )}
 
             <PriorityMatrix
               current={ticket.priority}

@@ -58,6 +58,7 @@ export function startingWorkState(seed = 0): WorkState {
       ai: CareerRecordSchema.shape.ai.parse(undefined),
     },
     life: LifeSchema.parse({}),
+    disruptions: [],
   }
 }
 

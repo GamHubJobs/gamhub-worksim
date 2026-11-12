@@ -862,6 +862,9 @@ export function Desktop({
                 ?.assignmentId ?? null
             }
             career={career}
+            lockedSections={Object.fromEntries(
+              tools.map((access) => [access.tool.id, access.lockedSections]),
+            )}
             onBack={() => setView({ app: 'helpdesk' })}
             onOpenTask={openTask}
           />

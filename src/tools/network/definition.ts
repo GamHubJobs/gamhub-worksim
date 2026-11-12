@@ -39,6 +39,11 @@ export const NetworkCheckSchema = z.discriminatedUnion('type', [
           from: z.string().default(''),
           /** A regular expression the command must match. */
           pattern: z.string(),
+          /**
+           * A regular expression one line of what it printed must match, e.g.
+           * a reply: a test that worked, not only one that was run.
+           */
+          output: z.string().optional(),
         }),
       )
       .min(1),
@@ -109,10 +114,12 @@ function gradeCheck(check: NetworkCheck, player: NetworkState) {
     case 'evidence': {
       const missing = check.items.filter((item) => {
         const pattern = new RegExp(item.pattern, 'i')
+        const output = item.output ? new RegExp(item.output, 'i') : null
         return !player.console.some(
           (e) =>
             (item.from === '' || e.from.toLowerCase() === item.from.toLowerCase()) &&
-            pattern.test(e.command),
+            pattern.test(e.command) &&
+            (!output || e.output.some((line) => output.test(line))),
         )
       })
       return checkResult(

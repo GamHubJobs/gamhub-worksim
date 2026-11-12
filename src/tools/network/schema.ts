@@ -53,6 +53,11 @@ export const DeviceSchema = z.object({
    * needs someone on site.
    */
   restartable: z.boolean().default(true),
+  /**
+   * The Wi-Fi access point a laptop or PC connects through, if it uses Wi-Fi.
+   * While that access point is down, the device is off the network.
+   */
+  accessPoint: Name.optional(),
   services: z.array(ServiceSchema).default([]),
   /** Network settings of computers (what ipconfig shows). */
   config: z
@@ -69,6 +74,7 @@ export const DnsRecordSchema = z.object({ name: Name, ip: Ip })
 
 export const FAULTS = [
   'device-offline',
+  'device-crashed',
   'service-stopped',
   'wrong-gateway',
   'wrong-dns-server',
@@ -79,6 +85,7 @@ export const FAULTS = [
 
 export const FAULT_NAMES: Record<(typeof FAULTS)[number], string> = {
   'device-offline': 'Device offline (needs someone on site)',
+  'device-crashed': 'Device stopped responding (can be restarted remotely)',
   'service-stopped': 'Service stopped',
   'wrong-gateway': 'Wrong default gateway',
   'wrong-dns-server': 'Wrong DNS server setting',

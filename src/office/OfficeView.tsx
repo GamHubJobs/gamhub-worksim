@@ -25,7 +25,14 @@ import { campaignFor } from '../game/story/campaigns'
 import { missionById, playScene, sceneFor, sceneLines } from '../game/story/engine'
 import type { Scene } from '../game/story/types'
 import { metAs, onTalkRequest, release } from '../world/npc/people'
-import { holdEncounter, relationOf, type Situation, type Who } from '../game/encounters'
+import {
+  holdEncounter,
+  relationOf,
+  troubleDoing,
+  type Situation,
+  type Who,
+} from '../game/encounters'
+import { troubleOf } from '../game/incidents'
 import { isInteraction, meetingOf } from './scene/officeLayout'
 import { fill, getPerson } from '../content/departments'
 import {
@@ -37,7 +44,8 @@ import {
   type SpotId,
 } from '../content/office'
 import { getMeeting, LUNCH } from '../content/workday'
-import { unreadCount, type ProfileData } from '../game/career'
+import { isPassed, unreadCount, type ProfileData } from '../game/career'
+import { getAssignment } from '../content/assignments'
 import { formatTime } from '../game/clock'
 import {
   conversationWith,
@@ -287,14 +295,20 @@ export function OfficeView({
       return
     }
     const other = n.with ? metAs(n.with)?.who : undefined
+    // Held up by a fault on one of the player's tickets, or back to work.
+    const trouble = troubleOf(profile.work.disruptions, id, (assignmentId) => {
+      const assignment = getAssignment(assignmentId)
+      return !!assignment && !isPassed(assignment, profile.assignments[assignmentId])
+    })
     setEncounter({
       who: n.who,
       with: other,
       situation: {
         availability: n.availability,
-        doing: n.doing,
+        doing: (trouble && troubleDoing(trouble)) ?? n.doing,
         with: other,
         minute: work.minute,
+        ...(trouble ? { trouble } : {}),
       },
     })
   }

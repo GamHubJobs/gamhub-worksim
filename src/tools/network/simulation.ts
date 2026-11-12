@@ -31,6 +31,14 @@ function subnetForIp(state: NetworkState, ip: string): Subnet | undefined {
 
 const up = (state: NetworkState, name: string) => deviceByName(state, name)?.up ?? false
 
+/**
+ * On the network: powered on and, for a device on Wi-Fi, with its access
+ * point up. A laptop whose access point is down is on, but cut off.
+ */
+export function onNetwork(state: NetworkState, device: Device): boolean {
+  return device.up && (!device.accessPoint || up(state, device.accessPoint))
+}
+
 const ROUTER = 'RTR-CORE'
 const FIREWALL = 'FW-EDGE'
 
@@ -50,16 +58,22 @@ export function route(state: NetworkState, fromName: string, ip: string): Hop[] 
   }
   const fromSubnet = subnetOf(state, from)
   if (!from.up || !fromSubnet) return [{ name: from.name, ip: from.ip, ok: false }]
+  // On Wi-Fi: the first hop is the access point.
+  if (from.accessPoint && !up(state, from.accessPoint)) {
+    const ap = deviceByName(state, from.accessPoint)
+    return [{ name: from.accessPoint, ip: ap?.ip ?? fromSubnet.gateway, ok: false }]
+  }
   // The device's own switch.
   if (!up(state, fromSubnet.switch))
     return [{ name: fromSubnet.switch, ip: fromSubnet.gateway, ok: false }]
   const targets = devicesAt(state, ip)
   const target = targets.find((t) => t.up) ?? targets[0]
   const targetSubnet = subnetForIp(state, ip)
+  const answers = !!target && onNetwork(state, target)
 
   // Same subnet: straight there.
   if (targetSubnet && targetSubnet.id === fromSubnet.id) {
-    add(target?.name ?? ip, ip, !!target?.up)
+    add(target?.name ?? ip, ip, answers)
     return hops
   }
   // Anywhere else goes through the default gateway, which must be right.
@@ -72,7 +86,7 @@ export function route(state: NetworkState, fromName: string, ip: string): Hop[] 
   if (targetSubnet) {
     if (!add(targetSubnet.switch, targetSubnet.gateway, up(state, targetSubnet.switch)))
       return hops
-    add(target?.name ?? ip, ip, !!target?.up)
+    add(target?.name ?? ip, ip, answers)
     return hops
   }
   // The internet: through the firewall.
@@ -158,6 +172,10 @@ export function runCommand(state: NetworkState, from: string, input: string): st
   if (!device) return [`Cannot connect to ${from}.`]
   if (!device.up)
     return [`${from} is not responding: the remote session could not start.`]
+  if (!onNetwork(state, device))
+    return [
+      `${from} is not reachable over the network: the remote session could not start.`,
+    ]
   switch (command.toLowerCase()) {
     case '':
       return []

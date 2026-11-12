@@ -40,7 +40,8 @@ import {
   type Reward,
 } from '../game/career'
 import { gradeAssignment, type GradeResult } from '../game/grading'
-import { buildQueueContent } from '../game/tickets'
+import { buildQueueContent, gradeEnvironment } from '../game/tickets'
+import { disruptionsOf } from '../game/incidents'
 import { buildProjectContent } from '../game/code/grading'
 import { gradeCodeSafely } from '../game/code/runInWorker'
 import { gradeToolTask } from '../tools/grading'
@@ -72,6 +73,7 @@ import {
 import { createId } from '../lib/ids'
 import type {
   AnyDocument,
+  Disruption,
   DocContent,
   MailMessage,
   PortfolioFileRole,
@@ -236,7 +238,27 @@ export function useCareer() {
                 }),
         files: assignment.deliverables.map((d) => deliverableFile(d, playerName)),
       })
-      show(profile)
+      // Colleagues held up by the task's faults are held up from the start.
+      const held =
+        assignment.kind === 'tickets' && assignment.queue?.environment
+          ? disruptionsOf(buildQueueContent(assignment), assignment.id)
+          : []
+      show(
+        held.length
+          ? await updateProfile(profile.id, (latest) => ({
+              ...latest,
+              work: {
+                ...latest.work,
+                disruptions: [
+                  ...latest.work.disruptions.filter(
+                    (d) => d.assignment !== assignment.id,
+                  ),
+                  ...held,
+                ].slice(-50),
+              },
+            }))
+          : profile,
+      )
       return documentId
     },
     [profileId, state, show],
@@ -303,7 +325,10 @@ export function useCareer() {
       const toolChecks =
         assignment.kind === 'tool'
           ? gradeToolTask(assignment, main?.kind === 'tool' ? main.content : null)
-          : []
+          : assignment.kind === 'tickets'
+            ? // The work done in the queue's systems (Network Tools, Directory).
+              gradeEnvironment(assignment, main?.kind === 'tickets' ? main.content : null)
+            : []
       // The player's code runs in a worker, with a time limit.
       const codeChecks =
         assignment.kind === 'code'
@@ -437,6 +462,32 @@ export function useCareer() {
         ),
       }))
       show(profile)
+    },
+    [profileId, show],
+  )
+
+  /**
+   * Keeps the colleagues held up by a task's tickets in step with its queue
+   * (see game/incidents.ts): only that task's entries are replaced, and
+   * nothing is saved when nothing changed.
+   */
+  const syncDisruptions = useCallback(
+    async (assignmentId: string, entries: Disruption[]) => {
+      if (!profileId) return
+      let changed = false
+      const profile = await updateProfile(profileId, (latest) => {
+        const others = latest.work.disruptions.filter(
+          (d) => d.assignment !== assignmentId,
+        )
+        const mine = latest.work.disruptions.filter((d) => d.assignment === assignmentId)
+        if (JSON.stringify(mine) === JSON.stringify(entries)) return latest
+        changed = true
+        return {
+          ...latest,
+          work: { ...latest.work, disruptions: [...others, ...entries].slice(-50) },
+        }
+      })
+      if (changed) show(profile)
     },
     [profileId, show],
   )
@@ -778,6 +829,7 @@ export function useCareer() {
     switchCareer,
     markRead,
     toggleStep,
+    syncDisruptions,
     act,
     saveCaseStep,
     openCaseFile,

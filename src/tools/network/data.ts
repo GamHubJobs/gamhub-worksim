@@ -197,3 +197,37 @@ export function intranetScenario(): NetworkState {
     changeDevice('AP-FL2', (d) => ({ ...d, up: false, restartable: false })),
   ].reduce((s, c) => c(s), officeNetwork())
 }
+
+/**
+ * Analyst scenario (Help Desk, tickets tied to the network): floor 2's Wi-Fi
+ * access point has crashed. Its laptops are on, but off the network: among
+ * them Carmen Ruiz's and Arjun Mehta's, from the office. A restart brings it
+ * back; nothing else does.
+ */
+export function wifiScenario(): NetworkState {
+  const base = officeNetwork()
+  return [
+    // Floor 2's laptops use the Wi-Fi.
+    ...['LT-0153', 'LT-0156'].map((name) =>
+      changeDevice(name, (d) => ({ ...d, accessPoint: 'AP-FL2' })),
+    ),
+    (state: NetworkState): NetworkState => ({
+      ...state,
+      devices: [
+        ...state.devices,
+        device('LT-0161', 'laptop', '10.20.2.121', 'fl2', 'Floor 2, payroll desks', {
+          description: 'Carmen Ruiz’s laptop',
+          accessPoint: 'AP-FL2',
+          config: client('10.20.2.1'),
+        }),
+        device('LT-0162', 'laptop', '10.20.2.122', 'fl2', 'Floor 2, data team', {
+          description: 'Arjun Mehta’s laptop',
+          accessPoint: 'AP-FL2',
+          config: client('10.20.2.1'),
+        }),
+      ],
+    }),
+    // It stopped responding at 08:50: crashed, so a remote restart works.
+    changeDevice('AP-FL2', (d) => ({ ...d, up: false, restartable: true })),
+  ].reduce((s, c) => c(s), base)
+}

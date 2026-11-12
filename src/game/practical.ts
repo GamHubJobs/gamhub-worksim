@@ -10,7 +10,7 @@ import type { AnyDocument } from '../persistence/schemas'
 import { buildProjectContent } from './code/grading'
 import { gradeCodeSafely } from './code/runInWorker'
 import { gradeAssignment, type CheckResult } from './grading'
-import { buildQueueContent } from './tickets'
+import { buildQueueContent, gradeEnvironment } from './tickets'
 import { gradeToolTask } from '../tools/grading'
 import { buildStartingContent } from './workbooks'
 
@@ -63,6 +63,8 @@ export async function gradePractical(
     extra.push(...gradeToolTask(toolOnly, document.content))
   if (assignment.kind === 'code' && document.kind === 'code')
     extra.push(...(await gradeCodeSafely(toolOnly, document.content)))
+  if (assignment.kind === 'tickets' && document.kind === 'tickets')
+    extra.push(...gradeEnvironment(toolOnly, document.content))
   const main =
     document.kind === 'sheet' || document.kind === 'tickets' || document.kind === 'code'
       ? document.content

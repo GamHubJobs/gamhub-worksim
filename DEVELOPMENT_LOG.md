@@ -190,6 +190,144 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 1: tickets that know when they are fixed
+
+A Help Desk ticket can now be tied to the company's simulated systems (Network
+Tools and Directory). It resolves because the problem is really fixed, never
+because the player chooses Resolved. The first task to use it is "Floor 2 has
+lost its Wi-Fi" (Service Desk Analyst). See `docs/STATE_AWARE_TICKETS.md`.
+
+### The audit first
+
+- **Already there, and extended rather than rebuilt:**
+  - the Help Desk queue (a `tickets` document);
+  - Network Tools (a deterministic network simulation, with pure actions and an
+    action log);
+  - Directory (pure actions, with an audit log);
+  - the office cast (Carmen Ruiz, Arjun Mehta, Leila Haddad and others);
+  - encounters, the grading of tickets and tools, and the content tests.
+- **Missing:**
+  - Wi-Fi: no device depended on an access point;
+  - any link between a ticket and the systems;
+  - an event mechanism between them.
+- **The investigation of ServiceDesk Simulator** (the research doc) was used as
+  research only: the idea of tickets checked against the state. No code, text or
+  assets from it.
+
+### What was built
+
+- **The condition engine** (`src/game/incidents.ts`, pure):
+  - **Eight conditions:** device up, service running, a host reachable (on a
+    port), a DNS record, account unlocked, account enabled, password reset, in a
+    group.
+  - Each gives pass or fail, a label, and what the system shows. A system that
+    is not connected fails safely.
+- **Event-driven:** every change to a system goes through
+  `applyEnvironmentChange`.
+  - It compares the state before and after (devices, services, settings, DNS,
+    accounts, groups, and the fix made from the action or audit log).
+  - It looks again only at the tickets that depend on what changed.
+  - No polling, no timers, nothing random. Console commands and findings change
+    nothing.
+- **The lifecycle:**
+  - Open → Assigned → In progress / Waiting for information → Resolved, and
+    Reopened if the fault returns before closing.
+  - Closed only from Resolved, and final.
+  - Choosing Resolved is checked first: if it is not fixed, the status stays, and
+    the player is told what is still broken. The attempt is kept in the history.
+  - Automatic and manual resolutions are told apart and explained. Each ticket
+    resolves once; later changes add no second resolution.
+- **The queue and its systems are one saved document.**
+  - New optional fields on tickets: requester, conditions, assignee, history,
+    resolution.
+  - The queue gains an optional `environment`. Everything is additive with
+    defaults, so old queues load unchanged.
+- **The Help Desk window** has tabs: the queue, and the real Network Tools and
+  Directory workspaces on the queue's systems.
+  - A ticket tied to the systems shows its assignee, the affected employee and
+    systems, each check live, what still prevents resolution, the resolution,
+    and its history with the office time.
+  - A status line above shows when a ticket resolves or reopens by itself.
+- **Wi-Fi in the network simulation:**
+  - an optional `accessPoint` per device: while it is down, the device is cut
+    off (its route, remote sessions, the map's "No network");
+  - a new fault, "Device stopped responding (can be restarted remotely)";
+  - evidence checks can require the command's output (a test that worked).
+
+  No older scenario sets an access point, so they behave as before.
+
+- **Colleagues held up:**
+  - The profile keeps who is held up by a task's tickets (`work.disruptions`,
+    additive).
+  - Walking up to them in the office, they say their laptop is off the Wi-Fi, or
+    they are locked out. Once it is fixed, they thank the player. Only the
+    tickets' requesters are affected, and only while the task is under way.
+- **The task "Floor 2 has lost its Wi-Fi"** (order 7; the five later IT tasks
+  move down one):
+  - Carmen's and Arjun's tickets (one crashed access point).
+  - Leila's lockout, which needs both a reset and an unlock.
+  - It is graded on the real fixes (`fixed` checks), the cause recorded, a test
+    from the access point and one from Carmen's laptop after the fix, and the
+    reply to Carmen.
+- **Not in this phase** (as asked): identity verification, hints with an XP
+  cost, remote desktop, voicemail, calls.
+
+### Found on the way
+
+- **The unit tests failed only because of how the shell was started.** All 102
+  files failed in Vitest's own setup (`describe` reading `config` of undefined).
+  - Node resolved Vitest from `c:\…` (lower-case drive) while Vitest ran from
+    `C:\…`, so it was loaded twice. The shell here sometimes starts in a
+    lower-case `c:` folder.
+  - From `C:\Users\User\Documents\GamHub-WorkSim` they pass. Not a fault in the
+    project.
+
+### Tests
+
+- **Before:** `npm run check` from `C:\…`: format, lint and types clean; 102
+  files, 2,278 tests passed. The build passed.
+- **Unit** (`src/game/incidents.test.ts`, 24):
+  - the Wi-Fi model;
+  - open while broken;
+  - the right fix resolves, with its explanation, and the wrong or unrelated
+    fixes do not;
+  - several tickets on one system;
+  - multiple conditions (a reset alone does not unlock);
+  - choosing Resolved cannot bypass, and a manual resolution once fixed;
+  - no duplicate resolution;
+  - reopening, and closed staying closed;
+  - assigned to in progress;
+  - failing safely;
+  - ordinary tickets unchanged;
+  - colleagues held up only while affected, and what they say;
+  - save and reload; older queues and profiles;
+  - model answer at 100%, Resolved without a fix scores nothing, and the tool
+    checks assess what was done.
+- **Browser** (`tests/e2e/state-tickets.spec.ts`), the whole scenario:
+  - Resolved refused, the laptop "No network", the wrong restart changes
+    nothing;
+  - restarting the access point resolves both Wi-Fi tickets with the reason;
+  - the test from Carmen's laptop, and a finding;
+  - Leila 1 of 2 until unlocked;
+  - reply and close; after a reload, closed with its history;
+  - submitted at 100%.
+- **Results after:** `npm run check` clean (103 files, 2,313 tests). Browser suite (Chromium): 220 passed, 2 flaky, 1 failed, 3 skipped; the failed one (`week.spec.ts`, a Grid Craft cell timing out) and both flaky ones passed when rerun alone. PWA: 5 of 6, the sixth (`offline: repairing the app files`) passed alone. Other browsers: 8 passed, 1 skipped. Build passed. Startup: start screen 296 kB, 2.6 s.
+
+### Limits
+
+- Two systems are connected (Network Tools, Directory). Other kinds of ticket
+  (remote desktop, mail) wait for later phases.
+- The update to the requester is in the ticket's history; no email is sent.
+- The consequence in the office is what the colleague says and seems to be
+  doing. Their 3D animation does not change, and it is not covered by a browser
+  test (the walking is not scripted). It is covered by unit tests.
+- One task uses it so far; the earlier IT tasks are unchanged.
+- Players already past task 6 who have not started the old task 7: it is now
+  task 8, and waits for the new task 7 first. Passed work, XP and levels are not
+  affected.
+
+---
+
 ## 2026-11-12 · Office apps 3: Deck Craft, a real presentation app, in the office
 
 The office presentation app is now **Deck Craft**: the official web build of

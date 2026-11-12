@@ -79,6 +79,34 @@ export interface Situation {
   with?: Who
   /** Minutes since midnight. */
   minute: number
+  /**
+   * Held up by a fault on one of the player's tickets (see game/incidents.ts),
+   * or back to work now it is fixed.
+   */
+  trouble?: { what: string; state: 'blocked' | 'restored' }
+}
+
+/** What someone held up by a fault says about it, or says once it is fixed. */
+export function troubleLine(trouble: NonNullable<Situation['trouble']>): string {
+  if (trouble.state === 'restored')
+    return trouble.what === 'their account'
+      ? 'I can sign in again, thank you! Back to work.'
+      : `${trouble.what[0].toUpperCase()}${trouble.what.slice(1)} is back, thank you! I can get on with my work again.`
+  if (trouble.what === 'the Wi-Fi')
+    return 'My laptop has dropped off the Wi-Fi, so I can’t get anything done. Is my ticket with you?'
+  if (trouble.what === 'their account')
+    return 'I’m locked out of my account, so I can’t do any work. Is my ticket with you?'
+  return 'Nothing on the network works for me, so I’m stuck. Is my ticket with you?'
+}
+
+/** What it looks like someone held up by a fault is doing. */
+export function troubleDoing(
+  trouble: NonNullable<Situation['trouble']>,
+): string | undefined {
+  if (trouble.state === 'restored') return undefined
+  return trouble.what === 'their account'
+    ? 'a sign-in screen that will not let them in'
+    : 'a laptop that will not connect'
 }
 
 export interface Line {
@@ -227,7 +255,11 @@ export function meet(who: Who, situation: Situation, rel: Relation): Encounter {
   return {
     who,
     busy: false,
-    opening: opening(who, situation, rel, hello),
+    opening: [
+      ...opening(who, situation, rel, hello),
+      // Held up by a fault on one of the player's tickets, or just back to work.
+      ...(situation.trouble ? [say(who, troubleLine(situation.trouble))] : []),
+    ],
     options: optionsFor(who, situation, rel),
   }
 }

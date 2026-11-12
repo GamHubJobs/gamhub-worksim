@@ -8,6 +8,8 @@
  */
 import { z } from 'zod'
 import { GitSchema } from '../game/code/git'
+import { DirectoryStateSchema } from '../tools/directory/schema'
+import { NetworkStateSchema } from '../tools/network/schema'
 import { isId } from '../lib/ids'
 
 // ---------------------------------------------------------------------------
@@ -391,7 +393,70 @@ export const TICKET_STATUSES = [
   'pending',
   'escalated',
   'resolved',
+  // For tickets tied to the company's systems (see game/incidents.ts):
+  'assigned',
+  'reopened',
+  'closed',
 ] as const
+
+const SystemName = z.string().min(1).max(100)
+
+/**
+ * What must be true in the company's systems for a ticket's problem to be
+ * fixed. Each is checked against the simulated state (Network Tools or
+ * Directory), never against what the player says. See game/incidents.ts.
+ */
+export const TicketConditionSchema = z.discriminatedUnion('type', [
+  /** Network Tools: the device is responding. */
+  z.object({ type: z.literal('device-up'), device: SystemName }),
+  /** Network Tools: the service is running on a responding device. */
+  z.object({
+    type: z.literal('service-running'),
+    device: SystemName,
+    port: z.number().int().min(1).max(65535),
+  }),
+  /** Network Tools: from a computer, a host answers (on a port, if given). */
+  z.object({
+    type: z.literal('can-reach'),
+    from: SystemName,
+    host: SystemName,
+    port: z.number().int().min(1).max(65535).optional(),
+  }),
+  /** Network Tools: a DNS record points to this address. */
+  z.object({ type: z.literal('dns-record'), name: SystemName, ip: SystemName }),
+  /** Directory: the account is not locked. */
+  z.object({ type: z.literal('account-unlocked'), user: SystemName }),
+  /** Directory: the account is enabled. */
+  z.object({ type: z.literal('account-enabled'), user: SystemName }),
+  /** Directory: a new temporary password has been issued. */
+  z.object({ type: z.literal('password-reset'), user: SystemName }),
+  /** Directory: the user is in the group (and so has its access). */
+  z.object({ type: z.literal('in-group'), user: SystemName, group: SystemName }),
+])
+
+export const TICKET_ACTIVITY_KINDS = [
+  'created',
+  'assigned',
+  'status',
+  'change',
+  'condition-ok',
+  'condition-failed',
+  'resolved',
+  'resolve-rejected',
+  'update-sent',
+  'reopened',
+  'closed',
+] as const
+
+/** One event in a ticket's history. */
+export const TicketActivitySchema = z.object({
+  /** When it happened (milliseconds since 1970). */
+  at: z.number().nonnegative(),
+  /** The office clock at the time, e.g. "Day 4, 09:42". */
+  time: z.string().max(40).default(''),
+  kind: z.enum(TICKET_ACTIVITY_KINDS),
+  text: z.string().max(500),
+})
 
 /** A support request from a colleague, and what the service desk did about it. */
 export const TicketSchema = z.object({
@@ -409,6 +474,36 @@ export const TicketSchema = z.object({
   reply: z.string().max(5000),
   /** Internal notes for colleagues. */
   note: z.string().max(5000),
+  /** The colleague who raised it, as an office person ID (for what happens to them). */
+  requester: z.string().max(40).optional(),
+  /**
+   * What must be true in the company's systems for it to be fixed. A ticket
+   * with conditions is resolved by fixing the problem, not by choosing
+   * Resolved (see game/incidents.ts); one without works as before.
+   */
+  conditions: z.array(TicketConditionSchema).max(8).default([]),
+  /** Who is working on it ("you"), once someone has taken it. */
+  assignee: z.string().max(60).nullable().default(null),
+  /** Everything that happened to it, oldest first. */
+  activity: z.array(TicketActivitySchema).max(200).default([]),
+  /** How it was resolved: the fix found by the systems, or confirmed by hand. */
+  resolution: z
+    .object({
+      by: z.enum(['automatic', 'manual']),
+      explanation: z.string().max(500),
+      at: z.number().nonnegative(),
+    })
+    .nullable()
+    .default(null),
+})
+
+/**
+ * The company's systems a ticket queue is connected to: the state of Network
+ * Tools and Directory that its tickets' conditions are checked against.
+ */
+export const TicketEnvironmentSchema = z.object({
+  network: NetworkStateSchema.optional(),
+  directory: DirectoryStateSchema.optional(),
 })
 
 export const TicketsContentSchema = z.object({
@@ -416,6 +511,8 @@ export const TicketsContentSchema = z.object({
   tickets: z.array(TicketSchema).max(100),
   /** Knowledge-base articles the desk works from (read-only). */
   knowledge: z.array(z.object({ title: z.string(), body: z.string() })).max(30),
+  /** The systems the tickets are tied to, for queues whose tickets have conditions. */
+  environment: TicketEnvironmentSchema.optional(),
 })
 
 export const TicketsDocumentSchema = DocumentBaseSchema.extend({
@@ -1179,6 +1276,25 @@ export const WorkStateSchema = z.object({
   record: CareerRecordSchema.prefault({}),
   /** Life outside work (see LifeSchema). */
   life: LifeSchema.prefault({}),
+  /**
+   * Colleagues held up by a fault on one of the player's tickets (a laptop
+   * off the Wi-Fi, a locked account), and those whose problem is now fixed.
+   * Kept in step with the ticket queues (see game/incidents.ts).
+   */
+  disruptions: z
+    .array(
+      z.object({
+        /** Office person ID. */
+        person: z.string().max(40),
+        assignment: z.string().max(100),
+        ticket: z.string().max(30),
+        state: z.enum(['blocked', 'restored']),
+        /** What they cannot use, e.g. "the Wi-Fi". */
+        what: z.string().max(100),
+      }),
+    )
+    .max(50)
+    .default([]),
 })
 
 /** Current format of player profiles; raise it (with an upgrade) when the shape changes. */
@@ -1345,6 +1461,11 @@ export type Ticket = z.infer<typeof TicketSchema>
 export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
 export type TicketStatus = (typeof TICKET_STATUSES)[number]
 export type TicketsContent = z.infer<typeof TicketsContentSchema>
+export type TicketCondition = z.infer<typeof TicketConditionSchema>
+export type TicketActivity = z.infer<typeof TicketActivitySchema>
+export type TicketActivityKind = (typeof TICKET_ACTIVITY_KINDS)[number]
+export type TicketEnvironment = z.infer<typeof TicketEnvironmentSchema>
+export type Disruption = WorkState['disruptions'][number]
 export type TicketsDocument = z.infer<typeof TicketsDocumentSchema>
 export type CodeFile = z.infer<typeof CodeFileSchema>
 export type CodeContent = z.infer<typeof CodeContentSchema>

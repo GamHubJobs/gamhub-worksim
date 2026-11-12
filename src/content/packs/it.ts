@@ -12,6 +12,7 @@ import { networkPrinting } from '../assignments/it/networkPrinting'
 import { recurringProblem } from '../assignments/it/recurringProblem'
 import { triageQueue } from '../assignments/it/triageQueue'
 import { userReplies } from '../assignments/it/userReplies'
+import { wifiOutage } from '../assignments/it/wifiOutage'
 import {
   outageDiagnosis,
   outageReview,
@@ -38,6 +39,7 @@ export const PACK: CareerPack = {
     recurringProblem,
     triageQueue,
     userReplies,
+    wifiOutage,
     outageDiagnosis,
     outageReview,
     outageTriage,
