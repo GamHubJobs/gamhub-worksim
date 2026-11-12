@@ -195,7 +195,7 @@ test('Start and search open apps', async ({ page }) => {
   await expect(start).toContainText('Cobalt Ridge Consulting')
   await start
     .getByRole('list', { name: 'All apps' })
-    .getByRole('button', { name: 'Docs' })
+    .getByRole('button', { name: 'Word Craft' })
     .click()
   await expect(start).toBeHidden()
   await expect(win(page, 'docs')).toBeVisible()

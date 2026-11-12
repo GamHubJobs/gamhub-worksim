@@ -177,7 +177,7 @@ As a Senior Developer, you now own features from start to finish. Finance wants 
 • if a billable entry is for someone with no rate, throw an error with the message “No rate for <person>”, so nobody is billed at zero by mistake,
 • no entries gives { clients: [], total: 0 }.
 
-Write tests for it in billing.test.js (at least five, all passing), and a short **design note** in Docs, with the headings Problem, Approach and Testing, explaining how it works and the decisions you made (why an error for a missing rate, for example).
+Write tests for it in billing.test.js (at least five, all passing), and a short **design note** in Word Craft, with the headings Problem, Approach and Testing, explaining how it works and the decisions you made (why an error for a missing rate, for example).
 
 Samuel`,
   },
@@ -217,7 +217,7 @@ Samuel`,
       id: 'note',
       title: 'Write the design note',
       instructions:
-        'In **Docs**, open **Billing report design note**. Use the headings **Problem**, **Approach** and **Testing**. Explain the rules, why a missing rate is an error, and how you tested it. 150 to 600 words.',
+        'In **Word Craft**, open **Billing report design note**. Use the headings **Problem**, **Approach** and **Testing**. Explain the rules, why a missing rate is an error, and how you tested it. 150 to 600 words.',
     },
     {
       id: 'send',

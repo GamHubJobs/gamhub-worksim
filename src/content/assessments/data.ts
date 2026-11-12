@@ -23,7 +23,7 @@ function dataDuplicates(p: {
     summary: 'Find why a SQL query overstates sales, correct it and explain.',
     brief: `This assessment checks that you can clean data, check SQL and communicate findings.
 
-Find out why the quarterly sales query gives too high a total, work out the correct total, decide how to fix it, write an analysis note in Docs, and explain it to the Sales Manager. You have 3 hours.`,
+Find out why the quarterly sales query gives too high a total, work out the correct total, decide how to fix it, write an analysis note in Word Craft, and explain it to the Sales Manager. You have 3 hours.`,
     whyItMatters:
       'Analysts at the next level publish numbers others rely on. Checking joins and duplicates before publishing is what makes them trustworthy.',
     objectives: [
@@ -177,7 +177,7 @@ function dataTest(p: {
     summary: 'Interpret an A/B test and advise whether to roll out the new design.',
     brief: `This assessment checks that you can analyse an experiment and advise on a decision.
 
-Interpret the checkout test, calculate the uplift, decide what to advise, write the results summary in Docs, and reply to the product manager. You have 3 hours.`,
+Interpret the checkout test, calculate the uplift, decide what to advise, write the results summary in Word Craft, and reply to the product manager. You have 3 hours.`,
     whyItMatters:
       'Senior analysts guard decisions against noisy or incomplete evidence, while still telling people what the data does show.',
     objectives: [

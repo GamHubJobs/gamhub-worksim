@@ -1,4 +1,4 @@
-# The office apps: Grid Craft (and next, Word Craft and Deck Craft)
+# The office apps: Grid Craft and Word Craft (and next, Deck Craft)
 
 The office computer runs real productivity software. Each app is the official,
 unmodified web build of an open-source project by the ArtCraft team, run in a window
@@ -8,8 +8,8 @@ file.
 | App        | Built from                                                         | Status      |
 | ---------- | ------------------------------------------------------------------ | ----------- |
 | Grid Craft | [GridCraft](https://github.com/storytold/gridcraft) 0.18.0         | In the game |
-| Word Craft | [WordCraft](https://github.com/storytold/wordcraft) (Docs today)   | Next        |
-| Deck Craft | [DeckCraft](https://github.com/storytold/deckcraft) (Slides today) | After that  |
+| Word Craft | [WordCraft](https://github.com/storytold/wordcraft) 0.18.0         | In the game |
+| Deck Craft | [DeckCraft](https://github.com/storytold/deckcraft) (Slides today) | Next        |
 
 ## Where the apps come from
 
@@ -44,6 +44,27 @@ file.
 - v0.16.0, the version of the extracted source, has host mode but not the page
   command API. v0.18.0 has both. Its `apps/gridcraft-web/src` is identical to the
   extracted `main` source.
+
+## What the apps share (src/apps/craft/)
+
+- `crafts.ts`: whether an app can be used here (installed, the device can draw it,
+  the player's choice).
+- `CraftFrame.tsx`: the iframe, the host messages and the command API, and the
+  keyboard-focus guard.
+- `useCraftSession.ts`: opening, saving, the pending indicator and the leave
+  guard. Each app describes itself with a `CraftAdapter`:
+  - how to open a kept file, or build one from WorkSim's content;
+  - how to ask for a save;
+  - which handed-over files are the document;
+  - how to read a saved file back.
+- Changes are noticed in two ways:
+  - from the app's change messages;
+  - by asking the app once a second whether it has unsaved changes (`isDirty`).
+
+  A change made while a save is under way can go unreported. Word Craft showed this:
+  a chart inserted during a save was never kept, until the second way was added.
+
+- `CraftShell.tsx`: the bar above the app and the cover while it opens.
 
 ## How a workbook is opened, saved and graded
 
@@ -130,23 +151,72 @@ Workbook window (WorkbookWindow.tsx)
 - **Version previews** are shown read-only in the basic editor's view. Restoring one
   reopens it in Grid Craft.
 
+## Word Craft: how a document is opened, saved and graded
+
+```
+Document window (DocWindow.tsx)
+ ├─ craftAvailable('wordcraft')
+ ├─ yes → WordCraftEditor ── CraftFrame (?host=parent)
+ │          ├─ open:  the kept .docx (file.open {path, data}), or WorkSim's document as
+ │          │         HTML (docToHtml); then File › Home is closed (ui.backstage false)
+ │          ├─ save:  file.save {path: .docx}; then file.save {path: .html} →
+ │          │         htmlToDoc (the basic editor's own parser) → body
+ │          ├─ from Grid Craft: a chart as insert.picture, the chart in its
+ │          │         alternative text; a table as insert.table, filled cell by cell
+ │          └─ AI:    the selected text (document.selection) and the document; text
+ │                    applied with text.insert
+ └─ no / failed → the basic Docs editor, the same file
+```
+
+- **Two forms of the same file,** as for workbooks: `body` (graded, read by AI,
+  exports and the Portfolio) and `file`, the real `.docx`.
+- **Read with the basic editor's parser.** Word Craft writes headings, paragraphs,
+  bold, italic, underline, alignment, lists, tables and line breaks as plain HTML.
+  The basic editor's own parser (TipTap) reads that HTML, so the result is exactly
+  what that editor would hold. `finishDoc` then:
+  - removes the font, size and black every imported text carries;
+  - turns heading bold into plain headings;
+  - turns sizes into the editor's own sizes.
+- **Charts.** A WorkSim chart becomes a PNG picture whose alternative text ends with
+  "(WorkSim chart <data>)". A picture with that text is read back as the chart, with
+  its data, so the "charts" checks count it.
+  - A chart on its own line is that line.
+  - A chart inside a line of text is read as a block after the line, and the line
+    keeps its text.
+  - Other pictures stay in the .docx only.
+- **Starting documents** (templates, task files) are written as HTML (`docToHtml`),
+  with their page size and margins set by command.
+- **Checked by:**
+  - the browser tests: headings, text, tables and charts as the graders read them;
+  - the report task done in Grid Craft and Word Craft and graded at 100%.
+- **Above the document:**
+  - Insert chart from Grid Craft and Insert table from Grid Craft (the shared
+    picker);
+  - Download .docx and Export PDF;
+  - Import a file… (.docx, .doc, .odt, .rtf, .html, .md, .txt, .tex).
+- **Not available while Word Craft is used:** the window's Print button (Export PDF
+  instead). Version previews show in the basic editor's view.
+- **Word Craft starts on File › Home** when it has nothing open, and opening a file
+  by command leaves it there. The adapter closes it after each open.
+
 ## Offline
 
 - The service worker leaves the apps out of the game's install. Each is tens of
   megabytes, and most players open only some.
 - Each app is kept in a cache of its own once opened, named after the apps' versions
-  (`craft-apps-gridcraft@0.18.0`). A game update does not download it again, and it
+  (`craft-apps-gridcraft@0.18.0,wordcraft@0.18.0`). A game update does not download it again, and it
   works offline from then on.
 - An app never opened online is not available offline. The basic editor is used
   instead.
 
 ## Licences and credit
 
-- **The code:** GridCraft is MIT OR Apache-2.0. Its `LICENSE-MIT`, `LICENSE-APACHE`,
-  `NOTICE` and `ATTRIBUTION.md` (including the fonts' licences) are served with it in
-  `public/crafts/gridcraft/`.
-- **The credit:** the window shows "Grid Craft 0.18.0, based on GridCraft by the
-  ArtCraft team" with a link to the NOTICE. See also `THIRD_PARTY_NOTICES.md`.
+- **The code:** GridCraft and WordCraft are MIT OR Apache-2.0. Each app's
+  `LICENSE-MIT`, `LICENSE-APACHE`, `NOTICE` and `ATTRIBUTION.md` (including the
+  fonts' licences, and WordCraft's `OFL-*.txt`) are served with it in
+  `public/crafts/<app>/`.
+- **The credit:** each window shows "Grid Craft 0.18.0, based on GridCraft by the
+  ArtCraft team" (or Word Craft…) with a link to the NOTICE. See also `THIRD_PARTY_NOTICES.md`.
 - **The marks:** the ArtCraft name and logos are trademarks, outside the licence.
   - WorkSim uses neither in its own interface, icons or texts.
   - The unmodified official build is used as it is, so any marks inside it are there
@@ -171,8 +241,25 @@ Workbook window (WorkbookWindow.tsx)
   - WorkSim AI: explaining, proposing and applying;
   - the basic editor when Grid Craft is missing, and when the player chooses it.
 
-  In a test browser without a graphics card each command takes about a second; in a
-  normal browser about 30 ms.
+- **Word Craft unit tests,** `src/apps/docs/wordcraft/convert.test.ts`:
+  - documents as HTML;
+  - charts in alternative text, both ways;
+  - every template;
+  - tidying what comes back;
+  - fingerprints.
+- **Word Craft browser tests,** `tests/e2e/wordcraft.spec.ts`:
+  - a new document kept as .docx, read as the graders read it, and reopened after a
+    reload;
+  - a template with its headings and table;
+  - charts counted, including one inside a heading;
+  - WorkSim AI's rewrite applied only after review;
+  - the report task across Grid Craft and Word Craft, graded at 100%;
+  - the basic editor when Word Craft is missing, and when chosen.
+- **Cross-browser** (`tests/browsers/`): typing into Grid Craft and Word Craft in
+  Chromium, Edge and Firefox.
+
+In a test browser without a graphics card each command takes about a second; in a
+normal browser about 30 ms.
 
 ## Keyboard focus and leaving
 
@@ -207,3 +294,14 @@ Workbook window (WorkbookWindow.tsx)
   date format.
 - Charts of a kind WorkSim does not have (area, scatter, …) are read as column
   charts, with the cells they draw.
+- **Word Craft:**
+  - Pictures, footnotes, comments, tracked changes, headers and footers, and fonts
+    are kept in the .docx, but only the text, headings, lists, tables and charts are
+    read into WorkSim's document.
+  - Page size and margins are taken from WorkSim's document when it is built, not
+    read back.
+  - A page break is written to Word Craft, but not read back.
+  - Charts made inside Word Craft (Insert › Chart) are not WorkSim charts. Only
+    charts inserted from Grid Craft count.
+  - WebKit types into Word Craft through the command API in the tests, as for Grid
+    Craft.

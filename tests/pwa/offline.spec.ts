@@ -183,7 +183,9 @@ test('Grid Craft, once opened online, opens offline too (from its own cache)', a
   // Not installed with the game: only kept once opened.
   expect(await page.evaluate(CRAFT_CACHES)).toEqual([])
   await openPractice()
-  expect(await page.evaluate(CRAFT_CACHES)).toEqual(['craft-apps-gridcraft@0.18.0'])
+  expect(await page.evaluate(CRAFT_CACHES)).toEqual([
+    'craft-apps-gridcraft@0.18.0,wordcraft@0.18.0',
+  ])
 
   await context.setOffline(true)
   await page.goto('/')

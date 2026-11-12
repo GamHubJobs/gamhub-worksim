@@ -24,7 +24,7 @@ function mktCampaign(p: {
     summary: 'Analyse a campaign, find the problems, adjust the spend and recommend.',
     brief: `This assessment checks that you can manage campaign performance.
 
-Analyse the search campaign’s three ad groups, work out its cost per conversion, decide how to move the budget, write your recommendations in Docs, and update the client. You have 3 hours.`,
+Analyse the search campaign’s three ad groups, work out its cost per conversion, decide how to move the budget, write your recommendations in Word Craft, and update the client. You have 3 hours.`,
     whyItMatters:
       'Executives at the next level are trusted with clients’ budgets. Reading performance correctly and moving money to what works is the core of the job.',
     objectives: [
@@ -180,7 +180,7 @@ function mktPlan(p: {
     summary: 'Recommend how to split next quarter’s budget across channels, and why.',
     brief: `This assessment checks that you can plan a marketing budget.
 
-Assess the channels’ returns and limits, work out the expected revenue of the draft plan, decide what to recommend, write the budget plan in Docs, and send it to the Head of Marketing. You have 3 hours.`,
+Assess the channels’ returns and limits, work out the expected revenue of the draft plan, decide what to recommend, write the budget plan in Word Craft, and send it to the Head of Marketing. You have 3 hours.`,
     whyItMatters:
       'Specialists plan budgets, not just campaigns. That means understanding returns, limits and risk, and explaining the trade-offs.',
     objectives: [

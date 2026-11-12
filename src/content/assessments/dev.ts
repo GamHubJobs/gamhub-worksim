@@ -23,7 +23,7 @@ function devDiscount(p: {
       'Investigate a defect, decide on the fix and its tests, and document the change.',
     brief: `This assessment checks that you can fix a defect properly.
 
-Investigate the discount bug from the code and the failing test, work out what the function should return, decide on the fix, write the change note in Docs, and reply to the product owner. You have 3 hours.`,
+Investigate the discount bug from the code and the failing test, work out what the function should return, decide on the fix, write the change note in Word Craft, and reply to the product owner. You have 3 hours.`,
     whyItMatters:
       'Developers at the next level fix defects on their own. That means finding the cause, proving the fix with tests and explaining the change.',
     objectives: [
@@ -163,7 +163,7 @@ function devReview(p: {
       'Review a pull request that speeds up pricing, and decide whether it can ship.',
     brief: `This assessment checks that you can review code and make release decisions.
 
-Review ${p.author}’s caching change, calculate the improvement, decide whether it can be released, write the review summary in Docs, and give ${p.author} your feedback. You have 3 hours.`,
+Review ${p.author}’s caching change, calculate the improvement, decide whether it can be released, write the review summary in Word Craft, and give ${p.author} your feedback. You have 3 hours.`,
     whyItMatters:
       'Senior developers protect quality for the whole team: they weigh benefits against risks and give feedback that helps people improve.',
     objectives: [

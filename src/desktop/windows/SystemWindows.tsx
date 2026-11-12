@@ -97,11 +97,11 @@ function OfficeApps() {
           }}
         />
         <span>
-          Use the basic spreadsheet editor instead of Grid Craft
+          Use the basic editors instead of Grid Craft and Word Craft
           <span className="block text-slate-600">
-            Grid Craft is drawn as a picture of its window, which screen readers may not
-            read. The basic editor reads out every cell. Your files work in both; files
-            opened after this change use the editor chosen.
+            Grid Craft and Word Craft are drawn as a picture of their window, which screen
+            readers may not read. The basic editors read out every cell and line. Your
+            files work in both; files opened after this change use the editor chosen.
           </span>
         </span>
       </label>

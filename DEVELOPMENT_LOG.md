@@ -190,6 +190,124 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · Office apps 2: Word Craft, a real word processor, in the office
+
+The office word processor is now **Word Craft**: the official web build of WordCraft
+0.18.0 by the ArtCraft team (MIT OR Apache-2.0), in the document window. The basic
+Docs editor stays as the fallback and as the format the graders read. Deck Craft is
+next. See `docs/CRAFT_APPS.md`.
+
+### The build
+
+- WordCraft 0.18.0's web release (published 2026-11-11) is pinned in `crafts.json`:
+  checksum checked against its SHA256SUMS.txt.
+- It has host mode and the page command API (`window.wordcraft`, 675 commands).
+- In host mode it starts with no document and on its own File › Home. It has no
+  option to hide its File tab; what it saves still comes to WorkSim.
+
+### What was built
+
+- **Shared parts, from Grid Craft** (`src/apps/craft/`):
+  - `useCraftSession` (opening, saving, pending, leaving) with an adapter per app;
+  - `CraftShell` (the bar and the cover).
+
+  Grid Craft now uses them too. Its six browser tests pass, run one at a time.
+
+- **The converter** (`src/apps/docs/wordcraft/`):
+  - WorkSim's documents are written as HTML for Word Craft to open.
+  - Word Craft's work is read back from its own HTML of the document, by the basic
+    editor's parser (TipTap). That gives exactly the headings, text, lists and
+    tables the graders read. Then it is tidied: imported fonts and sizes removed.
+  - **Charts** go in as pictures whose alternative text carries the chart, and are
+    read back as charts, so the "charts" checks count them. A chart inside a line of
+    text keeps the line's text.
+- **The document window** opens Word Craft:
+  - the kept `.docx` (a new, optional `file` field), or the document built from
+    WorkSim's (templates, task files);
+  - saved after each change, before submitting and closing, and when the tab is
+    hidden;
+  - in the bar above the document: Insert chart / table from Grid Craft, Download
+    .docx, Export PDF, Import a file…;
+  - WorkSim AI sees the selected text and the document, and applies a rewrite only
+    when chosen.
+- **Named Word Craft** wherever the player sees it: the dock, the start menu, task
+  and assessment text (the chart hints now name the new button), careers and help.
+  The id stays `docs`.
+- **Settings → Office apps** now chooses the basic editors for both apps.
+
+### Found and fixed on the way
+
+- **Word Craft stayed on its File › Home** after a document was opened by command.
+  It is closed after each open (`ui.backstage`).
+- **A chart inside a heading lost the heading's text** when read back. The chart is
+  now a block after the line.
+- **A chart inserted during a save was sometimes never kept.** Word Craft sent no
+  change report, so nothing saved it. The report task lost its chart 2 times in 3.
+  - Tracing showed the picture went in, and that the frame was not reloaded.
+  - The app's change report was missed.
+  - Both apps are now also asked once a second whether they have unsaved changes.
+  - The task then passed 3 times out of 3.
+- **Drawing a chart picture** no longer waits on `image.decode()` (it could wait
+  without end). It loads with a 10-second limit, and an error is shown if it fails.
+
+### Tests
+
+- **Unit tests** (`convert.test.ts`, 6):
+  - documents as HTML;
+  - charts in alternative text;
+  - every template;
+  - tidying what comes back;
+  - fingerprints.
+- **Browser tests** (`wordcraft.spec.ts`, 6):
+  - a new document, styled, kept as .docx, read as the graders read it, and
+    reopened after a reload;
+  - a template with its headings and table, and charts counted (also one inside a
+    heading);
+  - WorkSim AI's rewrite;
+  - **the report task, connected:** the analysis in Grid Craft, the report in Word
+    Craft with its chart from the picker, the slides, handed in by email, graded
+    100%;
+  - the basic editor when Word Craft is missing, and when chosen.
+- **Cross-browser:** Firefox and Edge type into Word Craft, and WebKit enters the
+  text through the API (see the Grid Craft entry).
+- I checked the screenshots (`docs/screenshots/crafts/wordcraft-*.png`). They led to
+  the File › Home fix.
+- Results:
+  - `npm run check`: format, lint and typecheck clean; 2,269 unit tests in 100
+    files, all passed.
+  - Before the full run:
+    - the Grid Craft and Word Craft browser tests, one at a time: 11 of 11;
+    - the report task, after the fix: 3 of 3;
+    - cross-browser: 8 passed, 1 skipped.
+  - **Full Chromium suite:** 210 passed, 2 failed, 3 flaky.
+    - **Failed:** "a full first week" and "a working day", both run in the basic
+      editors. Each passed when rerun alone (1.0 min each). The week test was flaky
+      before, in the Grid Craft runs.
+    - **Flaky:** a stand-up meeting, Books, and the Word Craft report task. The
+      report task waited for Word Craft to be ready, and passed on retry; it passed
+      3 of 3 alone after the fix.
+
+    Your own Firefox was using a lot of CPU during the runs, which slows the
+    parallel tests.
+
+  - **PWA:** 5 passed, 1 failed: Grid Craft offline, which took 3.4 minutes instead
+    of about 26 seconds, right after the Chromium suite. Rerun alone, it passed; the
+    whole PWA suite was then run again and passed 6 of 6.
+  - **Firefox, WebKit and Edge:** 8 passed, 1 skipped.
+  - **Production build:** OK. Startup: start screen 2.7 s, office 2.2 s.
+
+### Limits
+
+- Only the text, headings, lists, tables and charts are read into WorkSim's
+  document. Pictures, footnotes, comments, tracked changes, headers and footers stay
+  in the .docx.
+- Page size and margins are not read back, and a page break is not read back.
+- Charts made inside Word Craft are not WorkSim charts. Charts from Grid Craft are.
+- Screen reader support of the canvas app is not confirmed; the basic editors are in
+  Settings.
+
+---
+
 ## 2026-11-11 · Office apps 1: Grid Craft, a real spreadsheet, in the office
 
 The office spreadsheet is now **Grid Craft**: the official web build of GridCraft

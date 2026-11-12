@@ -112,7 +112,7 @@ Please:
 • compare the average improvement of those who attended and those who didn’t,
 • measure the correlation between hours of training and improvement,
 • answer the questions in **Questions**, and
-• write a short **memo** in Docs with your findings, your recommendation and the limits of what this data can prove.
+• write a short **memo** in Word Craft with your findings, your recommendation and the limits of what this data can prove.
 
 Reply to this email with the Data Studio file and the memo.
 
@@ -147,7 +147,7 @@ Amara`,
       id: 'conclude',
       title: 'Conclude honestly',
       instructions:
-        'Answer the questions. Then write the memo in **Docs** (**Training programme findings**): the difference, the correlation, a recommendation, and a caveat about voluntary attendance. 120 to 400 words.',
+        'Answer the questions. Then write the memo in **Word Craft** (**Training programme findings**): the difference, the correlation, a recommendation, and a caveat about voluntary attendance. 120 to 400 words.',
       hint: 'A fair test would assign training at random, or compare similar people. Suggest one for next time.',
     },
     {

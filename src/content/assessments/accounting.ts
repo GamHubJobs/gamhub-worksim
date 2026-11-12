@@ -26,7 +26,7 @@ function accReconciliation(p: {
     summary: 'Reconcile the cash book to the bank statement, find the errors and report.',
     brief: `This assessment checks that you can reconcile accounts and explain discrepancies.
 
-Reconcile the cash book to the bank statement, work out the correct cash book balance, decide how to correct it, write the reconciliation report in Docs, and explain your findings to {manager}. You have 3 hours.`,
+Reconcile the cash book to the bank statement, work out the correct cash book balance, decide how to correct it, write the reconciliation report in Word Craft, and explain your findings to {manager}. You have 3 hours.`,
     whyItMatters:
       'Reconciliations are how accountants prove the books are right. At the next level you will sign them off yourself.',
     objectives: [
@@ -179,7 +179,7 @@ function accVariance(p: {
     summary: 'Prepare the management accounts commentary for a month below budget.',
     brief: `This assessment checks that you can prepare financial reports and explain them.
 
-Analyse the month against budget, work out the profit shortfall, decide how to present the one-off cost, write the management accounts commentary in Docs, and brief the Finance Director. You have 3 hours.`,
+Analyse the month against budget, work out the profit shortfall, decide how to present the one-off cost, write the management accounts commentary in Word Craft, and brief the Finance Director. You have 3 hours.`,
     whyItMatters:
       'Senior accountants explain what the numbers mean. Separating one-offs from the underlying trend is what lets directors make the right decisions.',
     objectives: [

@@ -192,7 +192,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'cases', label: 'Cases', icon: 'cases' },
     { id: 'ai', label: 'WorkSim AI', icon: 'ai' },
     { id: 'sheets', label: 'Grid Craft', icon: 'sheets' },
-    { id: 'docs', label: 'Docs', icon: 'docs' },
+    { id: 'docs', label: 'Word Craft', icon: 'docs' },
     { id: 'slides', label: 'Slides', icon: 'slides' },
     { id: 'helpdesk', label: 'Help Desk', icon: 'helpdesk' },
     { id: 'code', label: 'Code', icon: 'code' },
@@ -824,6 +824,7 @@ export function Desktop({
             key={v.document}
             documentId={v.document}
             ownerId={profile.id}
+            author={profile.name}
             onBack={() => setView({ app: 'docs' })}
           />
         ) : (
@@ -969,7 +970,7 @@ export function Desktop({
             }
             onOpenFile={async (id, stepId) => {
               const documentId = await career.openAssessmentFile(id, stepId)
-              // Practical work opens in its own tool; the report in Docs.
+              // Practical work opens in its own tool; the report in Word Craft.
               const open = openAttempt(profile, id)
               const step = open
                 ? attemptDef(open)?.steps.find((s) => s.id === stepId)

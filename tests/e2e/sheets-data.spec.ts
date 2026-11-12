@@ -110,7 +110,7 @@ test('a chart and a table from Sheets go into a report in Docs', async ({ page }
 
   await page
     .getByRole('navigation', { name: 'Apps' })
-    .getByRole('button', { name: /^Docs/ })
+    .getByRole('button', { name: /^Word Craft/ })
     .click()
   await page.getByRole('button', { name: /Blank document/ }).click()
   const body = page.getByTestId('doc-body').locator('.ProseMirror')

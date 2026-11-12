@@ -95,7 +95,7 @@ The spring campaign is bringing people to the website, but bookings are well bel
 You now have **Site Analytics**. Please:
 • look at traffic by device and by source, and at the **booking funnel**, and save the views you use,
 • answer the questions in the **Questions** section,
-• write me a short **memo** in Docs: what is going wrong, how big the problem is (with figures), and what you recommend we do first.
+• write me a short **memo** in Word Craft: what is going wrong, how big the problem is (with figures), and what you recommend we do first.
 
 Reply to this email with the analytics file and the memo.
 
@@ -137,7 +137,7 @@ Sofia`,
       id: 'memo',
       title: 'Write the memo',
       instructions:
-        'In **Docs**, open **Booking funnel findings**: the problem, the evidence (form completion on mobile and on desktop), what it costs us, and your recommendation. Mention anything else you noticed about the traffic sources. 120 to 400 words.',
+        'In **Word Craft**, open **Booking funnel findings**: the problem, the evidence (form completion on mobile and on desktop), what it costs us, and your recommendation. Mention anything else you noticed about the traffic sources. 120 to 400 words.',
     },
     {
       id: 'send',

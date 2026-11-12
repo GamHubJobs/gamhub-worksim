@@ -312,7 +312,7 @@ prompts.
   - **Tasks**: how to approach the task, and which step to do first.
   - **Grid Craft**: explain a formula or an error, suggest a formula for the selected cell,
     and analyse the selected data (totals, unusual values, trends, which chart to use).
-  - **Docs**: review your writing, summarise, suggest a report structure, rewrite the
+  - **Word Craft**: review your writing, summarise, suggest a report structure, rewrite the
     selected text.
   - **Slides**: review the presentation, suggest an outline, help with speaker notes.
   - **Code**: explain the code and the failing tests, and which tests to write.
@@ -348,7 +348,8 @@ prompts.
 | Tasks        | Your work, with its steps and hints                                                    |
 | Cases        | Clients, budgets, meetings, incidents and leadership situations                        |
 | Grid Craft   | The office spreadsheet: formulas, formats, charts, tables, pivot tables; .xlsx files   |
-| Docs, Slides | Reports and presentations                                                              |
+| Word Craft   | The office word processor: styles, tables, pictures, references; .docx files           |
+| Slides       | Presentations                                                                          |
 | Career tools | Books, Help Desk, Network, Directory, Ad Campaigns, Analytics, Data Studio, Code, API… |
 | Career       | Your level, what promotion needs, your record, achievements and desk                   |
 | Readiness    | The practical assessments for your level                                               |

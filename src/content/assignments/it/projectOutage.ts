@@ -16,7 +16,7 @@ import { IT_CATEGORIES, PRIORITY_GUIDE, STATUS_GUIDE, WRITING_GUIDE } from './kn
  * 1. Help Desk: triage the flood of tickets and update the users.
  * 2. Network Tools: find the three causes with evidence and fix what can be
  *    fixed remotely.
- * 3. Help Desk, Docs and Slides: close the incident, write the review and
+ * 3. Help Desk, Word Craft and Slides: close the incident, write the review and
  *    brief management.
  *
  * Teaches: leading an incident from the first ticket to the lessons learnt.
@@ -481,7 +481,7 @@ export const outageReview: AssignmentInput = {
 Everything is working again. Last stage:
 
 1. **The queue**: resolve the six outage tickets (users have confirmed).
-2. **The review (Docs)**: an incident review with a summary, the timeline, the impact, the causes and the actions to stop it happening again. The engineers’ timeline is in the knowledge base.
+2. **The review (Word Craft)**: an incident review with a summary, the timeline, the impact, the causes and the actions to stop it happening again. The engineers’ timeline is in the knowledge base.
 3. **The briefing (Slides)**: 3 to 6 slides for {director}.
 
 Reply to this email with the queue, the review and the briefing attached.
@@ -505,7 +505,7 @@ Ravi`,
       id: 'review',
       title: 'The review',
       instructions:
-        'In **Docs**, open **Incident review: Thursday outage**: summary, timeline, impact, causes (all three), and actions.',
+        'In **Word Craft**, open **Incident review: Thursday outage**: summary, timeline, impact, causes (all three), and actions.',
     },
     {
       id: 'briefing',

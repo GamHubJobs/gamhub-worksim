@@ -165,8 +165,8 @@ function AssessmentView({
           </li>
           <li>
             {def.deadlineHours} hours of office time, from when you start. It includes
-            real work in your profession’s own tool and a report written in Docs; you need
-            both to pass.
+            real work in your profession’s own tool and a report written in Word Craft;
+            you need both to pass.
           </li>
           <li>
             You need {def.passScore}% to pass. If you don’t, practise and try again.

@@ -42,7 +42,7 @@ The directors have asked every team to find savings for next year, and I think o
 The workbook has what we spent with each of our eight main suppliers last year and this year. I’d like you to:
 • work out how much each supplier’s cost changed, in money and as a percentage, and flag every supplier whose cost rose by **more than 10%** for review;
 • estimate the saving if we renegotiate the flagged suppliers and bring their cost down by **8%**;
-• write a short proposal in Docs (problem, proposal, savings, recommendation) and prepare a few slides I can use to present it.
+• write a short proposal in Word Craft (problem, proposal, savings, recommendation) and prepare a few slides I can use to present it.
 
 How you make the case is up to you, but the numbers must be right and consistent everywhere. Reply to this email with the three files when you’re ready.
 
@@ -74,7 +74,7 @@ Add the totals for last year and this year in row 11 (B11 is a label; C11 and D1
     {
       id: 'proposal',
       title: 'Write the proposal',
-      instructions: `In **Docs**, write **Supplier savings proposal**: the problem (with figures), your proposal, the expected savings, and your recommendation. Name the suppliers to renegotiate and include your chart. Keep it under two pages.`,
+      instructions: `In **Word Craft**, write **Supplier savings proposal**: the problem (with figures), your proposal, the expected savings, and your recommendation. Name the suppliers to renegotiate and include your chart. Keep it under two pages.`,
     },
     {
       id: 'slides',
@@ -256,7 +256,7 @@ Add the totals for last year and this year in row 11 (B11 is a label; C11 and D1
           title: 'Chart in the proposal',
           points: 5,
           why: 'Evidence persuades better than adjectives.',
-          hint: 'Insert your chart with Chart in the Docs toolbar.',
+          hint: 'Insert your chart with **Insert chart from Grid Craft**, above the document.',
         },
         {
           id: 'proposal-length',

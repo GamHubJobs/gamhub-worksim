@@ -7,5 +7,14 @@
     "folder": "gridcraft-web-0.18.0",
     "source": "https://github.com/storytold/gridcraft/tree/v0.18.0",
     "license": "MIT OR Apache-2.0"
+  },
+  "wordcraft": {
+    "title": "Word Craft",
+    "version": "0.18.0",
+    "url": "https://github.com/storytold/wordcraft/releases/download/v0.18.0/wordcraft-web-0.18.0.zip",
+    "sha256": "a444046f649a50779b1b6a1b0db7e24facd906156ceecbcfa53bdbbbc89f0310",
+    "folder": "wordcraft-web-0.18.0",
+    "source": "https://github.com/storytold/wordcraft/tree/v0.18.0",
+    "license": "MIT OR Apache-2.0"
   }
 }

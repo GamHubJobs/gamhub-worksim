@@ -133,7 +133,7 @@ async function waitUntilSaved(page: Page) {
   )
 }
 
-test('the core journey: office, mail, Grid Craft, Docs, Slides, and saving across a reload', async ({
+test('the core journey: office, mail, Grid Craft, Word Craft, Slides, and saving across a reload', async ({
   page,
 }) => {
   await start(page)
@@ -156,11 +156,49 @@ test('the core journey: office, mail, Grid Craft, Docs, Slides, and saving acros
   await expect.poll(() => valueOf(frame, 'A2'), { timeout: 30_000 }).toBe(2500)
   await waitUntilSaved(page)
 
-  // Docs: a heading and text.
-  await app(page, 'Docs')
+  // Word Craft: text typed into the document.
+  await app(page, 'Word Craft')
   await page.getByRole('button', { name: /Blank document/ }).click()
-  await page.getByTestId('doc-body').locator('.ProseMirror').click()
-  await page.keyboard.type('A report typed in this browser')
+  await expect(page.getByTestId('wordcraft-editor')).toHaveAttribute(
+    'data-phase',
+    'ready',
+    {
+      timeout: 180_000,
+    },
+  )
+  const word = page.frame({ url: /crafts\/wordcraft\/index\.html/ })!
+  const wordApi = (command: string, params: object) =>
+    word.evaluate(
+      ([command, params]) =>
+        (globalThis as unknown as { wordcraft: GridCraftApi }).wordcraft.request(
+          command,
+          params,
+        ),
+      [command, params] as const,
+    )
+  const typed = 'A report typed in this browser'
+  if (test.info().project.name === 'webkit') {
+    // As for Grid Craft: keys reach the canvas unreliably in Playwright's WebKit here.
+    await wordApi('engine.execute', { command: 'text.insert', params: { text: typed } })
+  } else {
+    // Into the page (the middle of the app), then typed at a person's pace.
+    const box = (await page.getByTestId('craft-wordcraft').boundingBox())!
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+    await page.keyboard.type(typed, { delay: 80 })
+  }
+  await expect
+    .poll(
+      async () =>
+        JSON.stringify(
+          (
+            (await wordApi('document.inspect', { text: true })) as unknown as {
+              blocks: unknown
+            }
+          ).blocks,
+        ),
+      { timeout: 60_000 },
+    )
+    .toContain(typed)
   await waitUntilSaved(page)
 
   // Slides: a presentation opens and its slides show.

@@ -39,7 +39,7 @@ Congratulations on becoming a Digital Marketing Executive! Your first analysis i
 • **A**: “Our March newsletter”
 • **B**: “3 ways to close your month-end faster”
 
-Each was sent to half of each segment. The results are in the workbook. Please work out the open rate, click rate and click-to-open rate for each version, how much better (or worse) B did than A, and which one won. Then write me a short **recommendation memo in Docs**: which subject line style should we use from now on, backed by the numbers.
+Each was sent to half of each segment. The results are in the workbook. Please work out the open rate, click rate and click-to-open rate for each version, how much better (or worse) B did than A, and which one won. Then write me a short **recommendation memo in Word Craft**: which subject line style should we use from now on, backed by the numbers.
 
 Reply with both files.
 
@@ -73,7 +73,7 @@ Sofia`,
       id: 'memo',
       title: 'Write the recommendation',
       instructions:
-        'In **Docs**, open **A/B test recommendation**: which version won, by how much (B’s open rate, and the uplift in click rate), and what we should do next. 80 to 300 words. Then reply with both files.',
+        'In **Word Craft**, open **A/B test recommendation**: which version won, by how much (B’s open rate, and the uplift in click rate), and what we should do next. 80 to 300 words. Then reply with both files.',
     },
   ],
   workbook: {

@@ -246,7 +246,7 @@ export function StepForm({
             className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium hover:bg-slate-50 disabled:opacity-60"
           >
             {fileOpened ? 'Continue' : 'Start'} “{step.deliverable.title}” in{' '}
-            {step.deliverable.kind === 'doc' ? 'Docs' : 'Slides'}
+            {step.deliverable.kind === 'doc' ? 'Word Craft' : 'Slides'}
           </button>
           <span className="text-slate-500">It is handed in with the case.</span>
         </div>

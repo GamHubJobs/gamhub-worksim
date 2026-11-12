@@ -7,7 +7,7 @@ import { apply, approved, journal, line, marchBooks } from '../../../tools/books
  *
  * 1. Books: post the quarter-end adjustments.
  * 2. Grid Craft: analyse the quarter against budget and flag what to investigate.
- * 3. Grid Craft and Docs: the board pack (key figures and a written report).
+ * 3. Grid Craft and Word Craft: the board pack (key figures and a written report).
  *
  * Teaches: running a close from adjustments to the board, materiality
  * (what is worth investigating), and telling one consistent story.
@@ -421,7 +421,7 @@ Daniel`,
 }
 
 // ---------------------------------------------------------------------------
-// Stage 3: the board pack (Grid Craft and Docs)
+// Stage 3: the board pack (Grid Craft and Word Craft)
 // ---------------------------------------------------------------------------
 
 const months: Array<[string, number, number]> = [
@@ -452,7 +452,7 @@ Last stage. The board pack has two parts:
 
 **1. Key figures (Grid Craft).** The workbook has Q1 income and costs by month. Add each month’s **net profit** and **net margin** (profit ÷ income, as a %), and the **Q1 totals** in column E. Add a chart of income and costs by month.
 
-**2. The board report (Docs).** An executive summary, findings and recommendations. Give **Q1 income**, **Q1 net profit**, and the **professional fees overspend** from your variance analysis; explain that it is mostly the **audit** fee accrual, and say what else you flagged.
+**2. The board report (Word Craft).** An executive summary, findings and recommendations. Give **Q1 income**, **Q1 net profit**, and the **professional fees overspend** from your variance analysis; explain that it is mostly the **audit** fee accrual, and say what else you flagged.
 
 Reply to this email with the workbook and the report attached.
 
@@ -481,7 +481,7 @@ Daniel`,
       id: 'report',
       title: 'The board report',
       instructions:
-        'In **Docs**, open **Q1 board report**. Keep the headings, give the three figures, explain the professional fees overspend (the audit accrual) and the other flagged lines, and recommend what to watch in Q2. 200 to 800 words.',
+        'In **Word Craft**, open **Q1 board report**. Keep the headings, give the three figures, explain the professional fees overspend (the audit accrual) and the other flagged lines, and recommend what to watch in Q2. 200 to 800 words.',
     },
     {
       id: 'send',

@@ -133,7 +133,7 @@ test('Docs: a model’s rewrite of the selection is applied only after review', 
   )
   await page.reload()
   await sitAtComputer(page)
-  await openApp(page, 'Docs')
+  await openApp(page, 'Word Craft')
   await page.getByRole('button', { name: /Blank document/ }).click()
   const body = page.getByTestId('doc-body').locator('.ProseMirror')
   await body.click()

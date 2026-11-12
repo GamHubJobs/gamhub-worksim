@@ -7,7 +7,7 @@ const toolbar = (page: Page) => page.getByRole('toolbar', { name: 'Formatting' }
 test('a document can be written, formatted, renamed and reopened', async ({ page }) => {
   await page.goto('/')
   await startCareerIfNeeded(page, 'Alex Morgan')
-  await openApp(page, 'Docs')
+  await openApp(page, 'Word Craft')
   await page.getByRole('button', { name: /Blank document/ }).click()
 
   // A heading, a formatted paragraph and a bulleted list.
@@ -66,7 +66,7 @@ test('templates give a professional starting point, and files can be deleted', a
 }) => {
   await page.goto('/')
   await startCareerIfNeeded(page, 'Sam Lee')
-  await openApp(page, 'Docs')
+  await openApp(page, 'Word Craft')
   await page.getByRole('button', { name: /Meeting minutes/ }).click()
   await expect(body(page)).toContainText('Minutes: [Meeting name]')
   await expect(body(page)).toContainText('Minutes taken by')

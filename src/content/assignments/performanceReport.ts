@@ -3,7 +3,7 @@ import type { AssignmentInput } from '../schemas'
 /**
  * Assignment 7 (Junior Finance Assistant): the monthly departmental
  * performance report. The first task that uses three apps: analyse the
- * figures in Grid Craft (variances, a chart), write a report in Docs and prepare
+ * figures in Grid Craft (variances, a chart), write a report in Word Craft and prepare
  * slides for the management meeting, then email all three to Priya.
  */
 const departments: Array<[string, string, string]> = [
@@ -40,11 +40,11 @@ The directors want our **monthly departmental performance report** for Thursday�
 
 **1. The analysis (Grid Craft).** The workbook has each department’s budget and actual spending for October. Work out each department’s variance (actual minus budget), the percentage of budget used, and whether it is over or under budget; add the totals, and make a chart comparing budget and actual by department.
 
-**2. The report (Docs).** A short written report with an executive summary, your findings and your recommendations. Give the key figures (total budget, total actual spending, and the biggest overspend), name the departments that went over budget, and include your chart.
+**2. The report (Word Craft).** A short written report with an executive summary, your findings and your recommendations. Give the key figures (total budget, total actual spending, and the biggest overspend), name the departments that went over budget, and include your chart.
 
 **3. The slides (Slides).** Four to eight slides I can present on Thursday, with the chart and the headline figure.
 
-I’ve set up the three files for you; you’ll find them in Grid Craft, Docs and Slides. When you’re done, **reply to this email and attach all three files**.
+I’ve set up the three files for you; you’ll find them in Grid Craft, Word Craft and Slides. When you’re done, **reply to this email and attach all three files**.
 
 Thanks,
 
@@ -78,8 +78,8 @@ Fill them down, then add the totals in row 9: \`=SUM(B2:B${last})\` and \`=SUM(C
     },
     {
       id: 'report',
-      title: 'Write the report in Docs',
-      instructions: `Open **Docs** and the file **October performance report**. Replace the [placeholders]:
+      title: 'Write the report in Word Craft',
+      instructions: `Open **Word Craft** and the file **October performance report**. Replace the [placeholders]:
 - **Executive summary**: one or two sentences with the headline: total spending against total budget.
 - **Findings**: which departments were over budget and by how much; which were under.
 - **Recommendations**: what should happen next.
@@ -252,7 +252,7 @@ Insert your chart with **Chart** in the toolbar. Aim for 150 to 600 words.`,
           title: 'Chart in the report',
           points: 10,
           why: 'A picture of budget against actual makes the findings obvious.',
-          hint: 'In Docs, click Chart in the toolbar and choose your chart.',
+          hint: 'In Word Craft, click **Insert chart from Grid Craft** above the document and choose your chart.',
         },
         {
           id: 'report-length',

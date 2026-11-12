@@ -132,7 +132,9 @@ test('passing a readiness assessment with real SQL in Data Studio and a report i
   await page
     .getByTestId('readiness')
     .getByTestId('case-detail')
-    .getByRole('button', { name: /Start “Analysis note: quarterly sales total” in Docs/ })
+    .getByRole('button', {
+      name: /Start “Analysis note: quarterly sales total” in Word Craft/,
+    })
     .click()
   await writeReport(page, [
     [

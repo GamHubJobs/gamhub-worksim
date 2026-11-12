@@ -49,7 +49,7 @@ As an Accountant you now own a piece of the month-end close. The **Balances** sh
 Please:
 • set out the **trial balance**: each balance in a Debit or a Credit column, with totals (they must be equal);
 • prepare the **income statement**: revenue, total expenses, net profit and the profit margin;
-• write a short **management report in Docs** with the results: revenue, expenses, net profit, and what drove the costs.
+• write a short **management report in Word Craft** with the results: revenue, expenses, net profit, and what drove the costs.
 
 Reply with the workbook and the report attached.
 
@@ -81,7 +81,7 @@ Daniel`,
     {
       id: 'report',
       title: 'Report the results',
-      instructions: `In **Docs**, open **October results** and write a short report (150 to 600 words) with an executive summary, the findings and recommendations. Give revenue, total expenses and net profit, and say what the biggest cost was. Then reply to the email with both files attached.`,
+      instructions: `In **Word Craft**, open **October results** and write a short report (150 to 600 words) with an executive summary, the findings and recommendations. Give revenue, total expenses and net profit, and say what the biggest cost was. Then reply to the email with both files attached.`,
       hint: 'Lead with the headline: did we make a profit, and how big was it compared with revenue?',
     },
   ],

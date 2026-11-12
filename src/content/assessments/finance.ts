@@ -25,7 +25,7 @@ function faClaims(p: {
       'Review this week’s expense claims against policy, pay what is due and report.',
     brief: `This assessment checks that you can process expenses accurately and independently.
 
-Review the five claims against the expenses policy, work out what to pay, decide what to do about the problems, write a short expenses report in Docs, and tell {manager} what you have done. You have 3 hours.`,
+Review the five claims against the expenses policy, work out what to pay, decide what to do about the problems, write a short expenses report in Word Craft, and tell {manager} what you have done. You have 3 hours.`,
     whyItMatters:
       'At the next level you will process money on your own. Accuracy, applying policy fairly and explaining exceptions clearly are what make that possible.',
     objectives: [
@@ -181,7 +181,7 @@ function faBudget(p: {
       'Report the department’s spending against budget, with a forecast and recommendations.',
     brief: `This assessment checks that you can monitor a budget and advise on it.
 
-Analyse the department’s spending, forecast the quarter end including commitments, decide what to recommend, write the budget report in Docs, and brief the department head. You have 3 hours.`,
+Analyse the department’s spending, forecast the quarter end including commitments, decide what to recommend, write the budget report in Word Craft, and brief the department head. You have 3 hours.`,
     whyItMatters:
       'Officers are trusted to spot problems in the numbers early and to recommend action, not just to report what has happened.',
     objectives: [

@@ -8,7 +8,7 @@ import { runTerminal } from '../../../game/code/terminal'
  *
  * 1. Code: cover the current rules with tests before touching them.
  * 2. Code and Git: implement the new rules on a branch, test, merge.
- * 3. Code, Git and Docs: the changelog, the release commit and the notes.
+ * 3. Code, Git and Word Craft: the changelog, the release commit and the notes.
  *
  * Teaches: safety nets before changes, changing behaviour deliberately
  * (and updating tests with it), and shipping with clear release notes.
@@ -491,7 +491,7 @@ Last stage: shipping it.
 
 1. In **CHANGELOG.md**, add a **2.0.0** entry at the top saying what changed.
 2. Commit it on main with the message **“Release 2.0.0: new mileage rates”**, and leave the working tree clean.
-3. Write the **release notes** for Finance in Docs: what changes for people claiming mileage, with the new rates (**50p**, **30p** after **10,000** miles, and the **passenger** rate), and when it applies.
+3. Write the **release notes** for Finance in Word Craft: what changes for people claiming mileage, with the new rates (**50p**, **30p** after **10,000** miles, and the **passenger** rate), and when it applies.
 
 Reply to this email with the project and the release notes attached.
 
@@ -521,7 +521,7 @@ Samuel`,
       id: 'notes',
       title: 'Release notes',
       instructions:
-        'In **Docs**, open **Release notes: mileage rates**. Plain English for Finance and everyone who claims mileage. 80 to 400 words.',
+        'In **Word Craft**, open **Release notes: mileage rates**. Plain English for Finance and everyone who claims mileage. 80 to 400 words.',
     },
     {
       id: 'send',

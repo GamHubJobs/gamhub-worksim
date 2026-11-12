@@ -72,7 +72,7 @@ Congratulations on becoming a Service Desk Analyst. Analysts don’t just fix ti
 Five people have reported the same Outlook problem since last night’s update. {senior} found the cause and the fix (it’s in the knowledge base under “Engineer’s note”). Please:
 • triage the queue: priority and category (several people are affected now),
 • reply to each Outlook user with the fix, and resolve their tickets,
-• write a short **knowledge-base article in Docs** (symptoms, cause, resolution) so users can fix it themselves next time.
+• write a short **knowledge-base article in Word Craft** (symptoms, cause, resolution) so users can fix it themselves next time.
 
 There’s one ticket in the queue that has nothing to do with Outlook. Don’t let it hide.
 
@@ -103,7 +103,7 @@ Ravi`,
       id: 'article',
       title: 'Write the knowledge-base article',
       instructions:
-        'In **Docs**, open **KB: Outlook says Disconnected** and write the article with three headings: **Symptoms**, **Cause** and **Resolution** (numbered steps). 120 to 500 words.',
+        'In **Word Craft**, open **KB: Outlook says Disconnected** and write the article with three headings: **Symptoms**, **Cause** and **Resolution** (numbered steps). 120 to 500 words.',
     },
     {
       id: 'send',

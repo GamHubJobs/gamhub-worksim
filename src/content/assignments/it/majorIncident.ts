@@ -65,7 +65,7 @@ export const majorIncident: AssignmentInput = {
 Email is down for the whole company: Outlook, webmail, and mail from outside. This is a major incident and, as a Senior Support Analyst, you’re running the service desk side while {senior} and the infrastructure team fix it.
 
 1. **The queue**: tickets are pouring in. Triage them (this is as critical as it gets), keep them open, and send one clear update to Maria, who reported it first, saying what we know, what users can do meanwhile, and when the next update will be.
-2. **The report**: it’s now fixed. The engineers’ timeline and cause are in the knowledge base. Write the **incident report in Docs**: summary, timeline, impact, root cause and actions to stop it happening again.
+2. **The report**: it’s now fixed. The engineers’ timeline and cause are in the knowledge base. Write the **incident report in Word Craft**: summary, timeline, impact, root cause and actions to stop it happening again.
 3. **The briefing**: {director} wants a short **briefing in Slides** for the management meeting.
 
 Reply with all three files when you’re done.
@@ -92,7 +92,7 @@ Ravi`,
       id: 'report',
       title: 'Write the incident report',
       instructions:
-        'In **Docs**, open **Incident report: email outage**. Use headings for the summary, timeline, impact, root cause and actions. Use the engineers’ timeline from the knowledge base.',
+        'In **Word Craft**, open **Incident report: email outage**. Use headings for the summary, timeline, impact, root cause and actions. Use the engineers’ timeline from the knowledge base.',
     },
     {
       id: 'briefing',

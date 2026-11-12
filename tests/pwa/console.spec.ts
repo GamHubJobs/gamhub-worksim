@@ -39,7 +39,7 @@ test('a whole session in the production build: no console errors and no failed r
     'Tasks',
     'Cases',
     'Grid Craft',
-    'Docs',
+    'Word Craft',
     'Slides',
     'Career',
     'Readiness',

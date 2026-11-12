@@ -151,7 +151,7 @@ March’s transactions are all in **Books**. Before we report, these adjustments
 3. **Accrual**: our freelance designer did **£950** of work in March but won’t invoice until April (subcontractor costs).
 4. **Accrual**: the bank charges **£125** of loan interest for March, added to the loan.
 
-Then check the profit and loss and balance sheet, and write the **March management accounts** in Docs: a summary, the key figures (income, net profit and cash in the bank), what the adjustments did, and your recommendations. Reply to this email with the books and the report attached.
+Then check the profit and loss and balance sheet, and write the **March management accounts** in Word Craft: a summary, the key figures (income, net profit and cash in the bank), what the adjustments did, and your recommendations. Reply to this email with the books and the report attached.
 
 Daniel`,
   },
@@ -191,7 +191,7 @@ Daniel`,
       id: 'report',
       title: 'Write the management accounts',
       instructions:
-        'In **Docs**, open **March management accounts**. Keep the headings, give the key figures, explain in plain words what depreciation, the prepayment and the accruals did to profit, and recommend what to watch. 150 to 700 words.',
+        'In **Word Craft**, open **March management accounts**. Keep the headings, give the key figures, explain in plain words what depreciation, the prepayment and the accruals did to profit, and recommend what to watch. 150 to 700 words.',
     },
     {
       id: 'send',

@@ -20,7 +20,7 @@ function itOutage(p: {
     summary: 'Investigate an outage, find its cause, resolve it and document it.',
     brief: `This assessment checks that you can handle an incident from start to finish.
 
-Investigate why the Finance team cannot reach the shared drive, work out the time left on the target, decide how to resolve it, write the incident report in Docs, and update the affected users. You have 3 hours.`,
+Investigate why the Finance team cannot reach the shared drive, work out the time left on the target, decide how to resolve it, write the incident report in Word Craft, and update the affected users. You have 3 hours.`,
     whyItMatters:
       'Analysts at the next level own incidents end to end: diagnosis from evidence, a safe fix, clear communication and a record others can learn from.',
     objectives: [
@@ -172,7 +172,7 @@ function itTrends(p: {
       'Find the patterns in last month’s tickets and propose fixes that remove them.',
     brief: `This assessment checks that you can improve the service, not just answer tickets.
 
-Analyse last month’s tickets, estimate the time a fix would save, decide what to propose, write the problem report in Docs, and send your proposal to the IT manager. You have 3 hours.`,
+Analyse last month’s tickets, estimate the time a fix would save, decide what to propose, write the problem report in Word Craft, and send your proposal to the IT manager. You have 3 hours.`,
     whyItMatters:
       'Senior analysts look for the causes behind repeated tickets. Removing a whole category of work frees the desk for problems that need people.',
     objectives: [

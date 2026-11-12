@@ -10,7 +10,7 @@ import { cleanTable } from '../../../tools/datastudio/transform'
  *
  * 1. Data Studio: clean the subscriptions export and measure churn by plan.
  * 2. Data Studio: a churn dashboard and the monthly revenue lost.
- * 3. Grid Craft and Docs: the figures by plan and a findings memo.
+ * 3. Grid Craft and Word Craft: the figures by plan and a findings memo.
  *
  * Teaches: rates as well as counts, and that the biggest rate is not always
  * the biggest cost (Premium loses fewer customers but more revenue).
@@ -437,7 +437,7 @@ Amara`,
 }
 
 // ---------------------------------------------------------------------------
-// Stage 3: the figures by plan and the findings memo (Grid Craft and Docs)
+// Stage 3: the figures by plan and the findings memo (Grid Craft and Word Craft)
 // ---------------------------------------------------------------------------
 
 const header = { bold: true, fill: 'gray' } as const
@@ -471,7 +471,7 @@ Last stage. The head of customer success wants the findings in writing.
 
 **1. The figures (Grid Craft).** The workbook has each plan’s customers, cancellations and monthly fee. Add the **churn rate** (cancelled ÷ customers, as a %) and the **monthly revenue lost** (cancelled × fee) for each plan, the **totals**, and a chart of revenue lost by plan.
 
-**2. The memo (Docs).** A short findings memo: the **overall churn rate**, the **total monthly revenue lost**, which plan loses the most customers and which **loses the most revenue** (they are not the same!), and what you recommend.
+**2. The memo (Word Craft).** A short findings memo: the **overall churn rate**, the **total monthly revenue lost**, which plan loses the most customers and which **loses the most revenue** (they are not the same!), and what you recommend.
 
 Reply to this email with the workbook and the memo attached.
 
@@ -501,7 +501,7 @@ Amara`,
       id: 'memo',
       title: 'The memo',
       instructions:
-        'In **Docs**, open **Churn findings memo**: the overall churn rate, the revenue lost, the plan with the highest churn (Basic) and the one losing the most revenue (Premium), and your recommendation. 150 to 600 words.',
+        'In **Word Craft**, open **Churn findings memo**: the overall churn rate, the revenue lost, the plan with the highest churn (Basic) and the one losing the most revenue (Premium), and your recommendation. 150 to 600 words.',
     },
     {
       id: 'send',

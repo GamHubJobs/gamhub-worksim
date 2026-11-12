@@ -40,7 +40,7 @@ When we buy equipment, we don’t treat the whole cost as an expense on day one.
 
 In the workbook, for each asset, please work out the annual depreciation, the depreciation charged so far (never more than cost minus residual value), the net book value, and this year’s charge (zero for assets past their useful life). Then add the totals.
 
-Finally, write me a short **memo in Docs** for {director} explaining this year’s depreciation charge, the total net book value, and which asset is fully depreciated and may need replacing.
+Finally, write me a short **memo in Word Craft** for {director} explaining this year’s depreciation charge, the total net book value, and which asset is fully depreciated and may need replacing.
 
 Daniel`,
   },
@@ -75,7 +75,7 @@ Fill both down.`,
     {
       id: 'memo',
       title: 'Write the memo',
-      instructions: `In **Docs**, open **Depreciation memo** (a memo template). In plain words, for {director}: this year’s total depreciation charge (I9), the total net book value of our assets (H9), and which asset is fully depreciated. 80 to 300 words. Then reply to the email with the workbook and the memo attached.`,
+      instructions: `In **Word Craft**, open **Depreciation memo** (a memo template). In plain words, for {director}: this year’s total depreciation charge (I9), the total net book value of our assets (H9), and which asset is fully depreciated. 80 to 300 words. Then reply to the email with the workbook and the memo attached.`,
     },
   ],
   workbook: {

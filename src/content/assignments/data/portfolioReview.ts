@@ -51,7 +51,7 @@ The workbook has revenue for 2024 and 2025 and the hours we worked in 2025 for e
 • work out each client’s growth, revenue per hour and whether they are growing or declining,
 • summarise by sector: revenue both years, growth, hours, revenue per hour and the number of declining clients, with totals,
 • name the fastest-growing client and sector, and chart revenue by sector for both years,
-• write the **review in Docs** (summary, findings, recommendations), and
+• write the **review in Word Craft** (summary, findings, recommendations), and
 • prepare **4 to 8 slides** for the board.
 
 Amara`,
@@ -96,7 +96,7 @@ Totals in row ${total} (SUM for B, C, E and G; the same formulas for D and F). F
       id: 'report',
       title: 'Write the review',
       instructions:
-        'In **Docs**, open **Client portfolio review**: an executive summary, findings and recommendations, with total 2025 revenue, overall growth, the sector to invest in and the sector that needs attention, and your chart. 250 to 900 words.',
+        'In **Word Craft**, open **Client portfolio review**: an executive summary, findings and recommendations, with total 2025 revenue, overall growth, the sector to invest in and the sector that needs attention, and your chart. 250 to 900 words.',
     },
     {
       id: 'deck',
@@ -319,7 +319,7 @@ Totals in row ${total} (SUM for B, C, E and G; the same formulas for D and F). F
           title: 'Chart in the review',
           points: 5,
           why: 'One good chart tells the story faster than a page of text.',
-          hint: 'Insert your chart with Chart in the Docs toolbar.',
+          hint: 'Insert your chart with **Insert chart from Grid Craft**, above the document.',
         },
         {
           id: 'report-length',

@@ -24,11 +24,12 @@ own files on your device. Then, without a connection:
 
 - WorkSim starts, and your careers, tasks, cases, files and portfolio open;
 - all your work is saved on this device as usual;
-- every app and tool works, including the 3D office, Docs, Slides, Code, SQL and the
+- every app and tool works, including the 3D office, Slides, Code, SQL and the
   profession tools;
-- Grid Craft, the office spreadsheet, works once it has been opened online. It is
-  downloaded the first time it is opened, not with the rest of WorkSim, as it is
-  large. Until then, the basic spreadsheet editor opens the same files;
+- Grid Craft and Word Craft, the office spreadsheet and word processor, work once
+  they have been opened online. Each is downloaded the first time it is opened, not
+  with the rest of WorkSim, as they are large. Until then, the basic editors open
+  the same files;
 - you can download a backup file and export portfolio PDFs and ZIP files.
 
 When you are offline, a small notice at the top says so. Nothing else changes.

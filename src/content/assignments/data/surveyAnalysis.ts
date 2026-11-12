@@ -72,7 +72,7 @@ The client satisfaction survey has closed. Each response scores us from 1 to 5, 
 • summarise each team and the company overall: average score, the share of satisfied clients (4 or 5), average days to resolve and the share who would recommend us,
 • find the lowest-scoring team, and the median score overall,
 • chart the average score by team,
-• write a short **insight memo** in Docs: the finding, the evidence, a recommendation, and one honest caveat.
+• write a short **insight memo** in Word Craft: the finding, the evidence, a recommendation, and one honest caveat.
 
 Amara`,
   },
@@ -109,7 +109,7 @@ Amara`,
       id: 'memo',
       title: 'Write the insight memo',
       instructions:
-        'In **Docs**, open **Client survey insights**. Say which team scores lowest, with its share of satisfied clients and its average days to resolve, compared with the company overall. Recommend what to do, and add one caveat about what the data can and cannot show. 120 to 400 words.',
+        'In **Word Craft**, open **Client survey insights**. Say which team scores lowest, with its share of satisfied clients and its average days to resolve, compared with the company overall. Recommend what to do, and add one caveat about what the data can and cannot show. 120 to 400 words.',
       hint: 'Look at days to resolve next to the scores: is there a pattern? A survey of 24 clients shows a link, not proof of the cause.',
     },
     {

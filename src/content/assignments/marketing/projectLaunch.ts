@@ -17,7 +17,7 @@ import {
  *
  * 1. Site Analytics: find why visits don't become bookings.
  * 2. Ad Campaigns: stop the waste and bring the month back on budget.
- * 3. Grid Craft, Docs and Slides: the launch scorecard and the revised plan.
+ * 3. Grid Craft, Word Craft and Slides: the launch scorecard and the revised plan.
  *
  * Teaches: diagnosing a funnel before spending more, cutting waste without
  * cutting what works, and presenting a recovery plan.
@@ -361,7 +361,7 @@ Last stage: {director} wants to see the recovery.
 
 **1. The scorecard (Grid Craft).** The first two weeks by ad set. Add each ad set’s **ROAS** (revenue ÷ spend), a decision (**“Keep”** when ROAS is 1 or more, otherwise “Pause”), the totals and the overall ROAS, and a chart.
 
-**2. The plan (Docs).** What went wrong (the launch page and the wasted spending), what you changed, the **total spend** and **overall ROAS** of the first two weeks, and what happens next.
+**2. The plan (Word Craft).** What went wrong (the launch page and the wasted spending), what you changed, the **total spend** and **overall ROAS** of the first two weeks, and what happens next.
 
 **3. The slides.** 3 to 6 slides with the same story.
 
@@ -391,7 +391,7 @@ Sofia`,
       id: 'plan',
       title: 'The plan and the slides',
       instructions:
-        'In **Docs**, open **Health Check: revised launch plan**; in **Slides**, **Health Check: recovery**.',
+        'In **Word Craft**, open **Health Check: revised launch plan**; in **Slides**, **Health Check: recovery**.',
     },
     {
       id: 'send',

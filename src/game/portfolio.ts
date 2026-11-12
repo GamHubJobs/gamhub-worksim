@@ -49,7 +49,7 @@ export function toolsOf(assignment: Assignment): string[] {
 export function toolName(id: string): string {
   const apps: Record<string, string> = {
     sheets: 'Grid Craft',
-    docs: 'Docs',
+    docs: 'Word Craft',
     slides: 'Slides',
     helpdesk: 'Help Desk',
     code: 'Code',

@@ -108,7 +108,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'The adjusted books (Books)',
       'The variance analysis (Grid Craft)',
-      'The board pack: key figures (Grid Craft) and the board report (Docs)',
+      'The board pack: key figures (Grid Craft) and the board report (Word Craft)',
     ],
     assessment: [
       'Each stage is checked like a task and must pass',
@@ -135,7 +135,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'The cleaned data and churn query (Data Studio)',
       'The churn dashboard (Data Studio)',
-      'The figures by plan (Grid Craft) and the findings memo (Docs)',
+      'The figures by plan (Grid Craft) and the findings memo (Word Craft)',
     ],
     assessment: [
       'Each stage is checked like a task and must pass',
@@ -158,7 +158,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'The triaged queue and the update to users (Help Desk)',
       'Findings, fixes and evidence (Network Tools)',
-      'The resolved queue, the incident review (Docs) and the briefing (Slides)',
+      'The resolved queue, the incident review (Word Craft) and the briefing (Slides)',
     ],
     stages: ['outage-triage', 'outage-diagnosis', 'outage-review'],
     assessment: [
@@ -181,7 +181,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'Saved reports and the diagnosis (Site Analytics)',
       'The changed ad account (Ad Campaigns)',
-      'The scorecard (Grid Craft), the revised plan (Docs) and the slides (Slides)',
+      'The scorecard (Grid Craft), the revised plan (Word Craft) and the slides (Slides)',
     ],
     stages: ['launch-analytics', 'launch-campaigns', 'launch-plan'],
     assessment: [
@@ -204,7 +204,7 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
     deliverables: [
       'The tests for today’s rules (Code)',
       'The new rules, merged into main (Code and Git)',
-      'The changelog and release commit (Code and Git) and the release notes (Docs)',
+      'The changelog and release commit (Code and Git) and the release notes (Word Craft)',
     ],
     stages: ['mileage-tests', 'mileage-change', 'mileage-release'],
     assessment: [

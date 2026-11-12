@@ -1,7 +1,7 @@
 /**
  * Career readiness assessments: a practical piece of work showing whether the
  * player can handle the responsibilities of their current level. Each combines
- * an investigation, a calculation, a decision, a report written in Docs and a
+ * an investigation, a calculation, a decision, a report written in Word Craft and a
  * message, within a time limit, and is graded like a case.
  *
  * Every assessment comes in two versions with different figures and details,
@@ -113,7 +113,7 @@ export function report(
     id: 'report',
     kind: 'document',
     title: 'Write the report',
-    prompt: `Write a short report in Docs: ${sections.map((s) => `“${s[0]}”`).join(', ')}, with the key figures and what you recommend.`,
+    prompt: `Write a short report in Word Craft: ${sections.map((s) => `“${s[0]}”`).join(', ')}, with the key figures and what you recommend.`,
     points: 25,
     deliverable: {
       kind: 'doc',

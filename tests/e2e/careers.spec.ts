@@ -45,7 +45,7 @@ test('an Accounting career: its own manager, tools and a first task done end to 
 
   // The dock has the tools this career uses.
   await sitAtComputer(page)
-  await expect(apps(page).getByRole('button', { name: /^Docs/ })).toBeVisible()
+  await expect(apps(page).getByRole('button', { name: /^Word Craft/ })).toBeVisible()
   await expect(apps(page).getByRole('button', { name: /^Slides/ })).toHaveCount(0)
 
   // The welcome email describes this department.
@@ -113,7 +113,7 @@ test('switching careers keeps each one’s progress, colleagues and files', asyn
   test.setTimeout(120_000)
   await page.goto('/')
   await startCareerIfNeeded(page, 'Sam')
-  await openApp(page, 'Docs')
+  await openApp(page, 'Word Craft')
   await page.getByRole('button', { name: /Business letter/ }).click()
   await expect(page.getByTestId('document-title')).toHaveText('Letter')
   await openApp(page, 'Career')
@@ -132,7 +132,7 @@ test('switching careers keeps each one’s progress, colleagues and files', asyn
   await expect(page.getByTestId('career-title')).toHaveText('Accounts Trainee')
   await expect(page.getByTestId('colleague-manager')).toContainText('Daniel Okoro')
   // Finance's files are not in this career's Docs.
-  await openApp(page, 'Docs')
+  await openApp(page, 'Word Craft')
   await expect(page.getByTestId('doc-files')).not.toContainText('Letter')
 
   // Back to Finance: everything is where it was.
@@ -145,7 +145,7 @@ test('switching careers keeps each one’s progress, colleagues and files', asyn
   await openApp(page, 'Career')
   await expect(page.getByTestId('career-title')).toHaveText('Finance & Admin Intern')
   await expect(page.getByTestId('colleague-manager')).toContainText('Priya Raman')
-  await openApp(page, 'Docs')
+  await openApp(page, 'Word Craft')
   await expect(page.getByTestId('doc-files')).toContainText('Letter')
 
   // After a reload, the last career played is still the one in use.

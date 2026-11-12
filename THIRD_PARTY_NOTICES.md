@@ -18,5 +18,20 @@ shown in the game as "Grid Craft".
   sponsored or endorsed by the ArtCraft Team, and does not use their marks in its own
   interface.
 
+## Word Craft (the office word processor)
+
+GamHub WorkSim runs **WordCraft 0.18.0** by the ArtCraft team, unmodified. It is
+shown in the game as "Word Craft".
+
+- **Source:** https://github.com/storytold/wordcraft (tag `v0.18.0`).
+- **Build used:** the official web release, `wordcraft-web-0.18.0.zip`, with SHA-256
+  `a444046f649a50779b1b6a1b0db7e24facd906156ceecbcfa53bdbbbc89f0310`.
+- **Licence:** MIT OR Apache-2.0, copyright (c) 2026 the ArtCraft Team and the
+  WordCraft contributors.
+- **Notices shipped with the app:** the full licence texts, the NOTICE, the
+  per-file attribution and the fonts' SIL Open Font Licence texts are served with it,
+  in `crafts/wordcraft/`.
+- **Trademarks:** the same notice as for Grid Craft applies.
+
 The app files are not part of this repository. `npm run crafts` downloads them from
 the release above and checks them (see `docs/CRAFT_APPS.md`).

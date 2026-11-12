@@ -75,7 +75,7 @@ The spring campaign launches next week. {senior} has drafted the posts in the co
 Please:
 • count the characters in each post, look up its channel’s limit, and flag anything too long,
 • count the posts per channel and how many need shortening,
-• write the **launch email** in Docs: a short, friendly email to existing clients announcing the spring offer: a free 30-minute review, 20% off the first quarter with code **SPRING20**, booked at **cobaltridge.example/spring**. One clear call to action.
+• write the **launch email** in Word Craft: a short, friendly email to existing clients announcing the spring offer: a free 30-minute review, 20% off the first quarter with code **SPRING20**, booked at **cobaltridge.example/spring**. One clear call to action.
 
 Reply with both files when you’re done.
 
@@ -106,7 +106,7 @@ Sofia`,
       id: 'email',
       title: 'Write the launch email',
       instructions:
-        'In **Docs**, open **Spring launch email**. Write a subject line, a greeting, two or three short paragraphs about the offer with the code SPRING20, and one call to action: book at cobaltridge.example/spring. 80 to 250 words.',
+        'In **Word Craft**, open **Spring launch email**. Write a subject line, a greeting, two or three short paragraphs about the offer with the code SPRING20, and one call to action: book at cobaltridge.example/spring. 80 to 250 words.',
       hint: 'One reader, one message, one action. Say what they get, what it costs (nothing), and what to do next.',
     },
     {

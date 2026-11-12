@@ -162,8 +162,8 @@ export const SheetSchema = z.object({
  * the sheets it was saved with, so an edit made elsewhere (the basic editor,
  * a restored version) is noticed and the file rebuilt from the sheets.
  */
-export const SheetFileSchema = z.object({
-  format: z.literal('xlsx'),
+export const CraftFileSchema = z.object({
+  format: z.enum(['xlsx', 'docx']),
   app: z.string().min(1).max(40),
   /** The file, base64-encoded. */
   data: z.string().max(40_000_000),
@@ -173,7 +173,7 @@ export const SheetFileSchema = z.object({
 export const SheetContentSchema = z.object({
   sheets: z.array(SheetSchema).min(1),
   /** Added with the office apps: absent in workbooks made before them. */
-  file: SheetFileSchema.optional(),
+  file: CraftFileSchema.optional(),
 })
 
 // ---------------------------------------------------------------------------
@@ -261,6 +261,11 @@ export const DocContentSchema = z.object({
     size: z.enum(['a4', 'letter']),
     margins: z.enum(['normal', 'narrow', 'wide']),
   }),
+  /**
+   * The document as a real .docx file, kept when it is edited in Word Craft
+   * (see CraftFileSchema). Added with the office apps: absent before them.
+   */
+  file: CraftFileSchema.optional(),
 })
 
 export const DocDocumentSchema = DocumentBaseSchema.extend({

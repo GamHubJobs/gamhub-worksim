@@ -33,7 +33,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: 'apps',
     title: 'The apps',
     text: [
-      '**Mail** brings your tasks, cases and replies. **Tasks** lists your work with its steps and hints. **Grid Craft**, **Docs** and **Slides** are working office apps; your career also has its own tools, such as Books, Help Desk, Data Studio or Code.',
+      '**Mail** brings your tasks, cases and replies. **Tasks** lists your work with its steps and hints. **Grid Craft**, **Word Craft** and **Slides** are working office apps; your career also has its own tools, such as Books, Help Desk, Data Studio or Code.',
       'Everything you type is saved automatically, a moment after you stop typing.',
     ],
   },
@@ -130,7 +130,17 @@ export const HELP_TOPICS: HelpTopic[] = [
       '**Grid Craft** is the office spreadsheet: formulas (over 500 functions), formatting, sorting and filtering, tables, charts, pivot tables and several sheets. It has the ribbon, the formula bar and the shortcuts you would find in any spreadsheet program.',
       'Your work is saved by itself a moment after each change, as a real **.xlsx** file. Use **Download .xlsx**, **Download .csv** or **Export PDF** above the sheet for a copy of your own, and **Import a file…** to open a spreadsheet from your computer.',
       'Tasks are checked on what your cells hold: the values, the formulas and their formats. WorkSim AI can see the cell you are on and explain a formula or an error.',
-      'If Grid Craft cannot run on your device, the basic spreadsheet editor opens the same file instead. To always use the basic editor (it works fully with a screen reader), choose it in **Settings → Office apps**.',
+      'If Grid Craft cannot run on your device, the basic spreadsheet editor opens the same file instead. To always use the basic editors (they work fully with a screen reader), choose them in **Settings → Office apps**.',
+    ],
+  },
+  {
+    id: 'wordcraft',
+    title: 'Working in Word Craft',
+    text: [
+      '**Word Craft** is the office word processor: styles and headings, fonts, lists, tables, pictures, page layout, headers and footers, references, comments and track changes, spelling and grammar, with the ribbon and shortcuts of any word processor.',
+      'Your work is saved by itself a moment after each change, as a real **.docx** file. Above the document: **Insert chart from Grid Craft** and **Insert table from Grid Craft** bring in your analysis; **Download .docx** and **Export PDF** give you a copy; **Import a file…** opens a .docx, .odt, .rtf, .html, .md or .txt from your computer.',
+      'Reports are checked on their headings, the figures and words in them, their tables and charts: use Heading styles for your section titles. WorkSim AI can review your writing, suggest a structure, or rewrite the text you select.',
+      'If Word Craft cannot run on your device, the basic editor opens the same file. To always use the basic editors (they work fully with a screen reader), choose them in **Settings → Office apps**.',
     ],
   },
   {

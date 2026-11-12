@@ -65,7 +65,7 @@ As our Digital Marketing Specialist, you now own the **quarterly campaign report
 The workbook has spend, revenue and leads for each channel and month of the first quarter. Please:
 • summarise the quarter by channel: spend, revenue, leads, return on ad spend (ROAS) and cost per lead, with totals,
 • name the channel with the best ROAS, and make a chart comparing spend and revenue by channel,
-• write the **report in Docs** (summary, findings, recommendations) with the key figures and the chart,
+• write the **report in Word Craft** (summary, findings, recommendations) with the key figures and the chart,
 • prepare **4 to 8 slides** for the quarterly review, with the chart and the headline numbers.
 
 Reply with all three files.
@@ -94,7 +94,7 @@ Sofia`,
       id: 'report',
       title: 'Write the report',
       instructions:
-        'In **Docs**, open **Q1 campaign report**: executive summary, findings and recommendations, with total spend, total revenue and the best channel, and your chart. 200 to 800 words.',
+        'In **Word Craft**, open **Q1 campaign report**: executive summary, findings and recommendations, with total spend, total revenue and the best channel, and your chart. 200 to 800 words.',
     },
     {
       id: 'deck',
@@ -276,7 +276,7 @@ Sofia`,
           title: 'Chart in the report',
           points: 5,
           why: 'One good chart tells the story faster than a page of text.',
-          hint: 'Insert your chart with Chart in the Docs toolbar.',
+          hint: 'Insert your chart with **Insert chart from Grid Craft**, above the document.',
         },
         {
           id: 'report-length',

@@ -10,7 +10,7 @@
  * there is always a way to do the work.
  */
 
-export type CraftId = 'gridcraft'
+export type CraftId = 'gridcraft' | 'wordcraft'
 
 export interface CraftInfo {
   id: CraftId
@@ -28,6 +28,12 @@ export const CRAFTS: Record<CraftId, CraftInfo> = {
     title: 'Grid Craft',
     kind: 'spreadsheet',
     basedOn: 'GridCraft by the ArtCraft team',
+  },
+  wordcraft: {
+    id: 'wordcraft',
+    title: 'Word Craft',
+    kind: 'word processor',
+    basedOn: 'WordCraft by the ArtCraft team',
   },
 }
 
@@ -121,4 +127,10 @@ export function craftAvailable(id: CraftId): Promise<Installed | null> {
 /** Forgets a failed app for this session, so it is not tried again in every window. */
 export function markFailed(id: CraftId) {
   checks.set(id, Promise.resolve(null))
+}
+
+/** A file name from a document's title. */
+export function craftFileName(title: string, extension: string, fallback = 'Document') {
+  const base = title.replace(/[\\/:*?"<>|]+/g, ' ').trim() || fallback
+  return `${base}.${extension}`
 }
