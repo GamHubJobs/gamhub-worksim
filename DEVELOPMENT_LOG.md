@@ -190,6 +190,160 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 2: identity verification and access control
+
+Knowing how to unlock an account is no longer enough. In a directory with a
+security policy, an account change is refused until the person asking is
+verified against the records, and approved where the policy needs it. The
+Directory enforces it inside its own actions. The first task to use it is "The
+Account Unlock Request" (Service Desk Analyst). See
+`docs/IDENTITY_VERIFICATION.md`.
+
+### The audit first
+
+- **Present** (commit `409dd6e`):
+  - Phase 1's ticket engine (`game/incidents.ts`);
+  - the Directory's pure actions (`tools/directory/model.ts`): every account
+    change goes through them, from the Directory tab, the model answers and the
+    tests;
+  - the Help Desk's tabs, the office cast and encounters, the skills.
+- **Missing:**
+  - any record to verify a person against;
+  - a policy;
+  - approval relationships (no managers or group owners);
+  - a security log.
+- **The operation boundary is the actions in `model.ts`.** So the policy is
+  checked there, not in the buttons.
+- **The older directory tasks must not change.** The leaver task says Hannah
+  "answered her security questions" in its story. So the policy is part of a
+  directory's state, set by the scenarios that use it, and directories without
+  one work as before.
+
+### What was built
+
+- **The engine** (`tools/directory/security.ts`, pure):
+  - **Sessions:** a verification session covers one account, one ticket and
+    the changes chosen. It expires after 10 minutes, and each change can be
+    made with it once.
+  - **Identity checks:** employee number, staff badge number (compared with
+    the record, which is never shown), or a callback to the extension on
+    record. Whoever has that extension answers. A number the caller gives
+    proves nothing.
+  - **Approval:** a separate step. Only the line manager on record, or a
+    privileged group's owner, can approve. Anyone else is refused.
+  - **Wrong answers:** three of them end the session.
+  - **Deterministic:** what each requester says, and whether they are at their
+    desk, is scenario data.
+- **The policy:**
+  - unlock, password reset and MFA registration: 1 check;
+  - MFA reset: 2 different checks;
+  - disable and enable: the manager's approval;
+  - group changes: a check and the manager's approval;
+  - privileged groups: 2 checks and the owner's approval;
+  - unlocking or resetting a privileged account: the manager's approval as
+    well.
+
+  A scenario can make a change stricter.
+
+- **Enforced in the actions.** Every sensitive action in `model.ts` runs
+  through `guarded()`:
+  - refused: the account and audit log unchanged, a security event recorded,
+    the reason returned;
+  - allowed: the change made, the session used for it, a "performed" event.
+
+  The clock is in the state (`security.clock`), set before each change, and
+  never moves back.
+
+- **Security events:** the account, ticket, change, session, time, kind,
+  severity (info, warning, breach) and an explanation, never an answer. A
+  failed answer is information; an unsafe step is a warning; changing an
+  account nobody verified is a breach.
+- **The Help Desk:**
+  - an **Identity verification** panel on the ticket: choose the account and
+    the change, ask and check, call back, ask for approval. It shows required,
+    in progress, failed, expired, approval needed, denied, permitted and done.
+  - Security events go into the ticket's history once each, and an assigned
+    ticket moves to In progress.
+- **The Directory:**
+  - each account shows what each change needs, its manager and extension on
+    record (badge and employee numbers are never shown);
+  - a **Security events** log under the audit log.
+- **Colleagues:**
+  - the profile's `disruptions` gain an optional `stage` from the real
+    outcome;
+  - in the office, they say they are being checked, could not be verified,
+    are waiting for their manager, or are fed up after two failed answers;
+  - once fixed, they thank the player for checking it was really them.
+- **The task "The Account Unlock Request"** (IT order 8; the four later tasks
+  move down one):
+  - Leila, verified by her badge number;
+  - Carmen, whose payroll access needs her manager Priya's approval;
+  - Owen, who gives an old badge number, is away from his desk and offers his
+    mobile. There are two Owens. His account must stay locked, and his ticket
+    waits for him.
+
+  Graded on the process (verifications, the failed verification, the policy)
+  as well as the results.
+
+- **A new skill:** "Identity and access control", for the IT career.
+- **Not in this phase** (as asked): hints with an XP cost, remote desktop,
+  voicemail, phone calls, security operations.
+
+### Tests
+
+- **Before:** `npm run check` at `409dd6e`: format, lint and types clean; 103
+  files, 2,313 tests passed.
+- **Unit** (`tools/directory/security.test.ts`, 25):
+  - valid, wrong and differently typed answers;
+  - an unknown employee;
+  - a callback: confirmed, no answer, the wrong account's owner, a given
+    number;
+  - three failed attempts;
+  - expiry;
+  - another employee's session;
+  - the wrong change, the wrong group, and each change once;
+  - no answers in the log;
+  - authorisation: allowed, needs approval, the wrong approver, declined,
+    approval without identity, privileged groups, disabling with approval
+    alone;
+  - every guarded action refused when called directly;
+  - directories without a policy unchanged; old directories load.
+- **Integration** (`game/verification.test.ts`, 20):
+  - a failed verification does not resolve the ticket; nor does a successful
+    one alone;
+  - the verified repair resolves it automatically;
+  - refusals in the right ticket's history;
+  - Resolved still refused while broken;
+  - no event written twice;
+  - saving: sessions and events kept, expired stays expired after loading,
+    used sessions do not authorise again;
+  - Phase 1 queues and older profiles load;
+  - colleagues' stages and lines;
+  - grading: the model answer gets full marks, a bypass is a breach, a
+    reasonable refusal costs a little, a failed answer nothing, Owen handled
+    correctly.
+- **Browser** (`tests/e2e/verification.spec.ts`, 2):
+  - an unlock refused and recorded; Leila verified and unlocked, resolving her
+    ticket; Carmen refused without approval, the wrong approver refused, Priya
+    approves, unlocked and resolved; the security log; after a reload, the
+    tickets, histories and record unchanged;
+  - Owen: the old badge fails, his mobile and his desk prove nothing, unlock
+    and reset refused, Resolved refused, the ticket waits.
+- **Results after:** `npm run check` clean (105 files, 2,369 tests). Browser suite (Chromium): 219 passed, 4 flaky, 2 failed, 3 skipped. All six passed when rerun on their own, except `week.spec.ts` (an Accounting Grid Craft cell timing out), which failed again when run beside other browser tests and passed alone with one worker; it timed out the same way in the run before this phase, and nothing it uses changed. Offline (PWA): 6 passed. Other browsers: 8 passed, 1 skipped. Build passed. Startup: start screen 302 kB, 2.7 s.
+
+### Limits
+
+- **Opt-in:** the policy applies to directories that carry one (this task).
+  The older directory tasks are unchanged.
+- **The conversation is written,** in the panel, not a phone call (a later
+  phase). Approval is given straight away.
+- **Restoring an earlier version** of the queue restores its security record
+  with it, as for any change.
+- **Progression:** players already past task 7 who have not started the old
+  task 8 do this task first. Passed work, XP and levels are not affected.
+
+---
+
 ## 2026-11-12 · IT Help Desk 1: tickets that know when they are fixed
 
 A Help Desk ticket can now be tied to the company's simulated systems (Network

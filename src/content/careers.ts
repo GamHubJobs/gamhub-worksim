@@ -86,6 +86,12 @@ SKILLS.push(
     description:
       'Explaining technical things in plain words: guides, articles and reports.',
   },
+  {
+    id: 'access-control',
+    name: 'Identity and access control',
+    description:
+      'Verifying who is asking, checking the change is authorised, and following security policy before changing an account.',
+  },
 )
 
 SKILLS.push(
@@ -279,6 +285,7 @@ CAREERS.push({
     'incident-management',
     'technical-writing',
     'accuracy',
+    'access-control',
     'ai-use',
   ],
   apps: ['helpdesk', 'docs', 'slides'],

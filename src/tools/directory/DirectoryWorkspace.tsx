@@ -22,7 +22,14 @@ import {
   suggestUsername,
   unlockUser,
 } from './model'
-import type { Asset, DirectoryState, User } from './schema'
+import type { Asset, DirectoryState, Operation, User } from './schema'
+import {
+  describeRequirement,
+  OPERATION_NAMES,
+  sessionStatus,
+  viewSession,
+  withClock,
+} from './security'
 
 type Props = ToolWorkspaceProps<DirectoryState>
 type Update = (change: (s: DirectoryState) => DirectoryState) => void
@@ -62,17 +69,29 @@ export default function DirectoryWorkspace({
   readOnly,
   onUpdate,
   lockedSections,
+  now,
 }: Props) {
   const [section, setSection] = useState('users')
   const [problems, setProblems] = useState<string[]>([])
   const editable = !readOnly && !!onUpdate
   const update: Update = (change) => onUpdate?.(change)
-  /** Runs an action; shows its problems instead if it can't be done. */
+  /**
+   * Runs an action; shows its problems instead if it can't be done. The
+   * action itself enforces the security policy: a refusal leaves the account
+   * as it was, but is recorded, so that record is kept.
+   */
   const act: Act = (fn) => {
-    const result = fn(state)
-    if (result.problems.length > 0) return setProblems(result.problems)
+    const at = now?.()
+    const run = (s: DirectoryState) => fn(at === undefined ? s : withClock(s, at))
+    const result = run(state)
+    if (result.problems.length > 0) {
+      setProblems(result.problems)
+      const recorded = result.state.security?.events.at(-1)?.seq
+      if (recorded !== state.security?.events.at(-1)?.seq) update((s) => run(s).state)
+      return
+    }
     setProblems([])
-    update((s) => fn(s).state)
+    update((s) => run(s).state)
   }
 
   return (
@@ -386,7 +405,32 @@ function UserDetail({
           {user.failedSignIns}
           {user.signInLocation && ` · from ${user.signInLocation}`}
         </dd>
+        {user.extension && (
+          <>
+            <dt className="text-slate-500">Extension on record</dt>
+            <dd>{user.extension}</dd>
+          </>
+        )}
+        {user.manager && (
+          <>
+            <dt className="text-slate-500">Manager on record</dt>
+            <dd>{findUser(state, user.manager)?.name ?? user.manager}</dd>
+          </>
+        )}
+        {(user.employeeId || user.badge) && (
+          <>
+            <dt className="text-slate-500">Verification records</dt>
+            <dd className="text-slate-500">
+              {[user.employeeId && 'employee number', user.badge && 'badge number']
+                .filter(Boolean)
+                .join(' and ')}{' '}
+              on file (not shown: checked in a verification)
+            </dd>
+          </>
+        )}
       </dl>
+
+      {state.security && <PolicyBox state={state} user={user} />}
 
       {editable && (
         <div className="flex flex-wrap gap-2">
@@ -534,6 +578,58 @@ function UserDetail({
         )}
       </div>
     </section>
+  )
+}
+
+/** What the security policy needs for changes to this account, and where its verification stands. */
+function PolicyBox({ state, user }: { state: DirectoryState; user: User }) {
+  const ops: Operation[] = [
+    ...(user.locked ? (['unlock'] as const) : []),
+    'reset-password',
+    user.mfa ? 'reset-mfa' : 'register-mfa',
+    user.status === 'active' ? 'disable' : 'enable',
+  ]
+  const session = state.security?.sessions.findLast((s) => s.user === user.id)
+  const status = session ? sessionStatus(state, session) : null
+  const view = session ? viewSession(state, session) : null
+  return (
+    <div
+      className="rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-950"
+      data-testid="policy-box"
+    >
+      <p className="font-semibold">
+        Security policy: verify before you change this account
+      </p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-5">
+        {ops.map((op) => (
+          <li key={op}>
+            <span className="font-medium">{OPERATION_NAMES[op]}</span> needs{' '}
+            {describeRequirement(state, op, user)}.
+          </li>
+        ))}
+        <li>Group changes need identity and approval (privileged groups: more).</li>
+      </ul>
+      <p className="mt-2" data-testid="policy-session">
+        {!session || !view
+          ? 'Not verified: start a verification from their ticket in the Help Desk.'
+          : status === 'expired'
+            ? `Verification ${session.id} has expired: verify them again.`
+            : status === 'failed'
+              ? `Verification ${session.id} failed: do not change this account on this request.`
+              : status === 'complete'
+                ? `Verification ${session.id} has been used.`
+                : view.authorised
+                  ? `Verified (${session.id}) for ${session.operations
+                      .filter((op) => !session.done.includes(op))
+                      .map((op) => OPERATION_NAMES[op])
+                      .join(', ')}.`
+                  : `Verification ${session.id} in progress: ${
+                      view.identity === 'verified'
+                        ? 'identity verified, approval still needed.'
+                        : 'identity not verified yet.'
+                    }`}
+      </p>
+    </div>
   )
 }
 
@@ -760,6 +856,65 @@ function Audit({ state }: { state: DirectoryState }) {
                 <td className={`${cell} font-mono`}>{e.target}</td>
                 <td className={cell}>{e.detail}</td>
                 <td className={cell}>{e.byYou ? 'You' : 'Earlier'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {state.security && <SecurityLog state={state} />}
+    </div>
+  )
+}
+
+const SEVERITY_TONE = {
+  info: 'text-slate-700',
+  warning: 'text-amber-800',
+  breach: 'font-medium text-red-800',
+} as const
+
+/** Verifications, approvals and refused attempts: what the security policy recorded. */
+function SecurityLog({ state }: { state: DirectoryState }) {
+  const events = [...(state.security?.events ?? [])].sort((a, b) => b.seq - a.seq)
+  return (
+    <div className="mt-6" data-testid="security-log">
+      <h2 className="mb-1 text-lg font-semibold text-slate-900">Security events</h2>
+      <p className="mb-3 text-xs text-slate-500">
+        Verifications, approvals, changes allowed, and attempts refused under the policy.
+        No answers or records are written here.
+      </p>
+      {events.length === 0 ? (
+        <p className="text-sm text-slate-500">Nothing yet.</p>
+      ) : (
+        <table className="w-full rounded-lg border border-slate-200 bg-white text-sm">
+          <thead className="bg-slate-100 text-left text-xs text-slate-600 uppercase">
+            <tr>
+              <th className={cell}>Time</th>
+              <th className={cell}>Account</th>
+              <th className={cell}>Ticket</th>
+              <th className={cell}>What happened</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.map((e) => (
+              <tr
+                key={e.seq}
+                className={`border-t border-slate-100 ${SEVERITY_TONE[e.severity]}`}
+                data-testid="security-event"
+                data-severity={e.severity}
+                data-kind={e.kind}
+              >
+                <td className={`${cell} whitespace-nowrap`}>
+                  {new Date(e.at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </td>
+                <td className={cell}>{findUser(state, e.user)?.name ?? e.user}</td>
+                <td className={cell}>{e.ticket}</td>
+                <td className={cell}>
+                  {e.severity === 'breach' ? 'Policy breach: ' : ''}
+                  {e.text}
+                </td>
               </tr>
             ))}
           </tbody>

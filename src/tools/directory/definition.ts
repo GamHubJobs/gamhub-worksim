@@ -4,7 +4,13 @@ import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
 import type { ToolDefinition } from '../types'
 import { sampleDirectory } from './data'
-import { DirectoryStateSchema, type DirectoryState, type User } from './schema'
+import {
+  DirectoryStateSchema,
+  OPERATIONS,
+  type DirectoryState,
+  type User,
+} from './schema'
+import { OPERATION_NAMES, viewSession } from './security'
 
 export const DirectoryCheckSchema = z.discriminatedUnion('type', [
   /** An account is in the expected state. */
@@ -43,6 +49,33 @@ export const DirectoryCheckSchema = z.discriminatedUnion('type', [
     target: z.string(),
     /** Whether the action must NOT have been done (e.g. no reset for an attacker). */
     absent: z.boolean().default(false),
+  }),
+  /**
+   * The change was made to this person's account under a verification of
+   * them (and, if given, with this approver's approval). Directories with a
+   * security policy only (see security.ts).
+   */
+  FileCheckBaseSchema.extend({
+    type: z.literal('verified'),
+    name: z.string(),
+    operation: z.enum(OPERATIONS),
+    approver: z.string().optional(),
+  }),
+  /**
+   * The person could not be verified (a check failed, or nobody answered), and
+   * their account was not changed.
+   */
+  FileCheckBaseSchema.extend({
+    type: z.literal('verification-failed'),
+    name: z.string(),
+  }),
+  /**
+   * No breach of the security policy: nothing attempted without a
+   * verification. Refusals for reasonable mistakes (an expired verification,
+   * approval not yet given) cost a little; failed answers cost nothing.
+   */
+  FileCheckBaseSchema.extend({
+    type: z.literal('compliance'),
   }),
 ])
 export type DirectoryCheck = z.infer<typeof DirectoryCheckSchema>
@@ -162,6 +195,80 @@ function gradeCheck(check: DirectoryCheck, player: DirectoryState) {
             ],
       )
     }
+    case 'verified': {
+      const security = player.security
+      const user = byName(player, check.name)
+      if (!security || !user)
+        return checkResult(check, 0, [
+          `There is no verification record for ${check.name}.`,
+        ])
+      const action = OPERATION_NAMES[check.operation].toLowerCase()
+      const made = security.events.find(
+        (e) =>
+          e.kind === 'performed' && e.user === user.id && e.operation === check.operation,
+      )
+      const session = security.sessions.find((s) => s.id === made?.session)
+      if (!made || !session) {
+        const verified = security.sessions.some(
+          (s) =>
+            s.user === user.id &&
+            s.operations.includes(check.operation) &&
+            viewSession(player, s).identity === 'verified',
+        )
+        return checkResult(check, verified ? 0.5 : 0, [
+          verified
+            ? `${user.name} was verified, but the ${action} was not done with that verification.`
+            : `${user.name} was never verified for: ${action}.`,
+        ])
+      }
+      if (check.approver) {
+        const approver = byName(player, check.approver)
+        if (!approver || !session.approvals.includes(approver.id))
+          return checkResult(check, 0.5, [
+            `The ${action} for ${user.name} was not approved by ${check.approver}.`,
+          ])
+      }
+      return checkResult(check, 1, [])
+    }
+    case 'verification-failed': {
+      const security = player.security
+      const user = byName(player, check.name)
+      if (!security || !user)
+        return checkResult(check, 0, [
+          `There is no verification record for ${check.name}.`,
+        ])
+      const sessions = security.sessions.filter((s) => s.user === user.id)
+      const changed = security.events.some(
+        (e) => e.kind === 'performed' && e.user === user.id,
+      )
+      const tried = sessions.some((s) =>
+        s.steps.some((step) => step.method !== 'approval'),
+      )
+      const accepted = sessions.some(
+        (s) => viewSession(player, s).identity === 'verified',
+      )
+      const problems: string[] = []
+      if (!tried) problems.push(`${user.name}’s identity was never checked.`)
+      if (accepted) problems.push(`${user.name} was accepted as verified.`)
+      if (changed) problems.push(`${user.name}’s account was changed.`)
+      return checkResult(check, problems.length ? 0 : 1, problems)
+    }
+    case 'compliance': {
+      const events = player.security?.events ?? []
+      const breaches = events.filter((e) => e.severity === 'breach')
+      const warnings = events.filter((e) => e.severity === 'warning')
+      if (breaches.length)
+        return checkResult(
+          check,
+          0,
+          breaches.map((e) => `Policy breach: ${e.text}`),
+        )
+      return checkResult(
+        check,
+        Math.max(0.5, 1 - 0.25 * warnings.length),
+        warnings.map((e) => `Refused: ${e.text}`),
+      )
+    }
   }
 }
 
@@ -217,6 +324,10 @@ export const directory: ToolDefinition<DirectoryState, DirectoryCheck> = {
       {
         title: 'Lockouts, passwords and MFA',
         body: 'Before unlocking or resetting, confirm who you are talking to and look at the failed sign-ins: many failures from an unknown place may be an attack, not a forgetful user. A password reset issues a temporary password that must be changed at the next sign-in. Reset MFA when someone has lost or replaced their phone, so they can register again.',
+      },
+      {
+        title: 'Verify before you change an account',
+        body: 'Where the security policy is on, each account shows what a change needs. Start a verification from the person’s ticket: choose their account and the change, then check what they give you (employee number, badge number) against the record, or call back on the extension on record. Some changes also need approval from the person the records name (their manager, or a privileged group’s owner). A change that is not covered is refused and recorded.',
       },
       {
         title: 'Least privilege',

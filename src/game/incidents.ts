@@ -29,6 +29,7 @@ import type {
   TicketStatus,
 } from '../persistence/schemas'
 import type { DirectoryState } from '../tools/directory/schema'
+import { sessionForTicket, viewSession } from '../tools/directory/security'
 import type { NetworkState } from '../tools/network/schema'
 import {
   deviceByName,
@@ -496,6 +497,57 @@ function react(
 }
 
 /**
+ * The directory's new security events (verifications, approvals, refused
+ * attempts), written to the history of the ticket they belong to: the
+ * ticket named, or else the open tickets about that account. Each event is
+ * new exactly once (by its number), so none is written twice.
+ */
+function securityNotes(
+  tickets: Ticket[],
+  before: DirectoryState,
+  after: DirectoryState,
+  when: Moment,
+): Ticket[] {
+  const last = before.security?.events.reduce((max, e) => Math.max(max, e.seq), 0) ?? 0
+  const added = (after.security?.events ?? []).filter(
+    (e) => e.seq > last && e.kind !== 'performed',
+  )
+  if (added.length === 0) return tickets
+  return tickets.map((ticket) => {
+    if (ticket.status === 'closed') return ticket
+    const mine = added.filter((e) =>
+      e.ticket
+        ? e.ticket === ticket.id
+        : ticket.conditions.some((c) => 'user' in c && c.user === e.user),
+    )
+    if (mine.length === 0) return ticket
+    const noted = mine.reduce(
+      (t, e) =>
+        note(
+          t,
+          e.severity === 'info' ? 'verification' : 'security',
+          e.severity === 'breach'
+            ? `Security policy breach: ${e.text}`
+            : e.severity === 'warning'
+              ? `Refused by the security policy: ${e.text}`
+              : e.text,
+          when,
+        ),
+      ticket,
+    )
+    // Verifying the requester is work on the ticket.
+    return noted.status === 'assigned'
+      ? note(
+          { ...noted, status: 'open' },
+          'status',
+          'In progress: verification under way.',
+          when,
+        )
+      : noted
+  })
+}
+
+/**
  * Changes one of the queue's systems and lets the tickets react: the one way
  * a system's state changes, so no change is missed and none is counted twice.
  */
@@ -510,15 +562,24 @@ export function applyEnvironmentChange<S extends SystemId>(
   const updated = change(before as NonNullable<TicketEnvironment[S]>)
   if (updated === before) return content
   const environment: TicketEnvironment = { ...content.environment, [system]: updated }
+  const tickets =
+    system === 'directory'
+      ? securityNotes(
+          content.tickets,
+          before as DirectoryState,
+          updated as DirectoryState,
+          when,
+        )
+      : content.tickets
   const changes =
     system === 'network'
       ? networkChanges(before as NetworkState, updated as NetworkState)
       : directoryChanges(before as DirectoryState, updated as DirectoryState)
-  if (changes.length === 0) return { ...content, environment }
+  if (changes.length === 0) return { ...content, environment, tickets }
   return {
     ...content,
     environment,
-    tickets: content.tickets.map((t) =>
+    tickets: tickets.map((t) =>
       react(t, content.environment!, environment, changes, when),
     ),
   }
@@ -684,22 +745,45 @@ function whatIsOut(ticket: Ticket, environment: TicketEnvironment | undefined): 
  * The colleagues a queue's tickets are about: held up while the conditions
  * fail, back to work once they pass. Follows the systems, not the status.
  */
+/**
+ * Where verifying the requester stands, if their ticket needs it (a
+ * directory with a security policy, and a verification started).
+ */
+function verificationStage(
+  ticket: Ticket,
+  directory: DirectoryState | undefined,
+  fixed: boolean,
+): Disruption['stage'] {
+  if (!directory?.security) return undefined
+  const session = sessionForTicket(directory, ticket.id)
+  if (!session) return undefined
+  const view = viewSession(directory, session)
+  if (fixed) return 'verified'
+  if (view.status === 'failed') return 'unverified'
+  if (view.status === 'expired' || session.failedAttempts >= 2) return 'frustrated'
+  const checks = session.steps.filter((s) => s.method !== 'approval')
+  if (view.identity === 'verified')
+    return view.authorised ? 'verified' : 'awaiting-approval'
+  if (checks.length > 0 && checks.every((s) => !s.passed)) return 'unverified'
+  return 'verifying'
+}
+
 export function disruptionsOf(content: TicketsContent, assignment: string): Disruption[] {
-  return content.tickets.flatMap((ticket) =>
-    ticket.requester && isMonitored(ticket)
-      ? [
-          {
-            person: ticket.requester,
-            assignment,
-            ticket: ticket.id,
-            state: evaluateTicket(ticket, content.environment).fixed
-              ? ('restored' as const)
-              : ('blocked' as const),
-            what: whatIsOut(ticket, content.environment),
-          },
-        ]
-      : [],
-  )
+  return content.tickets.flatMap((ticket) => {
+    if (!ticket.requester || !isMonitored(ticket)) return []
+    const fixed = evaluateTicket(ticket, content.environment).fixed
+    const stage = verificationStage(ticket, content.environment?.directory, fixed)
+    return [
+      {
+        person: ticket.requester,
+        assignment,
+        ticket: ticket.id,
+        state: fixed ? ('restored' as const) : ('blocked' as const),
+        what: whatIsOut(ticket, content.environment),
+        ...(stage ? { stage } : {}),
+      },
+    ]
+  })
 }
 
 /**
@@ -710,9 +794,15 @@ export function troubleOf(
   disruptions: Disruption[],
   personId: string,
   underWay: (assignment: string) => boolean,
-): Pick<Disruption, 'what' | 'state'> | undefined {
+): Pick<Disruption, 'what' | 'state' | 'stage'> | undefined {
   const entry = disruptions.findLast(
     (d) => d.person === personId && underWay(d.assignment),
   )
-  return entry && { what: entry.what, state: entry.state }
+  return (
+    entry && {
+      what: entry.what,
+      state: entry.state,
+      ...(entry.stage ? { stage: entry.stage } : {}),
+    }
+  )
 }

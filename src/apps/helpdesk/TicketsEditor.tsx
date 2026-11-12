@@ -22,6 +22,7 @@ import {
   type Moment,
 } from '../../game/incidents'
 import { TicketSystemsPanel } from './TicketSystemsPanel'
+import { VerificationPanel } from './VerificationPanel'
 import { AskAiMenu } from '../ai/AskAiMenu'
 import { useAiContext } from '../ai/hub'
 import { ticketAiContext } from './aiContext'
@@ -298,6 +299,15 @@ export function TicketsEditor({
                 }
               />
             )}
+
+            <VerificationPanel
+              key={`verify-${ticket.id}`}
+              ticket={ticket}
+              content={content}
+              editable={editable}
+              onUpdate={onUpdate}
+              moment={moment}
+            />
 
             <PriorityMatrix
               current={ticket.priority}

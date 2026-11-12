@@ -22,6 +22,8 @@ const KIND_MARK: Partial<Record<TicketActivityKind, string>> = {
   'condition-failed': 'text-red-800',
   reopened: 'text-red-800',
   'resolve-rejected': 'text-amber-800',
+  verification: 'text-blue-900',
+  security: 'font-medium text-red-800',
 }
 
 /** What a condition is about, for "Affected systems". */

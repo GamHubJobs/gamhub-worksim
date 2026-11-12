@@ -65,6 +65,10 @@ payment changes the bank, and the reports always agree, as in real software.
 - **Tickets tied to the systems**: a ticket can carry conditions on Network Tools
   and Directory, and resolves only when the problem is really fixed (see
   [STATE_AWARE_TICKETS.md](STATE_AWARE_TICKETS.md)).
+- **Identity verification and access control**: in a directory with a security
+  policy, account changes are refused until the person is verified against the
+  records (and approved where needed); see
+  [IDENTITY_VERIFICATION.md](IDENTITY_VERIFICATION.md).
 
 ### Digital Marketing: **Campaigns**, **Social Planner**, **Site Analytics**, **SEO Audit**
 

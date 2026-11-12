@@ -1,10 +1,39 @@
 /**
  * Directory actions. Pure functions: each returns the new state (or the
  * problems that stop it), and records what was done in the audit log.
+ *
+ * In a directory with a security policy, the sensitive account actions are
+ * checked here, inside the action (`guarded`): whoever calls them, a change
+ * that is not covered by a verification is refused, the account stays as it
+ * was, and the attempt is recorded (see security.ts).
  */
-import type { Asset, AssetStatus, DirectoryState, User } from './schema'
+import type { Asset, AssetStatus, DirectoryState, Operation, User } from './schema'
+import { authorize, recordPerformed, recordRefusal } from './security'
 
 type Result = { state: DirectoryState; problems: string[] }
+
+/**
+ * Runs a sensitive account action under the directory's policy. Refused: the
+ * account is unchanged, the refusal is recorded, and the reason returned.
+ * Allowed: the action runs, and the verification is used up for it.
+ */
+function guarded(
+  state: DirectoryState,
+  op: Operation,
+  userId: string,
+  run: (state: DirectoryState) => Result,
+  groupId = '',
+): Result {
+  const decision = authorize(state, op, userId, groupId)
+  if (!decision.allowed)
+    return {
+      state: recordRefusal(state, decision, op, userId),
+      problems: [decision.reason],
+    }
+  const result = run(state)
+  if (result.problems.length > 0) return { state, problems: result.problems }
+  return { state: recordPerformed(result.state, decision, op, userId), problems: [] }
+}
 
 function log(
   state: DirectoryState,
@@ -97,24 +126,34 @@ export function createUser(
 }
 
 export const disableUser = (state: DirectoryState, id: string) =>
-  changeUser(
-    state,
-    id,
-    (u) => ({ ...u, status: 'disabled', locked: false }),
-    'Disable account',
+  guarded(state, 'disable', id, (s) =>
+    changeUser(
+      s,
+      id,
+      (u) => ({ ...u, status: 'disabled', locked: false }),
+      'Disable account',
+    ),
   )
 
 export const enableUser = (state: DirectoryState, id: string) =>
-  changeUser(state, id, (u) => ({ ...u, status: 'active' }), 'Enable account')
-
-export const unlockUser = (state: DirectoryState, id: string) =>
-  changeUser(
-    state,
-    id,
-    (u) => ({ ...u, locked: false, failedSignIns: 0 }),
-    'Unlock account',
+  guarded(state, 'enable', id, (s) =>
+    changeUser(s, id, (u) => ({ ...u, status: 'active' }), 'Enable account'),
   )
 
+export const unlockUser = (state: DirectoryState, id: string) =>
+  guarded(state, 'unlock', id, (s) =>
+    changeUser(
+      s,
+      id,
+      (u) => ({ ...u, locked: false, failedSignIns: 0 }),
+      'Unlock account',
+    ),
+  )
+
+/**
+ * Issues a temporary password, to be changed at the next sign-in. No password
+ * is stored or shown anywhere: only that a reset happened.
+ */
 export function resetPassword(state: DirectoryState, id: string): Result {
   const user = findUser(state, id)
   if (user?.status === 'disabled') {
@@ -123,23 +162,29 @@ export function resetPassword(state: DirectoryState, id: string): Result {
       problems: ['The account is disabled. Enable it first if that is intended.'],
     }
   }
-  return changeUser(
-    state,
-    id,
-    // A reset does not unlock: unlocking is a separate decision (see lockouts).
-    (u) => ({ ...u, mustChangePassword: true }),
-    'Reset password',
-    'Temporary password issued; must be changed at next sign-in',
+  return guarded(state, 'reset-password', id, (s) =>
+    changeUser(
+      s,
+      id,
+      // A reset does not unlock: unlocking is a separate decision (see lockouts).
+      (u) => ({ ...u, mustChangePassword: true }),
+      'Reset password',
+      'Temporary password issued; must be changed at next sign-in',
+    ),
   )
 }
 
 /** Removes the registered MFA method, so the user registers a new one (e.g. a lost phone). */
 export const resetMfa = (state: DirectoryState, id: string) =>
-  changeUser(state, id, (u) => ({ ...u, mfa: false }), 'Reset MFA', 'Must register again')
+  guarded(state, 'reset-mfa', id, (s) =>
+    changeUser(s, id, (u) => ({ ...u, mfa: false }), 'Reset MFA', 'Must register again'),
+  )
 
 /** Marks MFA as registered (the user completed set-up with IT). */
 export const registerMfa = (state: DirectoryState, id: string) =>
-  changeUser(state, id, (u) => ({ ...u, mfa: true }), 'Register MFA')
+  guarded(state, 'register-mfa', id, (s) =>
+    changeUser(s, id, (u) => ({ ...u, mfa: true }), 'Register MFA'),
+  )
 
 export function addToGroup(
   state: DirectoryState,
@@ -152,12 +197,19 @@ export function addToGroup(
   if (user?.groups.includes(groupId)) {
     return { state, problems: [`${user.name} is already in ${group.name}.`] }
   }
-  return changeUser(
+  return guarded(
     state,
+    'group-add',
     userId,
-    (u) => ({ ...u, groups: [...u.groups, groupId] }),
-    'Add to group',
-    group.name,
+    (s) =>
+      changeUser(
+        s,
+        userId,
+        (u) => ({ ...u, groups: [...u.groups, groupId] }),
+        'Add to group',
+        group.name,
+      ),
+    groupId,
   )
 }
 
@@ -167,12 +219,19 @@ export function removeFromGroup(
   groupId: string,
 ): Result {
   const group = state.groups.find((g) => g.id === groupId)
-  return changeUser(
+  return guarded(
     state,
+    'group-remove',
     userId,
-    (u) => ({ ...u, groups: u.groups.filter((g) => g !== groupId) }),
-    'Remove from group',
-    group?.name ?? groupId,
+    (s) =>
+      changeUser(
+        s,
+        userId,
+        (u) => ({ ...u, groups: u.groups.filter((g) => g !== groupId) }),
+        'Remove from group',
+        group?.name ?? groupId,
+      ),
+    groupId,
   )
 }
 

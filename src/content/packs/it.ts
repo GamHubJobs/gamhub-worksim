@@ -13,6 +13,7 @@ import { recurringProblem } from '../assignments/it/recurringProblem'
 import { triageQueue } from '../assignments/it/triageQueue'
 import { userReplies } from '../assignments/it/userReplies'
 import { wifiOutage } from '../assignments/it/wifiOutage'
+import { accountUnlock } from '../assignments/it/accountUnlock'
 import {
   outageDiagnosis,
   outageReview,
@@ -40,6 +41,7 @@ export const PACK: CareerPack = {
     triageQueue,
     userReplies,
     wifiOutage,
+    accountUnlock,
     outageDiagnosis,
     outageReview,
     outageTriage,

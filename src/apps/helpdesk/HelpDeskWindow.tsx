@@ -248,6 +248,7 @@ export function HelpDeskWindow({
                     state={shown.content.environment[tab]}
                     readOnly={!shown.live}
                     lockedSections={lockedSections[tab] ?? {}}
+                    now={() => moment().at}
                     onUpdate={
                       shown.live
                         ? (change) => {

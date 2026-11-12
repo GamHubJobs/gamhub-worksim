@@ -446,6 +446,9 @@ export const TICKET_ACTIVITY_KINDS = [
   'update-sent',
   'reopened',
   'closed',
+  // Identity verification and the security policy (tools/directory/security.ts):
+  'verification',
+  'security',
 ] as const
 
 /** One event in a ticket's history. */
@@ -1291,6 +1294,20 @@ export const WorkStateSchema = z.object({
         state: z.enum(['blocked', 'restored']),
         /** What they cannot use, e.g. "the Wi-Fi". */
         what: z.string().max(100),
+        /**
+         * Where verifying them stands, for an account change that needs it:
+         * being checked, not verified, waiting for approval, fed up with the
+         * wait, or verified (and grateful once it is fixed).
+         */
+        stage: z
+          .enum([
+            'verifying',
+            'unverified',
+            'awaiting-approval',
+            'frustrated',
+            'verified',
+          ])
+          .optional(),
       }),
     )
     .max(50)

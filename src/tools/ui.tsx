@@ -11,6 +11,8 @@ export interface ToolWorkspaceProps<State> {
   onUpdate?: (change: (state: State) => State) => void
   /** Sections still locked for this player: section ID → the level that unlocks it. */
   lockedSections: Record<string, string>
+  /** The time now (ms), for tools whose rules depend on it (e.g. a verification expiring). */
+  now?: () => number
 }
 
 // oxlint-disable-next-line no-explicit-any -- each tool has its own state type

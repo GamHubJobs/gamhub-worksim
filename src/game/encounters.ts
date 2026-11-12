@@ -83,15 +83,34 @@ export interface Situation {
    * Held up by a fault on one of the player's tickets (see game/incidents.ts),
    * or back to work now it is fixed.
    */
-  trouble?: { what: string; state: 'blocked' | 'restored' }
+  trouble?: {
+    what: string
+    state: 'blocked' | 'restored'
+    /** Where verifying them stands, for an account change that needs it. */
+    stage?: 'verifying' | 'unverified' | 'awaiting-approval' | 'frustrated' | 'verified'
+  }
 }
 
 /** What someone held up by a fault says about it, or says once it is fixed. */
 export function troubleLine(trouble: NonNullable<Situation['trouble']>): string {
   if (trouble.state === 'restored')
     return trouble.what === 'their account'
-      ? 'I can sign in again, thank you! Back to work.'
+      ? trouble.stage === 'verified'
+        ? 'I can sign in again, thank you! And thanks for checking it was really me: good to know nobody else could talk their way into my account.'
+        : 'I can sign in again, thank you! Back to work.'
       : `${trouble.what[0].toUpperCase()}${trouble.what.slice(1)} is back, thank you! I can get on with my work again.`
+  switch (trouble.stage) {
+    case 'verifying':
+      return 'IT is checking it’s really me before they unlock my account. Fair enough, I suppose.'
+    case 'unverified':
+      return 'IT couldn’t confirm it was me, so my account is still locked. I’ll have to bring my badge down.'
+    case 'awaiting-approval':
+      return 'Apparently my manager has to approve the unlock, because of what my account can access. Still locked out until then.'
+    case 'frustrated':
+      return 'I’ve answered the same questions twice now and I’m still locked out. How much longer?'
+    case 'verified':
+      return 'IT has verified me; they just need to unlock the account now.'
+  }
   if (trouble.what === 'the Wi-Fi')
     return 'My laptop has dropped off the Wi-Fi, so I can’t get anything done. Is my ticket with you?'
   if (trouble.what === 'their account')
