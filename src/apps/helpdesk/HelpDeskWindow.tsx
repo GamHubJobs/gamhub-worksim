@@ -30,6 +30,7 @@ import { deviceByName, onNetwork } from '../../tools/network/simulation'
 import { Icon, type IconName } from '../../ui/Icon'
 import { KnowledgeBasePanel } from './KnowledgeBasePanel'
 import { OverviewPanel } from './OverviewPanel'
+import { presenceOf } from '../../game/presence'
 
 interface HelpDeskWindowProps {
   documentId: string
@@ -42,12 +43,14 @@ interface HelpDeskWindowProps {
   onOpenTask: (assignmentId: string) => void
 }
 
-type Tab = 'overview' | 'queue' | 'knowledge' | 'remote' | SystemId
+type Tab =
+  'overview' | 'queue' | 'knowledge' | 'remote' | 'voicemail' | 'calls' | SystemId
 
 const SYSTEM_ICONS: Record<SystemId, IconName> = {
   network: 'network',
   directory: 'directory',
   devices: 'device',
+  comms: 'chat',
 }
 
 /** Now, for ticket histories: the real time and the office clock. */
@@ -238,9 +241,11 @@ export function HelpDeskWindow({
           const system: SystemId | null =
             tab === 'remote'
               ? 'devices'
-              : tab === 'queue' || tab === 'overview' || tab === 'knowledge'
-                ? null
-                : tab
+              : tab === 'voicemail' || tab === 'calls'
+                ? 'comms'
+                : tab === 'queue' || tab === 'overview' || tab === 'knowledge'
+                  ? null
+                  : tab
           const Workspace = system ? getWorkspace(system) : null
           const open = shown.content.tickets.filter(
             (t) => t.status !== 'resolved' && t.status !== 'closed',
@@ -283,6 +288,22 @@ export function HelpDeskWindow({
                             },
                           ],
                     ),
+                  },
+                ]
+              : []),
+            ...(shown.content.environment?.comms
+              ? [
+                  {
+                    name: 'Communications',
+                    items: [
+                      { id: 'comms' as Tab, label: 'Chat', icon: 'chat' as IconName },
+                      {
+                        id: 'voicemail' as Tab,
+                        label: 'Voicemail',
+                        icon: 'voicemail' as IconName,
+                      },
+                      { id: 'calls' as Tab, label: 'Calls', icon: 'phone' as IconName },
+                    ],
                   },
                 ]
               : []),
@@ -411,7 +432,26 @@ export function HelpDeskWindow({
                       readOnly={!shown.live}
                       lockedSections={lockedSections[system] ?? {}}
                       now={() => moment().at}
-                      initialSection={tab === 'remote' ? 'remote' : undefined}
+                      initialSection={
+                        tab === 'remote' || tab === 'voicemail' || tab === 'calls'
+                          ? tab
+                          : undefined
+                      }
+                      tickets={shown.content.tickets.map((t) => ({
+                        id: t.id,
+                        title: t.subject,
+                        open: t.status !== 'closed',
+                      }))}
+                      presence={(person) =>
+                        presenceOf(
+                          person,
+                          profile?.work.day ?? 1,
+                          profile?.work.minute ?? 540,
+                        )
+                      }
+                      officeTime={() =>
+                        profile?.work ? formatTime(profile.work.minute) : ''
+                      }
                       reachable={reachableIn(shown.content)}
                       related={(entity) => relatedTickets(shown.content, entity)}
                       onUpdate={

@@ -38,6 +38,8 @@ import {
   standardNetwork,
 } from '../tools/devices/model'
 import type { DevicesState } from '../tools/devices/schema'
+import type { CommsState } from '../tools/comms/schema'
+import { TicketConditionSchema } from '../persistence/schemas'
 import type { NetworkState } from '../tools/network/schema'
 import {
   deviceByName,
@@ -53,6 +55,7 @@ export const SYSTEM_NAMES: Record<SystemId, string> = {
   network: 'Network Tools',
   directory: 'Directory',
   devices: 'Devices',
+  comms: 'Communications',
 }
 
 /** Which system a condition is checked in. */
@@ -715,6 +718,151 @@ function securityNotes(
   })
 }
 
+// ---------------------------------------------------------------------------
+// Communications: tickets from voicemail and calls, and messages that follow
+// ---------------------------------------------------------------------------
+
+type Contact = (CommsState['voicemails'][number] | CommsState['calls'][number]) & {
+  kind: 'voicemail' | 'call'
+}
+
+const contactsOf = (comms: CommsState | undefined): Contact[] => [
+  ...(comms?.voicemails ?? []).map((v) => ({ ...v, kind: 'voicemail' as const })),
+  ...(comms?.calls ?? []).map((c) => ({ ...c, kind: 'call' as const })),
+]
+
+/**
+ * The tickets voicemail and calls were turned into (added to the queue once),
+ * and notes on the tickets they were linked to. Idempotent: a ticket that is
+ * already there is not added again, and a link is noted when it is made.
+ */
+export function materializeTickets(
+  content: TicketsContent,
+  before: CommsState | undefined,
+  when: Moment,
+): TicketsContent {
+  const comms = content.environment?.comms
+  if (!comms) return content
+  const was = new Map(contactsOf(before).map((c) => [c.id, c.ticket]))
+  let tickets = content.tickets
+  for (const contact of contactsOf(comms)) {
+    if (!contact.ticket) continue
+    const what = contact.kind === 'voicemail' ? 'voicemail' : 'call'
+    const created = contact.opens?.id === contact.ticket
+    if (created && !tickets.some((t) => t.id === contact.ticket)) {
+      const template = contact.opens!
+      const conditions = TicketConditionSchema.array().safeParse(template.conditions)
+      tickets = [
+        ...tickets,
+        {
+          id: template.id,
+          from: contact.name,
+          department: contact.department,
+          received: contact.received,
+          subject: template.subject,
+          body: template.body,
+          priority: null,
+          category: null,
+          status: 'new',
+          reply: '',
+          note: '',
+          requester: template.requester ?? contact.from,
+          conditions: conditions.success ? conditions.data : [],
+          assignee: null,
+          activity: [
+            {
+              at: when.at,
+              time: when.time,
+              kind: 'created',
+              text: `Ticket created from a ${what} from ${contact.name}: ${template.subject}`,
+            },
+          ],
+          resolution: null,
+          hintsUsed: 0,
+        },
+      ]
+    } else if (!created && was.get(contact.id) !== contact.ticket) {
+      tickets = tickets.map((t) =>
+        t.id === contact.ticket
+          ? note(
+              t,
+              'contact',
+              `${what === 'voicemail' ? 'Voicemail' : 'Call'} from ${contact.name} linked to this ticket.`,
+              when,
+            )
+          : t,
+      )
+    }
+  }
+  return tickets === content.tickets ? content : { ...content, tickets }
+}
+
+/**
+ * Messages that follow events: when a ticket becomes resolved or reopened,
+ * its requester writes to the service desk (once per event).
+ */
+function followUps(
+  before: TicketsContent,
+  after: TicketsContent,
+  when: Moment,
+): TicketsContent {
+  const comms = after.environment?.comms
+  if (!comms) return after
+  const old = new Map(before.tickets.map((t) => [t.id, t.status]))
+  let next = comms
+  for (const ticket of after.tickets) {
+    const was = old.get(ticket.id)
+    if (!ticket.requester || was === ticket.status) continue
+    const kind =
+      ticket.status === 'resolved'
+        ? 'resolved'
+        : ticket.status === 'reopened'
+          ? 'reopened'
+          : null
+    if (!kind) continue
+    const channel = `dm-${ticket.requester}`
+    const channels = next.channels.some((c) => c.id === channel)
+      ? next.channels
+      : [
+          ...next.channels,
+          {
+            id: channel,
+            name: ticket.from,
+            kind: 'direct' as const,
+            person: ticket.requester,
+            description: '',
+          },
+        ]
+    const n = next.messages.filter((m) =>
+      m.id.startsWith(`m-${ticket.id}-${kind}`),
+    ).length
+    const first = ticket.from.split(' ')[0]
+    next = {
+      ...next,
+      channels,
+      messages: [
+        ...next.messages,
+        {
+          id: `m-${ticket.id}-${kind}-${n + 1}`,
+          channel,
+          from: ticket.requester,
+          name: ticket.from,
+          time: when.time,
+          text:
+            kind === 'resolved'
+              ? `It’s working again, thank you for sorting it so quickly! (${ticket.subject})`
+              : `Sorry, it’s gone wrong again: “${ticket.subject}”. Could you have another look? ${first}`,
+          read: false,
+          ticket: ticket.id,
+        },
+      ].slice(-1000),
+    }
+  }
+  return next === comms
+    ? after
+    : { ...after, environment: { ...after.environment, comms: next } }
+}
+
 /**
  * Changes one of the queue's systems and lets the tickets react: the one way
  * a system's state changes, so no change is missed and none is counted twice.
@@ -739,6 +887,13 @@ export function applyEnvironmentChange<S extends SystemId>(
           when,
         )
       : content.tickets
+  // Communications open and link tickets; nothing a condition checks changes.
+  if (system === 'comms')
+    return materializeTickets(
+      { ...content, environment, tickets },
+      before as CommsState,
+      when,
+    )
   const changes =
     system === 'network'
       ? networkChanges(before as NetworkState, updated as NetworkState)
@@ -746,13 +901,14 @@ export function applyEnvironmentChange<S extends SystemId>(
         ? devicesChanges(before as DevicesState, updated as DevicesState)
         : directoryChanges(before as DirectoryState, updated as DirectoryState)
   if (changes.length === 0) return { ...content, environment, tickets }
-  return {
+  const next = {
     ...content,
     environment,
     tickets: tickets.map((t) =>
       react(t, content.environment!, environment, changes, when),
     ),
   }
+  return followUps(content, next, when)
 }
 
 // ---------------------------------------------------------------------------
@@ -844,8 +1000,10 @@ export function requestStatus(
         ...evaluation.failing.map((r) => r.state),
       ])
     return {
-      content: updateTicket(content, id, (t) =>
-        markResolved(t, evaluation, 'manual', when),
+      content: followUps(
+        content,
+        updateTicket(content, id, (t) => markResolved(t, evaluation, 'manual', when)),
+        when,
       ),
       refused: null,
     }

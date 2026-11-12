@@ -245,6 +245,7 @@ export const QueueSchema = z.object({
       network: EnvironmentToolSchema.optional(),
       directory: EnvironmentToolSchema.optional(),
       devices: EnvironmentToolSchema.optional(),
+      comms: EnvironmentToolSchema.optional(),
     })
     .optional(),
 })

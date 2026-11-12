@@ -141,30 +141,36 @@ export function TicketSystemsPanel({
         </div>
       )}
 
-      {ticket.activity.length > 0 && (
-        <details open className="text-sm">
-          <summary className="cursor-pointer font-semibold text-slate-800">
-            History ({ticket.activity.length})
-          </summary>
-          <ol
-            className="mt-2 space-y-1 border-l border-slate-200 pl-3"
-            aria-label="Ticket history"
-          >
-            {[...ticket.activity].reverse().map((entry, i) => (
-              <li key={i} className={KIND_MARK[entry.kind] ?? 'text-slate-700'}>
-                <span className="mr-2 text-xs text-slate-500">
-                  {entry.time ||
-                    new Date(entry.at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                </span>
-                {entry.text}
-              </li>
-            ))}
-          </ol>
-        </details>
-      )}
+      <TicketHistory ticket={ticket} />
     </section>
+  )
+}
+
+/** A ticket's history, newest first (any ticket that has one). */
+export function TicketHistory({ ticket }: { ticket: Ticket }) {
+  if (ticket.activity.length === 0) return null
+  return (
+    <details open className="text-sm">
+      <summary className="cursor-pointer font-semibold text-slate-800">
+        History ({ticket.activity.length})
+      </summary>
+      <ol
+        className="mt-2 space-y-1 border-l border-slate-200 pl-3"
+        aria-label="Ticket history"
+      >
+        {[...ticket.activity].reverse().map((entry, i) => (
+          <li key={i} className={KIND_MARK[entry.kind] ?? 'text-slate-700'}>
+            <span className="mr-2 text-xs text-slate-500">
+              {entry.time ||
+                new Date(entry.at).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+            </span>
+            {entry.text}
+          </li>
+        ))}
+      </ol>
+    </details>
   )
 }

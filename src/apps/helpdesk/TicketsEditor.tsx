@@ -21,7 +21,7 @@ import {
   requestStatus,
   type Moment,
 } from '../../game/incidents'
-import { TicketSystemsPanel } from './TicketSystemsPanel'
+import { TicketHistory, TicketSystemsPanel } from './TicketSystemsPanel'
 import { VerificationPanel } from './VerificationPanel'
 import { AskAiMenu } from '../ai/AskAiMenu'
 import { useAiContext } from '../ai/hub'
@@ -340,6 +340,12 @@ export function TicketsEditor({
                     : undefined
                 }
               />
+            )}
+            {/* Tickets not tied to the systems show their history too (e.g. a linked voicemail). */}
+            {!isMonitored(ticket) && ticket.activity.length > 0 && (
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
+                <TicketHistory ticket={ticket} />
+              </section>
             )}
 
             <GuidancePanel

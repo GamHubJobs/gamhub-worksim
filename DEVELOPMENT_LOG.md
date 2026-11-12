@@ -190,6 +190,105 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 5: chat, voicemail, support calls, and how the player communicates
+
+The Help Desk gains the service desk's communications, connected to the
+tickets and the office, and an assessment of how the player speaks to people.
+
+### What was built
+
+- **A Communications tool** (`src/tools/comms/`), registered like the other
+  systems and used inside the Help Desk:
+  - **Chat:**
+    - company channels and direct messages, with unread counts;
+    - read when opened;
+    - sending messages, timed with the office clock;
+    - each colleague's availability (available, in a meeting, away) from the
+      office's own schedule (`game/presence.ts`: their hours, lunch and
+      meetings), the same schedule that moves them in the 3D office.
+  - **Voicemail:**
+    - each message from a colleague, with its length and their extension;
+    - "Listen" plays it with the browser's own speech (no service, no
+      microphone), and the transcript is always shown;
+    - Create ticket, Link to a ticket, Mark handled.
+  - **Support calls:**
+    - answer an incoming call, then choose what to say at each step (a
+      written dialogue: deterministic, no microphone or speech service
+      needed);
+    - "Read the caller aloud" (optional) uses the browser's speech;
+    - call notes; create a ticket from the call (with the notes) or link it.
+- **Communication assessment** (`assessCall`):
+  - every option in a call is marked for what it shows: professional tone,
+    asking the right questions, explaining clearly, plain words, handling
+    frustration, saying what happens next, closing well;
+  - the call is scored on the dimensions it tested (0–100), with what went
+    well and what to improve, from the notes written for each choice;
+  - an unfinished call scores nothing.
+- **Connected to the tickets** (`game/incidents.ts`):
+  - **Tickets from contacts:** a voicemail or call turned into a ticket adds
+    it to the queue once, with its conditions (so a call can open a ticket
+    tied to a PC).
+  - **Linking:** a voicemail or call linked to a ticket writes a note in that
+    ticket's history.
+  - **Follow-up messages:** when a ticket becomes resolved, its requester
+    writes to thank the desk; when it reopens, they write that it has gone
+    wrong again (once per event).
+  - **Model answers:** the tickets their calls and voicemail open are added to
+    the queue before grading.
+- **In the Help Desk:**
+  - a Communications group in the sidebar: Chat, Voicemail, Calls, with
+    counts of what is waiting;
+  - every ticket now shows its history (a linked voicemail on an ordinary
+    ticket was invisible before).
+- **The task "Phones, voicemail and chat"** (IT order 10; the four later IT
+  tasks move down one):
+  - **Chat:** keep #finance informed about the shared drive outage.
+  - **Voicemail:** link Grace's to the open outage ticket; turn Dana's into a
+    ticket.
+  - **Calls:**
+    - Ben, frustrated, whose spreadsheet app crashes: his call becomes a
+      ticket tied to his PC; repairing the app remotely resolves it, and he
+      writes to thank you;
+    - Arjun, asking for a password reset on an unverified call: a polite no,
+      and the safe way (call back on the extension on record).
+  - **Graded on:** routing, both calls' assessments (at least 80%), the
+    channel update, and Ben's fix.
+
+### Tests
+
+- **Unit and integration** (`tools/comms/comms.test.ts`, 11):
+  - unread and read, sending;
+  - availability from the schedule;
+  - voicemail: listen first, a ticket once, a link with a note;
+  - calls: a good call (100%), a poor one (under 30%, with what to improve),
+    recovering from a slip (in between), an unfinished call (0);
+  - the whole loop: call, ticket tied to the PC, remote repair, resolved,
+    Ben's message;
+  - the model answer at 100%;
+  - a duplicate ticket for a known problem marked as wrong routing;
+  - saving; older queues load.
+- **Browser** (`tests/e2e/deskops-comms.spec.ts`):
+  - the #finance update;
+  - Grace's voicemail linked, Dana's turned into a ticket;
+  - Ben's call to a 100% assessment, notes, a ticket from the call;
+  - the remote repair resolving it;
+  - Ben's message arriving;
+  - the new tickets in the queue, and the link in the outage ticket's history.
+- **Found on the way:** an ordinary ticket's history was not shown. Fixed, and
+  covered by the browser test.
+- **Results after:** `npm run check` clean (108 files, 2,441 tests). The Help Desk browser tests (15 spec files, 77 tests) passed. Production build passed.
+
+### Limits
+
+- **Calls are a written dialogue** (choices), not speech recognition. The
+  caller can be read aloud by the browser where it has voices.
+- **No sounds:** voicemail "audio" is the browser reading the transcript; there
+  are no recorded sound files.
+- **Messages are scenario data and event-driven follow-ups;** colleagues do not
+  answer free text.
+
+---
+
 ## 2026-11-12 · IT Help Desk 4: devices, Remote Desktop and Device Management
 
 The company's computers become simulated state that IT support fixes

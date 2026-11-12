@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { GitSchema } from '../game/code/git'
 import { DirectoryStateSchema } from '../tools/directory/schema'
 import { DevicesStateSchema } from '../tools/devices/schema'
+import { CommsStateSchema } from '../tools/comms/schema'
 import { NetworkStateSchema } from '../tools/network/schema'
 import { isId } from '../lib/ids'
 
@@ -479,6 +480,8 @@ export const TICKET_ACTIVITY_KINDS = [
   'security',
   // A guidance hint opened (game/guidance.ts).
   'hint',
+  // A voicemail or call linked to the ticket (tools/comms).
+  'contact',
 ] as const
 
 /** One event in a ticket's history. */
@@ -540,6 +543,7 @@ export const TicketEnvironmentSchema = z.object({
   network: NetworkStateSchema.optional(),
   directory: DirectoryStateSchema.optional(),
   devices: DevicesStateSchema.optional(),
+  comms: CommsStateSchema.optional(),
 })
 
 export const TicketsContentSchema = z.object({

@@ -15,6 +15,7 @@ import { userReplies } from '../assignments/it/userReplies'
 import { wifiOutage } from '../assignments/it/wifiOutage'
 import { accountUnlock } from '../assignments/it/accountUnlock'
 import { deviceSupport } from '../assignments/it/deviceSupport'
+import { serviceDeskComms } from '../assignments/it/serviceDeskComms'
 import {
   outageDiagnosis,
   outageReview,
@@ -44,6 +45,7 @@ export const PACK: CareerPack = {
     wifiOutage,
     accountUnlock,
     deviceSupport,
+    serviceDeskComms,
     outageDiagnosis,
     outageReview,
     outageTriage,

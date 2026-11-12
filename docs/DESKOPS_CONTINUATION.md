@@ -46,55 +46,46 @@ every phase.
 | 1     | Tickets resolved by the systems' real state                     | Done `409dd6e` |
 | 2     | Identity verification and access control                        | Done `63cf341` |
 | 3     | Guidance, progressive hints (XP), Knowledge Base, AI context    | Done `8403f51` |
-| 4     | Device inventory, Remote Desktop, device troubleshooting        | Done           |
-| 5     | Chat, voicemail, support calls, communication assessment        | In progress    |
-| 6     | Security operations: console, investigations, incident response | To do          |
+| 4     | Device inventory, Remote Desktop, device troubleshooting        | Done `69ae5fa` |
+| 5     | Chat, voicemail, support calls, communication assessment        | Done           |
+| 6     | Security operations: console, investigations, incident response | In progress    |
 | 7     | Cross-department incidents, consequences, prioritisation        | To do          |
 | 8     | SLAs (office time), reports, workload, manager reviews          | To do          |
 | 9     | Competencies, portfolio evidence, readiness, career completion  | To do          |
 
 ## Next steps
 
-Phase 5 (communications). Drafted outside the repository (the session's
-scratchpad, `p5/`); if that is lost, rebuild it from this plan:
+Phase 6 (security operations). Drafted outside the repository (the scratchpad,
+`p6/`); if that is lost, rebuild it from this plan.
 
-- **A Communications tool** (`src/tools/comms/`):
-  - **schema:** channels, messages, voicemails and calls. A call is a dialogue
-    tree whose options carry qualities: tone, questions, clarity, jargon,
-    empathy, updates, closing.
-  - **model:** mark read, send, listen, create a ticket from a voicemail or
-    call, link to a ticket, mark handled, answer, say, notes, and
-    `assessCall`.
-  - **definition:** checks `call` (minScore), `routed` (new, or a ticket ID)
-    and `chat` (mentions).
-  - **CommsWorkspace:** Chat, Voicemail and Calls, using the browser's own
-    speech for audio, with the transcript always shown.
-- **Task `serviceDeskComms.ts`** ("Phones, voicemail and chat", IT order 10):
-  - **Systems:** comms and devices.
-  - **Voicemail:** Grace's, linked to INC-3401; Dana's, a new ticket.
-  - **Calls:** Ben, a frustrated caller whose call becomes ticket INC-3411,
-    tied to DT-0181's Office Suite; Arjun, an unverified password reset.
-  - **Chat:** an update in #finance.
+- **A Security Console tool** (`src/tools/soc/`):
+  - **schema:** sign-ins, alerts, endpoints, emails, mailboxes, accounts, an
+    incident with stages, and the scenario's truth (for validation, never
+    shown).
+  - **model:** actions validated against the truth; a wrong action is
+    recorded as a mistake with a consequence; `blockers` and `advance` gate
+    each stage.
+  - **data:** `securityScenario` (a phishing email, an overseas sign-in, a
+    forwarding rule, a remote-access program on LT-0171, and false alarms).
+  - **definition:** checks `stage`, `no-mistakes` and `report`.
+  - **SecurityConsole** (a dark operations-centre theme).
+- **Task `securityIncident.ts`** ("Incident response: a compromised
+  account", senior support analyst, IT order 13; the project tasks move to
+  14–16). Carmen's ticket INC-3501 has the condition
+  `incident-closed: IR-2026-014`.
 
 Wiring:
 
-1. `TicketEnvironment` and `QueueSchema.environment` gain `comms`.
-2. In `incidents.ts`:
-   - **Tickets from communications:** a voicemail or call with
-     `ticket === opens.id` adds that ticket to the queue (once), with its
-     conditions validated by `TicketConditionSchema`. Linking adds a history
-     note to the existing ticket.
-   - **Follow-ups:** when a ticket becomes resolved or reopened, the requester
-     sends a direct message (one per ticket and event).
-3. `applyTicketSolution` materialises the tickets from the comms solution.
-4. `ToolWorkspaceProps` gains `tickets`, `presence` and `officeTime`.
-   Presence comes from the office schedule (`OFFICE_PEOPLE`: hours, lunch,
-   meetings).
-5. The shell gets a Communications group: Chat, Voicemail, Calls.
-6. Renumber the later IT tasks (10 onwards move by one).
-7. Tests:
-   - unit: model, assessment, routing, follow-ups;
+1. `TicketConditionSchema` gains `incident-closed`; `incidents.ts` evaluates it
+   (system `soc`), with changes on stage.
+2. `disruptionsOf` adds the consequences:
+   - a device isolated by mistake holds up its user ("their computer");
+   - an account disabled by mistake holds up its owner ("their account");
+   - the compromised device, while isolated, holds up its own user.
+3. The environment and the content schema gain `soc`; register the tool and
+   its workspace; the shell gets a Security group with the Security Console.
+4. Tests:
+   - unit: each gate, mistakes and consequences;
    - the model answer at 100%;
-   - browser: voicemail link and create, a call to its assessment, a chat
-     update, then fixing Ben's PC resolving his ticket, which brings a thank
-     you.
+   - browser: the whole lifecycle, refusals before evidence, and a wrong
+     isolation's consequence.

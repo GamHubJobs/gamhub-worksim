@@ -7,7 +7,7 @@ import type { TicketEnvironment, TicketsContent } from '../persistence/schemas'
 import { checkResult, type CheckInfo } from '../tools/checks'
 import { getTool } from '../tools/registry'
 import type { CheckResult, CheckStatus } from './grading'
-import { evaluateTicket, isMonitored } from './incidents'
+import { evaluateTicket, isMonitored, materializeTickets } from './incidents'
 
 /** The systems a queue starts with (its faults), from the task. */
 function startingEnvironment(assignment: Assignment): TicketEnvironment | undefined {
@@ -20,6 +20,8 @@ function startingEnvironment(assignment: Assignment): TicketEnvironment | undefi
     out.directory = getTool('directory')!.state.parse(environment.directory.start)
   if (environment.devices)
     out.devices = getTool('devices')!.state.parse(environment.devices.start)
+  if (environment.comms)
+    out.comms = getTool('comms')!.state.parse(environment.comms.start)
   return out
 }
 
@@ -72,7 +74,7 @@ export function gradeEnvironment(
 ): CheckResult[] {
   const environment = assignment.queue?.environment
   if (!environment) return []
-  return (['network', 'directory', 'devices'] as const).flatMap((id) => {
+  return (['network', 'directory', 'devices', 'comms'] as const).flatMap((id) => {
     const task = environment[id]
     const tool = getTool(id)
     if (!task || !tool || task.checks.length === 0) return []
@@ -227,12 +229,20 @@ export function applyTicketSolution(
           ...(environment.devices
             ? { devices: getTool('devices')!.state.parse(environment.devices.solution) }
             : {}),
+          ...(environment.comms
+            ? { comms: getTool('comms')!.state.parse(environment.comms.solution) }
+            : {}),
         }
       : queue.environment
+  // Tickets the model answer opened from voicemail and calls are added first.
+  const withEnvironment = materializeTickets(
+    { ...queue, ...(solved ? { environment: solved } : {}) },
+    queue.environment?.comms,
+    { at: 0, time: '' },
+  )
   return {
-    ...queue,
-    ...(solved ? { environment: solved } : {}),
-    tickets: queue.tickets.map((ticket) => ({
+    ...withEnvironment,
+    tickets: withEnvironment.tickets.map((ticket) => ({
       ...ticket,
       ...assignment.ticketSolution[ticket.id],
     })),

@@ -54,7 +54,7 @@ export const networkIntranet: AssignmentInput = {
   version: 1,
   careerId: 'it-support',
   levelId: 'senior-support-analyst',
-  order: 10,
+  order: 11,
   kind: 'tool',
   title: 'Monday after the change',
   summary:

@@ -19,6 +19,12 @@ export interface ToolWorkspaceProps<State> {
   reachable?: (device: string) => boolean
   /** Tickets about something in the tool (a device, an account), for its detail view. */
   related?: (entity: string) => Array<{ id: string; title: string; open: boolean }>
+  /** The queue's tickets (for linking a voicemail or call to one). */
+  tickets?: Array<{ id: string; title: string; open: boolean }>
+  /** Where a colleague is now, from the office schedule. */
+  presence?: (person: string) => 'available' | 'busy' | 'away'
+  /** The office clock as shown, e.g. "09:42" (for messages). */
+  officeTime?: () => string
 }
 
 // oxlint-disable-next-line no-explicit-any -- each tool has its own state type
@@ -28,6 +34,7 @@ const WORKSPACES: Record<string, Workspace> = {
   books: lazy(() => import('./books/BooksWorkspace')),
   directory: lazy(() => import('./directory/DirectoryWorkspace')),
   devices: lazy(() => import('./devices/DevicesWorkspace')),
+  comms: lazy(() => import('./comms/CommsWorkspace')),
   network: lazy(() => import('./network/NetworkWorkspace')),
   social: lazy(() => import('./social/SocialWorkspace')),
   seo: lazy(() => import('./seo/SeoWorkspace')),
