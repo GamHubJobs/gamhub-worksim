@@ -8,6 +8,7 @@ import { disruptionsOf, evaluateTicket, isMonitored } from '../../game/incidents
 import type { Ticket, TicketsContent } from '../../persistence/schemas'
 import { Icon, type IconName } from '../../ui/Icon'
 import { LIFECYCLE_NAMES, PRIORITY_INFO, STATUS_NAMES } from './labels'
+import { arrivedTickets, slaOf } from '../../game/sla'
 
 const OPEN = (t: Ticket) => t.status !== 'resolved' && t.status !== 'closed'
 
@@ -52,12 +53,23 @@ export function OverviewPanel({
   content,
   assignmentId,
   onOpenTicket,
+  officeNow,
 }: {
   content: TicketsContent
   assignmentId: string | null
+  /** The office clock (absolute minutes), for SLAs and tickets arriving later. */
+  officeNow?: number
   onOpenTicket: (id: string) => void
 }) {
-  const tickets = content.tickets
+  // Only the tickets that have come in by now (some arrive during the day).
+  const tickets =
+    officeNow === undefined ? content.tickets : arrivedTickets(content, officeNow)
+  const slas =
+    officeNow === undefined
+      ? []
+      : tickets.map((t) => slaOf(t, content.officeDay, officeNow))
+  const breached = slas.filter((s) => s?.resolution === 'breached').length
+  const slaAtRisk = slas.filter((s) => s?.resolution === 'at-risk').length
   const open = tickets.filter(OPEN)
   const unassigned = open.filter((t) => t.status === 'new')
   const waiting = tickets.filter((t) => t.status === 'pending')
@@ -127,6 +139,15 @@ export function OverviewPanel({
             tone="green"
             testid="stat-fixed"
           />
+          {slas.some(Boolean) && (
+            <Stat
+              label={`SLA overdue${slaAtRisk ? ` · ${slaAtRisk} at risk` : ''}`}
+              value={breached}
+              icon="clock"
+              tone={breached ? 'red' : slaAtRisk ? 'amber' : 'green'}
+              testid="stat-sla"
+            />
+          )}
         </div>
 
         {atRisk.length > 0 && (

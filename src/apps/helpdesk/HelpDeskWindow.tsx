@@ -12,7 +12,7 @@ import { useSavedDocument } from '../shared/useSavedDocument'
 import { AssignmentPane } from '../sheets/ui/AssignmentPane'
 import { SubmissionResults } from '../tasks/SubmissionResults'
 import { TicketsEditor } from './TicketsEditor'
-import { formatTime, weekdayName } from '../../game/clock'
+import { absoluteTime, formatTime, weekdayName } from '../../game/clock'
 import {
   applyEnvironmentChange,
   disruptionsOf,
@@ -30,6 +30,8 @@ import { deviceByName, onNetwork } from '../../tools/network/simulation'
 import { Icon, type IconName } from '../../ui/Icon'
 import { KnowledgeBasePanel } from './KnowledgeBasePanel'
 import { OverviewPanel } from './OverviewPanel'
+import { ReportsPanel } from './ReportsPanel'
+import { arrivedTickets } from '../../game/sla'
 import { presenceOf } from '../../game/presence'
 
 interface HelpDeskWindowProps {
@@ -44,7 +46,14 @@ interface HelpDeskWindowProps {
 }
 
 type Tab =
-  'overview' | 'queue' | 'knowledge' | 'remote' | 'voicemail' | 'calls' | SystemId
+  | 'overview'
+  | 'queue'
+  | 'knowledge'
+  | 'reports'
+  | 'remote'
+  | 'voicemail'
+  | 'calls'
+  | SystemId
 
 const SYSTEM_ICONS: Record<SystemId, IconName> = {
   network: 'network',
@@ -61,6 +70,7 @@ function officeMoment(work?: { day: number; minute: number }): Moment {
     time: work
       ? `${weekdayName(work.day)} (day ${work.day}), ${formatTime(work.minute)}`
       : '',
+    ...(work ? { office: absoluteTime(work.day, work.minute) } : {}),
   }
 }
 
@@ -135,6 +145,10 @@ export function HelpDeskWindow({
   )
 
   const moment = () => officeMoment(profile?.work)
+  /** The office clock now (absolute minutes), for SLAs. */
+  const officeNow = profile?.work
+    ? absoluteTime(profile.work.day, profile.work.minute)
+    : undefined
 
   // Tickets that changed by themselves since the queue was opened (fixed, or broken again).
   const seen = useRef<number | null>(null)
@@ -244,13 +258,18 @@ export function HelpDeskWindow({
               ? 'devices'
               : tab === 'voicemail' || tab === 'calls'
                 ? 'comms'
-                : tab === 'queue' || tab === 'overview' || tab === 'knowledge'
+                : tab === 'queue' ||
+                    tab === 'overview' ||
+                    tab === 'knowledge' ||
+                    tab === 'reports'
                   ? null
                   : tab
           const Workspace = system ? getWorkspace(system) : null
-          const open = shown.content.tickets.filter(
-            (t) => t.status !== 'resolved' && t.status !== 'closed',
-          ).length
+          const open = (
+            officeNow === undefined
+              ? shown.content.tickets
+              : arrivedTickets(shown.content, officeNow)
+          ).filter((t) => t.status !== 'resolved' && t.status !== 'closed').length
           const groups: Array<{
             name: string
             items: Array<{ id: Tab; label: string; icon: IconName }>
@@ -261,6 +280,7 @@ export function HelpDeskWindow({
                 { id: 'overview', label: 'Overview', icon: 'dashboard' },
                 { id: 'queue', label: 'Ticket queue', icon: 'ticket' },
                 { id: 'knowledge', label: 'Knowledge Base', icon: 'guide' },
+                { id: 'reports', label: 'Reports', icon: 'chart' },
               ],
             },
             ...(systems.length
@@ -405,12 +425,20 @@ export function HelpDeskWindow({
                 )}
                 {tab === 'overview' ? (
                   <OverviewPanel
+                    officeNow={officeNow}
                     content={shown.content}
                     assignmentId={assignment?.id ?? null}
                     onOpenTicket={(id) => {
                       setFocus(id)
                       setTab('queue')
                     }}
+                  />
+                ) : tab === 'reports' ? (
+                  <ReportsPanel
+                    profile={profile}
+                    current={shown.content}
+                    currentTitle={assignment?.title ?? 'This queue'}
+                    now={officeNow ?? 0}
                   />
                 ) : tab === 'knowledge' ? (
                   <KnowledgeBasePanel
@@ -428,6 +456,7 @@ export function HelpDeskWindow({
                     onUpdate={shown.live ? queue.update : undefined}
                     moment={moment}
                     initialTicket={focus}
+                    officeNow={officeNow}
                     onOpenArticle={(id) => {
                       setArticle(id)
                       setTab('knowledge')

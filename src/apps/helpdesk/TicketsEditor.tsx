@@ -29,6 +29,8 @@ import { ticketAiContext } from './aiContext'
 import { guidanceFor } from '../../game/guidance'
 import { getArticle } from '../../content/knowledge/it'
 import { GuidancePanel } from './GuidancePanel'
+import { arrivedTickets, slaOf } from '../../game/sla'
+import { SlaBadge, SlaLine } from './Sla'
 
 interface TicketsEditorProps {
   content: TicketsContent
@@ -40,6 +42,8 @@ interface TicketsEditorProps {
   onOpenArticle?: (id: string) => void
   /** The ticket to show first (e.g. opened from the Overview). */
   initialTicket?: string
+  /** The office clock (absolute minutes), for SLAs and tickets that arrive during the day. */
+  officeNow?: number
 }
 
 const statusName = (ticket: Ticket, status: TicketStatus) =>
@@ -63,6 +67,7 @@ export function TicketsEditor({
   moment = () => ({ at: Date.now(), time: '' }),
   onOpenArticle,
   initialTicket,
+  officeNow,
 }: TicketsEditorProps) {
   const editable = !readOnly && !!onUpdate
   const [selectedId, setSelectedId] = useState(
@@ -76,7 +81,10 @@ export function TicketsEditor({
     null,
   )
   const ticket = content.tickets.find((t) => t.id === selectedId) ?? content.tickets[0]
-  const shown = content.tickets.filter((t) => filter === 'all' || t.status === filter)
+  // Tickets that have not come in yet (later in the office day) are not shown.
+  const arrived =
+    officeNow === undefined ? content.tickets : arrivedTickets(content, officeNow)
+  const shown = arrived.filter((t) => filter === 'all' || t.status === filter)
 
   // WorkSim AI sees the open ticket and the knowledge base articles that match it.
   useAiContext(
@@ -149,7 +157,7 @@ export function TicketsEditor({
       <div className="flex w-80 shrink-0 flex-col border-r border-slate-200 bg-white">
         <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2">
           <span className="text-sm font-semibold text-slate-800">
-            Queue ({content.tickets.length})
+            Queue ({arrived.length})
           </span>
           <select
             aria-label="Show tickets"
@@ -200,8 +208,17 @@ export function TicketsEditor({
                 <p className="mt-0.5 truncate text-sm font-medium text-slate-900">
                   {t.subject}
                 </p>
-                <p className="truncate text-xs text-slate-500">
-                  {t.from} · {t.received}
+                <p className="flex items-center justify-between gap-2 text-xs text-slate-500">
+                  <span className="truncate">
+                    {t.from} · {t.received}
+                  </span>
+                  <SlaBadge
+                    sla={
+                      officeNow === undefined
+                        ? null
+                        : slaOf(t, content.officeDay, officeNow)
+                    }
+                  />
                 </p>
               </button>
             </li>
@@ -245,6 +262,13 @@ export function TicketsEditor({
                 From <strong>{ticket.from}</strong> ({ticket.department}) at{' '}
                 {ticket.received}
               </p>
+              <SlaLine
+                sla={
+                  officeNow === undefined
+                    ? null
+                    : slaOf(ticket, content.officeDay, officeNow)
+                }
+              />
               <p className="mt-3 text-sm whitespace-pre-wrap text-slate-800">
                 {ticket.body}
               </p>

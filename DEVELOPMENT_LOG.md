@@ -190,6 +190,110 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 8: SLAs on the office clock, reports, a full day, and the manager's review
+
+Service levels measured on the game's own clock, tickets that arrive during
+the day, a service desk report from the player's real tickets, and IT
+evidence in the manager's weekly review.
+
+### What was built
+
+- **SLAs** (`game/sla.ts`, pure):
+  - **Targets:** response and resolution for each priority, the same as the
+    priority labels (P1 15 minutes and 4 hours, P2 1 hour and 8 hours, P3 4
+    hours and 3 days, P4 2 days and 5 days). The labels now show both.
+  - **Measured on the office clock:**
+    - every history entry now records the office time (`office`);
+    - a queue records the office day it started (`officeDay`);
+    - the clock is set from the received time.
+  - **What counts:** "responded" is the first work on the ticket; "resolved"
+    is when it resolved.
+  - **States:** running, at risk (under a quarter of the time left), met, or
+    breached.
+  - **Nothing real-time:** no timers, no polling. The state is worked out when
+    shown, from the office clock.
+- **Shown in the Help Desk:**
+  - each ticket in the queue has an SLA badge (time left, overdue, met);
+  - the ticket has an SLA line (respond by, resolve by, done or missed);
+  - the Overview counts SLAs overdue and at risk.
+- **Ordinary tickets now keep their status changes in their history,** so their
+  SLAs can be measured too. A Phase 1 test was updated: they are still not
+  checked against anything.
+- **Workload:**
+  - a ticket marked `arrivesLater` comes into the queue at its received time
+    on the office clock;
+  - until then it is not in the queue, the counts, the Overview or the
+    report;
+  - every older task's tickets are there from the start, as before.
+- **Reports** (`game/serviceReport.ts`, and a Reports section in the
+  sidebar), over all the player's Help Desk queues:
+  - received, resolved, reopened;
+  - average resolution time (office clock);
+  - overdue, escalated;
+  - first-contact resolution;
+  - an estimated satisfaction;
+  - the calls' communication average;
+  - by priority (with overdue), by department and by category.
+
+  Every figure says how it is counted (in a tooltip, and listed under the
+  report). Only tickets that have arrived count.
+
+- **Grading:** a new ticket check `sla`. Each listed ticket must be resolved
+  within its target; a ticket with no priority counts as missed.
+- **The manager's weekly review** (`reviewFor`, IT career only) adds strengths
+  and points to improve from the recorded results of the Help Desk tasks:
+  - fixes that really hold;
+  - security procedure;
+  - calls;
+  - write-ups;
+  - prioritisation and SLAs;
+  - working without hints.
+
+  Only areas with results are mentioned.
+
+- **The task "A full day on the desk"** (Service Desk Lead, IT order 18):
+  - two tickets in the morning, and three arriving at 10:30, 11:45 and 14:00
+    (payroll and the board papers are P2);
+  - all fixed remotely;
+  - graded on priorities, the five fixes, every SLA met, and disconnecting.
+
+### Tests
+
+- **Unit** (`game/sla.test.ts`, 11):
+  - no SLA without a priority or an office day;
+  - running, at risk, breached;
+  - response and resolution from the history;
+  - targets in proportion;
+  - arrivals, and older tasks unaffected;
+  - saving and old queues;
+  - the model answer at 100%;
+  - a late resolution and a missing priority marked down;
+  - the report's figures from real tickets;
+  - the manager's review lines, and only for the IT career.
+- **Browser** (`tests/e2e/deskops-sla.spec.ts`):
+  - two tickets in the morning;
+  - a priority gives an SLA in the queue and on the ticket;
+  - two office hours later Carmen's ticket arrives;
+  - the Overview's SLA count;
+  - the report counting the three that have arrived.
+- **Found and fixed:**
+  - the report counted tickets that had not arrived yet;
+  - the queue header and the sidebar count did too;
+  - the SLA targets were first set apart from the priority labels' response
+    times, and are now the same.
+- **Results after:** `npm run check` clean (111 files, 2,508 tests). The Help Desk browser tests (19 spec files, including the manager review, 81 tests) passed. Production build passed.
+
+### Limits
+
+- **The office clock runs through the night:** a P3's 3 days are calendar
+  days on it, not working hours.
+- **Satisfaction is an estimate** from what was recorded (overdue, reopened,
+  no reply); requesters are not surveyed.
+- **The report's "Reports" step in the full-day task is not graded;** it is
+  there to read.
+
+---
+
 ## 2026-11-12 · IT Help Desk 7: one morning across the company: business impact, priorities and consequences
 
 IT problems reach across the company's departments (the same company and

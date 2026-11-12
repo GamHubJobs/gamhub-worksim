@@ -616,6 +616,8 @@ export interface Moment {
   time: string
   /** The requester's name, from their office person ID. */
   nameOf?: (personId: string) => string | undefined
+  /** The office clock (absolute minutes), for SLAs. */
+  office?: number
 }
 
 function note(
@@ -624,7 +626,13 @@ function note(
   text: string,
   when: Moment,
 ): Ticket {
-  const entry: TicketActivity = { at: when.at, time: when.time, kind, text }
+  const entry: TicketActivity = {
+    at: when.at,
+    time: when.time,
+    kind,
+    text,
+    ...(when.office !== undefined ? { office: when.office } : {}),
+  }
   return { ...ticket, activity: [...ticket.activity, entry].slice(-200) }
 }
 
@@ -1010,9 +1018,20 @@ export function requestStatus(
 ): StatusRequest {
   const ticket = content.tickets.find((t) => t.id === id)
   if (!ticket) return { content, refused: ['That ticket is not in the queue.'] }
+  // Other tickets take the status as chosen; the change is kept in their history (for SLAs).
   if (!isMonitored(ticket))
     return {
-      content: updateTicket(content, id, (t) => ({ ...t, status })),
+      content:
+        status === ticket.status
+          ? content
+          : updateTicket(content, id, (t) =>
+              note(
+                { ...t, status },
+                'status',
+                `Status changed to ${STATUS_WORDS[status]}.`,
+                when,
+              ),
+            ),
       refused: null,
     }
   if (status === ticket.status) return { content, refused: null }

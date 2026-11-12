@@ -8,6 +8,7 @@ import { checkResult, type CheckInfo } from '../tools/checks'
 import { getTool } from '../tools/registry'
 import type { CheckResult, CheckStatus } from './grading'
 import { evaluateTicket, isMonitored, materializeTickets } from './incidents'
+import { slaOf } from './sla'
 
 /** The systems a queue starts with (its faults), from the task. */
 function startingEnvironment(assignment: Assignment): TicketEnvironment | undefined {
@@ -33,6 +34,8 @@ function startingEnvironment(assignment: Assignment): TicketEnvironment | undefi
 export function buildQueueContent(
   assignment: Assignment,
   now = Date.now(),
+  /** The office day it starts (for SLAs on the office clock). */
+  officeDay?: number,
 ): TicketsContent {
   const queue = assignment.queue
   if (!queue) return { categories: ['General'], tickets: [], knowledge: [] }
@@ -62,6 +65,7 @@ export function buildQueueContent(
         : [],
     })),
     ...(environment ? { environment } : {}),
+    ...(officeDay !== undefined ? { officeDay } : {}),
   }
 }
 
@@ -159,6 +163,29 @@ export function gradeTickets(
           )
       }
       return result(check, ids.length ? right / ids.length : 0, problems)
+    }
+
+    if (check.type === 'sla') {
+      // Resolved, and by the target for its priority (office clock).
+      const problems: string[] = []
+      let met = 0
+      for (const id of check.tickets) {
+        const ticket = byId.get(id)
+        if (!ticket) {
+          problems.push(`${id} is not in the queue.`)
+          continue
+        }
+        const sla = slaOf(ticket, queue.officeDay ?? 1, Number.POSITIVE_INFINITY)
+        if (!sla) problems.push(`${id} has no priority, so no SLA to meet.`)
+        else if (sla.resolution === 'met') met++
+        else
+          problems.push(
+            ticket.status === 'resolved' || ticket.status === 'closed'
+              ? `${id} was resolved after its ${sla.priority} target.`
+              : `${id} is not resolved.`,
+          )
+      }
+      return result(check, met / check.tickets.length, problems)
     }
 
     if (check.type === 'fixed') {

@@ -308,7 +308,10 @@ describe('tickets tied to the systems', () => {
     const result = requestStatus(queue, id, 'resolved', when)
     expect(result.refused).toBeNull()
     expect(ticket(result.content, id).status).toBe('resolved')
-    expect(ticket(result.content, id).activity).toEqual([])
+    // Not checked against anything; the change is only kept in its history (for SLAs).
+    expect(ticket(result.content, id).activity.map((a) => [a.kind, a.text])).toEqual([
+      ['status', 'Status changed to resolved.'],
+    ])
     expect(queue.environment).toBeUndefined()
   })
 })

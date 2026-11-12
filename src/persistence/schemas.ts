@@ -495,6 +495,8 @@ export const TicketActivitySchema = z.object({
   time: z.string().max(40).default(''),
   kind: z.enum(TICKET_ACTIVITY_KINDS),
   text: z.string().max(500),
+  /** The office clock (absolute minutes since day 1), for SLAs (game/sla.ts). */
+  office: z.number().nonnegative().optional(),
 })
 
 /** The business impact of a ticket's problem: the service, how many people, and what is at risk. */
@@ -546,6 +548,8 @@ export const TicketSchema = z.object({
   hintsUsed: z.number().int().min(0).max(4).default(0),
   /** What the problem costs the business (from the task): shown with the ticket and in the Overview. */
   impact: TicketImpactSchema.optional(),
+  /** Comes in during the office day, at its received time (game/sla.ts). */
+  arrivesLater: z.boolean().optional(),
 })
 
 /**
@@ -567,6 +571,8 @@ export const TicketsContentSchema = z.object({
   knowledge: z.array(z.object({ title: z.string(), body: z.string() })).max(30),
   /** The systems the tickets are tied to, for queues whose tickets have conditions. */
   environment: TicketEnvironmentSchema.optional(),
+  /** The office day the queue started (for SLAs on the office clock). */
+  officeDay: z.number().int().positive().optional(),
 })
 
 export const TicketsDocumentSchema = DocumentBaseSchema.extend({

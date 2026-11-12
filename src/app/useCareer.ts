@@ -231,7 +231,11 @@ export function useCareer() {
               ? {
                   kind: 'tickets' as const,
                   title: assignment.queue?.title ?? assignment.title,
-                  content: buildQueueContent(assignment),
+                  content: buildQueueContent(
+                    assignment,
+                    Date.now(),
+                    state.status === 'ready' ? state.profile.work.day : undefined,
+                  ),
                 }
               : {
                   kind: 'sheet' as const,

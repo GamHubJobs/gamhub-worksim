@@ -49,9 +49,9 @@ every phase.
 | 4     | Device inventory, Remote Desktop, device troubleshooting        | Done `69ae5fa` |
 | 5     | Chat, voicemail, support calls, communication assessment        | Done `4faf405` |
 | 6     | Security operations: console, investigations, incident response | Done `1f71ab7` |
-| 7     | Cross-department incidents, consequences, prioritisation        | Done           |
-| 8     | SLAs (office time), reports, workload, manager reviews          | In progress    |
-| 9     | Competencies, portfolio evidence, readiness, career completion  | To do          |
+| 7     | Cross-department incidents, consequences, prioritisation        | Done `aef82fa` |
+| 8     | SLAs (office time), reports, workload, manager reviews          | Done           |
+| 9     | Competencies, portfolio evidence, readiness, career completion  | In progress    |
 
 ## Next steps
 

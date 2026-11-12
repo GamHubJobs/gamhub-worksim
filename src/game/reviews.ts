@@ -147,6 +147,11 @@ export function reviewFor(profile: ProfileData): Review {
       'Look after yourself: take your lunch break and go home on time. Tired people make mistakes, and I need you here for the long run.',
     )
   }
+  // IT service evidence, from the Help Desk tasks' recorded results.
+  const it = itServiceEvidence(profile)
+  strengths.push(...it.strengths)
+  improvements.push(...it.improvements)
+
   if (strengths.length === 0) strengths.push('You are settling in and learning quickly.')
 
   return {
@@ -157,6 +162,77 @@ export function reviewFor(profile: ProfileData): Review {
     strengths,
     improvements,
   }
+}
+
+/**
+ * What the IT manager says about the player's service desk work, from the
+ * checks recorded on their Help Desk task attempts (the latest of each):
+ * technical fixes, security compliance, communication, documentation,
+ * prioritisation and SLAs, and how much they worked without hints. Only
+ * areas with recorded results are mentioned.
+ */
+export function itServiceEvidence(profile: ProfileData): {
+  strengths: string[]
+  improvements: string[]
+} {
+  const strengths: string[] = []
+  const improvements: string[] = []
+  if (profile.careerId !== 'it-support') return { strengths, improvements }
+  const attempts = Object.values(profile.assignments)
+    .map((p) => p.attempts.at(-1))
+    .filter((a) => a !== undefined)
+  const checks = attempts.flatMap((a) => a.checks)
+  const area = (match: (id: string) => boolean) => {
+    const found = checks.filter((c) => match(c.id))
+    if (found.length === 0) return null
+    return (
+      found.reduce((sum, c) => sum + (c.points ? c.earned / c.points : 0), 0) /
+      found.length
+    )
+  }
+  const areas: Array<[number | null, string, string]> = [
+    [
+      area((id) => id.endsWith('-fixed')),
+      'Your fixes hold: the systems show the problems really solved, not just marked resolved.',
+      'Several problems you handled were not actually fixed: check in the systems before you close a ticket.',
+    ],
+    [
+      area((id) => id === 'policy' || id === 'accurate'),
+      'You follow security procedure: verification before changes, and the right account and device contained.',
+      'Security procedure needs attention: verify first, and act only on what the evidence shows.',
+    ],
+    [
+      area((id) => id.startsWith('call-')),
+      'People like dealing with you on the phone: you listen, explain simply and say what happens next.',
+      'Work on your calls: ask before suggesting, avoid jargon, and close with what happens next.',
+    ],
+    [
+      area((id) => id.endsWith('-reply') || id === 'report'),
+      'Your write-ups are clear: people know what happened and what you did.',
+      'Your ticket replies and reports need more: what was wrong, what you did, what they should do.',
+    ],
+    [
+      area((id) => id === 'priorities' || id === 'sla'),
+      'You prioritise by business impact and meet the service levels.',
+      'Prioritise by business impact, and watch the time left on each ticket’s SLA.',
+    ],
+  ]
+  for (const [rate, good, bad] of areas) {
+    if (rate === null) continue
+    if (rate >= 0.8) strengths.push(good)
+    else if (rate < 0.5) improvements.push(bad)
+  }
+  const helpDesk = attempts.filter((a) => a.hintsUsed !== undefined)
+  const independent = helpDesk.filter((a) => a.hintsUsed === 0).length
+  if (helpDesk.length >= 2 && independent === helpDesk.length)
+    strengths.push(
+      'You troubleshoot independently: no hints needed on your recent tickets.',
+    )
+  else if (helpDesk.length >= 2 && independent === 0)
+    improvements.push(
+      'You lean on the hints: try the Knowledge Base and the tools first, then a hint if you are stuck.',
+    )
+  return { strengths, improvements }
 }
 
 export function hasReviewThisWeek(profile: ProfileData): boolean {

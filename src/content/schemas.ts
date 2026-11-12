@@ -146,6 +146,15 @@ export const TicketCheckSchema = z.discriminatedUnion('type', [
     type: z.literal('fixed'),
     ticket: z.string(),
   }),
+  /**
+   * The tickets were resolved within their SLA's resolution target, on the
+   * office clock (see game/sla.ts). A ticket with no priority has no SLA, and
+   * counts as missed.
+   */
+  FileCheckBaseSchema.extend({
+    type: z.literal('sla'),
+    tickets: z.array(z.string()).min(1),
+  }),
 ])
 
 /**
@@ -237,6 +246,8 @@ export const QueueSchema = z.object({
         conditions: z.array(TicketConditionSchema).default([]),
         /** What the problem costs the business (service, people, deadline). */
         impact: TicketImpactSchema.optional(),
+        /** Comes in during the office day, at its received time. */
+        arrivesLater: z.boolean().optional(),
       }),
     )
     .min(1),
