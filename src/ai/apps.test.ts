@@ -208,9 +208,11 @@ describe('Help Desk, Slides and Code help', () => {
       },
       knowledge,
     )
-    expect(items.map((i) => i.label)).toEqual([
+    // The task's own article first, then the IT Knowledge Base's best match.
+    expect(items.map((i) => i.label).slice(0, 3)).toEqual([
       'Ticket T-1: Printer offline',
       'Knowledge base: Printer offline',
+      'Knowledge base: Printer not printing',
     ])
     const answer = builtinAnswer(ask('How should I resolve this ticket?', items))
     expect(answer.text).toContain('Printer offline')

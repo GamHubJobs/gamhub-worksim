@@ -38,6 +38,14 @@ const ACTION_RULES: Record<string, string | ((mode: AiMode) => string)> = {
     'Task: suggest how to resolve the ticket: likely causes, the checks to make in order, and when to escalate. Refer to the knowledge base articles given, if any.',
 }
 
+/**
+ * For IT support work: the AI teaches and explains, the employee does the
+ * work in the simulated systems (it cannot change them, and must not
+ * pretend to).
+ */
+const TICKET_RULE =
+  'IT support: you cannot see or change the company’s systems beyond what is shared here, and you must never say you have changed anything. Explain concepts, error messages and diagnostic results; suggest what to check next and why; help write clear ticket updates; explain why an operation is unsafe (for example changing an account before verifying the person). Do not give a complete step-by-step solution to a graded task in Learning mode: the employee must do the troubleshooting.'
+
 export function systemPrompt(request: AiRequest): string {
   const context = toModelText(request.context)
   const rule = request.action ? ACTION_RULES[request.action] : undefined
@@ -46,6 +54,7 @@ export function systemPrompt(request: AiRequest): string {
     MODE_RULES[request.mode],
     'Rules: be concise and use plain British English. Use short paragraphs or lists. Say when you are unsure and suggest how to check. Never invent figures that are not in the context. Do not ask for personal information. When you show a spreadsheet formula, write it on its own line starting with =.',
     ...(rule ? [typeof rule === 'function' ? rule(request.mode) : rule] : []),
+    ...(request.context.items.some((i) => i.kind === 'ticket') ? [TICKET_RULE] : []),
     context
       ? `What the employee is working on (only this has been shared with you):\n\n${context}`
       : 'The employee has not shared anything from their work for this question.',

@@ -141,7 +141,9 @@ test('a new document in Word Craft: written, styled, kept as a .docx and read fo
     ['format.bold'],
   )
   await waitUntilKept(page)
-  await page.screenshot({ path: 'docs/screenshots/crafts/wordcraft-document.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/wordcraft-document.png`,
+  })
 
   // What the graders read: the heading, the text, the bold word.
   const saved = (await savedDoc(page, 'Untitled document'))!
@@ -208,7 +210,9 @@ test('a WorkSim template opens in Word Craft with its headings and table; a char
     ['insert.picture', { data: picture.data, width: 360, alt: picture.alt }],
   )
   await waitUntilKept(page)
-  await page.screenshot({ path: 'docs/screenshots/crafts/wordcraft-report.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/wordcraft-report.png`,
+  })
   const after = (await savedDoc(page, 'Business report'))!
   expect(all(after.body, 'heading').map(textOf)).toEqual(headingsBefore)
   expect(all(after.body, 'table')).toHaveLength(1)
@@ -421,7 +425,9 @@ test('the connected office: analysis in Grid Craft, the report in Word Craft wit
     ),
   )
   await waitUntilKept(page)
-  await page.screenshot({ path: 'docs/screenshots/crafts/wordcraft-task-report.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/wordcraft-task-report.png`,
+  })
   const report = (await savedDoc(page, 'October performance report'))!
   expect(all(report.body, 'chart')).toHaveLength(1)
 
@@ -455,7 +461,9 @@ test('the connected office: analysis in Grid Craft, the report in Word Craft wit
     .getByRole('button', { name: /October departmental performance/ })
     .click()
   await waitUntilKept(page)
-  await page.screenshot({ path: 'docs/screenshots/crafts/deckcraft-task-slides.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/deckcraft-task-slides.png`,
+  })
 
   // 4. Hand in by email: graded on the workbook, the report and the slides.
   await apps.getByRole('button', { name: /^Tasks/ }).click()
@@ -470,7 +478,9 @@ test('the connected office: analysis in Grid Craft, the report in Word Craft wit
   await compose.getByRole('button', { name: 'Send' }).click()
   const results = page.getByTestId('submission-results')
   await expect(results).toBeVisible({ timeout: 60_000 })
-  await page.screenshot({ path: 'docs/screenshots/crafts/wordcraft-task-graded.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/wordcraft-task-graded.png`,
+  })
   await expect(results.getByTestId('score')).toHaveText('100%')
 })
 

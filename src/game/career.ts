@@ -19,6 +19,7 @@ import type {
 import { startingWorkState } from '../persistence/workState'
 import { addDeadline } from './deadlines'
 import type { GradeResult } from './grading'
+import { hintFactor } from './guidance'
 
 /** The parts of a profile the game controls (no save bookkeeping). */
 export type ProfileData = Pick<
@@ -410,9 +411,18 @@ export function recordSubmission(
   const wasPassed = isPassed(assignment, progress)
   const isFirstAttempt = progress.attempts.length === 0
 
-  const earned = earnings(assignment, grade.score, previousBest)
+  // Guidance hints take a little off the XP (never the score): see game/guidance.ts.
+  const hints = grade.hintsUsed ?? 0
+  const factor = hintFactor(hints)
+  const raw = earnings(assignment, grade.score, previousBest)
+  const earned = {
+    xp: Math.round(raw.xp * factor),
+    skills: Object.fromEntries(
+      Object.entries(raw.skills).map(([id, gain]) => [id, Math.round(gain * factor)]),
+    ),
+  }
   const bonusXp =
-    isFirstAttempt && grade.rating === 'excellent'
+    isFirstAttempt && grade.rating === 'excellent' && hints === 0
       ? Math.round(assignment.xp * FIRST_TRY_BONUS)
       : 0
   const xp = earned.xp + bonusXp
@@ -430,6 +440,7 @@ export function recordSubmission(
     })),
     xpEarned: xp,
     skillXpEarned: earned.skills,
+    ...(grade.hintsUsed !== undefined ? { hintsUsed: grade.hintsUsed } : {}),
     ...(versionId ? { versionId } : {}),
     ...(fileVersions && (fileVersions.doc || fileVersions.slides)
       ? { files: fileVersions }

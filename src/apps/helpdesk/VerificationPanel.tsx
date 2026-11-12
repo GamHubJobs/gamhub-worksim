@@ -232,8 +232,8 @@ export function VerificationPanel({
                 <option value="">Choose…</option>
                 {directory.groups.map((g) => (
                   <option key={g.id} value={g.id}>
-                    {g.privileged ? '🛡 ' : ''}
                     {g.name}
+                    {g.privileged ? ' (privileged)' : ''}
                   </option>
                 ))}
               </select>

@@ -499,7 +499,14 @@ function UserDetail({
                 data-testid="member-of"
               >
                 <span>
-                  {g?.privileged && <span title="Privileged group">🛡 </span>}
+                  {g?.privileged && (
+                    <span
+                      title="Privileged group"
+                      className="mr-1 inline-block align-[-2px] text-amber-700"
+                    >
+                      <Icon name="shield" className="h-4 w-4" />
+                    </span>
+                  )}
                   <span className="font-medium">{g?.name ?? id}</span>
                   <span className="text-slate-500"> · {g?.grants}</span>
                 </span>
@@ -529,8 +536,8 @@ function UserDetail({
               <option value="">Add to a group…</option>
               {available.map((g) => (
                 <option key={g.id} value={g.id}>
-                  {g.privileged ? '🛡 ' : ''}
                   {g.name}
+                  {g.privileged ? ' (privileged)' : ''}
                 </option>
               ))}
             </select>
@@ -653,7 +660,14 @@ function Groups({ state }: { state: DirectoryState }) {
           {state.groups.map((g) => (
             <tr key={g.id} className="border-t border-slate-100">
               <td className={cell}>
-                {g.privileged && <span title="Privileged group">🛡 </span>}
+                {g.privileged && (
+                  <span
+                    title="Privileged group"
+                    className="mr-1 inline-block align-[-2px] text-amber-700"
+                  >
+                    <Icon name="shield" className="h-4 w-4" />
+                  </span>
+                )}
                 <span className="font-medium">{g.name}</span>
                 <span className="block text-xs text-slate-500">{g.description}</span>
               </td>

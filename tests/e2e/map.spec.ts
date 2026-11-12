@@ -48,7 +48,9 @@ test('the world map: M, the pause menu and the phone; places, a destination, a r
   await page.keyboard.down('w')
   await page.waitForTimeout(1000)
   await page.keyboard.up('w')
-  await page.screenshot({ path: 'docs/screenshots/map/world-map.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/map/world-map.png`,
+  })
 
   // Zoom.
   const canvas = map(page).getByTestId('world-map-canvas')
@@ -71,7 +73,9 @@ test('the world map: M, the pause menu and the phone; places, a destination, a r
   const zs = points!.split(' ').map((p) => Number(p.split(',')[1]))
   expect(zs.length).toBeGreaterThanOrEqual(2)
   for (const z of zs) expect(Math.abs(z)).toBeLessThan(10)
-  await page.screenshot({ path: 'docs/screenshots/map/route.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/map/route.png`,
+  })
 
   // M again closes it: the player is exactly where they were.
   await page.keyboard.press('m')
@@ -83,7 +87,9 @@ test('the world map: M, the pause menu and the phone; places, a destination, a r
     'points',
     /[0-9]/,
   )
-  await page.screenshot({ path: 'docs/screenshots/map/minimap.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/map/minimap.png`,
+  })
 
   // The pause menu opens the same map.
   await page.getByTestId('city-3d').focus()

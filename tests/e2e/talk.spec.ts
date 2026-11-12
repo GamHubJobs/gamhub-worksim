@@ -102,7 +102,9 @@ test('a colleague in the office: walked over to, turns and waves, talks, goes ba
   await encounter(page).getByRole('button', { name: 'Chat with Grace' }).click()
   await expect(encounter(page)).toContainText('Grace:')
   await expect(encounter(page)).toContainText(/warms to you/)
-  await page.screenshot({ path: 'docs/screenshots/people/office-colleague.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/people/office-colleague.png`,
+  })
   // A second thing to say, in the same conversation; then goodbye.
   await encounter(page)
     .getByRole('button', { name: /what they are working on/ })
@@ -130,7 +132,9 @@ test('someone busy says so: at the stand-up, a colleague only lifts a hand', asy
   await expect(
     encounter(page).getByRole('button', { name: 'Say you will come back later' }),
   ).toBeVisible()
-  await page.screenshot({ path: 'docs/screenshots/people/office-busy.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/people/office-busy.png`,
+  })
   // She stays at the stand-up.
   const after = (await person(page, 'front2'))!
   expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(0.05)
@@ -216,7 +220,9 @@ test('out in town: the barista, a gym member mid-run, a local in the street', as
   await expect(
     encounter(page).getByRole('button', { name: 'Ask what is on locally' }),
   ).toBeVisible()
-  await page.screenshot({ path: 'docs/screenshots/people/street-local.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/people/street-local.png`,
+  })
   await encounter(page).getByRole('button', { name: 'Ask what is on locally' }).click()
   await encounter(page).getByRole('button', { name: 'Goodbye' }).click()
 
@@ -235,7 +241,9 @@ test('out in town: the barista, a gym member mid-run, a local in the street', as
   await expect(encounter(page)).toContainText("I'm Maya")
   await encounter(page).getByRole('button', { name: 'Ask what is good today' }).click()
   await expect(encounter(page)).toContainText('banana bread')
-  await page.screenshot({ path: 'docs/screenshots/people/cafe-barista.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/people/cafe-barista.png`,
+  })
   await encounter(page).getByRole('button', { name: 'Goodbye' }).click()
 
   // The gym: a member on the treadmill keeps running.
@@ -261,5 +269,7 @@ test('out in town: the barista, a gym member mid-run, a local in the street', as
   })
   await encounter(page).getByRole('button', { name: 'Ask for fitness guidance' }).click()
   await expect(encounter(page)).toContainText('A fitness tip.')
-  await page.screenshot({ path: 'docs/screenshots/people/gym-trainer.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/people/gym-trainer.png`,
+  })
 })

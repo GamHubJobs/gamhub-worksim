@@ -68,6 +68,11 @@ export interface GradeResult {
   earned: number
   maxPoints: number
   checks: CheckResult[]
+  /**
+   * Guidance hints opened while doing the task (Help Desk tasks). The score
+   * is the score; the XP is reduced a little for each (game/guidance.ts).
+   */
+  hintsUsed?: number
 }
 
 const MAX_PROBLEMS_SHOWN = 4

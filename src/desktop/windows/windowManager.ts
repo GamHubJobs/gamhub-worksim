@@ -100,10 +100,19 @@ export function openWindow(desk: Desk, view: View, area: Area): Desk {
   const z = topZ(desk) + 1
   if (desk.windows.some((w) => w.key === key))
     return withWindow(desk, key, (w) => ({ ...w, view, minimized: false, z }))
+  const place = placeNew(desk, area)
   return {
     windows: [
       ...desk.windows,
-      { key, view, ...placeNew(desk, area), minimized: false, z },
+      {
+        key,
+        view,
+        ...place,
+        // The Help Desk is a full IT operations application: it opens filling the screen.
+        maximized: place.maximized || view.app === 'helpdesk',
+        minimized: false,
+        z,
+      },
     ],
   }
 }

@@ -449,6 +449,8 @@ export const TICKET_ACTIVITY_KINDS = [
   // Identity verification and the security policy (tools/directory/security.ts):
   'verification',
   'security',
+  // A guidance hint opened (game/guidance.ts).
+  'hint',
 ] as const
 
 /** One event in a ticket's history. */
@@ -498,6 +500,8 @@ export const TicketSchema = z.object({
     })
     .nullable()
     .default(null),
+  /** Guidance hints opened on it (0 to 4; see game/guidance.ts). */
+  hintsUsed: z.number().int().min(0).max(4).default(0),
 })
 
 /**
@@ -661,6 +665,8 @@ export const AttemptSchema = z.object({
   /** XP this attempt added (only improvements on earlier attempts count). */
   xpEarned: z.number().int().nonnegative(),
   skillXpEarned: z.record(z.string(), z.number().int().nonnegative()),
+  /** Guidance hints opened for this attempt (Help Desk tasks); XP is reduced a little for each. */
+  hintsUsed: z.number().int().nonnegative().optional(),
   /** The version-history copy of the workbook as submitted. */
   versionId: IdSchema.optional(),
   /** The version-history copies of the report and presentation handed in with it. */
@@ -1312,6 +1318,8 @@ export const WorkStateSchema = z.object({
     )
     .max(50)
     .default([]),
+  /** Knowledge Base articles the player bookmarked (article IDs). */
+  kbBookmarks: z.array(z.string().max(60)).max(100).default([]),
 })
 
 /** Current format of player profiles; raise it (with an upgrade) when the shape changes. */

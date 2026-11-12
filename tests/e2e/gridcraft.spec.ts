@@ -93,7 +93,9 @@ test('the first task in Grid Craft: the starting workbook, the work, full marks'
     ['Printer paper A4, box of 5 reams', 'Paper', 6, 24.99, null],
   ])
   await waitUntilSaved(page)
-  await page.screenshot({ path: 'docs/screenshots/crafts/gridcraft-task.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/gridcraft-task.png`,
+  })
 
   // Nothing done yet: the same feedback as ever.
   await submit(page)
@@ -116,7 +118,9 @@ test('the first task in Grid Craft: the starting workbook, the work, full marks'
   await submit(page)
   await expect(results.getByTestId('score')).toHaveText('100%')
   await expect(results.getByTestId('rewards')).toContainText('+100 XP')
-  await page.screenshot({ path: 'docs/screenshots/crafts/gridcraft-graded.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/gridcraft-graded.png`,
+  })
   await results.getByRole('button', { name: 'Close' }).click()
   await expect(page.getByTestId('xp')).toHaveText('100 XP')
 })
@@ -170,7 +174,9 @@ test('the practice workbook: work done in Grid Craft is there after a reload, as
   ])
   const sheets = await inspect(frame)
   expect(sheets.sheets.map((s) => s.name)).toEqual(['Sheet1', 'Notes'])
-  await page.screenshot({ path: 'docs/screenshots/crafts/gridcraft-practice.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/gridcraft-practice.png`,
+  })
 })
 
 test('without Grid Craft (not installed, or it cannot start), the basic editor opens the same workbook', async ({

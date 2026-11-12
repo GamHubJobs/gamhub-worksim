@@ -197,7 +197,9 @@ test('a template in Deck Craft: its slides, then slides added, duplicated, moved
   expect((await deck(frame)).slides.map((s) => s.title)[7]).toBe('Highlights for October')
   await run(frame, 'slide.delete', { index: 7 })
   await waitUntilKept(page)
-  await page.screenshot({ path: 'docs/screenshots/crafts/deckcraft-presentation.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/deckcraft-presentation.png`,
+  })
 
   // What the graders read: the titles, the slide count, the chart with its data, the notes.
   const saved = (await savedDeck(page, 'Monthly business review'))!
@@ -244,7 +246,9 @@ test('presenting in Deck Craft: the slide show moves on with the keyboard and Es
     .poll(async () => (await ui(frame)).showing?.slide, { timeout: 30_000 })
     .toBe(0)
   await page.waitForTimeout(1000)
-  await page.screenshot({ path: 'docs/screenshots/crafts/deckcraft-show.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/crafts/deckcraft-show.png`,
+  })
   await page.keyboard.press('ArrowRight')
   await expect
     .poll(async () => (await ui(frame)).showing?.slide, { timeout: 30_000 })

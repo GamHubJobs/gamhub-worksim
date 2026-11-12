@@ -74,7 +74,9 @@ test('children grow up: a seven-year-old at home, a grown-up one living away', a
   await expect(talk).toContainText('Your child, 7')
   await talk.getByRole('button', { name: 'Ask Ada about their day' }).click()
   await expect(talk).toContainText(/fire drill|volcano/)
-  await page.screenshot({ path: 'docs/screenshots/relationships/child-day.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/child-day.png`,
+  })
   await talk.getByRole('button', { name: /^(Close|Goodbye)$/ }).click()
   // The family, in the Relationships screen.
   await page.getByRole('button', { name: /Menu/ }).click()
@@ -119,7 +121,9 @@ test('café customers come in through the door, order, and sit down', async ({ p
   // He came in at the door (just inside it, by the front of the café), and walked.
   expect(first.z).toBeGreaterThan(2.5)
   expect(samples.some((n) => n.shown && n.status !== 'there')).toBe(true)
-  await page.screenshot({ path: 'docs/screenshots/city/cafe-customer.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/city/cafe-customer.png`,
+  })
   expect(await here(page, 'cafe:walkin1')).toBe(true)
 })
 
@@ -141,7 +145,9 @@ test('the takeaway comes while you are out: the courier waits at your door in th
   const talk = page.getByTestId('encounter')
   await expect(talk).toBeVisible({ timeout: 120_000 })
   await expect(talk).toContainText("hands you the bag at your building's door")
-  await page.screenshot({ path: 'docs/screenshots/city/courier-street.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/city/courier-street.png`,
+  })
   // Handed over: they are gone.
   await expect.poll(() => here(page, 'home:courier'), { timeout: 30_000 }).toBe(false)
 })

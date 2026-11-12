@@ -237,6 +237,30 @@ export function resolveTicket(ticket: ContextItem | undefined, mode: AiMode): st
     (ticket.data?.articles as Array<{ title: string; body: string }> | undefined) ?? []
   const first = sentences(ticket.text).slice(0, 2).join(' ')
   const parts = [`**${ticket.label}**: ${first}`]
+  // For a ticket tied to the systems: what they show, what was tried, where to go.
+  const situation = ticket.data?.situation as
+    | {
+        failing: Array<{ label: string; state: string }>
+        attempted: string[]
+        next: string
+      }
+    | undefined
+  if (situation) {
+    parts.push(
+      situation.failing.length
+        ? `**What the systems show is still wrong:**\n${list(situation.failing.map((f) => `${f.label}: ${f.state}`))}`
+        : '**The systems show it is fixed.** Tell the requester what was wrong and what you did, then close it.',
+    )
+    if (situation.attempted.length)
+      parts.push(
+        `**You have tried:** ${situation.attempted.join('; ')}. The checks still failing tell you whether that was the cause.`,
+      )
+    parts.push(
+      mode === 'learning'
+        ? 'Start from the first thing still wrong: which tool would show you more about it? If you are stuck, the ticket’s hints go one step at a time (each takes a little XP).'
+        : `Next: ${situation.next}`,
+    )
+  }
   if (articles.length) {
     parts.push(
       `Knowledge base articles that match:\n${list(articles.map((a) => `**${a.title}**: ${sentences(a.body)[0] ?? ''}`))}`,

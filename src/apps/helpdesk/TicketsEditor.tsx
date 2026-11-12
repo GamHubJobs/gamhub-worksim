@@ -26,6 +26,9 @@ import { VerificationPanel } from './VerificationPanel'
 import { AskAiMenu } from '../ai/AskAiMenu'
 import { useAiContext } from '../ai/hub'
 import { ticketAiContext } from './aiContext'
+import { guidanceFor } from '../../game/guidance'
+import { getArticle } from '../../content/knowledge/it'
+import { GuidancePanel } from './GuidancePanel'
 
 interface TicketsEditorProps {
   content: TicketsContent
@@ -33,6 +36,10 @@ interface TicketsEditorProps {
   onUpdate?: (change: (content: TicketsContent) => TicketsContent) => void
   /** Now, for a ticket's history (the office clock, and who requesters are). */
   moment?: () => Moment
+  /** Opens a Knowledge Base article (in the Help Desk's Knowledge Base section). */
+  onOpenArticle?: (id: string) => void
+  /** The ticket to show first (e.g. opened from the Overview). */
+  initialTicket?: string
 }
 
 const statusName = (ticket: Ticket, status: TicketStatus) =>
@@ -54,9 +61,13 @@ export function TicketsEditor({
   readOnly = false,
   onUpdate,
   moment = () => ({ at: Date.now(), time: '' }),
+  onOpenArticle,
+  initialTicket,
 }: TicketsEditorProps) {
   const editable = !readOnly && !!onUpdate
-  const [selectedId, setSelectedId] = useState(content.tickets[0]?.id ?? '')
+  const [selectedId, setSelectedId] = useState(
+    initialTicket ?? content.tickets[0]?.id ?? '',
+  )
   const [filter, setFilter] = useState<'all' | TicketStatus>('all')
   const [kbOpen, setKbOpen] = useState<number | null>(null)
   const [showKb, setShowKb] = useState(content.knowledge.length > 0)
@@ -70,7 +81,38 @@ export function TicketsEditor({
   // WorkSim AI sees the open ticket and the knowledge base articles that match it.
   useAiContext(
     'helpdesk',
-    editable && ticket ? () => ticketAiContext(ticket, content.knowledge) : null,
+    editable && ticket
+      ? () => {
+          // What the systems show for it (tickets tied to the systems only).
+          const guidance = isMonitored(ticket) ? guidanceFor(ticket, content) : null
+          const evaluation = guidance ? evaluateTicket(ticket, content.environment) : null
+          const article = guidance?.hints[2]?.article
+          const kb = article ? getArticle(article) : undefined
+          return ticketAiContext(
+            ticket,
+            content.knowledge,
+            guidance && evaluation
+              ? {
+                  failing: evaluation.failing.map((r) => ({
+                    label: r.label,
+                    state: r.state,
+                  })),
+                  attempted: guidance.attempted,
+                  next: guidance.next,
+                  ...(kb
+                    ? {
+                        article: {
+                          title: kb.title,
+                          summary: kb.summary,
+                          ...(kb.concept ? { concept: kb.concept } : {}),
+                        },
+                      }
+                    : {}),
+                }
+              : undefined,
+          )
+        }
+      : null,
   )
 
   const change = (changes: Partial<Ticket>) => {
@@ -300,6 +342,16 @@ export function TicketsEditor({
               />
             )}
 
+            <GuidancePanel
+              key={`guide-${ticket.id}`}
+              ticket={ticket}
+              content={content}
+              editable={editable}
+              onUpdate={onUpdate}
+              moment={moment}
+              onOpenArticle={onOpenArticle}
+            />
+
             <VerificationPanel
               key={`verify-${ticket.id}`}
               ticket={ticket}
@@ -338,8 +390,8 @@ export function TicketsEditor({
         )}
       </div>
 
-      {/* Knowledge base */}
-      {content.knowledge.length > 0 && (
+      {/* Knowledge base (inside the Help Desk shell it has its own section instead) */}
+      {content.knowledge.length > 0 && !onOpenArticle && (
         <aside
           className={`flex shrink-0 flex-col border-l border-slate-200 bg-white ${showKb ? 'w-80' : 'w-10'}`}
           aria-label="Knowledge base"

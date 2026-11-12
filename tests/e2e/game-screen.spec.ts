@@ -41,12 +41,16 @@ test('full screen at work, at home and in town, with the HUD; Esc pauses; menus 
     timeout: 30_000,
   })
   await fillsTheView(page, 'home-3d')
-  await page.screenshot({ path: 'docs/screenshots/game-screen/home.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/game-screen/home.png`,
+  })
   // The drawer folds away, leaving the world and the HUD.
   const drawer = page.getByTestId('drawer')
   await drawer.getByRole('button', { name: 'Hide ◂' }).click()
   await expect(drawer).toBeHidden()
-  await page.screenshot({ path: 'docs/screenshots/game-screen/home-world.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/game-screen/home-world.png`,
+  })
 
   // Opening the pause menu, a screen from it, and the phone does not rebuild the 3D view.
   await page.evaluate(
@@ -56,7 +60,9 @@ test('full screen at work, at home and in town, with the HUD; Esc pauses; menus 
   await page.keyboard.press('Escape')
   const pause = page.getByTestId('pause-menu')
   await expect(pause).toBeVisible()
-  await page.screenshot({ path: 'docs/screenshots/game-screen/pause.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/game-screen/pause.png`,
+  })
   await pause.getByRole('button', { name: 'Relationships' }).click()
   await expect(page.getByTestId('relationships')).toBeVisible()
   await page.keyboard.press('Escape')
@@ -95,5 +101,7 @@ test('full screen at work, at home and in town, with the HUD; Esc pauses; menus 
     .getByRole('button', { name: /Go out into the neighbourhood/ })
     .click()
   await fillsTheView(page, 'city-3d')
-  await page.screenshot({ path: 'docs/screenshots/game-screen/street.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/game-screen/street.png`,
+  })
 })

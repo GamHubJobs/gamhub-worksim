@@ -41,6 +41,7 @@ import {
 } from '../game/career'
 import { gradeAssignment, type GradeResult } from '../game/grading'
 import { buildQueueContent, gradeEnvironment } from '../game/tickets'
+import { hintsUsed } from '../game/guidance'
 import { disruptionsOf } from '../game/incidents'
 import { buildProjectContent } from '../game/code/grading'
 import { gradeCodeSafely } from '../game/code/runInWorker'
@@ -334,10 +335,15 @@ export function useCareer() {
         assignment.kind === 'code'
           ? await gradeCodeSafely(assignment, main?.kind === 'code' ? main.content : null)
           : []
-      const grade = gradeAssignment(assignment, mainContent, files, [
+      const graded = gradeAssignment(assignment, mainContent, files, [
         ...codeChecks,
         ...toolChecks,
       ])
+      // Guidance hints opened in the queue reduce the XP a little (game/guidance.ts).
+      const grade =
+        main?.kind === 'tickets'
+          ? { ...graded, hintsUsed: hintsUsed(main.content) }
+          : graded
       let reward: Reward | null = null
       // Each handed-in file's role in the portfolio, and its submitted version.
       const roleOf = (document: AnyDocument): PortfolioFileRole =>
@@ -488,6 +494,27 @@ export function useCareer() {
         }
       })
       if (changed) show(profile)
+    },
+    [profileId, show],
+  )
+
+  /** Bookmarks or un-bookmarks a Knowledge Base article (kept with the player). */
+  const toggleBookmark = useCallback(
+    async (articleId: string) => {
+      if (!profileId) return
+      const profile = await updateProfile(profileId, (latest) => {
+        const marks = latest.work.kbBookmarks
+        return {
+          ...latest,
+          work: {
+            ...latest.work,
+            kbBookmarks: marks.includes(articleId)
+              ? marks.filter((id) => id !== articleId)
+              : [...marks, articleId].slice(-100),
+          },
+        }
+      })
+      show(profile)
     },
     [profileId, show],
   )
@@ -830,6 +857,7 @@ export function useCareer() {
     markRead,
     toggleStep,
     syncDisruptions,
+    toggleBookmark,
     act,
     saveCaseStep,
     openCaseFile,

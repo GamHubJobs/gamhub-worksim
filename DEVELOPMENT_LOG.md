@@ -190,6 +190,108 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 3: guidance, hints, Knowledge Base, and the operations shell
+
+The Help Desk becomes an IT operations application, with guidance that knows
+the ticket's real situation. The plan for the remaining phases, and where the
+work stands, is in `docs/DESKOPS_CONTINUATION.md`.
+
+### What was built
+
+- **The Help Desk shell:**
+  - The window opens maximised.
+  - A sidebar groups the sections: Service desk (Overview, Ticket queue,
+    Knowledge Base) and Systems (Network Tools, Directory, when the queue has
+    them). It is a vertical tab list, so keyboard and screen readers work, and
+    it collapses to icons on narrow screens.
+  - The update line ("INC-3101: Resolved automatically") sits above the
+    section.
+  - Layouts respond to the space they have (container queries), not the
+    screen.
+- **Overview:** counted from the queue only (open, not assigned, waiting for
+  the employee, people held up, fixed and not closed), with:
+  - a ticket table showing each ticket's checks passing;
+  - the impact by department;
+  - the security policy's events;
+  - recent activity.
+
+  A ticket opens from the table.
+
+- **Guidance** (`game/guidance.ts`, pure), on each ticket:
+  - **What is still wrong**, from its first failing condition and what the
+    systems show.
+  - **What was tried**, from the history: changes, Resolved refused, policy
+    refusals.
+  - **Four progressive hints:** the problem, where to look (the tool), what
+    to try next (a specific test), why it works this way (the concept from the
+    Knowledge Base).
+  - **They follow the real state.** For example: where the route stops,
+    which access point a laptop uses, verification before an unlock when the
+    policy applies.
+  - **Tickets without conditions** get triage hints from the Knowledge Base.
+- **Hints and XP:**
+  - Each hint opened is counted on the ticket and kept in its history.
+  - At hand-in, the XP and skill XP are reduced 5% per hint, at most 30%. The
+    score is not affected.
+  - The first-try bonus needs no hints.
+  - The panel says this before a hint is opened.
+- **The IT Knowledge Base** (`content/knowledge/it.ts`):
+  - 22 original articles in 10 categories (accounts, network, Windows,
+    devices, printers, software, email, security, escalation, documentation).
+  - Each has symptoms, diagnosis, resolution, when to escalate and the
+    concept.
+  - Search, a category filter, bookmarks (kept with the player), and the
+    task's own articles.
+  - Part of the app, so it works offline.
+- **WorkSim AI:**
+  - The ticket's context now carries what the systems show, what was tried,
+    and the matching Knowledge Base articles.
+  - The built-in guide (offline) explains and points to the hints without
+    giving the fix.
+  - A model is told it cannot change the systems, must never say it has, and
+    must not solve graded work step by step in Learning mode.
+- **SVG icons** for the new sections. The privileged-group emoji in Directory
+  is now an icon (or "(privileged)" in drop-downs).
+- **Browser test screenshots:** they are written to `WORKSIM_SHOTS` when set
+  (default `docs/screenshots`), so full test runs no longer overwrite the
+  user's uncommitted screenshots.
+
+### Tests
+
+- **Unit** (`game/guidance.test.ts`, 16):
+  - hints from the real condition and state;
+  - the route through an access point;
+  - what was tried;
+  - "a reset does not unlock";
+  - verification first;
+  - triage hints;
+  - counting and history;
+  - no hints once fixed;
+  - the XP factor and the hand-in XP;
+  - saving and old saves;
+  - Knowledge Base coverage and search;
+  - the AI context, the offline answer and the model's rules.
+- **One existing test updated:** `ai/apps.test.ts` now expects the Knowledge
+  Base match in a ticket's AI context.
+- **Browser** (`tests/e2e/deskops-guidance.spec.ts`):
+  - Overview figures and opening a ticket from it;
+  - three hints opened and recorded;
+  - the hint's article opened, bookmarked, found by search and the bookmarks
+    filter;
+  - after a reload, hints and bookmark kept.
+- **Accessibility:** the accessibility checks first failed on the new sidebar
+  (label contrast; tab names). Both fixed, and the 10 checks pass.
+- **Help Desk browser tests:** the 13 spec files that use it, 75 tests, pass.
+- **Results after:** `npm run check` clean (106 files, 2,385 tests); production build passed.
+
+### Limits
+
+- **Hints follow the current problem:** if it changes after hints were
+  opened, the next ones are about the new problem, but the count stays.
+- **Bookmarks are per player,** not per task.
+
+---
+
 ## 2026-11-12 · IT Help Desk 2: identity verification and access control
 
 Knowing how to unlock an account is no longer enough. In a directory with a

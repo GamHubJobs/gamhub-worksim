@@ -46,6 +46,25 @@ const PATHS = {
     'M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 0v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
   cases: 'M4 6h16v13H4V6Zm5 0V4h6v2M4 11h16M10 11v3h4v-3',
   portfolio: 'M4 8h16v11H4V8Zm5 0V5.5h6V8M4 13h16M11 13v2h2v-2',
+  // IT operations (the Help Desk's sections and states)
+  dashboard: 'M4 4h7v8H4V4Zm9 0h7v5h-7V4ZM4 14h7v6H4v-6Zm9-3h7v9h-7v-9Z',
+  ticket:
+    'M4 7a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v3a2 2 0 0 0 0 4v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a2 2 0 0 0 0-4V7Zm11-1v12',
+  search: 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13Zm4.6-1.9L20 20',
+  bookmark: 'M7 4h10v16l-5-3.5L7 20V4Z',
+  hint: 'M9.5 18h5M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z',
+  shield: 'M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6L12 3Z',
+  alert: 'M12 4 2.8 19.5h18.4L12 4Zm0 6v4.5m0 2.5h.01',
+  device: 'M5 5h14v10H5V5Zm-2 13h18l-1.5-3h-15L3 18Z',
+  remote: 'M3 4.5h18v12H3v-12ZM9 20.5h6M12 16.5v4M8 11l3-3 3 3m-3-3v6',
+  chat: 'M4 5h16v11H9l-5 4V5Zm4 4h8M8 12h5',
+  voicemail:
+    'M7 15a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm10 0a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM7 15h10',
+  phone:
+    'M6.5 3.5h3l1.5 4-2 1.3a10 10 0 0 0 6.2 6.2l1.3-2 4 1.5v3a1.5 1.5 0 0 1-1.6 1.5A16 16 0 0 1 5 5.1 1.5 1.5 0 0 1 6.5 3.5Z',
+  user: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0',
+  server: 'M5 4h14v6H5V4Zm0 10h14v6H5v-6Zm3-7h.01M8 17h.01',
+  activity: 'M3 12h4l3-7 4 14 3-7h4',
 } as const
 
 export type IconName = keyof typeof PATHS

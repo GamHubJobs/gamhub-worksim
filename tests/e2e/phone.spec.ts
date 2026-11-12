@@ -37,7 +37,9 @@ test('out with P in the office: held, no walking, every app opens, home and back
   await expect(phone(page).getByTestId('phone-home')).toBeVisible()
   await expect(phone(page).getByTestId('phone-time')).toHaveText(/\d+:\d\d/)
   await page.waitForTimeout(800)
-  await page.screenshot({ path: 'docs/screenshots/phone/home.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/phone/home.png`,
+  })
   // Accessible: the home screen.
   const audit = await new AxeBuilder({ page })
     .include('[data-testid="phone"]')
@@ -86,7 +88,9 @@ test('out with P in the office: held, no walking, every app opens, home and back
       ).toHaveCount(1, {
         timeout: 15_000,
       })
-      await page.screenshot({ path: 'docs/screenshots/phone/camera.png' })
+      await page.screenshot({
+        path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/phone/camera.png`,
+      })
     }
     // Back to the home screen: the back arrow, or the home bar.
     if (name === 'Maps')
@@ -100,7 +104,9 @@ test('out with P in the office: held, no walking, every app opens, home and back
     .getByRole('button', { name: /Call Leo/ })
     .click()
   await expect(phone(page).getByTestId('phone-call')).toContainText('Calling…')
-  await page.screenshot({ path: 'docs/screenshots/phone/calling.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/phone/calling.png`,
+  })
   await expect(phone(page).getByTestId('phone-call')).toContainText(
     /Connected|No answer/,
     {
@@ -180,7 +186,9 @@ test('food ordered on the phone at home brings the courier to the door', async (
     timeout: 15_000,
   })
   await expect(page.getByTestId('home').getByTestId('balance')).not.toHaveText(balance!)
-  await page.screenshot({ path: 'docs/screenshots/phone/food.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/phone/food.png`,
+  })
   // The same delivery as ordering any other way: wait, and the courier comes to the door.
   await phone(page).getByRole('button', { name: 'Put the phone away' }).click()
   await page

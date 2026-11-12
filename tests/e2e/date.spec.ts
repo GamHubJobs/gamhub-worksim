@@ -68,7 +68,9 @@ test('asking Maya out in person, and the date at the café that evening', async 
   await encounter.getByRole('button', { name: 'Ask Maya out on a date' }).click()
   await expect(encounter).toContainText('I would like that. Yes.')
   await expect(encounter).toContainText(/A date with Maya/)
-  await page.screenshot({ path: 'docs/screenshots/relationships/asked-out.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/asked-out.png`,
+  })
   await encounter.getByRole('button', { name: /Goodbye|Close/ }).click()
 
   // On the evening (her free day may be later in the week: the date is moved to tonight
@@ -91,25 +93,33 @@ test('asking Maya out in person, and the date at the café that evening', async 
   const date = page.getByTestId('date')
   await expect(date).toBeVisible({ timeout: 120_000 })
   await expect(date).toContainText('You came!')
-  await page.screenshot({ path: 'docs/screenshots/relationships/date-greet.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/date-greet.png`,
+  })
   const balance = await city.getByTestId('balance').textContent()
   // Dinner together: the player orders, sits down at the table across from her, and eats.
   await date.getByRole('button', { name: /Sit down with Maya for dinner/ }).click()
   await expect(date.getByText('Round 1 of 3')).toBeVisible({ timeout: 180_000 })
   await expect(city.getByTestId('balance')).not.toHaveText(balance!)
-  await page.screenshot({ path: 'docs/screenshots/relationships/date-dinner.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/date-dinner.png`,
+  })
   await date.getByRole('button', { name: 'Talk about baking' }).click()
   await expect(date).toContainText('You remembered!')
   await date.getByRole('button', { name: 'Ask if you can hold their hand' }).click()
   await expect(date).toContainText('takes your hand')
   await page.waitForTimeout(1500)
-  await page.screenshot({ path: 'docs/screenshots/relationships/holding-hands.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/holding-hands.png`,
+  })
   // Too soon for a kiss: “not yet”, and that is respected.
   await date.getByRole('button', { name: 'Ask if you can kiss them goodnight' }).click()
   await expect(date).toContainText('Not yet')
   await expect(date).toContainText('completely fine')
   await expect(date.getByTestId('date-summary')).toContainText('dating now')
-  await page.screenshot({ path: 'docs/screenshots/relationships/date-end.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/date-end.png`,
+  })
   // Goodnight, standing face to face (a hug: they are close enough, and a kiss was not yet).
   // (At normal speed, to see it.)
   await page.evaluate('window.__worksimSpeed = 1')
@@ -118,6 +128,8 @@ test('asking Maya out in person, and the date at the café that evening', async 
     .poll(() => page.evaluate('window.__worksimPlayer.mode'), { timeout: 30_000 })
     .toBe('acting')
   await page.waitForTimeout(1500)
-  await page.screenshot({ path: 'docs/screenshots/relationships/goodnight.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/goodnight.png`,
+  })
   await expect(date).toHaveCount(0, { timeout: 20_000 })
 })

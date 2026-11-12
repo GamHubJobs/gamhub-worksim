@@ -57,7 +57,9 @@ test('the wedding in the park: guests, the vows, the kiss and the first dance', 
   // The guests are there, and so is Maya.
   await expect.poll(() => here(page, 'guest:leo'), { timeout: 60_000 }).toBe(true)
   await expect.poll(() => here(page, 'cafe:barista'), { timeout: 60_000 }).toBe(true)
-  await page.screenshot({ path: 'docs/screenshots/relationships/wedding-guests.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/wedding-guests.png`,
+  })
   await talkTo(page, 'cafe:barista')
   const wedding = page.getByTestId('wedding')
   await expect(wedding).toBeVisible({ timeout: 120_000 })
@@ -70,7 +72,9 @@ test('the wedding in the park: guests, the vows, the kiss and the first dance', 
     .poll(() => page.evaluate('window.__worksimPlayer.mode'), { timeout: 60_000 })
     .toBe('acting')
   await page.waitForTimeout(1500)
-  await page.screenshot({ path: 'docs/screenshots/relationships/wedding-kiss.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/wedding-kiss.png`,
+  })
   await expect
     .poll(() => page.evaluate('window.__worksimPlayer.mode'), { timeout: 30_000 })
     .toBe('free')
@@ -79,7 +83,9 @@ test('the wedding in the park: guests, the vows, the kiss and the first dance', 
     .poll(() => page.evaluate('window.__worksimPlayer.mode'), { timeout: 60_000 })
     .toBe('acting')
   await page.waitForTimeout(2500)
-  await page.screenshot({ path: 'docs/screenshots/relationships/first-dance.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/first-dance.png`,
+  })
   await wedding.getByRole('button', { name: 'Celebrate with everyone' }).click()
   await expect(wedding).toHaveCount(0)
   // Married, in the Relationships screen.
@@ -111,5 +117,7 @@ test('a family at home: playing with your child', async ({ page }) => {
   await expect(talk).toContainText('Your child')
   await talk.getByRole('button', { name: 'Play with Ada' }).click()
   await expect(talk).toContainText('a lot of laughing')
-  await page.screenshot({ path: 'docs/screenshots/relationships/family.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/family.png`,
+  })
 })

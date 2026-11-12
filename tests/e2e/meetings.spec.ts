@@ -43,9 +43,13 @@ test('the stand-up, attended in person: walked to, listened to, an update given'
   // In the circle at the whiteboard.
   const me = await player(page)
   expect(Math.hypot(me.x + 0.9, me.z - 4.07)).toBeLessThan(0.3)
-  await page.screenshot({ path: 'docs/screenshots/meetings/standup-listening.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/meetings/standup-listening.png`,
+  })
   await expect(activity).toContainText('Giving your update', { timeout: 60_000 })
-  await page.screenshot({ path: 'docs/screenshots/meetings/standup-update.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/meetings/standup-update.png`,
+  })
   // Then the meeting itself (its content and choices, as before).
   await expect(page.getByTestId('office-dialogue')).toBeVisible({ timeout: 60_000 })
   await expect(page.getByTestId('meeting-now')).toHaveCount(0)

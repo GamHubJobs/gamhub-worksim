@@ -53,7 +53,9 @@ test('an evening at home together, staying the night, and moving in', async ({
   await evening.getByRole('button', { name: 'Talk about baking' }).click()
   await evening.getByRole('button', { name: 'Ask if you can hold their hand' }).click()
   await page.waitForTimeout(1500)
-  await page.screenshot({ path: 'docs/screenshots/relationships/sofa.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/sofa.png`,
+  })
   await evening.getByRole('button', { name: 'Ask about their day' }).click()
   await expect(evening.getByTestId('date-summary')).toBeVisible()
   // Asked to stay: a yes, for a couple.
@@ -70,10 +72,14 @@ test('an evening at home together, staying the night, and moving in', async ({
   await page.evaluate('window.__worksimSpeed = 12')
   await home.getByRole('button', { name: /^Go to bed/ }).click()
   await expect(page.getByTestId('night-fade')).toBeVisible({ timeout: 60_000 })
-  await page.screenshot({ path: 'docs/screenshots/relationships/night-fade.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/night-fade.png`,
+  })
   await expect(home).toContainText('Morning at home', { timeout: 60_000 })
   await expect.poll(() => here(page, 'cafe:barista'), { timeout: 60_000 }).toBe(true)
-  await page.screenshot({ path: 'docs/screenshots/relationships/morning.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/relationships/morning.png`,
+  })
 
   // Asking her to move in.
   await talkTo(page, 'cafe:barista')

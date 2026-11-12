@@ -68,7 +68,9 @@ test('a story from the first screen: the first morning and the missing invoice, 
     timeout: 120_000,
   })
   await expect(scene(page)).toContainText('You must be Sam!')
-  await page.screenshot({ path: 'docs/screenshots/story/nina-welcome.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/story/nina-welcome.png`,
+  })
   await scene(page).getByRole('button', { name: 'Admit you are nervous' }).click()
   await expect(scene(page)).toContainText('glass door')
   await scene(page).getByRole('button', { name: 'Carry on' }).click()
@@ -78,7 +80,9 @@ test('a story from the first screen: the first morning and the missing invoice, 
   const xp = Number((await page.getByTestId('xp').textContent())!.replace(/\D/g, ''))
   await play(page, 'manager', 'priya-first', /good first month/)
   await expect(page.getByTestId('story-finished')).toContainText('First morning')
-  await page.screenshot({ path: 'docs/screenshots/story/mission-complete.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/story/mission-complete.png`,
+  })
   await page
     .getByTestId('story-finished')
     .getByRole('button', { name: 'Carry on' })
@@ -142,7 +146,9 @@ test('a story from the first screen: the first morning and the missing invoice, 
     timeout: 120_000,
   })
   await expect(scene(page)).toContainText('You came together')
-  await page.screenshot({ path: 'docs/screenshots/story/priya-decision.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/story/priya-decision.png`,
+  })
   await scene(page)
     .getByRole('button', { name: /as it happened/ })
     .click()
@@ -161,7 +167,9 @@ test('a story from the first screen: the first morning and the missing invoice, 
     'data-status',
     'open',
   )
-  await page.screenshot({ path: 'docs/screenshots/story/story-screen.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/story/story-screen.png`,
+  })
 })
 
 test('free play is unchanged: no story unless chosen, and the Story screen offers one', async ({
@@ -231,7 +239,9 @@ test('chapters 2 and 3: the supplier review with new people, and an ending that 
   })
   await expect(scene(page)).toContainText('Marcus came to see me')
   await expect(scene(page)).toContainText('café on the corner')
-  await page.screenshot({ path: 'docs/screenshots/story/priya-offer.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/story/priya-offer.png`,
+  })
   await scene(page)
     .getByRole('button', { name: /Put Marcus forward/ })
     .click()
@@ -245,7 +255,9 @@ test('chapters 2 and 3: the supplier review with new people, and an ending that 
   await expect(page.getByTestId('story-ending')).toContainText(
     'The end of “Short Delivery”',
   )
-  await page.screenshot({ path: 'docs/screenshots/story/the-end.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/story/the-end.png`,
+  })
 })
 
 test('a side mission in town: helping Maya with her books at the café, after work', async ({
@@ -275,7 +287,9 @@ test('a side mission in town: helping Maya with her books at the café, after wo
   await play(page, 'cafe:barista', 'maya-books', /simple system/)
   await expect(page.getByTestId('story-finished')).toContainText('Shoeboxes of receipts')
   await expect(page.getByTestId('story-finished')).toContainText('banana bread')
-  await page.screenshot({ path: 'docs/screenshots/story/maya-books.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/story/maya-books.png`,
+  })
 })
 
 test('every career has a story: IT Help Desk, “Ticket Zero”, from the first screen', async ({
@@ -297,5 +311,7 @@ test('every career has a story: IT Help Desk, “Ticket Zero”, from the first 
   await play(page, 'manager', 'it-ravi', /worst thing/)
   await play(page, 'senior', 'it-jess', /ticket zero/)
   await expect(page.getByTestId('story-finished')).toContainText('First login')
-  await page.screenshot({ path: 'docs/screenshots/story/it-first-login.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/story/it-first-login.png`,
+  })
 })

@@ -165,14 +165,18 @@ test('the office: everyone seated is on a real chair, and works with real things
   }
   expect(seated).toBeGreaterThanOrEqual(3)
   expect(seen).toContain('type')
-  await page.screenshot({ path: 'docs/screenshots/activities/office.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/activities/office.png`,
+  })
   // The lunch hour: the break room table, the kitchen.
   await page.evaluate(`window.__worksim.setTime(1, 13 * 60 + 5)`)
   await page.waitForTimeout(5000)
   checkCrowd(await crowd(page), await anchors(page))
   await page.getByRole('button', { name: 'Break room' }).click()
   await page.waitForTimeout(4000)
-  await page.screenshot({ path: 'docs/screenshots/activities/break-room.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/activities/break-room.png`,
+  })
 })
 
 test('the café and the shop: seats, equipment and what is held', async ({ page }) => {
@@ -186,7 +190,9 @@ test('the café and the shop: seats, equipment and what is held', async ({ page 
   })
   expect(cafe.find((p) => p.id === 'cafe:reader')!.seat).not.toBeNull()
   expect(cafe.find((p) => p.id === 'cafe:barista')!.clips).toContain('reach')
-  await page.screenshot({ path: 'docs/screenshots/activities/cafe.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/activities/cafe.png`,
+  })
   await page
     .getByTestId('city')
     .getByRole('button', { name: 'Back out to the street' })
@@ -200,5 +206,7 @@ test('the café and the shop: seats, equipment and what is held', async ({ page 
   const shop = await poses(page)
   for (const id of ['shop:shopper', 'shop:cashier'])
     expect(shop.find((p) => p.id === id)!.clips, id).toContain('reach')
-  await page.screenshot({ path: 'docs/screenshots/activities/shop.png' })
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/activities/shop.png`,
+  })
 })

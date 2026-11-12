@@ -26,6 +26,9 @@ import type {
   TicketsContent,
 } from '../../persistence/schemas'
 import { getWorkspace } from '../../tools/ui'
+import { Icon, type IconName } from '../../ui/Icon'
+import { KnowledgeBasePanel } from './KnowledgeBasePanel'
+import { OverviewPanel } from './OverviewPanel'
 
 interface HelpDeskWindowProps {
   documentId: string
@@ -38,7 +41,12 @@ interface HelpDeskWindowProps {
   onOpenTask: (assignmentId: string) => void
 }
 
-type Tab = 'queue' | SystemId
+type Tab = 'overview' | 'queue' | 'knowledge' | SystemId
+
+const SYSTEM_ICONS: Record<SystemId, IconName> = {
+  network: 'network',
+  directory: 'directory',
+}
 
 /** Now, for ticket histories: the real time and the office clock. */
 function officeMoment(work?: { day: number; minute: number }): Moment {
@@ -80,6 +88,9 @@ export function HelpDeskWindow({
   const [result, setResult] = useState<SubmissionResult | null>(null)
   const manager = assignment ? getPerson(assignment.from) : null
   const [tab, setTab] = useState<Tab>('queue')
+  /** The Knowledge Base article open, and the ticket to show (from the Overview). */
+  const [article, setArticle] = useState<string | null>(null)
+  const [focus, setFocus] = useState<string | undefined>(undefined)
   const environment = state.status === 'ready' ? state.content.environment : undefined
   const systems = (['network', 'directory'] as const).filter((id) => environment?.[id])
 
@@ -187,87 +198,180 @@ export function HelpDeskWindow({
                   }
                 : null
           if (!shown) return null
-          const Workspace = tab === 'queue' ? null : getWorkspace(tab)
+          const isSystem = tab !== 'queue' && tab !== 'overview' && tab !== 'knowledge'
+          const Workspace = isSystem ? getWorkspace(tab) : null
+          const open = shown.content.tickets.filter(
+            (t) => t.status !== 'resolved' && t.status !== 'closed',
+          ).length
+          const groups: Array<{
+            name: string
+            items: Array<{ id: Tab; label: string; icon: IconName }>
+          }> = [
+            {
+              name: 'Service desk',
+              items: [
+                { id: 'overview', label: 'Overview', icon: 'dashboard' },
+                { id: 'queue', label: 'Ticket queue', icon: 'ticket' },
+                { id: 'knowledge', label: 'Knowledge Base', icon: 'guide' },
+              ],
+            },
+            ...(systems.length
+              ? [
+                  {
+                    name: 'Systems',
+                    items: systems.map((id) => ({
+                      id: id as Tab,
+                      label: SYSTEM_NAMES[id],
+                      icon: SYSTEM_ICONS[id],
+                    })),
+                  },
+                ]
+              : []),
+          ]
           return (
-            <div className="flex min-h-0 flex-1 flex-col">
-              {systems.length > 0 && (
+            <div className="flex min-h-0 flex-1" data-testid="deskops">
+              <nav
+                className="flex w-14 shrink-0 flex-col gap-4 overflow-y-auto bg-slate-900 py-3 text-slate-300 sm:w-52"
+                aria-label="Help Desk sections"
+              >
+                <p className="hidden px-4 text-xs font-semibold tracking-wide text-teal-300 uppercase sm:block">
+                  IT operations
+                </p>
                 <div
-                  className="flex shrink-0 items-center gap-1 border-b border-slate-200 bg-white px-3 py-1.5"
                   role="tablist"
+                  aria-orientation="vertical"
                   aria-label="Help Desk and the company’s systems"
+                  className="flex flex-col gap-4"
                 >
-                  {(['queue', ...systems] as Tab[]).map((id) => (
-                    <button
-                      key={id}
-                      type="button"
-                      role="tab"
-                      aria-selected={tab === id}
-                      onClick={() => setTab(id)}
-                      className={`rounded-md px-3 py-1 text-sm ${
-                        tab === id
-                          ? 'bg-blue-50 font-medium text-blue-900'
-                          : 'text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      {id === 'queue' ? 'Ticket queue' : SYSTEM_NAMES[id]}
-                    </button>
-                  ))}
-                  {update && (
-                    <p
-                      role="status"
-                      className={`ml-3 min-w-0 flex-1 truncate text-sm ${
-                        update.kind === 'resolved' ? 'text-emerald-800' : 'text-red-800'
-                      }`}
-                      title={`${update.ticket}: ${update.text}`}
-                      data-testid="ticket-update"
-                    >
-                      {update.kind === 'resolved' ? '✓' : '!'} {update.ticket}:{' '}
-                      {update.text}
-                    </p>
-                  )}
-                </div>
-              )}
-              {tab === 'queue' || !Workspace || !shown.content.environment?.[tab] ? (
-                <TicketsEditor
-                  key={shown.key}
-                  content={shown.content}
-                  readOnly={!shown.live}
-                  onUpdate={shown.live ? queue.update : undefined}
-                  moment={moment}
-                />
-              ) : (
-                <Suspense
-                  fallback={
-                    <p className="p-6 text-sm text-slate-600">
-                      Opening {SYSTEM_NAMES[tab]}…
-                    </p>
-                  }
-                >
-                  <Workspace
-                    key={`${shown.key}-${tab}`}
-                    state={shown.content.environment[tab]}
-                    readOnly={!shown.live}
-                    lockedSections={lockedSections[tab] ?? {}}
-                    now={() => moment().at}
-                    onUpdate={
-                      shown.live
-                        ? (change) => {
-                            const when = moment()
-                            queue.update((latest) =>
-                              applyEnvironmentChange(
-                                latest,
-                                tab,
-                                // The tool changes its own state; the tickets react to it.
-                                change,
-                                when,
-                              ),
-                            )
+                  {groups.map((group) => (
+                    <div key={group.name} className="flex flex-col gap-0.5 px-2">
+                      <p className="hidden px-2 pb-1 text-[11px] font-semibold tracking-wide text-slate-300 uppercase sm:block">
+                        {group.name}
+                      </p>
+                      {group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={tab === item.id}
+                          title={
+                            item.id === 'queue' && open > 0
+                              ? `${item.label} (${open} open)`
+                              : item.label
                           }
-                        : undefined
-                    }
+                          onClick={() => {
+                            setTab(item.id)
+                            if (item.id === 'knowledge') setArticle(null)
+                          }}
+                          className={`flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm ${
+                            tab === item.id
+                              ? 'bg-teal-600/20 font-medium text-white'
+                              : 'hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <Icon name={item.icon} className="h-5 w-5 shrink-0" />
+                          <span className="sr-only min-w-0 flex-1 truncate sm:not-sr-only sm:block">
+                            {item.label}
+                          </span>
+                          {item.id === 'queue' && open > 0 && (
+                            <span
+                              aria-hidden
+                              className="hidden rounded-full bg-slate-700 px-1.5 text-xs text-slate-100 sm:inline"
+                            >
+                              {open}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </nav>
+              <div className="flex min-w-0 flex-1 flex-col">
+                {update && (
+                  <p
+                    role="status"
+                    className={`flex shrink-0 items-center gap-2 border-b px-4 py-1.5 text-sm ${
+                      update.kind === 'resolved'
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                        : 'border-red-200 bg-red-50 text-red-900'
+                    }`}
+                    title={`${update.ticket}: ${update.text}`}
+                    data-testid="ticket-update"
+                  >
+                    <Icon
+                      name={update.kind === 'resolved' ? 'check' : 'alert'}
+                      className="h-4 w-4 shrink-0"
+                    />
+                    <span className="min-w-0 truncate">
+                      {update.ticket}: {update.text}
+                    </span>
+                  </p>
+                )}
+                {tab === 'overview' ? (
+                  <OverviewPanel
+                    content={shown.content}
+                    assignmentId={assignment?.id ?? null}
+                    onOpenTicket={(id) => {
+                      setFocus(id)
+                      setTab('queue')
+                    }}
                   />
-                </Suspense>
-              )}
+                ) : tab === 'knowledge' ? (
+                  <KnowledgeBasePanel
+                    taskArticles={shown.content.knowledge}
+                    bookmarks={profile?.work.kbBookmarks ?? []}
+                    onToggleBookmark={(id) => void career.toggleBookmark(id)}
+                    openArticle={article}
+                    onOpenArticle={setArticle}
+                  />
+                ) : !isSystem || !Workspace || !shown.content.environment?.[tab] ? (
+                  <TicketsEditor
+                    key={`${shown.key}-${focus ?? ''}`}
+                    content={shown.content}
+                    readOnly={!shown.live}
+                    onUpdate={shown.live ? queue.update : undefined}
+                    moment={moment}
+                    initialTicket={focus}
+                    onOpenArticle={(id) => {
+                      setArticle(id)
+                      setTab('knowledge')
+                    }}
+                  />
+                ) : (
+                  <Suspense
+                    fallback={
+                      <p className="p-6 text-sm text-slate-600">
+                        Opening {SYSTEM_NAMES[tab]}…
+                      </p>
+                    }
+                  >
+                    <Workspace
+                      key={`${shown.key}-${tab}`}
+                      state={shown.content.environment[tab]}
+                      readOnly={!shown.live}
+                      lockedSections={lockedSections[tab] ?? {}}
+                      now={() => moment().at}
+                      onUpdate={
+                        shown.live
+                          ? (change) => {
+                              const when = moment()
+                              queue.update((latest) =>
+                                applyEnvironmentChange(
+                                  latest,
+                                  tab,
+                                  // The tool changes its own state; the tickets react to it.
+                                  change,
+                                  when,
+                                ),
+                              )
+                            }
+                          : undefined
+                      }
+                    />
+                  </Suspense>
+                )}
+              </div>
             </div>
           )
         }}

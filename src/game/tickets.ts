@@ -44,6 +44,7 @@ export function buildQueueContent(
       note: '',
       assignee: null,
       resolution: null,
+      hintsUsed: 0,
       activity: ticket.conditions.length
         ? [
             {
