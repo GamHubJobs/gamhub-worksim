@@ -17,6 +17,7 @@ import { accountUnlock } from '../assignments/it/accountUnlock'
 import { deviceSupport } from '../assignments/it/deviceSupport'
 import { serviceDeskComms } from '../assignments/it/serviceDeskComms'
 import { securityIncident } from '../assignments/it/securityIncident'
+import { companyOutage } from '../assignments/it/companyOutage'
 import {
   outageDiagnosis,
   outageReview,
@@ -48,6 +49,7 @@ export const PACK: CareerPack = {
     deviceSupport,
     serviceDeskComms,
     securityIncident,
+    companyOutage,
     outageDiagnosis,
     outageReview,
     outageTriage,

@@ -73,6 +73,10 @@ export function OverviewPanel({
     const dept = ticket?.department ?? 'Unknown'
     byDepartment.set(dept, (byDepartment.get(dept) ?? 0) + 1)
   }
+  // What is at stake now: open problems with a business impact, biggest first.
+  const atRisk = open
+    .filter((t) => t.impact)
+    .sort((a, b) => b.impact!.people - a.impact!.people)
   const recent = tickets
     .flatMap((t) => t.activity.map((a) => ({ ...a, ticket: t.id })))
     .sort((a, b) => b.at - a.at)
@@ -125,6 +129,42 @@ export function OverviewPanel({
           />
         </div>
 
+        {atRisk.length > 0 && (
+          <section aria-label="Business impact">
+            <h3 className="mb-2 text-sm font-semibold text-slate-900">
+              Business impact: what is at stake, biggest first
+            </h3>
+            <ul
+              className="grid gap-2 @2xl:grid-cols-2 @4xl:grid-cols-3"
+              data-testid="business-impact"
+            >
+              {atRisk.map((t) => (
+                <li
+                  key={t.id}
+                  className={`rounded-lg border border-l-4 border-slate-200 bg-white px-3 py-2 text-sm ${t.impact!.people >= 5 ? 'border-l-red-500' : t.impact!.people > 1 ? 'border-l-amber-500' : 'border-l-slate-300'}`}
+                >
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium text-slate-900">
+                      {t.impact!.service}
+                    </span>
+                    <span className="text-xs whitespace-nowrap text-red-700">
+                      {t.impact!.people} {t.impact!.people === 1 ? 'person' : 'people'}
+                    </span>
+                  </span>
+                  <span className="block text-xs text-slate-600">
+                    {t.department} · {t.id}
+                    {t.impact!.deadline && (
+                      <span className="font-medium text-amber-800">
+                        {' '}
+                        · {t.impact!.deadline}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <div className="grid gap-5 @4xl:grid-cols-3">
           <section className="rounded-lg border border-slate-200 bg-white @4xl:col-span-2">
             <h3 className="border-b border-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-900">

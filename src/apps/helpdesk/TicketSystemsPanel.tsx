@@ -82,6 +82,16 @@ export function TicketSystemsPanel({
           <dd className="text-slate-900">
             {ticket.from} ({ticket.department})
           </dd>
+          {ticket.impact && (
+            <>
+              <dt className="text-slate-500">Business impact</dt>
+              <dd className="text-slate-900" data-testid="ticket-impact">
+                {ticket.impact.service}: {ticket.impact.people}{' '}
+                {ticket.impact.people === 1 ? 'person' : 'people'}
+                {ticket.impact.deadline && ` · ${ticket.impact.deadline}`}
+              </dd>
+            </>
+          )}
           <dt className="text-slate-500">Affected systems</dt>
           <dd className="text-slate-900">
             {affected.join(', ')}{' '}

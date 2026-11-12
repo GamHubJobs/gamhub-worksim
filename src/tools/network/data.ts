@@ -199,6 +199,58 @@ export function intranetScenario(): NetworkState {
 }
 
 /**
+ * Lead scenario (Help Desk, cross-department): a Monday morning with three
+ * separate faults. File sharing on FILE-01 has stopped (Finance, Accounting
+ * and the data team lose the shared drive); the development server DEV-01 has
+ * crashed (Engineering); and the intranet name still points at the old
+ * server, so Marketing cannot publish. The laptops belong to people from
+ * across the company.
+ */
+export function companyOutageScenario(): NetworkState {
+  const laptop = (
+    name: string,
+    ip: string,
+    subnet: 'fl1' | 'fl2',
+    where: string,
+    whose: string,
+  ) =>
+    device(name, 'laptop', ip, subnet, where, {
+      description: `${whose}’s laptop`,
+      config: client(subnet === 'fl1' ? '10.20.1.1' : '10.20.2.1'),
+    })
+  return [
+    (state: NetworkState): NetworkState => ({
+      ...state,
+      devices: [
+        ...state.devices,
+        device('DEV-01', 'server', '10.20.0.30', 'srv', 'Server room', {
+          description: 'Development and build server',
+          services: [{ port: 443, name: 'Build server (HTTPS)', running: true }],
+        }),
+        laptop('LT-0161', '10.20.2.121', 'fl2', 'Floor 2, payroll desks', 'Carmen Ruiz'),
+        laptop('LT-0162', '10.20.2.122', 'fl2', 'Floor 2, data team', 'Arjun Mehta'),
+        laptop('LT-0170', '10.20.1.170', 'fl1', 'Floor 1, accounts', 'Grace Mensah'),
+        laptop('LT-0175', '10.20.1.175', 'fl1', 'Floor 1, marketing', 'Sofia Alvarez'),
+        laptop('LT-0180', '10.20.2.180', 'fl2', 'Floor 2, engineering', 'Rosa Ferreira'),
+      ],
+      dns: {
+        ...state.dns,
+        records: [...state.dns.records, { name: 'dev-01', ip: '10.20.0.30' }],
+      },
+    }),
+    // File sharing stopped at 08:40 after an update.
+    changeDevice('FILE-01', (d) => ({
+      ...d,
+      services: d.services.map((s) => (s.port === 445 ? { ...s, running: false } : s)),
+    })),
+    // The development server crashed overnight: a restart brings it back.
+    changeDevice('DEV-01', (d) => ({ ...d, up: false, restartable: true })),
+    // The intranet moved to INTRA-02, but the name still points at INTRA-01.
+    changeRecord('intranet', '10.20.0.25'),
+  ].reduce((s, c) => c(s), officeNetwork())
+}
+
+/**
  * Analyst scenario (Help Desk, tickets tied to the network): floor 2's Wi-Fi
  * access point has crashed. Its laptops are on, but off the network: among
  * them Carmen Ruiz's and Arjun Mehta's, from the office. A restart brings it

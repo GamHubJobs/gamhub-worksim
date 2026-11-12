@@ -497,6 +497,14 @@ export const TicketActivitySchema = z.object({
   text: z.string().max(500),
 })
 
+/** The business impact of a ticket's problem: the service, how many people, and what is at risk. */
+export const TicketImpactSchema = z.object({
+  service: z.string().max(100),
+  people: z.number().int().min(1).max(10000),
+  /** What is at risk and when, e.g. "Payroll run at 12:00". */
+  deadline: z.string().max(100).default(''),
+})
+
 /** A support request from a colleague, and what the service desk did about it. */
 export const TicketSchema = z.object({
   id: z.string().min(1).max(30),
@@ -536,6 +544,8 @@ export const TicketSchema = z.object({
     .default(null),
   /** Guidance hints opened on it (0 to 4; see game/guidance.ts). */
   hintsUsed: z.number().int().min(0).max(4).default(0),
+  /** What the problem costs the business (from the task): shown with the ticket and in the Overview. */
+  impact: TicketImpactSchema.optional(),
 })
 
 /**

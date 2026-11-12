@@ -190,6 +190,83 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 7: one morning across the company: business impact, priorities and consequences
+
+IT problems reach across the company's departments (the same company and
+people as the other careers), and the service desk's work has consequences
+in the office.
+
+### What was built
+
+- **Business impact on tickets:**
+  - an optional `impact` (the service, how many people, what is at risk and
+    when), passed from the task and shown on the ticket;
+  - the Overview opens with **Business impact: what is at stake, biggest
+    first**, which shrinks as problems are fixed;
+  - colour by size: red for five people or more, amber for a few, grey for
+    one person.
+- **Workplace consequences**, through the existing relationship system (no
+  new one). At a Help Desk task's first hand-in:
+  - each colleague whose problem the systems show fixed trusts the player more
+    (+3);
+  - each left stuck trusts them less (−4);
+  - the player's reputation moves with the balance (at most ±3).
+
+  It is applied once per task, so resubmitting does not repeat it. This holds
+  for every Help Desk task tied to the systems, so the earlier tasks now have
+  consequences in the office too.
+
+- **A cross-department scenario on the office network**
+  (`companyOutageScenario`), with three separate faults:
+  - file sharing stopped on FILE-01: Finance, Accounting and the data team;
+  - the development server DEV-01 crashed: Engineering;
+  - the intranet's name still points at the old server: Marketing cannot
+    publish.
+
+  Laptops from five departments are on it.
+
+- **The task "One morning, five departments"** (Service Desk Lead, IT order
+  17):
+  - **Seven tickets:** three departments on the shared drive (each P1, with
+    payroll, month-end and a board dashboard at risk), Engineering's server
+    and Marketing's campaign (P2), a monitor (P3) and a keyboard request (P4).
+  - **Graded on:**
+    - priorities set by business impact (treating everything as P1 is wrong);
+    - the five fixes;
+    - a finding for each cause;
+    - a test from a Finance laptop after the fix;
+    - replies to Carmen and Sofia.
+
+### Tests
+
+- **Unit** (`game/companyOutage.test.ts`, 8):
+  - every department failing at the start, with its impact;
+  - one fix at the source resolving exactly the three shared-drive tickets;
+  - the other causes resolving their own;
+  - only office colleagues held up;
+  - the model answer at 100%;
+  - all-P1 marked down;
+  - trust and reputation up for fixed, down for left stuck;
+  - saving; older tickets load without an impact.
+- **Browser** (`tests/e2e/deskops-company.spec.ts`):
+  - the Overview ranked by impact (payroll first);
+  - the ticket's impact;
+  - one restart of file sharing in Network Tools resolving three tickets;
+  - the business impact shrinking to the four that are left, and nobody held
+    up.
+- **Visual check:** the business impact was below the fold. It is now cards
+  above the ticket table, coloured by size.
+- **Results after:** `npm run check` clean (110 files, 2,486 tests). The Help Desk browser tests (17 spec files, 79 tests) passed. Production build passed.
+
+### Limits
+
+- **Consequences are trust and reputation** (and, as before, colleagues held up
+  while their problem lasts). Departments have no separate performance score.
+- **Rosa (Engineering) and Sofia (Marketing)** are not in the 3D office, so
+  only the office colleagues are seen held up.
+
+---
+
 ## 2026-11-12 · IT Help Desk 6: the Security Console and incident response
 
 A security operations console in the Help Desk, with an incident worked

@@ -48,14 +48,16 @@ every phase.
 | 3     | Guidance, progressive hints (XP), Knowledge Base, AI context    | Done `8403f51` |
 | 4     | Device inventory, Remote Desktop, device troubleshooting        | Done `69ae5fa` |
 | 5     | Chat, voicemail, support calls, communication assessment        | Done `4faf405` |
-| 6     | Security operations: console, investigations, incident response | Done           |
-| 7     | Cross-department incidents, consequences, prioritisation        | In progress    |
-| 8     | SLAs (office time), reports, workload, manager reviews          | To do          |
+| 6     | Security operations: console, investigations, incident response | Done `1f71ab7` |
+| 7     | Cross-department incidents, consequences, prioritisation        | Done           |
+| 8     | SLAs (office time), reports, workload, manager reviews          | In progress    |
 | 9     | Competencies, portfolio evidence, readiness, career completion  | To do          |
 
 ## Next steps
 
-**Phase 7: cross-department incidents, consequences, prioritisation.**
+**Phase 7: done.**
+
+**Phase 7 (as planned, for reference): cross-department incidents, consequences, prioritisation.**
 
 - Tickets gain an optional `impact` (business service, people affected,
   deadline), passed from `QueueSchema`. The Overview shows a Business impact
@@ -74,7 +76,7 @@ every phase.
 
   It is graded on the fixes and on the priorities (`field` checks).
 
-**Phase 8: SLAs on the office clock, reports, workload, manager reviews.**
+**Phase 8: SLAs on the office clock, reports, workload, manager reviews.** Drafted in the scratchpad (`p8/`: sla.ts, serviceReport.ts, ReportsPanel.tsx).
 
 - `TicketActivity` gains `office` (absolute office minutes, from `Moment`).
   The queue gains `officeDay`.

@@ -4,7 +4,11 @@
  * blueprints, and a test checks every file against them.
  */
 import { z } from 'zod'
-import { CellFormatSchema, TicketConditionSchema } from '../persistence/schemas'
+import {
+  CellFormatSchema,
+  TicketConditionSchema,
+  TicketImpactSchema,
+} from '../persistence/schemas'
 
 /** "Order!E2:E11" or "Order!E13": a sheet name and a cell or range. */
 export const SheetRangeSchema = z
@@ -231,6 +235,8 @@ export const QueueSchema = z.object({
         requester: z.string().optional(),
         /** What must be true in the systems for it to be fixed (see game/incidents.ts). */
         conditions: z.array(TicketConditionSchema).default([]),
+        /** What the problem costs the business (service, people, deadline). */
+        impact: TicketImpactSchema.optional(),
       }),
     )
     .min(1),

@@ -42,6 +42,7 @@ import {
 import { gradeAssignment, type GradeResult } from '../game/grading'
 import { buildQueueContent, gradeEnvironment } from '../game/tickets'
 import { hintsUsed } from '../game/guidance'
+import { applyServiceOutcomes, serviceOutcomes } from '../game/incidents'
 import { disruptionsOf } from '../game/incidents'
 import { buildProjectContent } from '../game/code/grading'
 import { gradeCodeSafely } from '../game/code/runInWorker'
@@ -374,7 +375,12 @@ export function useCareer() {
           const withSent = sent ? { ...latest, inbox: [...latest.inbox, sent] } : latest
           const versionOf = (kind: 'doc' | 'slides') =>
             versions[handedIn.findIndex((d) => d !== main && d.kind === kind)]?.id
-          const result = recordSubmission(
+          // The first hand-in of a ticket queue: colleagues react to how their problem went.
+          const firstTime =
+            (latest.assignments[assignment.id]?.attempts.length ?? 0) === 0
+          const outcomes =
+            firstTime && main?.kind === 'tickets' ? serviceOutcomes(main.content) : []
+          const recorded = recordSubmission(
             withSent,
             assignment,
             grade,
@@ -382,6 +388,15 @@ export function useCareer() {
             main ? versionId : undefined,
             { doc: versionOf('doc'), slides: versionOf('slides') },
           )
+          const result = outcomes.length
+            ? {
+                ...recorded,
+                profile: {
+                  ...recorded.profile,
+                  work: applyServiceOutcomes(recorded.profile.work, outcomes),
+                },
+              }
+            : recorded
           reward = result.reward
           return {
             ...latest,

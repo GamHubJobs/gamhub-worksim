@@ -41,7 +41,8 @@ import type { DevicesState } from '../tools/devices/schema'
 import type { CommsState } from '../tools/comms/schema'
 import type { SocState } from '../tools/soc/schema'
 import { STAGE_NAMES } from '../tools/soc/model'
-import { TicketConditionSchema } from '../persistence/schemas'
+import { TicketConditionSchema, type WorkState } from '../persistence/schemas'
+import { changeReputation, changeTrust } from './relationships'
 import type { NetworkState } from '../tools/network/schema'
 import {
   deviceByName,
@@ -1197,6 +1198,58 @@ function ticketDisruptions(content: TicketsContent, assignment: string): Disrupt
       },
     ]
   })
+}
+
+// ---------------------------------------------------------------------------
+// What the service desk's work means to the people it serves
+// ---------------------------------------------------------------------------
+
+export interface ServiceOutcome {
+  person: string
+  ticket: string
+  /** Their problem is really fixed (the systems show it), not just marked done. */
+  fixed: boolean
+}
+
+/** Each requester's outcome on a queue's tickets tied to the systems. */
+export function serviceOutcomes(content: TicketsContent): ServiceOutcome[] {
+  return content.tickets.flatMap((ticket) =>
+    ticket.requester && isMonitored(ticket)
+      ? [
+          {
+            person: ticket.requester,
+            ticket: ticket.id,
+            fixed: evaluateTicket(ticket, content.environment).fixed,
+          },
+        ]
+      : [],
+  )
+}
+
+/** Trust gained with a colleague whose problem was fixed, and lost with one left stuck. */
+export const TRUST_FIXED = 3
+export const TRUST_LEFT_STUCK = -4
+
+/**
+ * The workplace consequences of a queue (applied once, at its first hand-in):
+ * colleagues whose problem was fixed trust the player more, those left stuck
+ * less, and the player's reputation follows the overall result.
+ */
+export function applyServiceOutcomes(
+  work: WorkState,
+  outcomes: ServiceOutcome[],
+): WorkState {
+  if (outcomes.length === 0) return work
+  let next = work
+  for (const outcome of outcomes)
+    next = changeTrust(
+      next,
+      outcome.person,
+      outcome.fixed ? TRUST_FIXED : TRUST_LEFT_STUCK,
+    )
+  const fixed = outcomes.filter((o) => o.fixed).length
+  const stuck = outcomes.length - fixed
+  return changeReputation(next, Math.max(-3, Math.min(3, fixed - stuck)))
 }
 
 /**
