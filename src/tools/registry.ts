@@ -10,6 +10,7 @@ import { apiClient } from './api/definition'
 import { campaigns } from './campaigns/definition'
 import { dataStudio } from './datastudio/definition'
 import { comms } from './comms/definition'
+import { soc } from './soc/definition'
 import { devices } from './devices/definition'
 import { directory } from './directory/definition'
 import { network } from './network/definition'
@@ -22,6 +23,7 @@ const TOOLS: AnyTool[] = [
   directory,
   devices,
   comms,
+  soc,
   network,
   social,
   seo,

@@ -22,6 +22,7 @@ function startingEnvironment(assignment: Assignment): TicketEnvironment | undefi
     out.devices = getTool('devices')!.state.parse(environment.devices.start)
   if (environment.comms)
     out.comms = getTool('comms')!.state.parse(environment.comms.start)
+  if (environment.soc) out.soc = getTool('soc')!.state.parse(environment.soc.start)
   return out
 }
 
@@ -74,7 +75,7 @@ export function gradeEnvironment(
 ): CheckResult[] {
   const environment = assignment.queue?.environment
   if (!environment) return []
-  return (['network', 'directory', 'devices', 'comms'] as const).flatMap((id) => {
+  return (['network', 'directory', 'devices', 'comms', 'soc'] as const).flatMap((id) => {
     const task = environment[id]
     const tool = getTool(id)
     if (!task || !tool || task.checks.length === 0) return []
@@ -231,6 +232,9 @@ export function applyTicketSolution(
             : {}),
           ...(environment.comms
             ? { comms: getTool('comms')!.state.parse(environment.comms.solution) }
+            : {}),
+          ...(environment.soc
+            ? { soc: getTool('soc')!.state.parse(environment.soc.solution) }
             : {}),
         }
       : queue.environment

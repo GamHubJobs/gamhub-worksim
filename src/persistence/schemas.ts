@@ -11,6 +11,7 @@ import { GitSchema } from '../game/code/git'
 import { DirectoryStateSchema } from '../tools/directory/schema'
 import { DevicesStateSchema } from '../tools/devices/schema'
 import { CommsStateSchema } from '../tools/comms/schema'
+import { SocStateSchema } from '../tools/soc/schema'
 import { NetworkStateSchema } from '../tools/network/schema'
 import { isId } from '../lib/ids'
 
@@ -461,6 +462,8 @@ export const TicketConditionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('updates-installed'), device: SystemName }),
   /** Nothing stuck in its print queue. */
   z.object({ type: z.literal('print-queue-clear'), device: SystemName }),
+  // Security Console (tools/soc): the incident has been worked through to the end.
+  z.object({ type: z.literal('incident-closed'), incident: SystemName }),
 ])
 
 export const TICKET_ACTIVITY_KINDS = [
@@ -544,6 +547,7 @@ export const TicketEnvironmentSchema = z.object({
   directory: DirectoryStateSchema.optional(),
   devices: DevicesStateSchema.optional(),
   comms: CommsStateSchema.optional(),
+  soc: SocStateSchema.optional(),
 })
 
 export const TicketsContentSchema = z.object({

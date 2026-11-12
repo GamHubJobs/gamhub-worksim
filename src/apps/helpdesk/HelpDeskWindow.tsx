@@ -51,6 +51,7 @@ const SYSTEM_ICONS: Record<SystemId, IconName> = {
   directory: 'directory',
   devices: 'device',
   comms: 'chat',
+  soc: 'shield',
 }
 
 /** Now, for ticket histories: the real time and the office clock. */
@@ -303,6 +304,20 @@ export function HelpDeskWindow({
                         icon: 'voicemail' as IconName,
                       },
                       { id: 'calls' as Tab, label: 'Calls', icon: 'phone' as IconName },
+                    ],
+                  },
+                ]
+              : []),
+            ...(shown.content.environment?.soc
+              ? [
+                  {
+                    name: 'Security',
+                    items: [
+                      {
+                        id: 'soc' as Tab,
+                        label: 'Security Console',
+                        icon: 'shield' as IconName,
+                      },
                     ],
                   },
                 ]

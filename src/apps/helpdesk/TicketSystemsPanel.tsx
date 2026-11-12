@@ -45,6 +45,8 @@ function subjectOf(result: ConditionResult, environment?: TicketEnvironment): st
     case 'updates-installed':
     case 'print-queue-clear':
       return c.device
+    case 'incident-closed':
+      return `Security incident ${c.incident}`
     default: {
       const name = environment?.directory?.users.find((u) => u.id === c.user)?.name
       return `${name ?? c.user}’s account`

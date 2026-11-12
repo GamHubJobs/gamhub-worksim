@@ -13,6 +13,7 @@ import { getArticle, searchKnowledge, type KbArticle } from '../content/knowledg
 import type { Ticket, TicketsContent } from '../persistence/schemas'
 import { sessionForTicket, viewSession } from '../tools/directory/security'
 import { deviceByName } from '../tools/network/simulation'
+import { STAGE_GOALS } from '../tools/soc/model'
 import {
   evaluateTicket,
   isMonitored,
@@ -295,6 +296,22 @@ function deviceHints(focus: ConditionResult): Hint[] {
   }
 }
 
+/** Hints for a ticket about a security incident: its current stage, in the Security Console. */
+function securityHints(focus: ConditionResult, content: TicketsContent): Hint[] {
+  const soc = content.environment?.soc
+  const stage = soc?.incident.stage ?? 'detect'
+  return make(
+    [
+      `${focus.state} The ticket closes when the incident has been worked through every stage.`,
+      'In the Help Desk, open the Security Console: the incident’s stages are at the top, and the tools to investigate and respond are below.',
+      `Now: ${STAGE_GOALS[stage]} The console says what is still missing when you try to complete the stage.`,
+      concept('kb-incident-response'),
+    ],
+    'knowledge',
+    'kb-incident-response',
+  )
+}
+
 /** Hints for a ticket without conditions (triage, a reply): from the knowledge base. */
 function classicHints(ticket: Ticket): Hint[] {
   const match: KbArticle | undefined = searchKnowledge(
@@ -344,7 +361,9 @@ export function guidanceFor(ticket: Ticket, content: TicketsContent): Guidance {
       ? networkHints(focus, content)
       : 'device' in focus.condition
         ? deviceHints(focus)
-        : directoryHints(focus, ticket, content)
+        : focus.condition.type === 'incident-closed'
+          ? securityHints(focus, content)
+          : directoryHints(focus, ticket, content)
   return {
     status: 'working',
     focus,

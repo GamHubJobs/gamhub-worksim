@@ -35,6 +35,7 @@ const WORKSPACES: Record<string, Workspace> = {
   directory: lazy(() => import('./directory/DirectoryWorkspace')),
   devices: lazy(() => import('./devices/DevicesWorkspace')),
   comms: lazy(() => import('./comms/CommsWorkspace')),
+  soc: lazy(() => import('./soc/SecurityConsole')),
   network: lazy(() => import('./network/NetworkWorkspace')),
   social: lazy(() => import('./social/SocialWorkspace')),
   seo: lazy(() => import('./seo/SeoWorkspace')),

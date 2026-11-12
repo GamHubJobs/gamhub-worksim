@@ -47,45 +47,57 @@ every phase.
 | 2     | Identity verification and access control                        | Done `63cf341` |
 | 3     | Guidance, progressive hints (XP), Knowledge Base, AI context    | Done `8403f51` |
 | 4     | Device inventory, Remote Desktop, device troubleshooting        | Done `69ae5fa` |
-| 5     | Chat, voicemail, support calls, communication assessment        | Done           |
-| 6     | Security operations: console, investigations, incident response | In progress    |
-| 7     | Cross-department incidents, consequences, prioritisation        | To do          |
+| 5     | Chat, voicemail, support calls, communication assessment        | Done `4faf405` |
+| 6     | Security operations: console, investigations, incident response | Done           |
+| 7     | Cross-department incidents, consequences, prioritisation        | In progress    |
 | 8     | SLAs (office time), reports, workload, manager reviews          | To do          |
 | 9     | Competencies, portfolio evidence, readiness, career completion  | To do          |
 
 ## Next steps
 
-Phase 6 (security operations). Drafted outside the repository (the scratchpad,
-`p6/`); if that is lost, rebuild it from this plan.
+**Phase 7: cross-department incidents, consequences, prioritisation.**
 
-- **A Security Console tool** (`src/tools/soc/`):
-  - **schema:** sign-ins, alerts, endpoints, emails, mailboxes, accounts, an
-    incident with stages, and the scenario's truth (for validation, never
-    shown).
-  - **model:** actions validated against the truth; a wrong action is
-    recorded as a mistake with a consequence; `blockers` and `advance` gate
-    each stage.
-  - **data:** `securityScenario` (a phishing email, an overseas sign-in, a
-    forwarding rule, a remote-access program on LT-0171, and false alarms).
-  - **definition:** checks `stage`, `no-mistakes` and `report`.
-  - **SecurityConsole** (a dark operations-centre theme).
-- **Task `securityIncident.ts`** ("Incident response: a compromised
-  account", senior support analyst, IT order 13; the project tasks move to
-  14–16). Carmen's ticket INC-3501 has the condition
-  `incident-closed: IR-2026-014`.
+- Tickets gain an optional `impact` (business service, people affected,
+  deadline), passed from `QueueSchema`. The Overview shows a Business impact
+  panel: per department, the people held up and what is at risk.
+- **Consequences** (existing systems): when a Help Desk task is first
+  submitted, each requester's trust changes with their ticket's outcome
+  (fixed, or not), and reputation follows the overall outcome. This lives in
+  `useCareer.submitAssignment`, via a pure `serviceOutcomes(content)` in
+  `game/incidents.ts`, applied with `changeTrust` and `changeReputation`.
+- **Task "One fault, five departments"** (service-desk-lead, IT order 17, at
+  the end, so nothing is renumbered). On the network:
+  - file-01's file sharing has stopped (Finance, Accounting, Data);
+  - a development server is down (Engineering);
+  - Marketing's publishing tool cannot reach the intranet;
+  - low-priority requests interrupt.
 
-Wiring:
+  It is graded on the fixes and on the priorities (`field` checks).
 
-1. `TicketConditionSchema` gains `incident-closed`; `incidents.ts` evaluates it
-   (system `soc`), with changes on stage.
-2. `disruptionsOf` adds the consequences:
-   - a device isolated by mistake holds up its user ("their computer");
-   - an account disabled by mistake holds up its owner ("their account");
-   - the compromised device, while isolated, holds up its own user.
-3. The environment and the content schema gain `soc`; register the tool and
-   its workspace; the shell gets a Security group with the Security Console.
-4. Tests:
-   - unit: each gate, mistakes and consequences;
-   - the model answer at 100%;
-   - browser: the whole lifecycle, refusals before evidence, and a wrong
-     isolation's consequence.
+**Phase 8: SLAs on the office clock, reports, workload, manager reviews.**
+
+- `TicketActivity` gains `office` (absolute office minutes, from `Moment`).
+  The queue gains `officeDay`.
+- **`game/sla.ts`:** targets by priority, response and resolution due, time
+  remaining, met, at risk or breached. Shown in the queue, the ticket and the
+  Overview.
+- **A Reports section:** `serviceReport` over all the player's IT queues
+  (loaded with `getDocument`). It shows received, resolved, reopened, average
+  resolution, overdue, categories, departments, escalations, first-contact
+  resolution, and satisfaction (each formula documented).
+- **Workload:** tickets can arrive later in the office day (`arrives`
+  minutes); a task with arrivals.
+- **Manager reviews:** `reviewFor` adds IT service evidence (fixes, security
+  checks, communication checks, documentation) from the attempts' checks.
+
+**Phase 9: competencies, portfolio, readiness, completion.**
+
+- **`game/itCompetencies.ts`:** 14 IT operations competencies, mapped to tasks
+  and checks. Levels come from passed portfolio items' checks; independent
+  work (no hints) counts as stronger evidence. Shown in Portfolio and
+  Readiness for the IT career.
+- **Portfolio:** DeskOps evidence summaries (tickets, incidents,
+  investigations, communication assessments, manager feedback).
+- **The IT readiness assessment** is extended with a practical scenario.
+- **A career completion record** reflects the demonstrated competencies, and
+  is clearly not a real-world certification.

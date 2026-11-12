@@ -39,6 +39,8 @@ import {
 } from '../tools/devices/model'
 import type { DevicesState } from '../tools/devices/schema'
 import type { CommsState } from '../tools/comms/schema'
+import type { SocState } from '../tools/soc/schema'
+import { STAGE_NAMES } from '../tools/soc/model'
 import { TicketConditionSchema } from '../persistence/schemas'
 import type { NetworkState } from '../tools/network/schema'
 import {
@@ -56,6 +58,7 @@ export const SYSTEM_NAMES: Record<SystemId, string> = {
   directory: 'Directory',
   devices: 'Devices',
   comms: 'Communications',
+  soc: 'Security Console',
 }
 
 /** Which system a condition is checked in. */
@@ -74,6 +77,8 @@ export function systemOf(condition: TicketCondition): SystemId {
     case 'updates-installed':
     case 'print-queue-clear':
       return 'devices'
+    case 'incident-closed':
+      return 'soc'
     default:
       return 'directory'
   }
@@ -377,6 +382,24 @@ function evaluateDevices(
   }
 }
 
+function evaluateSoc(
+  condition: TicketCondition,
+  state: SocState,
+): Omit<ConditionResult, 'condition'> {
+  if (condition.type !== 'incident-closed')
+    return { label: 'A security check', passed: false, state: 'This cannot be checked.' }
+  const label = `Security incident ${condition.incident} is closed`
+  if (state.incident.id !== condition.incident)
+    return { label, passed: false, state: `There is no incident ${condition.incident}.` }
+  return state.incident.stage === 'closed'
+    ? { label, passed: true, state: `Incident ${condition.incident} is closed.` }
+    : {
+        label,
+        passed: false,
+        state: `Incident ${condition.incident} is at the “${STAGE_NAMES[state.incident.stage]}” stage.`,
+      }
+}
+
 /** Checks one condition against the systems as they are now. */
 export function evaluateCondition(
   condition: TicketCondition,
@@ -398,7 +421,9 @@ export function evaluateCondition(
       ? evaluateNetwork(condition, state as NetworkState)
       : system === 'devices'
         ? evaluateDevices(condition, state as DevicesState)
-        : evaluateDirectory(condition, state as DirectoryState)
+        : system === 'soc'
+          ? evaluateSoc(condition, state as SocState)
+          : evaluateDirectory(condition, state as DirectoryState)
   return { condition, ...result }
 }
 
@@ -531,6 +556,18 @@ export function devicesChanges(
   return changes
 }
 
+/** What changed in the security console: the incident's stage (with the step that completed). */
+export function socChanges(before: SocState, after: SocState): SystemChange[] {
+  if (before.incident.stage === after.incident.stage) return []
+  return [
+    {
+      system: 'soc',
+      entities: [after.incident.id],
+      action: `Incident ${after.incident.id}: ${STAGE_NAMES[before.incident.stage]} complete`,
+    },
+  ]
+}
+
 /** The devices, records or accounts a condition is about. */
 function entitiesOf(condition: TicketCondition): string[] {
   switch (condition.type) {
@@ -544,6 +581,8 @@ function entitiesOf(condition: TicketCondition): string[] {
     case 'updates-installed':
     case 'print-queue-clear':
       return [condition.device]
+    case 'incident-closed':
+      return [condition.incident]
     case 'can-reach':
       return [condition.from, condition.host]
     case 'dns-record':
@@ -899,7 +938,9 @@ export function applyEnvironmentChange<S extends SystemId>(
       ? networkChanges(before as NetworkState, updated as NetworkState)
       : system === 'devices'
         ? devicesChanges(before as DevicesState, updated as DevicesState)
-        : directoryChanges(before as DirectoryState, updated as DirectoryState)
+        : system === 'soc'
+          ? socChanges(before as SocState, updated as SocState)
+          : directoryChanges(before as DirectoryState, updated as DirectoryState)
   if (changes.length === 0) return { ...content, environment, tickets }
   const next = {
     ...content,
@@ -1099,8 +1140,50 @@ function verificationStage(
 }
 
 export function disruptionsOf(content: TicketsContent, assignment: string): Disruption[] {
+  return [
+    ...ticketDisruptions(content, assignment),
+    ...securityDisruptions(content, assignment),
+  ]
+}
+
+/**
+ * Who security work holds up: the owner of an isolated device and of a
+ * disabled account (a mistake, or the compromised laptop until it is
+ * reconnected). They are back to work once it is restored.
+ */
+function securityDisruptions(content: TicketsContent, assignment: string): Disruption[] {
+  const soc = content.environment?.soc
+  if (!soc) return []
+  const person = (user: string) => soc.accounts.find((a) => a.user === user)?.person ?? ''
+  const held: Disruption[] = []
+  for (const endpoint of soc.endpoints) {
+    const who = person(endpoint.user)
+    if (who && endpoint.isolated)
+      held.push({
+        person: who,
+        assignment,
+        ticket: soc.incident.id,
+        state: 'blocked',
+        what: 'their computer',
+      })
+  }
+  for (const account of soc.accounts)
+    if (account.person && account.disabled)
+      held.push({
+        person: account.person,
+        assignment,
+        ticket: soc.incident.id,
+        state: 'blocked',
+        what: 'their account',
+      })
+  return held
+}
+
+function ticketDisruptions(content: TicketsContent, assignment: string): Disruption[] {
   return content.tickets.flatMap((ticket) => {
     if (!ticket.requester || !isMonitored(ticket)) return []
+    // A report about a security incident does not stop the person reporting it.
+    if (ticketSystems(ticket).every((s) => s === 'soc')) return []
     const fixed = evaluateTicket(ticket, content.environment).fixed
     const stage = verificationStage(ticket, content.environment?.directory, fixed)
     return [

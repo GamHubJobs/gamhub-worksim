@@ -190,6 +190,105 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 6: the Security Console and incident response
+
+A security operations console in the Help Desk, with an incident worked
+through every stage. Everything is safely simulated: no real accounts,
+devices, addresses or malware. The addresses used are reserved example ranges.
+
+### What was built
+
+- **A Security Console tool** (`src/tools/soc/`):
+  - **Investigation sources:**
+    - sign-in history (where, when, which device, success or failure);
+    - alerts with severity, two of them false alarms;
+    - endpoints (processes with their path and signature, recent changes,
+      isolation);
+    - reported emails (sender address, reply-to, recipients, and "Inspect
+      link" for where a link really goes);
+    - mailboxes (rules, audit);
+    - the accounts the security team can contain.
+  - **The scenario's truth** (who and what is compromised) is kept in the state
+    to validate actions, and never shown.
+- **An incident lifecycle** (`model.ts`): detect, triage, investigate, contain,
+  eradicate, recover, document, review.
+  - "Complete" moves it on only when that stage's work is really done; it says
+    what is still missing.
+  - **Triage:** the severity is not understated, and the category is right.
+  - **Investigate:** the overseas sign-in, the phishing email, the forwarding
+    rule and the unsigned program found.
+  - **Contain:** the account's sessions ended and its password reset, the
+    laptop isolated.
+  - **Eradicate:** the rule removed, the program removed, the email quarantined
+    from every inbox. The laptop cannot be reconnected while the program
+    runs.
+  - **Recover:** the laptop reconnected, and anything isolated or disabled by
+    mistake restored.
+  - **Document:** a report of 60 words or more naming the device, the mailbox
+    change and how the account was secured.
+  - **Review:** lessons learned.
+- **Mistakes have consequences** (no arbitrary penalties):
+  - **The wrong laptop isolated:** its user cannot work; they are held up in
+    the office until it is restored.
+  - **The wrong account disabled:** its owner is locked out.
+  - **The real alert dismissed:** the attacker stays in the account.
+  - **The phishing email called legitimate:** it stays in four inboxes.
+
+  Each mistake is recorded, shown under "Consequences", and marked down.
+  Dismissing a false alarm, or calling the genuine maintenance email
+  legitimate, is not a mistake.
+
+- **Connected to the tickets:**
+  - **A new condition, "incident closed":** Carmen's report (INC-3501)
+    resolves by itself when the incident closes.
+  - **Guidance:** hints follow the incident's current stage.
+  - **Colleagues:** the people held up by security work are shown in the office
+    and the Overview; the person who reported the email is not.
+- **The task "Incident response: a compromised account"** (Senior Support
+  Analyst, IT order 13; the three project tasks move to 14–16). Graded on:
+  - the incident worked through to closed (40);
+  - no wrong actions (25);
+  - the report (15);
+  - Carmen's ticket (10);
+  - the reply thanking her (10).
+
+### Tests
+
+- **Unit and integration** (`tools/soc/soc.test.ts`, 12):
+  - each stage's gate (refused, then allowed);
+  - an understated severity and the wrong category;
+  - evidence needed;
+  - containment;
+  - no reconnecting before the threat is removed;
+  - no recovery while something is isolated by mistake;
+  - a thin report or lessons refused;
+  - mistakes: the wrong laptop (and its user held up), the wrong account, the
+    real alert dismissed, phishing let through, with false alarms not
+    counted;
+  - the ticket resolving as the incident closes;
+  - the model answer at 100%;
+  - mistakes marked down;
+  - saving.
+- **Browser** (`tests/e2e/deskops-security.spec.ts`), the whole incident:
+  - refusals before the work is done;
+  - triage and the evidence (including inspecting a link);
+  - a deliberate mistake (Grace's laptop) and its consequence;
+  - containment, eradication, recovery (refused until Grace's laptop is
+    back);
+  - the report and lessons;
+  - closed, with Carmen's ticket resolved automatically.
+- **Results after:** `npm run check` clean (109 files, 2,467 tests). The Help Desk browser tests (16 spec files, 78 tests) passed. Production build passed.
+
+### Limits
+
+- **One incident per task;** the console's data is the scenario's, not live
+  monitoring.
+- **Contained in the console:** the actions affect the security console's
+  accounts and devices. They do not change Directory or the Devices tool in
+  other tasks.
+
+---
+
 ## 2026-11-12 · IT Help Desk 5: chat, voicemail, support calls, and how the player communicates
 
 The Help Desk gains the service desk's communications, connected to the
