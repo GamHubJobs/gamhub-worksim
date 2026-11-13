@@ -162,3 +162,135 @@
 body[data-onsite] .onsite-hide {
   display: none;
 }
+
+/*
+ * The HUD layout (ui/hud/Hud.tsx): fixed zones over the 3D world that never
+ * overlap. Sizes come from these variables and change with the screen.
+ * Stacking order, lowest first: the world, the HUD, conversations, notices,
+ * app windows, menus and dialogs, help, the guided tour.
+ */
+:root {
+  --hud-gap: 0.75rem;
+  --hud-left: clamp(14rem, 22vw, 18rem);
+  --hud-right: clamp(14rem, 26vw, 22rem);
+  --z-hud: 20;
+  --z-dialogue: 30;
+  --z-notice: 35;
+  --z-menu: 50;
+  --z-help: 80;
+  --z-tour: 95;
+}
+.hud-grid {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-hud);
+  pointer-events: none;
+  display: grid;
+  gap: var(--hud-gap);
+  padding: var(--hud-gap);
+  grid-template-columns: minmax(0, var(--hud-left)) minmax(0, 1fr) minmax(
+      0,
+      var(--hud-right)
+    );
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'tl tc tr'
+    'tl . mr'
+    'bl bc br';
+}
+.hud-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: 0;
+  pointer-events: none;
+}
+.hud-zone > .hud-slot {
+  max-width: 100%;
+  min-height: 0;
+}
+.hud-tl {
+  grid-area: tl;
+  overflow: hidden;
+}
+.hud-tc {
+  grid-area: tc;
+}
+.hud-tr {
+  grid-area: tr;
+}
+.hud-mr {
+  grid-area: mr;
+  overflow: hidden;
+}
+.hud-mr > .hud-slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  height: 100%;
+  width: 100%;
+}
+.hud-bl {
+  grid-area: bl;
+}
+.hud-bc {
+  grid-area: bc;
+}
+.hud-br {
+  grid-area: br;
+}
+/* Short screens (a 1366 × 768 laptop): a smaller minimap, tighter gaps. */
+@media (max-height: 760px) {
+  :root {
+    --hud-gap: 0.5rem;
+  }
+  .hud-br .hud-minimap {
+    width: 7.5rem;
+    height: 7.5rem;
+  }
+}
+/* Narrow screens (tablets and phones): two columns, conversations across the middle. */
+@media (max-width: 760px) {
+  :root {
+    --hud-left: 1fr;
+    --hud-right: 1fr;
+  }
+  .hud-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'tl tr'
+      'mr mr'
+      'bl br'
+      'bc bc';
+  }
+  .hud-tc {
+    display: none;
+  }
+  .hud-br .hud-minimap {
+    width: 6rem;
+    height: 6rem;
+  }
+  /* Each corner keeps to its share of the screen, and scrolls inside it. */
+  .hud-tl,
+  .hud-tr,
+  .hud-bl,
+  .hud-br {
+    max-height: 38vh;
+  }
+  .hud-tl > .hud-slot,
+  .hud-tr > .hud-slot,
+  .hud-bl > .hud-slot,
+  .hud-br > .hud-slot {
+    max-height: 38vh;
+    overflow-y: auto;
+  }
+  /* In a conversation the place panel, the minimap and the needs step aside. */
+  .hud-grid[data-mode='dialogue'] .hud-tl,
+  .hud-grid[data-mode='dialogue'] .hud-minimap,
+  .hud-grid[data-mode='dialogue'] [data-testid='hud-needs'] {
+    display: none;
+  }
+}

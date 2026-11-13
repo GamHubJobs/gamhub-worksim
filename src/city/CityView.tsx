@@ -437,7 +437,7 @@ export function CityView({
           {storyScene && (
             <StoryScenePanel
               key={storyScene.scene.id}
-              className="fixed right-4 bottom-4 z-40"
+              className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
               scene={storyScene.scene}
               name={storyScene.name}
               mission={storyScene.mission}
@@ -563,7 +563,7 @@ export function CityView({
           {encounter && (
             <EncounterPanel
               key={encounter.who.id}
-              className="fixed right-4 bottom-4 z-40"
+              className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
               who={encounter.who}
               situation={encounter.situation}
               relation={relationOf(profile, encounter.who.id)}

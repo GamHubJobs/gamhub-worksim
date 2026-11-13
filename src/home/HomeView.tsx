@@ -358,7 +358,7 @@ export function HomeView({
           {talking && personAt(talking) && (
             <EncounterPanel
               key={talking}
-              className="fixed right-4 bottom-4 z-40"
+              className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
               who={personAt(talking)!}
               situation={{ availability: 'free', minute: life.minute }}
               relation={relationOf(profile, talking)}
@@ -379,7 +379,7 @@ export function HomeView({
           )}
           {courier && (
             <EncounterPanel
-              className="fixed right-4 bottom-4 z-40"
+              className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
               who={TOWN_PEOPLE.courier}
               situation={{ availability: 'free', minute: life.minute }}
               relation={relationOf(profile, TOWN_PEOPLE.courier.id)}

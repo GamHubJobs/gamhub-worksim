@@ -8,10 +8,26 @@
  * It can be collapsed to a small "Next step" button (remembered), and it
  * offers the guided tour to a player who has not taken it.
  */
-import { useState } from 'react'
+import { useState, useSyncExternalStore, type ReactNode } from 'react'
+import { HudSlot } from '../ui/hud/Hud'
+import { useHud } from '../ui/hud/hudContext'
 import type { NextStep } from '../game/nextStep'
 import { Icon } from '../ui/Icon'
 import { useCurrentAppHint } from './appHints'
+
+/** A narrow screen (a phone, or a tablet held upright), following resizes and turns. */
+function useNarrow(): boolean {
+  const query = '(max-width: 760px)'
+  return useSyncExternalStore(
+    (change) => {
+      const m = window.matchMedia?.(query)
+      m?.addEventListener('change', change)
+      return () => m?.removeEventListener('change', change)
+    },
+    () => !!window.matchMedia?.(query).matches,
+    () => false,
+  )
+}
 
 export function GuideBar({
   step,
@@ -32,9 +48,12 @@ export function GuideBar({
   onTour: () => void
 }) {
   const live = useCurrentAppHint()
+  const hud = useHud()
   const shown: NextStep = live ?? step
   const [more, setMore] = useState<boolean | null>(null)
-  const open = more ?? beginner
+  // On a narrow screen the detail starts closed (More opens it), so the card stays small.
+  const narrow = useNarrow()
+  const open = more ?? (beginner && !narrow)
   const position = place === 'office' ? 'left-4 bottom-4' : 'left-2 bottom-12'
 
   // At the computer the next step is a strip docked above the taskbar: the
@@ -111,12 +130,17 @@ export function GuideBar({
       </div>
     )
 
-  if (collapsed)
-    return (
+  const inGrid = !!hud?.zones['bottom-left']
+  const at = inGrid ? '' : `fixed ${position} z-[60]`
+  const small = collapsed || hud?.mode === 'dialogue'
+  const slot = (node: ReactNode) => <HudSlot zone="bottom-left">{node}</HudSlot>
+
+  if (small)
+    return slot(
       <button
         type="button"
         onClick={() => onCollapse(false)}
-        className={`onsite-hide fixed ${position} z-[60] flex items-center gap-1.5 rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-white shadow-lg hover:bg-slate-800`}
+        className={`onsite-hide ${at} flex items-center gap-1.5 rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-white shadow-lg hover:bg-slate-800`}
         data-tour="guide-bar"
         data-testid="guide-bar"
         data-collapsed="true"
@@ -124,12 +148,12 @@ export function GuideBar({
       >
         <Icon name="hint" className="h-3.5 w-3.5 text-amber-300" />
         Next step
-      </button>
+      </button>,
     )
 
-  return (
+  return slot(
     <aside
-      className={`onsite-hide pointer-events-none fixed ${position} z-[60] w-[min(26rem,calc(100vw-1rem))] rounded-xl bg-slate-900/92 p-3 text-sm text-white shadow-xl ring-1 ring-white/10 backdrop-blur`}
+      className={`onsite-hide ${inGrid ? '' : 'pointer-events-none'} ${at} w-[min(26rem,calc(100vw-1rem))] max-w-full rounded-xl bg-slate-900/92 p-3 text-sm text-white shadow-xl ring-1 ring-white/10 backdrop-blur`}
       aria-label="Next step"
       data-tour="guide-bar"
       data-testid="guide-bar"
@@ -190,6 +214,6 @@ export function GuideBar({
           )}
         </div>
       </div>
-    </aside>
+    </aside>,
   )
 }

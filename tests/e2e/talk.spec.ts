@@ -90,7 +90,7 @@ test('a colleague in the office: walked over to, turns and waves, talks, goes ba
   await encounter(page).getByRole('button', { name: 'Say goodbye' }).click()
   await encounter(page).getByRole('button', { name: 'Close' }).click()
   await expect(encounter(page)).toHaveCount(0)
-  await expect(page.getByTestId('office-3d')).toContainText(/talk to Grace/, {
+  await expect(page.getByTestId('prompt')).toContainText(/talk to Grace/, {
     timeout: 20_000,
   })
   // (As a player does: the keys go to the 3D view.)

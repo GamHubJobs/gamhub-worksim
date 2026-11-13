@@ -190,6 +190,76 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · The HUD layout: nothing over the world overlaps
+
+From a report with a screenshot. In the office at 1366 × 768, several things
+covered each other and the camera buttons: the mission notice, a
+conversation, the minimap, the needs and the next step. Each piece of HUD
+placed itself with its own fixed coordinates. Full description:
+`docs/HUD.md`.
+
+### What was built
+
+- **A reusable HUD layout manager** (`ui/hud/Hud.tsx`, `ui/hud/hudContext.ts`).
+  - **One CSS grid over the 3D world**, with seven zones that cannot overlap:
+    the corners, the top and bottom centre, and a right-hand column for
+    conversations.
+  - **Slots:** each piece renders into its zone with `<HudSlot>`, so pieces
+    sharing a zone stack. Where there is no grid (the city, home, the
+    computer) a slot keeps its old position.
+  - **Sizes and stacking order** are CSS variables, with layouts for short
+    and narrow screens.
+- **What went where:**
+  - the location panel: top left, now collapsible to the place's name;
+  - the controls help: top centre;
+  - the camera buttons and the mission tracker: top right;
+  - conversations: the right-hand column, scrolling inside it;
+  - the next step: bottom left;
+  - the "Press E" prompt or the activity, then the places bar: bottom centre;
+  - the minimap, the needs (now compact or full) and the buttons: bottom
+    right.
+- **Contextual priority:** in a conversation, the mission tracker and the
+  controls help step aside, and the next step shrinks to its button. On a
+  narrow screen the location panel, minimap and needs step aside too.
+- **Narrow screens:** two columns, each corner kept to its share of the screen
+  and scrolling inside it, and the next step's detail starting closed.
+  Short screens get a smaller minimap.
+- **Remembered on the device:** the location panel's and the needs' compact
+  choices.
+- **Found and fixed:**
+  - the grid's first version re-registered its zones on every render (an
+    endless loop);
+  - the conversation boxes now use a smaller shadow, because the large one
+    over the WebGL canvas left a pale block in the software renderer;
+  - the city and home conversation panels keep their own height limit.
+
+### Tests
+
+- **Browser** (`tests/e2e/hud-layout.spec.ts`): every visible piece of HUD in
+  the office is measured at 1366 × 768, 1440 × 900, 1600 × 900, 1920 × 1080,
+  1280 × 720, 1024 × 768 and 390 × 844, exploring and in a conversation.
+  It fails on any overlap or anything off the screen. The location panel
+  collapses and keeps the place's name.
+- **Updated** (behaviour unchanged, the parts moved into the HUD zones):
+  - `meetings.spec.ts` finds the activity on the page, no longer inside the
+    3D view;
+  - `talk.spec.ts` reads the prompt from the prompt itself.
+- **Results:**
+  - `npm run check` passes: 2,577 unit tests.
+  - The production build passes.
+  - The HUD test passes.
+  - The office, guidance, IT, meetings, people, talking, story, phone,
+    collision, city and home browser tests pass (the home test passed when
+    re-run on its own).
+
+### Limits
+
+- **Only the office uses the grid so far.** The city and home keep their
+  positions; their HUD pieces are already slots, so they can adopt it the
+  same way.
+
+---
+
 ## 2026-11-13 · Guidance: window controls, the next step, guided tours and help (all careers)
 
 A global usability round, for every career, app, tool and simulation. Full

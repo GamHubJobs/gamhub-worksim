@@ -6,7 +6,8 @@
  * and the main menu. Each is an overlay over the world, which carries on
  * behind it; closing it goes back to exactly where the player was.
  */
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { HudSlot } from '../ui/hud/Hud'
 import type { Profile } from '../persistence/schemas'
 import { CareersSection } from '../apps/career/CareersSection'
 import { describe } from '../game/children'
@@ -25,7 +26,28 @@ import { MiniMap } from '../world/map/MiniMap'
 export type MenuScreen = 'relationships' | 'character' | 'inventory' | null
 
 /** Six small bars: hunger, hygiene, social, fun, energy, stress. */
+const NEEDS_KEY = 'worksim.hud.needs'
+const readOpen = () => {
+  try {
+    return window.localStorage.getItem(NEEDS_KEY) !== 'compact'
+  } catch {
+    return true
+  }
+}
+
 export function NeedsHud({ profile }: { profile: ProfileData }) {
+  // Full (names and numbers) or compact (six small meters); remembered on this device.
+  const [open, setOpen] = useState(readOpen)
+  const toggle = () => {
+    setOpen((o) => {
+      try {
+        window.localStorage.setItem(NEEDS_KEY, o ? 'compact' : 'full')
+      } catch {
+        // Storage blocked: the choice lasts until the page closes.
+      }
+      return !o
+    })
+  }
   const n = profile.work.life.needs
   const w = profile.work.wellbeing
   const bars: Array<[string, number, string]> = [
@@ -36,13 +58,49 @@ export function NeedsHud({ profile }: { profile: ProfileData }) {
     ['Energy', w.energy, '#4ade80'],
     ['Stress', w.stress, '#f87171'],
   ]
+  if (!open)
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label="How you are: show details"
+        data-testid="hud-needs"
+        data-compact="true"
+        className="pointer-events-auto flex items-end gap-1 rounded-xl bg-slate-900/85 px-2.5 py-1.5 shadow-lg ring-1 ring-white/10"
+        title={bars.map(([name, value]) => `${name} ${Math.round(value)}`).join(' · ')}
+      >
+        {bars.map(([name, value, colour]) => (
+          <span
+            key={name}
+            className="flex h-6 w-2 flex-col justify-end overflow-hidden rounded-sm bg-white/20"
+            role="meter"
+            aria-label={name}
+            aria-valuenow={Math.round(value)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <span style={{ height: `${value}%`, background: colour }} />
+          </span>
+        ))}
+      </button>
+    )
   return (
     <div
       role="group"
       aria-label="How you are"
       data-testid="hud-needs"
-      className="pointer-events-none grid w-56 grid-cols-2 gap-x-3 gap-y-1 rounded-xl bg-slate-900/85 px-3 py-2 text-[11px] text-white shadow-lg ring-1 ring-white/10"
+      data-compact="false"
+      className="pointer-events-auto relative grid w-56 max-w-full grid-cols-2 gap-x-3 gap-y-1 rounded-xl bg-slate-900/85 px-3 py-2 pr-6 text-[11px] text-white shadow-lg ring-1 ring-white/10"
     >
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label="How you are: make it compact"
+        title="Compact"
+        className="absolute top-1 right-1 rounded px-1 text-[10px] text-slate-300 hover:bg-white/10"
+      >
+        ▾
+      </button>
       {bars.map(([name, value, colour]) => (
         <div key={name}>
           <div className="flex justify-between">
@@ -81,14 +139,11 @@ export function GameHud({
   if (phone.open || map.open) return null
   const button =
     'pointer-events-auto rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-white shadow ring-1 ring-white/15 hover:bg-slate-900'
-  return (
-    <div
-      className="onsite-hide pointer-events-none fixed right-3 bottom-3 z-10 flex flex-col items-end gap-2"
-      data-testid="hud"
-    >
+  const content = (
+    <div className="onsite-hide flex flex-col items-end gap-2" data-testid="hud">
       <MiniMap profile={profile} />
       <NeedsHud profile={profile} />
-      <div className="flex gap-1.5">
+      <div className="pointer-events-auto flex gap-1.5">
         <button type="button" className={button} onClick={() => openPhone(null)}>
           📱 Phone <kbd className="font-sans">P</kbd>
         </button>
@@ -100,6 +155,17 @@ export function GameHud({
         </button>
       </div>
     </div>
+  )
+  return (
+    <HudSlot
+      zone="bottom-right"
+      passive
+      fallback={(c) => (
+        <div className="pointer-events-none fixed right-3 bottom-3 z-10">{c}</div>
+      )}
+    >
+      {content}
+    </HudSlot>
   )
 }
 

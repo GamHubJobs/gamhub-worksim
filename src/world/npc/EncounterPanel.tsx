@@ -22,7 +22,7 @@ export function EncounterPanel({
   relation,
   onSay,
   onClose,
-  className = 'absolute right-4 bottom-20 z-20',
+  className = 'absolute right-4 bottom-20 z-20 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]',
 }: {
   who: Who
   situation: Situation
@@ -71,7 +71,7 @@ export function EncounterPanel({
     <section
       ref={box}
       tabIndex={-1}
-      className={`visible ${className} max-h-[calc(100%-7rem)] w-[26rem] max-w-[calc(100%-2rem)] overflow-y-auto rounded-xl bg-white p-4 shadow-2xl ring-1 ring-slate-200 outline-none`}
+      className={`visible ${className} w-[26rem] overflow-y-auto rounded-xl bg-white p-4 shadow-lg ring-1 ring-slate-200 outline-none`}
       role="dialog"
       aria-label={`Talking to ${who.name}`}
       data-testid="encounter"

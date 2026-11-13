@@ -80,8 +80,19 @@ import { supportsWebGL } from './webgl'
 import { deskLayout } from '../game/desk'
 import type { FieldJob } from '../persistence/schemas'
 import { OnSiteWork, type OnSitePlace, type OnSiteSync } from './OnSiteWork'
+import { HudLayout, HudSlot } from '../ui/hud/Hud'
+import { useHud } from '../ui/hud/hudContext'
 
 const OfficeScene = lazy(() => import('./scene/OfficeScene'))
+
+const PANEL_KEY = 'worksim.hud.place'
+const readPanel = () => {
+  try {
+    return window.localStorage.getItem(PANEL_KEY) !== 'collapsed'
+  } catch {
+    return true
+  }
+}
 
 /** Where an IT job is done in person. */
 function placeOf(job: FieldJob): OnSitePlace {
@@ -158,6 +169,17 @@ export function OfficeView({
   onAct,
   sync,
 }: OfficeViewProps) {
+  // The location panel: open, or just the place's name (remembered on this device).
+  const [panelOpen, setPanelOpen] = useState(readPanel)
+  const togglePanel = () =>
+    setPanelOpen((o) => {
+      try {
+        window.localStorage.setItem(PANEL_KEY, o ? 'collapsed' : 'open')
+      } catch {
+        // Storage blocked: the choice lasts until the page closes.
+      }
+      return !o
+    })
   // Hands-on IT work open in person (the cabinet, the bench, a colleague's desk).
   const [onsite, setOnsite] = useState<OnSitePlace | null>(null)
   const fieldJobs = profile.work.fieldJobs
@@ -493,6 +515,12 @@ export function OfficeView({
   useEffect(() => onTalkRequest((id) => ask(`person:${id}`)), [])
   // The conversation is over: whoever it was goes back to their day.
   const conversing = !!dialogue || !!encounter || !!storyScene
+  // In a conversation, non-essential HUD steps aside (ui/hud/Hud.tsx).
+  const hudMode = useHud()?.setMode
+  useEffect(() => {
+    hudMode?.(conversing ? 'dialogue' : 'explore')
+    return () => hudMode?.('explore')
+  }, [conversing, hudMode])
   useEffect(() => {
     if (!conversing) release()
   }, [conversing])
@@ -553,149 +581,173 @@ export function OfficeView({
         )}
       </div>
 
-      {/* Where you are and what you can do here */}
-      <section
-        className="absolute top-4 left-4 z-20 w-72 rounded-xl bg-white/90 p-4 shadow-lg ring-1 ring-slate-200 backdrop-blur"
-        aria-label="This area"
-        data-testid="office-panel"
-      >
-        <p className="text-xs font-medium tracking-wide text-blue-700 uppercase">
-          You are at
-        </p>
-        <h1 className="text-lg font-semibold text-slate-900">{fill(current.name)}</h1>
-        <p className="mt-1 text-sm text-slate-600">{fill(current.description)}</p>
+      {/* The HUD's zones over the world (ui/hud/Hud.tsx): nothing overlaps. */}
+      <HudLayout />
 
-        {meetingNow && (
-          <div
-            className="mt-3 rounded-md bg-amber-50 p-2 text-sm text-amber-900"
-            data-testid="meeting-now"
-          >
-            <p>
-              <strong>{fill(meetingNow.title)}</strong>{' '}
-              {work.minute < meetingNow.start
-                ? `starts at ${formatTime(meetingNow.start)}`
-                : 'has started'}{' '}
-              ({fill(getSpot(meetingNow.spot).name.toLowerCase())}).
+      {/* Where you are and what you can do here */}
+      <HudSlot zone="top-left">
+        <section
+          className="max-h-full w-full overflow-y-auto rounded-xl bg-white/90 p-4 shadow-lg ring-1 ring-slate-200 backdrop-blur"
+          aria-label="This area"
+          data-testid="office-panel"
+          data-collapsed={panelOpen ? 'false' : 'true'}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs font-medium tracking-wide text-blue-700 uppercase">
+              You are at
             </p>
             <button
               type="button"
-              onClick={() =>
-                // In 3D, the player walks to the meeting and attends it in person.
-                walkable
-                  ? ask(`meeting:${meetingNow.id}`)
-                  : meetingHere
-                    ? joinMeeting(meetingNow.id)
-                    : go(meetingNow.spot)
-              }
-              className="mt-1.5 w-full rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
+              onClick={togglePanel}
+              aria-expanded={panelOpen}
+              aria-label={panelOpen ? 'Collapse this panel' : 'Expand this panel'}
+              className="-mt-1 -mr-1 rounded px-1.5 text-xs text-slate-500 hover:bg-slate-100"
             >
-              {meetingHere || walkable
-                ? fill(`Join the ${meetingNow.title.toLowerCase()}`)
-                : fill(`Go to ${getSpot(meetingNow.spot).name}`)}
+              {panelOpen ? '▴' : '▾'}
             </button>
           </div>
-        )}
-        {pendingEvents(profile).map((event) => {
-          const person = getPerson(event.person)
-          return (
-            <div
-              key={event.id}
-              className="mt-3 flex items-center gap-2 rounded-md bg-blue-50 p-2 text-sm text-blue-900"
-              data-testid="event-waiting"
-            >
-              <Avatar personId={event.person} />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{person.name.split(' ')[0]} wants a word</p>
-                <p className="truncate text-xs">“{event.opener}”</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDialogue(eventScene(profile, event.id))}
-                className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-800"
+          <h1 className="text-lg font-semibold text-slate-900">{fill(current.name)}</h1>
+          {panelOpen && (
+            <p className="mt-1 text-sm text-slate-600">{fill(current.description)}</p>
+          )}
+          <div hidden={!panelOpen}>
+            {meetingNow && (
+              <div
+                className="mt-3 rounded-md bg-amber-50 p-2 text-sm text-amber-900"
+                data-testid="meeting-now"
               >
-                Talk
-              </button>
-            </div>
-          )
-        })}
-        {!meetingNow && upcoming && (
-          <p className="mt-2 text-xs text-slate-500">
-            Next: {fill(upcoming.title)} at {formatTime(upcoming.start)} (
-            {fill(getSpot(upcoming.spot).name)})
-          </p>
-        )}
-
-        {fieldJobs.length > 0 && (
-          <div className="mt-3 rounded-md bg-amber-50 p-2" data-testid="it-jobs">
-            <p className="text-xs font-semibold tracking-wide text-amber-900 uppercase">
-              IT jobs in the office
-            </p>
-            <ul className="mt-1 space-y-1">
-              {fieldJobs.map((job) => {
-                const place = placeOf(job)
-                return (
-                  <li
-                    key={`${job.kind}-${job.subject}-${job.target}`}
-                    className="flex items-center gap-2 text-sm text-amber-950"
+                <p>
+                  <strong>{fill(meetingNow.title)}</strong>{' '}
+                  {work.minute < meetingNow.start
+                    ? `starts at ${formatTime(meetingNow.start)}`
+                    : 'has started'}{' '}
+                  ({fill(getSpot(meetingNow.spot).name.toLowerCase())}).
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    // In 3D, the player walks to the meeting and attends it in person.
+                    walkable
+                      ? ask(`meeting:${meetingNow.id}`)
+                      : meetingHere
+                        ? joinMeeting(meetingNow.id)
+                        : go(meetingNow.spot)
+                  }
+                  className="mt-1.5 w-full rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
+                >
+                  {meetingHere || walkable
+                    ? fill(`Join the ${meetingNow.title.toLowerCase()}`)
+                    : fill(`Go to ${getSpot(meetingNow.spot).name}`)}
+                </button>
+              </div>
+            )}
+            {pendingEvents(profile).map((event) => {
+              const person = getPerson(event.person)
+              return (
+                <div
+                  key={event.id}
+                  className="mt-3 flex items-center gap-2 rounded-md bg-blue-50 p-2 text-sm text-blue-900"
+                  data-testid="event-waiting"
+                >
+                  <Avatar personId={event.person} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">
+                      {person.name.split(' ')[0]} wants a word
+                    </p>
+                    <p className="truncate text-xs">“{event.opener}”</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDialogue(eventScene(profile, event.id))}
+                    className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-800"
                   >
-                    <span className="min-w-0 flex-1">{job.label}</span>
-                    <button
-                      type="button"
-                      className="shrink-0 rounded bg-amber-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-amber-600"
-                      onClick={() =>
-                        walkable ? ask(`onsite:${place}`) : openOnSite(place)
-                      }
-                      aria-label={`Go: ${job.label}`}
-                    >
-                      Go
-                    </button>
-                  </li>
-                )
-              })}
+                    Talk
+                  </button>
+                </div>
+              )
+            })}
+            {!meetingNow && upcoming && (
+              <p className="mt-2 text-xs text-slate-500">
+                Next: {fill(upcoming.title)} at {formatTime(upcoming.start)} (
+                {fill(getSpot(upcoming.spot).name)})
+              </p>
+            )}
+
+            {fieldJobs.length > 0 && (
+              <div className="mt-3 rounded-md bg-amber-50 p-2" data-testid="it-jobs">
+                <p className="text-xs font-semibold tracking-wide text-amber-900 uppercase">
+                  IT jobs in the office
+                </p>
+                <ul className="mt-1 space-y-1">
+                  {fieldJobs.map((job) => {
+                    const place = placeOf(job)
+                    return (
+                      <li
+                        key={`${job.kind}-${job.subject}-${job.target}`}
+                        className="flex items-center gap-2 text-sm text-amber-950"
+                      >
+                        <span className="min-w-0 flex-1">{job.label}</span>
+                        <button
+                          type="button"
+                          className="shrink-0 rounded bg-amber-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-amber-600"
+                          onClick={() =>
+                            walkable ? ask(`onsite:${place}`) : openOnSite(place)
+                          }
+                          aria-label={`Go: ${job.label}`}
+                        >
+                          Go
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
+            <ul className="mt-3 space-y-1.5">
+              {interactionsAt(spot).map((interaction) => (
+                <li key={interaction.id}>
+                  <InteractionButton
+                    interaction={interaction}
+                    unread={unread}
+                    lunchOpen={lunchAvailability(work) === 'available'}
+                    onClick={() => doInteract(interaction.id)}
+                  />
+                </li>
+              ))}
             </ul>
+            {webgl && (
+              <p className="mt-3 text-xs text-slate-500">
+                Tip: walk with W, A, S and D (or click the blue rings on the floor), and
+                press E next to people and things, or click them.
+              </p>
+            )}
           </div>
-        )}
-        <ul className="mt-3 space-y-1.5">
-          {interactionsAt(spot).map((interaction) => (
-            <li key={interaction.id}>
-              <InteractionButton
-                interaction={interaction}
-                unread={unread}
-                lunchOpen={lunchAvailability(work) === 'available'}
-                onClick={() => doInteract(interaction.id)}
-              />
-            </li>
-          ))}
-        </ul>
-        {webgl && (
-          <p className="mt-3 text-xs text-slate-500">
-            Tip: walk with W, A, S and D (or click the blue rings on the floor), and press
-            E next to people and things, or click them.
-          </p>
-        )}
-      </section>
+        </section>
+      </HudSlot>
 
       {/* Places */}
-      <nav
-        className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-xl bg-white/90 p-1.5 shadow-lg ring-1 ring-slate-200 backdrop-blur"
-        aria-label="Places"
-      >
-        {SPOTS.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => go(s.id)}
-            aria-current={s.id === spot ? 'location' : undefined}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${
-              s.id === spot
-                ? 'bg-blue-700 text-white'
-                : 'text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            {fill(s.name)}
-          </button>
-        ))}
-      </nav>
+      <HudSlot zone="bottom-center" order={2}>
+        <nav
+          className="flex max-w-full flex-wrap justify-center gap-1 rounded-xl bg-white/90 p-1.5 shadow-lg ring-1 ring-slate-200 backdrop-blur"
+          aria-label="Places"
+        >
+          {SPOTS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => go(s.id)}
+              aria-current={s.id === spot ? 'location' : undefined}
+              className={`rounded-lg px-4 py-2 text-sm font-medium ${
+                s.id === spot
+                  ? 'bg-blue-700 text-white'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              {fill(s.name)}
+            </button>
+          ))}
+        </nav>
+      </HudSlot>
 
       {onsite &&
         (() => {
@@ -715,53 +767,61 @@ export function OfficeView({
           ) : null
         })()}
       {storyScene && (
-        <StoryScenePanel
-          key={storyScene.scene.id}
-          scene={storyScene.scene}
-          name={storyScene.name}
-          mission={storyScene.mission}
-          lines={storyScene.lines}
-          onChoose={(choice) =>
-            void onAct((p) => playScene(p, storyScene.scene.id, choice))
-          }
-          onClose={() => setStoryScene(null)}
-        />
+        <HudSlot zone="right">
+          <StoryScenePanel
+            className="max-h-full w-[28rem] max-w-full overflow-y-auto"
+            key={storyScene.scene.id}
+            scene={storyScene.scene}
+            name={storyScene.name}
+            mission={storyScene.mission}
+            lines={storyScene.lines}
+            onChoose={(choice) =>
+              void onAct((p) => playScene(p, storyScene.scene.id, choice))
+            }
+            onClose={() => setStoryScene(null)}
+          />
+        </HudSlot>
       )}
       {encounter && (
-        <EncounterPanel
-          key={encounter.who.id}
-          who={encounter.who}
-          situation={encounter.situation}
-          relation={relationOf(profile, encounter.who.id)}
-          onSay={(outcome, option) =>
-            void onAct((p) =>
-              holdEncounter(
-                p,
-                option === 'join' && encounter.with
-                  ? [encounter.who.id, encounter.with.id]
-                  : [encounter.who.id],
-                outcome,
-                'office',
-              ),
-            )
-          }
-          onClose={() => setEncounter(null)}
-        />
+        <HudSlot zone="right">
+          <EncounterPanel
+            className="max-h-full w-[28rem] max-w-full overflow-y-auto"
+            key={encounter.who.id}
+            who={encounter.who}
+            situation={encounter.situation}
+            relation={relationOf(profile, encounter.who.id)}
+            onSay={(outcome, option) =>
+              void onAct((p) =>
+                holdEncounter(
+                  p,
+                  option === 'join' && encounter.with
+                    ? [encounter.who.id, encounter.with.id]
+                    : [encounter.who.id],
+                  outcome,
+                  'office',
+                ),
+              )
+            }
+            onClose={() => setEncounter(null)}
+          />
+        </HudSlot>
       )}
       {dialogue && (
-        <DialogueBox
-          dialogue={dialogue}
-          onAction={(action) => {
-            setDialogue(null)
-            onUseComputer(action.open)
-          }}
-          onChoose={(choice) => choose(dialogue, choice)}
-          onClose={() => {
-            if (dialogue.id === 'leave-early') void onAct(endDay)
-            setDialogue(null)
-          }}
-          closeLabel={dialogue.id === 'leave-early' ? 'Go home anyway' : undefined}
-        />
+        <HudSlot zone="right">
+          <DialogueBox
+            dialogue={dialogue}
+            onAction={(action) => {
+              setDialogue(null)
+              onUseComputer(action.open)
+            }}
+            onChoose={(choice) => choose(dialogue, choice)}
+            onClose={() => {
+              if (dialogue.id === 'leave-early') void onAct(endDay)
+              setDialogue(null)
+            }}
+            closeLabel={dialogue.id === 'leave-early' ? 'Go home anyway' : undefined}
+          />
+        </HudSlot>
       )}
     </div>
   )
@@ -842,7 +902,7 @@ function DialogueBox({
       onKeyDown={(event) => {
         if (event.key === 'Escape') onClose()
       }}
-      className="absolute right-4 bottom-20 z-20 outline-none max-h-[calc(100%-7rem)] w-[28rem] max-w-[calc(100%-2rem)] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl ring-1 ring-slate-200"
+      className="max-h-full w-[28rem] max-w-full overflow-y-auto rounded-xl bg-white p-5 shadow-lg ring-1 ring-slate-200 outline-none"
       role="dialog"
       aria-label={dialogue.title}
       data-testid="office-dialogue"

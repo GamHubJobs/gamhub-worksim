@@ -38,7 +38,7 @@ test('the stand-up, attended in person: walked to, listened to, an update given'
     .getByRole('button', { name: /Join the team stand-up/ })
   await expect(join).toBeVisible({ timeout: 30_000 })
   await join.click()
-  const activity = page.getByTestId('office-3d').getByTestId('activity')
+  const activity = page.getByTestId('activity')
   await expect(activity).toContainText('Listening to the team', { timeout: 120_000 })
   // In the circle at the whiteboard.
   const me = await player(page)
@@ -65,7 +65,7 @@ test('walking away from the stand-up part way is not attending it', async ({ pag
     .getByTestId('meeting-now')
     .getByRole('button', { name: /Join the team stand-up/ })
     .click()
-  const activity = page.getByTestId('office-3d').getByTestId('activity')
+  const activity = page.getByTestId('activity')
   await expect(activity).toContainText('Listening to the team', { timeout: 180_000 })
   // Walk off.
   await page.getByTestId('office-3d').focus()

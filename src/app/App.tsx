@@ -3,6 +3,7 @@
  * either the first-day screen or the desktop. Also owns storage health,
  * backups and saving before another tab takes over.
  */
+import { HudProvider } from '../ui/hud/Hud'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppStatus } from '../ui/AppStatus'
 import { Onboarding } from '../desktop/Onboarding'
@@ -188,17 +189,19 @@ export function App({ session, tabLock }: AppProps) {
         <Suspense
           fallback={<p className="p-6 text-slate-500">Opening GamHub WorkSim…</p>}
         >
-          <Desktop
-            // A different career save is a different desk: start fresh.
-            key={career.state.profile.id}
-            profile={career.state.profile}
-            career={career}
-            storageWarning={storageWarning}
-            onOpenStorage={() => {
-              refreshStorageInfo()
-              setStorageOpen(true)
-            }}
-          />
+          <HudProvider>
+            <Desktop
+              // A different career save is a different desk: start fresh.
+              key={career.state.profile.id}
+              profile={career.state.profile}
+              career={career}
+              storageWarning={storageWarning}
+              onOpenStorage={() => {
+                refreshStorageInfo()
+                setStorageOpen(true)
+              }}
+            />
+          </HudProvider>
         </Suspense>
       )}
 

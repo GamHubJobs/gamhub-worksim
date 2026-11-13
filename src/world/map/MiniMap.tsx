@@ -42,7 +42,7 @@ export function MiniMap({ profile }: { profile: ProfileData }) {
       type="button"
       onClick={openMap}
       data-testid="minimap"
-      className="pointer-events-auto relative h-40 w-40 overflow-hidden rounded-full bg-slate-900/85 shadow-lg ring-2 ring-white/30"
+      className="hud-minimap pointer-events-auto relative h-40 w-40 overflow-hidden rounded-full bg-slate-900/85 shadow-lg ring-2 ring-white/30"
     >
       <span className="sr-only">Mini-map: open the world map</span>
       <svg

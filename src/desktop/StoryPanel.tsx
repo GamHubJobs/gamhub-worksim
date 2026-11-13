@@ -5,6 +5,7 @@
  * and the tracker that stays on screen while playing: the mission under way,
  * what to do now and where, and a mission's summary when it is done.
  */
+import { HudSlot } from '../ui/hud/Hud'
 import { useEffect, useRef } from 'react'
 import { trustOf, trustReading } from '../game/relationships'
 import type { ProfileData } from '../game/career'
@@ -306,50 +307,69 @@ export function StoryTracker({ profile, act }: { profile: ProfileData; act: Act 
   const finished = missionById(campaign, story.finished)
   if (finished)
     return (
-      <div
-        role="status"
-        data-testid="story-finished"
-        className="fixed top-16 left-1/2 z-40 w-[28rem] max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-xl bg-slate-900/95 p-4 text-white shadow-2xl"
+      <HudSlot
+        zone="top-center"
+        fallback={(c) => (
+          <div className="fixed top-16 left-1/2 z-40 w-[28rem] max-w-[calc(100%-2rem)] -translate-x-1/2">
+            {c}
+          </div>
+        )}
       >
-        <p className="text-xs font-semibold tracking-wide text-rose-300 uppercase">
-          Mission complete
-        </p>
-        <p className="text-lg font-semibold">{finished.title}</p>
-        <p className="mt-1 text-sm text-slate-200">{finished.summary(story.flags)}</p>
-        <p className="mt-1 text-xs text-slate-400">
-          {[
-            finished.reward.xp ? `+${finished.reward.xp} XP` : '',
-            ...Object.keys(finished.reward.trust ?? {}).map(
-              (id) => `${campaign.cast[id] ?? id} trusts you more`,
-            ),
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-        <button
-          type="button"
-          onClick={() => void act(seenFinished)}
-          className="mt-2 rounded-md bg-white/15 px-3 py-1 text-sm hover:bg-white/25"
+        <div
+          role="status"
+          data-testid="story-finished"
+          className="w-[28rem] max-w-full rounded-xl bg-slate-900/95 p-4 text-white shadow-2xl"
         >
-          Carry on
-        </button>
-      </div>
+          <p className="text-xs font-semibold tracking-wide text-rose-300 uppercase">
+            Mission complete
+          </p>
+          <p className="text-lg font-semibold">{finished.title}</p>
+          <p className="mt-1 text-sm text-slate-200">{finished.summary(story.flags)}</p>
+          <p className="mt-1 text-xs text-slate-400">
+            {[
+              finished.reward.xp ? `+${finished.reward.xp} XP` : '',
+              ...Object.keys(finished.reward.trust ?? {}).map(
+                (id) => `${campaign.cast[id] ?? id} trusts you more`,
+              ),
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+          <button
+            type="button"
+            onClick={() => void act(seenFinished)}
+            className="mt-2 rounded-md bg-white/15 px-3 py-1 text-sm hover:bg-white/25"
+          >
+            Carry on
+          </button>
+        </div>
+      </HudSlot>
     )
   const active = missionById(campaign, story.active)
   const now = currentObjective(campaign, story)
   if (!active || !now) return null
   return (
-    <div
-      role="status"
-      aria-label="Mission"
-      data-testid="story-tracker"
-      className="pointer-events-none fixed top-16 right-4 z-30 w-72 rounded-lg bg-slate-900/85 p-3 text-white shadow-lg"
+    <HudSlot
+      zone="top-right"
+      order={1}
+      passive
+      hideWhen="dialogue"
+      fallback={(c) => (
+        <div className="pointer-events-none fixed top-16 right-4 z-30">{c}</div>
+      )}
     >
-      <p className="text-xs font-semibold tracking-wide text-rose-300 uppercase">
-        {active.title}
-      </p>
-      <p className="text-sm font-medium">{now.label}</p>
-      <p className="text-xs text-slate-300">{WHERE[now.where]}</p>
-    </div>
+      <div
+        role="status"
+        aria-label="Mission"
+        data-testid="story-tracker"
+        className="w-72 max-w-full rounded-lg bg-slate-900/85 p-3 text-white shadow-lg"
+      >
+        <p className="text-xs font-semibold tracking-wide text-rose-300 uppercase">
+          {active.title}
+        </p>
+        <p className="text-sm font-medium">{now.label}</p>
+        <p className="text-xs text-slate-300">{WHERE[now.where]}</p>
+      </div>
+    </HudSlot>
   )
 }

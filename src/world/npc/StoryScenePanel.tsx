@@ -13,7 +13,7 @@ export function StoryScenePanel({
   lines,
   onChoose,
   onClose,
-  className = 'absolute right-4 bottom-20 z-20',
+  className = 'absolute right-4 bottom-20 z-20 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]',
 }: {
   scene: Scene
   /** The speaker's name. */
@@ -55,7 +55,7 @@ export function StoryScenePanel({
       aria-label={`${mission}: ${name}`}
       data-testid="story-scene"
       data-scene={scene.id}
-      className={`visible ${className} max-h-[calc(100%-7rem)] w-[28rem] max-w-[calc(100%-2rem)] overflow-y-auto rounded-xl bg-white p-4 shadow-2xl ring-2 ring-rose-200 outline-none`}
+      className={`visible ${className} w-[28rem] overflow-y-auto rounded-xl bg-white p-4 shadow-lg ring-2 ring-rose-200 outline-none`}
     >
       <p className="text-xs font-semibold tracking-wide text-rose-700 uppercase">
         {mission}
