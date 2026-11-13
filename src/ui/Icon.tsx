@@ -65,6 +65,8 @@ const PATHS = {
   user: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 9a7 7 0 0 1 14 0',
   server: 'M5 4h14v6H5V4Zm0 10h14v6H5v-6Zm3-7h.01M8 17h.01',
   medical: 'M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6V4Z',
+  engineering:
+    'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0-5v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1',
   legal:
     'M12 4v16M8 20h8M5 7h14M5 7l-2 6a3 3 0 0 0 4 0L5 7Zm14 0-2 6a3 3 0 0 0 4 0l-2-6Z',
   activity: 'M3 12h4l3-7 4 14 3-7h4',

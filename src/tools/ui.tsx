@@ -43,6 +43,7 @@ const WORKSPACES: Record<string, Workspace> = {
   itops: lazy(() => import('./itops/ItopsWorkspace')),
   clinical: lazy(() => import('./clinical/ClinicalWorkspace')),
   legal: lazy(() => import('./legal/LegalWorkspace')),
+  engineering: lazy(() => import('./engineering/EngineeringWorkspace')),
   network: lazy(() => import('./network/NetworkWorkspace')),
   social: lazy(() => import('./social/SocialWorkspace')),
   seo: lazy(() => import('./seo/SeoWorkspace')),

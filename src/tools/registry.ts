@@ -14,6 +14,7 @@ import { soc } from './soc/definition'
 import { itops } from './itops/definition'
 import { clinical } from './clinical/definition'
 import { legal } from './legal/definition'
+import { engineering } from './engineering/definition'
 import { devices } from './devices/definition'
 import { directory } from './directory/definition'
 import { network } from './network/definition'
@@ -30,6 +31,7 @@ const TOOLS: AnyTool[] = [
   itops,
   clinical,
   legal,
+  engineering,
   network,
   social,
   seo,

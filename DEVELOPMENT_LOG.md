@@ -190,6 +190,55 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Engineering 1: Works Desk, an engineering firm's tools (simulation)
+
+Part 5 of the consolidated prompt, in stages. This stage is the tools; the
+career follows.
+
+### Key decision
+
+- **Real formulas, simplified data.** The formulas are standard textbook
+  ones: Ohm's law, P = I²R, M = PL/4, σ = M/Z, gear ratios and the
+  critical path.
+- The catalogues, limits and safety factor are simplified and fictional, and
+  every screen says real engineering needs the applicable codes and a
+  qualified engineer.
+
+### What was built: one section per discipline
+
+- **Circuits (electrical):**
+  - a series LED circuit with a schematic;
+  - live analysis: total resistance, current, each part's voltage drop and
+    power;
+  - warnings for an over-current LED, an overheating resistor or a short;
+  - resistors chosen from the standard E12 values and power ratings.
+- **Beams (structural, educational):**
+  - a simply supported beam with a load diagram, and its bending moment;
+  - every catalogue section's stress and utilisation;
+  - the lightest safe section to choose.
+- **Gear trains (mechanical):** stages of gear pairs, the overall ratio and
+  the output speed against the target.
+- **Project planning (industrial):** a schedule with dependencies and bars;
+  the player marks the critical path.
+- **Maintenance:**
+  - a work order done in the safe order: permit, isolate, lock and tag,
+    prove dead, repair, remove locks, test run (starting the repair
+    earlier is refused, with the reason);
+  - it closes only with a reading within the limit.
+- **Inspection (quality):** parts measured against a drawing's nominal
+  sizes and tolerances, then accepted or rejected.
+- **Environment:** monitoring results against permit limits; any result
+  over its limit is flagged, with an action.
+- **Checks for tasks,** one per discipline.
+
+### Tests
+
+- **Unit tests:**
+  - the circuit maths (100 mA, then 17.9 mA with 560 Ω and 0.179 W);
+  - the beam (30 kN·m; NB-200 at 157.9 N/mm² is the lightest that passes);
+  - gears, the critical path (24 days, A-B-E-F) and lockout order;
+  - tolerances and sample flags.
+
 ## 2026-11-13 · Law 2: the career at Kestrel & Vane LLP, with a mock hearing and the story “Good Law”
 
 Full description: `docs/LEGAL.md`.
