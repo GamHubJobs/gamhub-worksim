@@ -9,6 +9,8 @@
  */
 import { useEffect, useState } from 'react'
 import { BUTTON, CARD, Pill, type SectionProps } from './kit'
+import { useAppHint } from '../../guide/appHints'
+import { cabinetHint } from '../../guide/stepHints'
 import { OFFICE_CABINET } from './data'
 import { nodeState, powerCycle } from './model'
 import type { Node } from './schema'
@@ -49,6 +51,7 @@ export default function CommsCabinet(p: SectionProps) {
     if (!r.problems.length) setBooting((b) => [...b, n.id])
   }
   const selected = devices.find((d) => d.id === inspect)
+  useAppHint(cabinetHint(devices, p.state, inspect, off, booting))
 
   return (
     <div className="space-y-3 p-4" data-testid="comms-cabinet">

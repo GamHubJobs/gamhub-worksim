@@ -99,6 +99,11 @@ import {
 import { DesktopSurface, type DesktopIcon, type NewItem } from './windows/DesktopSurface'
 import { StartMenu } from './windows/StartMenu'
 import { RecycleBinWindow, SettingsWindow } from './windows/SystemWindows'
+import { GuideBar } from '../guide/GuideBar'
+import { TourOverlay } from '../guide/TourOverlay'
+import { getTour, tourForWindow, type TourStep } from '../guide/tours'
+import { isBeginner, nextStep } from '../game/nextStep'
+import type { GuideState } from '../persistence/schemas'
 import { Taskbar, TrayIcons, type LaunchableApp } from './windows/Taskbar'
 import {
   closeWindow,
@@ -222,7 +227,7 @@ const TOOL_COLOR = '#2d6a8f'
 function initialArea(): Area {
   return {
     w: globalThis.innerWidth || 1280,
-    h: Math.max(300, (globalThis.innerHeight || 800) - 40),
+    h: Math.max(300, (globalThis.innerHeight || 800) - 68),
   }
 }
 
@@ -559,6 +564,148 @@ export function Desktop({
     colors[app.key] =
       APP_COLORS[app.key] ?? (app.key.startsWith('tool:') ? TOOL_COLOR : '#1f6fbf')
 
+  // Guidance (src/guide): the next step, the guided tours, help, and closing safely.
+  const guide = profile.work.guide
+  const place: 'office' | 'computer' =
+    view.app === 'office' || dayOver ? 'office' : 'computer'
+  const step = nextStep(profile, { place, app: focused?.key ?? null })
+  const beginner = isBeginner(profile)
+  const [tour, setTour] = useState<{ id: string; step: number } | null>(null)
+  const [helpSection, setHelpSection] = useState<'topics' | 'tours'>('topics')
+  const [closing, setClosing] = useState<{ key: string; title: string } | null>(null)
+  const setGuide = (change: (g: GuideState) => GuideState) =>
+    void act((p) => ({ ...p, work: { ...p.work, guide: change(p.work.guide) } }))
+  const viewOfKey = (key: string): View =>
+    key.startsWith('tool:')
+      ? ({ app: 'tool', tool: key.slice(5) } as View)
+      : ({ app: key } as View)
+  function startTour(id: string, from = 0) {
+    const t = getTour(id)
+    if (!t) return
+    setHelpOpen(false)
+    setHelpSection('topics')
+    setMenu(false)
+    if (t.app) {
+      if (view.app === 'office') setView(viewOfKey(t.app))
+      else launch(viewOfKey(t.app))
+    }
+    setTour({ id, step: from })
+  }
+  function prepareTour(s: TourStep) {
+    if (s.place === 'office' && view.app !== 'office')
+      setView({ app: 'office', spot: 'desk' })
+    else if (s.place === 'computer' && view.app === 'office')
+      setView(s.open ? viewOfKey(s.open) : { app: 'mail' })
+    else if (s.open) launch(viewOfKey(s.open))
+  }
+  // A new player is shown round once (not in automated browsers, unless asked with ?tour).
+  const firstVisit =
+    !guide.tours.intro && Object.keys(profile.assignments).length === 0 && !dayOver
+  useEffect(() => {
+    const asked = new URLSearchParams(window.location.search).has('tour')
+    if (firstVisit && (asked || !navigator.webdriver)) setTour({ id: 'intro', step: 0 })
+    // Only on arriving.
+    // oxlint-disable-next-line exhaustive-deps
+  }, [])
+  const activeTour = tour ? getTour(tour.id) : undefined
+  const guideBar = (
+    <GuideBar
+      step={step}
+      beginner={beginner}
+      collapsed={guide.hintsCollapsed}
+      place={place}
+      onCollapse={(c) => setGuide((g) => ({ ...g, hintsCollapsed: c }))}
+      offerTour={!guide.tours.intro}
+      onTour={() => startTour('intro')}
+    />
+  )
+  const guideLayer = (
+    <>
+      {place === 'office' && !dayOver && (
+        <GuideBar
+          step={step}
+          beginner={beginner}
+          collapsed={guide.hintsCollapsed}
+          place={place}
+          onCollapse={(c) => setGuide((g) => ({ ...g, hintsCollapsed: c }))}
+          offerTour={!guide.tours.intro}
+          onTour={() => startTour('intro')}
+        />
+      )}
+      {activeTour && tour && (
+        <TourOverlay
+          key={activeTour.id}
+          tour={activeTour}
+          index={tour.step}
+          onStep={(n) => setTour((t) => (t ? { ...t, step: n } : t))}
+          prepare={prepareTour}
+          onExit={(status, at) => {
+            setGuide((g) => ({
+              ...g,
+              tours: { ...g.tours, [activeTour.id]: { status, step: at } },
+            }))
+            setTour(null)
+          }}
+        />
+      )}
+      {helpOpen && (
+        <HelpPanel
+          onClose={() => {
+            setHelpOpen(false)
+            setHelpSection('topics')
+          }}
+          guide={guide}
+          onStartTour={startTour}
+          careerTools={launchables
+            .filter((a) => a.key.startsWith('tool:'))
+            .map((a) => a.key.slice(5))}
+          initialSection={helpSection}
+        />
+      )}
+      {closing && (
+        <div
+          className="fixed inset-0 z-[85] flex items-center justify-center bg-slate-900/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="close-title"
+          data-testid="close-confirm"
+        >
+          <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl">
+            <h2 id="close-title" className="text-lg font-semibold text-slate-900">
+              Close {closing.title}?
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Your latest changes in {closing.title} could not be saved yet. Keep it open
+              and try again in a moment, or close it anyway (the changes are kept for
+              recovery when you open it again).
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setClosing(null)}
+                className="rounded-md px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+              >
+                Keep it open
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const key = closing.key
+                  setClosing(null)
+                  setDesk((d) => closeWindow(d, key))
+                }}
+                className="rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-800"
+              >
+                Close anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+
   const header = (
     <>
       <header className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-2">
@@ -657,7 +804,7 @@ export function Desktop({
   if (dayOver || view.app === 'office') {
     return (
       <div
-        className="flex h-screen flex-col overflow-hidden bg-slate-100"
+        className="flex h-screen flex-col overflow-clip bg-slate-100"
         data-testid="desktop"
       >
         {header}
@@ -670,7 +817,14 @@ export function Desktop({
             onClose={() => setMenu(false)}
             onStory={() => setStoryOpen(true)}
             onSound={() => setSoundOpen(true)}
-            onHelp={() => setHelpOpen(true)}
+            onHelp={() => {
+              setHelpSection('topics')
+              setHelpOpen(true)
+            }}
+            onTours={() => {
+              setHelpSection('tours')
+              setHelpOpen(true)
+            }}
             onStorage={onOpenStorage}
             onMainMenu={() => setScreen('main')}
             onScreen={setScreen}
@@ -693,7 +847,7 @@ export function Desktop({
             onClose={() => setScreen(null)}
           />
         )}
-        {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
+        {guideLayer}
         {soundOpen && <AudioSettingsPanel onClose={() => setSoundOpen(false)} />}
         <SoundCaptions />
         {dayOver && lifePhase(profile) === 'work' ? (
@@ -1217,10 +1371,10 @@ export function Desktop({
 
   return (
     <div
-      className="flex h-screen flex-col overflow-hidden bg-[#0b4f9c]"
+      className="flex h-screen flex-col overflow-clip bg-[#0b4f9c]"
       data-testid="desktop"
     >
-      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
+      {guideLayer}
       {soundOpen && <AudioSettingsPanel onClose={() => setSoundOpen(false)} />}
       <SoundCaptions />
       <AudioScene scene={{ place: 'computer', time: timeOfDay(profile.work.minute) }} />
@@ -1264,7 +1418,16 @@ export function Desktop({
                 // Work an app still holds (Grid Craft saves a moment after a change) is
                 // saved before its window goes.
                 onClose={() =>
-                  void saveAll().finally(() => setDesk((d) => closeWindow(d, key)))
+                  void saveAll()
+                    .catch(() => false)
+                    .then((saved) =>
+                      saved
+                        ? setDesk((d) => closeWindow(d, key))
+                        : setClosing({ key, title: meta.title }),
+                    )
+                }
+                onTour={
+                  tourForWindow(key) ? () => startTour(tourForWindow(key)!.id) : undefined
                 }
                 onMove={(x, y) => setDesk((d) => moveWindow(d, key, x, y, area))}
                 onResize={(w, h) => setDesk((d) => resizeWindow(d, key, w, h, area))}
@@ -1288,6 +1451,7 @@ export function Desktop({
         </DesktopSurface>
       </AiHubContext.Provider>
 
+      {guideBar}
       <Taskbar
         apps={launchables}
         openKeys={new Set(desk.windows.map((w) => w.key))}
@@ -1314,7 +1478,14 @@ export function Desktop({
             }}
             onProfile={() => launch({ app: 'career' })}
             onSettings={() => openSystem('settings')}
-            onHelp={() => setHelpOpen(true)}
+            onHelp={() => {
+              setHelpSection('topics')
+              setHelpOpen(true)
+            }}
+            onTour={() => {
+              setHelpSection('tours')
+              setHelpOpen(true)
+            }}
             onStorage={onOpenStorage}
             onLeaveDesk={leaveDesk}
             onClose={close}

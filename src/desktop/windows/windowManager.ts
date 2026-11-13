@@ -205,13 +205,15 @@ export function fitToArea(desk: Desk, area: Area): Desk {
   return {
     windows: desk.windows.map((w) => {
       const width = Math.max(MIN_SIZE.w, Math.min(w.w, area.w))
-      const height = Math.max(MIN_SIZE.h, Math.min(w.h, area.h))
+      const y = Math.max(0, Math.min(area.h - 40, w.y))
+      // The bottom stays on the desktop too (above the taskbar and the next step).
+      const height = Math.max(MIN_SIZE.h, Math.min(w.h, area.h - y, area.h))
       return {
         ...w,
         w: width,
         h: height,
         x: Math.max(-width + 120, Math.min(area.w - 120, w.x)),
-        y: Math.max(0, Math.min(area.h - 40, w.y)),
+        y: Math.max(0, Math.min(area.h - height, y)),
       }
     }),
   }

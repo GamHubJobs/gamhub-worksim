@@ -37,6 +37,8 @@ import { ReportsPanel } from './ReportsPanel'
 import { arrivedTickets } from '../../game/sla'
 import { presenceOf } from '../../game/presence'
 import { fieldJobsOf } from '../../game/fieldJobs'
+import { useAppHint } from '../../guide/appHints'
+import { queueHint } from '../../guide/stepHints'
 
 interface HelpDeskWindowProps {
   documentId: string
@@ -100,6 +102,10 @@ const SYSTEM_ICONS: Record<SystemId, IconName> = {
   soc: 'shield',
   itops: 'server',
 }
+
+/** The office clock now (absolute minutes), if the player has one. */
+const officeNowFor = (work?: { day: number; minute: number }) =>
+  work ? absoluteTime(work.day, work.minute) : undefined
 
 /** Now, for ticket histories: the real time and the office clock. */
 function officeMoment(work?: { day: number; minute: number }): Moment {
@@ -177,11 +183,20 @@ export function HelpDeskWindow({
   /** The Knowledge Base article open, and the ticket to show (from the Overview). */
   const [article, setArticle] = useState<string | null>(null)
   const [focus, setFocus] = useState<string | undefined>(undefined)
+  // The next step in the queue itself (the Tools publish their own while open).
+  const serviceTab =
+    tab === 'overview' || tab === 'queue' || tab === 'knowledge' || tab === 'reports'
+  const liveContent = state.status === 'ready' ? state.content : null
   const environment = state.status === 'ready' ? state.content.environment : undefined
   const systems = (['network', 'directory', 'devices'] as const).filter(
     (id) => environment?.[id],
   )
 
+  useAppHint(
+    liveContent && serviceTab
+      ? queueHint(liveContent, officeNowFor(profile?.work))
+      : null,
+  )
   const moment = () => officeMoment(profile?.work)
   /** The office clock now (absolute minutes), for SLAs. */
   const officeNow = profile?.work

@@ -9,6 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
+import { HintScope } from '../../guide/appHints'
 import { Icon, type IconName } from '../../ui/Icon'
 import type { AppWindow } from './windowManager'
 
@@ -25,6 +26,7 @@ export function AppWindowFrame({
   onClose,
   onMove,
   onResize,
+  onTour,
   children,
 }: {
   window: AppWindow
@@ -37,6 +39,8 @@ export function AppWindowFrame({
   onClose: () => void
   onMove: (x: number, y: number) => void
   onResize: (w: number, h: number) => void
+  /** Starts this app's guided tour (if it has one). */
+  onTour?: () => void
   children: ReactNode
 }) {
   const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null)
@@ -77,7 +81,7 @@ export function AppWindowFrame({
       data-testid={`window-${win.key}`}
       data-active={active}
       onPointerDownCapture={onFocus}
-      className={`pointer-events-auto absolute flex outline-none flex-col overflow-hidden bg-white ${
+      className={`pointer-events-auto absolute flex outline-none flex-col overflow-clip bg-white ${
         win.maximized
           ? 'inset-0'
           : `border shadow-[0_8px_28px_rgba(0,0,0,0.35)] ${
@@ -110,6 +114,18 @@ export function AppWindowFrame({
       >
         <Icon name={icon} className="mx-2.5 h-4 w-4 shrink-0 text-[#1f6fbf]" />
         <span className="min-w-0 flex-1 truncate text-xs">{title}</span>
+        {onTour && (
+          <button
+            type="button"
+            onClick={onTour}
+            aria-label={`Guided tour of ${title}`}
+            title="Guided tour of this app"
+            className="mr-1 flex h-6 items-center gap-1 rounded px-2 text-[11px] text-slate-600 hover:bg-slate-200"
+          >
+            <Icon name="guide" className="h-3.5 w-3.5" />
+            Tour
+          </button>
+        )}
         <TitleButton label={`Minimise ${title}`} onClick={onMinimize}>
           <span aria-hidden className="block h-px w-2.5 bg-current" />
         </TitleButton>
@@ -128,14 +144,14 @@ export function AppWindowFrame({
         </TitleButton>
         <TitleButton label={`Close ${title}`} onClick={onClose} danger>
           <span aria-hidden className="text-sm leading-none">
-            ✕
+            âœ•
           </span>
         </TitleButton>
       </div>
 
       {/* The app */}
-      <div className="min-h-0 flex-1 overflow-hidden border-t border-slate-200 bg-slate-50">
-        {children}
+      <div className="min-h-0 flex-1 overflow-auto border-t border-slate-200 bg-slate-50">
+        <HintScope.Provider value={showing}>{children}</HintScope.Provider>
       </div>
 
       {/* Resize edges */}

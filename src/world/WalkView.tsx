@@ -286,6 +286,7 @@ export function WalkView({
         <button
           type="button"
           aria-pressed={overhead}
+          data-tour="view-toggle"
           onClick={() => {
             const next = !overhead
             setOverhead(next)

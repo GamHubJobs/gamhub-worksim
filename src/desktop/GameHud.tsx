@@ -158,6 +158,7 @@ export function PauseMenu({
   onStory,
   onSound,
   onHelp,
+  onTours,
   onStorage,
   onMainMenu,
   onScreen,
@@ -166,6 +167,8 @@ export function PauseMenu({
   onStory: () => void
   onSound: () => void
   onHelp: () => void
+  /** The guided tours (take one again, resume a paused one). */
+  onTours?: () => void
   onStorage: () => void
   onMainMenu: () => void
   onScreen: (s: MenuScreen) => void
@@ -184,6 +187,7 @@ export function PauseMenu({
     ['Inventory', go(() => onScreen('inventory'))],
     ['Settings', go(onSound)],
     ['Help', go(onHelp)],
+    ...(onTours ? ([['Guided tours', go(onTours)]] as Array<[string, () => void]>) : []),
     ['Save & backup', go(onStorage)],
     ['Main menu', go(onMainMenu)],
   ]

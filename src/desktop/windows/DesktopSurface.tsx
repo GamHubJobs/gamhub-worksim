@@ -125,7 +125,7 @@ export function DesktopSurface({
   return (
     <div
       ref={surface}
-      className="relative min-h-0 flex-1 overflow-hidden"
+      className="relative min-h-0 flex-1 overflow-clip"
       data-testid="desktop-surface"
       onContextMenu={(event) => {
         // Windows have their own right-click behaviour; only the desktop gets this menu.

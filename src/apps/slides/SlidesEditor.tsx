@@ -802,6 +802,12 @@ export function SlidesEditor({
                         onPointerDown={(event) =>
                           pointerStart(event, shownSelected, handle)
                         }
+                        // On a small slide a handle can cover the middle of a thin
+                        // box: a double-click there still edits it.
+                        onDoubleClick={(event) => {
+                          event.stopPropagation()
+                          startEditing(shownSelected)
+                        }}
                         className="pointer-events-auto absolute rounded-sm border border-blue-600 bg-white"
                         style={handleStyle(handle, 10 / scale)}
                         data-testid={`handle-${handle}`}

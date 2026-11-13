@@ -16,6 +16,8 @@ import {
   type Port,
 } from '../deployment'
 import type { DeploymentRun } from '../schema'
+import { useAppHint } from '../../../guide/appHints'
+import { benchHint } from './benchHint'
 import {
   H,
   spotsFor,
@@ -902,6 +904,7 @@ export function Bench({ run, editable, onConnect, onDisconnect }: BenchProps) {
   const holding = drag?.cable ?? held
   const heldCable = cables.find((c) => c.id === holding)
   const inspected = ports.find((p) => p.id === inspect)
+  useAppHint(benchHint(device, run.cables, heldCable ?? null, view))
   const onView = (v: View) =>
     cables.filter((c) => spots[run.cables[c.id] ?? '']?.view === v).length
 

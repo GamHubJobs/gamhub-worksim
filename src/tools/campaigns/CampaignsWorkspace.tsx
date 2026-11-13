@@ -64,7 +64,13 @@ export default function CampaignsWorkspace({
           )
         })}
       </nav>
-      <div className="min-w-0 flex-1 overflow-y-auto p-5">
+      <div
+        className="min-w-0 flex-1 overflow-y-auto p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-600"
+        // Scrollable, so it can be reached and scrolled with the keyboard.
+        tabIndex={0}
+        role="region"
+        aria-label="Work area"
+      >
         {problems.length > 0 && (
           <ul
             role="alert"

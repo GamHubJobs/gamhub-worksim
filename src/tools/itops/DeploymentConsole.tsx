@@ -8,6 +8,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Icon } from '../../ui/Icon'
 import { BUTTON, CARD, GoThere, INPUT, Pill, PRIMARY, type SectionProps } from './kit'
 import { Bench } from './bench/Bench'
+import { useAppHint } from '../../guide/appHints'
+import { deploymentHint } from '../../guide/stepHints'
 import {
   advance,
   BUILD_FOR_DEPARTMENT,
@@ -889,6 +891,8 @@ function Run({ run, ...p }: SectionProps & { run: DeploymentRun }) {
   const steps = STEPS[run.method]
   const step = currentStep(run)
   const [sop, setSop] = useState(false)
+  // The bench says what to plug in next; every other step, this does.
+  useAppHint(p.onSite && step !== 'cabling' ? deploymentHint(run) : null)
   return (
     <div className="space-y-4" data-testid="deployment-run" data-step={step}>
       <div className="flex flex-wrap items-center gap-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-slate-100">
@@ -942,6 +946,7 @@ export default function Deployment(p: SectionProps) {
   const [hints, setHints] = useState(false)
   const [menu, setMenu] = useState(!run)
   const [docs, setDocs] = useState(false)
+  useAppHint(p.onSite && (!run || menu) ? deploymentHint(null) : null)
   if (!p.onSite)
     return (
       <div className="space-y-4 p-4" data-testid="deployment-menu">

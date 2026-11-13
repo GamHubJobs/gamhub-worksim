@@ -1430,6 +1430,24 @@ export const WorkStateSchema = z.object({
     )
     .max(30)
     .default([]),
+  /**
+   * Guidance: which guided tours were finished, skipped or paused part way
+   * (with the step to resume at), and whether the next-step hint is collapsed.
+   */
+  guide: z
+    .object({
+      tours: z
+        .record(
+          z.string().max(60),
+          z.object({
+            status: z.enum(['done', 'skipped', 'paused']),
+            step: z.number().int().min(0).default(0),
+          }),
+        )
+        .default({}),
+      hintsCollapsed: z.boolean().default(false),
+    })
+    .prefault({}),
 })
 
 /** Current format of player profiles; raise it (with an upgrade) when the shape changes. */
@@ -1602,6 +1620,7 @@ export type TicketActivityKind = (typeof TICKET_ACTIVITY_KINDS)[number]
 export type TicketEnvironment = z.infer<typeof TicketEnvironmentSchema>
 export type Disruption = WorkState['disruptions'][number]
 export type FieldJob = WorkState['fieldJobs'][number]
+export type GuideState = WorkState['guide']
 export type TicketsDocument = z.infer<typeof TicketsDocumentSchema>
 export type CodeFile = z.infer<typeof CodeFileSchema>
 export type CodeContent = z.infer<typeof CodeContentSchema>

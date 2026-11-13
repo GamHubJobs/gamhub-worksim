@@ -17,6 +17,7 @@ export function StartMenu({
   onProfile,
   onSettings,
   onHelp,
+  onTour,
   onStorage,
   onLeaveDesk,
   onClose,
@@ -30,6 +31,8 @@ export function StartMenu({
   onProfile: () => void
   onSettings: () => void
   onHelp: () => void
+  /** The guided tours (replay the introduction or an app's tour). */
+  onTour?: () => void
   onStorage: () => void
   onLeaveDesk: () => void
   onClose: () => void
@@ -109,6 +112,20 @@ export function StartMenu({
               Handbook and help
             </button>
           </li>
+          {onTour && (
+            <li>
+              <button
+                type="button"
+                onClick={run(onTour)}
+                className="flex w-full items-center gap-3 px-3 py-1.5 text-left text-sm hover:bg-white/10"
+              >
+                <span className="flex h-7 w-7 items-center justify-center bg-[#5c5c5c]">
+                  <Icon name="guide" className="h-4 w-4" />
+                </span>
+                Guided tours
+              </button>
+            </li>
+          )}
         </ul>
       </div>
 

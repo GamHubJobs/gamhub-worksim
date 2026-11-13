@@ -29,6 +29,7 @@ import { assetByTag } from '../tools/itops/model'
 import { bookIn, finishRepair, jobFor } from '../tools/itops/repair'
 import type { ItopsState } from '../tools/itops/schema'
 import { Icon } from '../ui/Icon'
+import { useCurrentAppHint } from '../guide/appHints'
 
 const ItopsWorkspace = lazy(() => import('../tools/itops/ItopsWorkspace'))
 
@@ -63,6 +64,8 @@ export function OnSiteWork({
   onClose: () => void
 }) {
   const queue = useSavedDocument(documentId, 'tickets', TicketsContentSchema)
+  // The next step from the close-up itself (state-aware: see guide/stepHints.ts).
+  const hint = useCurrentAppHint()
   const { state, update, flush } = queue
   const [leaving, setLeaving] = useState(false)
   const [benchChoice, setBench] = useState<'repair' | 'deployment' | null>(null)
@@ -179,6 +182,15 @@ export function OnSiteWork({
         />
         <span className="font-semibold">{desk ? `${first}’s desk` : TITLES[place]}</span>
         <span className="text-slate-400">In person, in the office</span>
+        {hint && (
+          <span
+            className="ml-3 min-w-0 truncate rounded bg-amber-400/15 px-2 py-0.5 text-amber-100"
+            data-testid="onsite-hint"
+            title={hint.detail ?? hint.text}
+          >
+            Next: {hint.text}
+          </span>
+        )}
         {place === 'bench' && (
           <span className="ml-4 flex gap-1" role="tablist" aria-label="At the bench">
             {(

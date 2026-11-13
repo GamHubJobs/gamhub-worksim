@@ -190,6 +190,141 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Guidance: window controls, the next step, guided tours and help (all careers)
+
+A global usability round, for every career, app, tool and simulation. Full
+description: `docs/GUIDANCE.md`.
+
+### What was built
+
+- **Window controls:**
+  - **Already in place:** every app window shares one frame with minimise,
+    maximise or restore, and close. Minimised windows keep their state.
+    Windows stay reachable.
+  - **A bug fix (from a report with a screenshot):** on short screens the
+    Career window's title bar and the taskbar had been pushed out of view.
+    An app focusing something scrolled a container that should never scroll.
+    The desktop, its surface and the window frame now use `overflow: clip`.
+  - **Closing safely:** a close whose save fails asks first.
+  - **A Tour button** in the title bar of every app with a tour.
+- **The next step** (`guide/GuideBar.tsx`, `game/nextStep.ts`): always on
+  screen. In the office it is a card at the bottom left; at the computer it
+  is a strip docked above the taskbar, and the windows end above it, so it
+  never covers an app (its detail opens upwards only when asked).
+  - **What it shows:** what the screen in front says, live and state-aware
+    (`guide/appHints.ts`, `guide/stepHints.ts`), or otherwise the game's own
+    next step.
+  - **Live hints:**
+    - the physical setup bench names the cable still missing and its port,
+      a lead in the wrong socket first, and which side to turn the laptop;
+    - the Repair Bench says what is still to do on that laptop;
+    - the comms cabinet says to find, then power-cycle, only the hung device;
+    - Computer Deployment points to the SOP without giving its answers;
+    - the Help Desk queue names the most urgent ticket and what it still
+      needs.
+  - **The game's own next step:** a meeting that is on, a colleague who
+    wants a word, hands-on work, unread mail, the task in hand and its next
+    unticked step, or submitting when every step is done.
+  - **Detail:** beginners get it with the keys; experienced players get the
+    short version, with More.
+  - **Collapsing** is remembered. In an office close-up, the close-up's
+    header shows the next step instead.
+- **Guided tours** (`guide/tours.ts`, `guide/TourOverlay.tsx`):
+  - **The tours:**
+    - the introduction (14 steps covering all twelve subjects asked for);
+    - one per app (12);
+    - one per profession tool, made from the tool's own guide (accounting,
+      marketing, data and IT).
+  - **How they show:**
+    - the real element is outlined and the rest dimmed, with a card beside it
+      that does not cover it;
+    - Back, Next, Skip and Pause, and the arrow keys and Esc;
+    - steps that need the office, the computer or an app open take the
+      player there.
+  - **Where to start one:** the Start menu, the game menu, Help, and a
+    window's title bar.
+  - **On a first visit:** new players get the introduction once.
+  - **Progress is kept** with the player (taken, skipped, or paused at a
+    step, resumed from Help). Old saves get the defaults.
+- **The help centre** (`ui/HelpPanel.tsx`): searchable, with Getting
+  started, Guided tours, Keyboard shortcuts, and the guides to the career's
+  own tools (each with its tour).
+
+### Tests
+
+- **Unit** (`guide/guide.test.ts`, 10):
+  - the next step in the office and at the computer (mail, start, the next
+    unticked step, submit, hands-on work first);
+  - the bench hint with the dock powered but no network lead: it names the
+    network lead and its port, not the opening instructions; a lead in the
+    VOICE socket first; turning the laptop;
+  - the Repair Bench hint through every stage of a repair;
+  - the cabinet hint, and deployment hints that never contain the SOP's
+    password;
+  - the queue hint (assign, then what the systems show);
+  - every app and tool has a tour made from its own guide;
+  - old saves get the guidance defaults.
+- **Browser** (`tests/e2e/guidance.spec.ts`, 3):
+  - **Window controls** on a 600-pixel-high screen, the size in the report:
+    the title bar and taskbar on screen, minimise and restore from the
+    taskbar, maximise and restore to the same size, close.
+  - **The next step:** in the office and at the computer, collapsed and
+    still collapsed after a reload.
+  - **The tours:**
+    - the introduction on a first visit, with Next, the arrow keys and
+      Back, then paused;
+    - resumed from Help (which lists every tour, its status and the tools'
+      tours), on to the computer steps where it opens Mail to show the
+      window controls, then skipped;
+    - the Tasks tour from its title bar, finished;
+    - help searched, the shortcuts, and "Take it again".
+- **Found and fixed while testing:**
+  - the tour forgot its step when it moved the player between the office and
+    the computer (the step is now kept by the desktop);
+  - the spotlight did not dim at the computer, because the tours were rebuilt
+    on every render (they are now built once), and the dimming is now four
+    panels round the spotlight;
+  - Help reopened on the tours tab after a tour had been started from it.
+- **Results:**
+  - `npm run check` passes: formatting, lint, types and 2,577 unit tests.
+  - The production build passes.
+  - **Two full Chromium browser runs** (242 tests, on a busy machine):
+    - the first: 231 passed, 6 flaky, 2 failed;
+    - the second, after the fixes below: 228 passed, 5 flaky, 6 failed.
+  - **Every failure re-run on its own:** all pass except the real regressions
+    below, which were fixed and re-run. The rest were the load: the desktop
+    or a 3D scene not ready within a few seconds, an autosave finishing
+    before it was looked for, a timing test.
+- **Regressions the full runs found, all fixed:**
+  - **A full first week:** the next-step card's tour link sat over Grid
+    Craft's sheet tabs, so a tab could not be clicked. The bar is now a strip
+    docked above the taskbar at the computer, and the windows' area ends
+    above it.
+  - **Layout fixes that followed** from the shorter work area:
+    - the first window size allows for the strip;
+    - a window's contents scroll when an app needs more room than its
+      window (the title bar stays fixed above);
+    - fitting to the screen keeps a window's bottom edge on the desktop too.
+  - **Ad Campaigns accessibility:** its work area could now scroll without
+    being reachable by keyboard. The work area of the eight tools built the
+    same way (Ad Campaigns, Analytics, API, Books, Data Studio, Directory,
+    SEO, Social) can now be reached with Tab, has a focus ring and a label.
+  - **Deck Craft:** on a smaller slide a resize handle could cover the
+    middle of a thin text box, so a double-click selected it instead of
+    editing it. Double-clicking a handle of the selected box now edits it
+    too.
+
+### Limits
+
+- **Tours explain each app's main screen.** Inside an app, a part that only
+  exists once a file is open is explained over its window.
+- **Live hints exist for the IT simulations and the Help Desk queue.** Other
+  apps get the game's next step from the task's steps.
+- **At the computer the strip takes 28 pixels** of height, even when
+  collapsed (it then shows only its button).
+
+---
+
 ## 2026-11-13 · IT Help Desk 11: hands-on IT work in person, in the office
 
 Hardware support is now done by walking to the equipment in the 3D office

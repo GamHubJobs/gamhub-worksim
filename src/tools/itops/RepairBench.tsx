@@ -7,6 +7,8 @@
  */
 import { useState } from 'react'
 import { BUTTON, CARD, GoThere, Pill, PRIMARY, type SectionProps } from './kit'
+import { useAppHint } from '../../guide/appHints'
+import { repairHint } from '../../guide/stepHints'
 import { assetByTag, personById } from './model'
 import {
   bookable,
@@ -311,6 +313,7 @@ export default function RepairBench(p: SectionProps) {
   const asset = tag ? assetByTag(state, tag) : undefined
   // On the bench: stock laptops are here already; a colleague's is collected from their desk.
   const waiting = bookable(state).filter((a) => !a.assignedTo)
+  useAppHint(p.onSite ? repairHint(state, job ? tag : null) : null)
 
   if (!p.onSite)
     return (

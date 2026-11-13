@@ -61,6 +61,7 @@ export function startingWorkState(seed = 0): WorkState {
     disruptions: [],
     kbBookmarks: [],
     fieldJobs: [],
+    guide: { tours: {}, hintsCollapsed: false },
   }
 }
 
