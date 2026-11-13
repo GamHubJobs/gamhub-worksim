@@ -8,7 +8,7 @@ import { AskAiMenu } from '../ai/AskAiMenu'
 import { useAiApply } from '../ai/hub'
 import type { SubmissionResult } from '../../app/useCareer'
 import { getAssignment } from '../../content/assignments'
-import { COMPANY } from '../../content/company'
+import { activeEmployer } from '../../content/departments'
 import { getPerson } from '../../content/departments'
 import { personFor, senderOf } from '../../game/mailSender'
 import { getCase } from '../../content/cases'
@@ -362,7 +362,7 @@ function MessageView({
         </button>
       )}
       <p className="mt-10 border-t border-slate-100 pt-3 text-xs text-slate-400">
-        {COMPANY.name} internal mail
+        {activeEmployer().name} internal mail
       </p>
     </article>
   )

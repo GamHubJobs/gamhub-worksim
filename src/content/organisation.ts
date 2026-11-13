@@ -58,6 +58,15 @@ export const ORG_DEPARTMENTS: OrgDepartment[] = [
     quarterBudget: 25000,
     committed: 0.7,
   },
+  // Not part of Cobalt Ridge: the healthcare career's ward at Riverside
+  // Community Hospital, so its approvals have a budget of their own.
+  {
+    id: 'ward',
+    name: 'Ward 4 (Medical), Riverside Community Hospital',
+    head: { name: 'Grace Mbeki', role: 'Ward Manager' },
+    quarterBudget: 22000,
+    committed: 0.85,
+  },
   {
     id: 'people',
     name: 'People & Culture',

@@ -4,7 +4,13 @@ import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
 import type { ToolDefinition } from '../types'
 import { sampleClinical } from './data'
-import { latestVitals, medicineAlerts, patientById, privacyBreaches } from './model'
+import {
+  labelMatches,
+  latestVitals,
+  medicineAlerts,
+  patientById,
+  privacyBreaches,
+} from './model'
 import { ClinicalStateSchema, type ClinicalState } from './schema'
 
 const Mentions = z.array(z.array(z.string()).min(1)).default([])
@@ -67,6 +73,8 @@ export const ClinicalCheckSchema = z.discriminatedUnion('type', [
   }),
   /** No medicine with a safety alert was verified, dispensed or given. */
   FileCheckBaseSchema.extend({ type: z.literal('no-unsafe-medicine') }),
+  /** A specimen was labelled with exactly the patient's name and date of birth. */
+  FileCheckBaseSchema.extend({ type: z.literal('lab-label'), order: z.string() }),
 ])
 
 export type ClinicalCheck = z.infer<typeof ClinicalCheckSchema>
@@ -208,6 +216,15 @@ function gradeCheck(check: ClinicalCheck, s: ClinicalState) {
       if (check.bed && p.bed !== check.bed)
         return checkResult(check, 0.5, [`${p.name} is in ${p.bed}, not ${check.bed}.`])
       return checkResult(check, 1, [])
+    }
+    case 'lab-label': {
+      const lab = s.labs.find((l) => l.id === check.order)
+      if (!lab?.label) return checkResult(check, 0, ['The specimen was not labelled.'])
+      return labelMatches(s, lab)
+        ? checkResult(check, 1, [])
+        : checkResult(check, 0, [
+            `The label says ${lab.label.name}, born ${lab.label.dob}: it does not match the patient.`,
+          ])
     }
     case 'no-unsafe-medicine': {
       const unsafe = s.meds.filter(

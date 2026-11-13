@@ -23,7 +23,7 @@ import {
   type BusinessId,
   type JobAd,
 } from '../content/careerLife'
-import { COMPANY } from '../content/company'
+import { activeEmployer } from '../content/departments'
 import { REVIEW_RATINGS } from '../content/schemas'
 import { LATEST_BEDTIME, WEEKLY_PAY, formatMoney } from '../content/life'
 import type { Life } from '../persistence/schemas'
@@ -446,7 +446,7 @@ export function startBusiness(profile: ProfileData, id: BusinessId): ProfileData
   )
   life = note(
     life,
-    `Started a side business: ${business.name}, declared to ${COMPANY.name}`,
+    `Started a side business: ${business.name}, declared to ${activeEmployer().name}`,
   )
   return withCareer(
     profile,

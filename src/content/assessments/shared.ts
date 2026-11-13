@@ -12,6 +12,7 @@
  * These are simulated workplace assessments, not qualifications.
  */
 import type { CaseInput } from '../cases/schema'
+import { employerFor } from '../departments'
 
 export const gbp = (n: number) =>
   `£${n.toLocaleString('en-GB', Number.isInteger(n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -63,7 +64,7 @@ export function assessment(base: Base): CaseInput {
     from: {
       name: 'the readiness panel',
       role: 'Career readiness assessment',
-      organisation: 'Cobalt Ridge',
+      organisation: employerFor(base.careerId).shortName,
     },
     trigger: {},
     deadlineHours: 3,

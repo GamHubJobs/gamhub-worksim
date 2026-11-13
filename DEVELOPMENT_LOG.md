@@ -190,6 +190,65 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Healthcare 2: the career at Riverside Community Hospital
+
+Full description: `docs/HEALTHCARE.md`.
+
+### Key decision
+
+- **Careers can have their own employer.** The new careers do not belong in a
+  consulting firm.
+  - **What a department can now name:** an `employer` and its own shared
+    staff.
+  - **What follows the career:** the welcome email, Career, Mail, Start,
+    onboarding and the office sign.
+  - **What stays with Cobalt Ridge:** the Manchester office programme. Its
+    two tests now cover the Cobalt Ridge careers only.
+  - **The hospital's own programme:** a two-stage project, the discharge
+    lounge.
+
+### What was built
+
+- **The career:**
+  - four levels (Healthcare Support Trainee to Ward Coordinator);
+  - four new skills (patient safety; observation and escalation; clinical
+    documentation; confidentiality);
+  - the Ward 4 team: Grace Mbeki (Ward Manager) and Owen Fraser (Senior
+    Staff Nurse), with a ward clerk, an estates supervisor and a learning
+    lead.
+- **Five tasks in Ward Systems,** each with a model answer built from the
+  same actions as the player's:
+  1. observations and an SBAR escalation;
+  2. specimens and a critical result;
+  3. a clinic morning;
+  4. the medicines round and pharmacy queries;
+  5. a discharge and an admission.
+- **Cases:** fifteen, matching every other career's set, kinds and
+  difficulty:
+  - the meeting, the workflow and its follow-up, the incident and the
+    leadership case;
+  - variants of four cases;
+  - two readiness assessments, each with two versions using different
+    practical tasks.
+- **Ward Systems:** a new check, that a specimen label matches the patient.
+
+### Tests
+
+- **Unit tests:** 2,737 pass, including the shared content, balance,
+  variant, achievement and assessment tests, which now cover this career.
+- **New browser tests:** `tests/e2e/healthcare.spec.ts`:
+  - the first task done in the app and marked 100%;
+  - the bedside checks enforced;
+  - an unsafe prescription queried.
+- **Existing browser tests:** the desktop tests pass. The full check and the
+  build pass.
+
+### Not yet
+
+- **The walkable hospital** (the office still shows Cobalt Ridge's floor,
+  signed with the hospital's name).
+- **A story campaign** (story mode is not offered for this career yet).
+
 ## 2026-11-13 · Healthcare 1: Ward Systems, the hospital's systems (simulation)
 
 Part 2 of the consolidated prompt, built in stages. This first stage is the

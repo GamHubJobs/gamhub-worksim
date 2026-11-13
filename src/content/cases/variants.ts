@@ -17,6 +17,69 @@ export interface CaseVariant {
 }
 
 export const CASE_VARIANTS: Record<string, CaseVariant[]> = {
+  // Healthcare -------------------------------------------------------------
+  'hc-supplies-count': [
+    {
+      // A bigger order and a bigger shortfall.
+      id: 'bigger-order',
+      text: [
+        ['9 boxes arrived instead of 12', '11 boxes arrived instead of 15'],
+        ['signed for the 9', 'signed for the 11'],
+        ['3 boxes are missing', '4 boxes are missing'],
+        ['3 boxes', '4 boxes'],
+        ['three boxes', 'four boxes'],
+        ['9 boxes', '11 boxes'],
+        ['nine boxes', 'eleven boxes'],
+        ['30 dressings', '40 dressings'],
+        ['30', '40'],
+      ],
+      exact: [
+        ['12', '15'],
+        ['9', '11'],
+      ],
+      numbers: [[30, 40]],
+    },
+  ],
+  'hc-adv-hygiene-audit': [
+    {
+      id: 'worse-month',
+      text: [
+        ['84 of 100', '80 of 100'],
+        ['84%', '80%'],
+        ['12 of 20', '8 of 20'],
+        ['84', '80'],
+      ],
+      exact: [['12', '8']],
+      numbers: [[84, 80]],
+    },
+  ],
+  'hc-adv-clinic-dna': [
+    {
+      id: 'more-missed',
+      text: [
+        [
+          '30 missed out of 180 (150 seen + 30 missed)',
+          '45 missed out of 195 (150 seen + 45 missed)',
+        ],
+        ['30 of 180', '45 of 195'],
+        ['16.7%', '23.1%'],
+        ['16.7', '23.1'],
+      ],
+      exact: [['30', '45']],
+      numbers: [[16.7, 23.1]],
+    },
+  ],
+  'hc-complaint': [
+    {
+      id: 'ward-7',
+      text: [
+        ['Ward 6', 'Ward 7'],
+        ['17:00', '18:30'],
+        ['5 pm', '6.30 pm'],
+      ],
+    },
+  ],
+
   // Finance & Admin -------------------------------------------------------
   'fa-short-delivery': [
     {

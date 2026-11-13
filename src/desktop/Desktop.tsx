@@ -33,7 +33,7 @@ import { openPracticeFile } from '../persistence/toolPractice'
 import { careerTools } from '../tools/registry'
 import { MailApp } from '../apps/mail/MailApp'
 import { getAssignment } from '../content/assignments'
-import { COMPANY } from '../content/company'
+import { activeEmployer } from '../content/departments'
 import {
   assignmentStatus,
   careerAssignments,
@@ -713,7 +713,7 @@ export function Desktop({
           <span className="text-lg font-bold tracking-tight text-blue-900">
             GamHub WorkSim
           </span>
-          <span className="text-sm text-slate-500">{COMPANY.name}</span>
+          <span className="text-sm text-slate-500">{activeEmployer().name}</span>
         </div>
         <div className="flex items-center gap-4">
           {!dayOver && (
@@ -1471,7 +1471,7 @@ export function Desktop({
             colors={colors}
             name={profile.name}
             title={current.title}
-            company={COMPANY.name}
+            company={activeEmployer().name}
             onLaunch={(key) => {
               const app = launchables.find((a) => a.key === key)
               if (app) launch(app.view)
@@ -1498,7 +1498,7 @@ export function Desktop({
               onClick={() => launch({ app: 'career' })}
               className="hidden flex-col justify-center px-2 text-left text-[11px] leading-tight text-white hover:bg-white/10 sm:flex"
               data-testid="player-chip"
-              title={`${profile.name}, ${current.title} at ${COMPANY.name}`}
+              title={`${profile.name}, ${current.title} at ${activeEmployer().name}`}
             >
               <span className="max-w-44 truncate">
                 {profile.name} · {current.title}

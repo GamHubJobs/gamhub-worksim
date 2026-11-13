@@ -8,13 +8,14 @@
  * the right department. Shared staff (reception, facilities, HR) are the same
  * in every department.
  */
-import { SHARED_PEOPLE, type Person } from '../company'
+import { COMPANY, SHARED_PEOPLE, type Employer, type Person } from '../company'
 import { accounting } from './accounting'
 import { finance } from './finance'
 import { data } from './data'
 import { engineering } from './engineering'
 import { itSupport } from './itSupport'
 import { marketing } from './marketing'
+import { healthcare } from './healthcare'
 import type { Department } from './types'
 
 export type { Department } from './types'
@@ -26,6 +27,7 @@ export const DEPARTMENTS: Record<string, Department> = {
   [marketing.careerId]: marketing,
   [data.careerId]: data,
   [engineering.careerId]: engineering,
+  [healthcare.careerId]: healthcare,
 }
 
 let activeCareerId = finance.careerId
@@ -48,8 +50,22 @@ export function findPerson(id: string): Person | undefined {
   const department = activeDepartment()
   if (id === 'manager') return department.manager
   if (id === 'senior') return department.senior
-  return SHARED_PEOPLE[id]
+  return department.sharedPeople?.[id] ?? SHARED_PEOPLE[id]
 }
+
+/** The organisation a career works for (Cobalt Ridge unless its department says otherwise). */
+export function employerFor(careerId: string): Employer {
+  return DEPARTMENTS[careerId]?.employer ?? COMPANY
+}
+
+/** The organisation of the career being played. */
+export function activeEmployer(): Employer {
+  return activeDepartment().employer ?? COMPANY
+}
+
+/** Whether a career works at Cobalt Ridge (the office, its programme and its story world). */
+export const atCobaltRidge = (careerId: string): boolean =>
+  !DEPARTMENTS[careerId]?.employer
 
 /** A person by ID or role ("manager" is the active department's manager). */
 export function getPerson(id: string): Person {

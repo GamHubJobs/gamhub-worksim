@@ -15,6 +15,7 @@ import { buildSolutionContent, findSheet } from '../game/workbooks'
 import type { DocContent } from '../persistence/schemas'
 import { ASSIGNMENTS, getAssignment } from './assignments'
 import { CAREERS } from './careers'
+import { atCobaltRidge } from './departments'
 import { CASES, getCase } from './cases'
 import { workstreamFor } from './programme'
 import { PROJECTS } from './projects'
@@ -234,8 +235,14 @@ describe('written stages of the other projects', () => {
 describe('the Manchester office programme', () => {
   const programme = PROJECTS.filter((p) => p.stageType === 'cases')
 
-  it('every career has its part, as a project of cases in order', () => {
-    expect(new Set(programme.map((p) => p.careerId)).size).toBe(CAREERS.length)
+  // The programme is Cobalt Ridge's: careers at other employers (the hospital) are not part of it.
+  const cobaltRidge = CAREERS.filter((c) => atCobaltRidge(c.id))
+
+  it('every Cobalt Ridge career has its part, as a project of cases in order', () => {
+    expect(
+      new Set(programme.filter((p) => atCobaltRidge(p.careerId)).map((p) => p.careerId))
+        .size,
+    ).toBe(cobaltRidge.length)
     for (const project of programme) {
       const stages = project.stages.map((id) => getCase(id))
       stages.forEach((stage, i) => {
@@ -250,8 +257,8 @@ describe('the Manchester office programme', () => {
     }
   })
 
-  it('every department has a workstream, and every career owns one', () => {
-    for (const career of CAREERS)
+  it('every department has a workstream, and every Cobalt Ridge career owns one', () => {
+    for (const career of cobaltRidge)
       expect(workstreamFor(career.id), career.id).toBeDefined()
   })
 })

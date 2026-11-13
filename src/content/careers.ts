@@ -477,6 +477,91 @@ CAREERS.push({
   ],
 })
 
+SKILLS.push(
+  {
+    id: 'patient-safety',
+    name: 'Patient safety',
+    description:
+      'The checks that prevent harm: the right patient, allergies, medicines, labels and clean equipment.',
+  },
+  {
+    id: 'clinical-observation',
+    name: 'Observation and escalation',
+    description:
+      'Recording observations accurately, recognising when a patient is getting worse, and asking for help early (SBAR).',
+  },
+  {
+    id: 'clinical-documentation',
+    name: 'Clinical documentation',
+    description:
+      'Clear, signed records that the next person can act on: notes, handovers and discharge summaries.',
+  },
+  {
+    id: 'confidentiality',
+    name: 'Confidentiality and records',
+    description:
+      'Seeing only the records you need, keeping health information private, and an accurate audit trail.',
+  },
+)
+
+/**
+ * Healthcare & Medical Services, at Riverside Community Hospital (fictional).
+ * A simulation for learning: the player never diagnoses or prescribes.
+ */
+CAREERS.push({
+  id: 'healthcare',
+  name: 'Healthcare & Medical Services',
+  department: 'Ward 4 (Medical)',
+  description:
+    'Work on a hospital ward and its support services: observations and escalation, the medicines round, specimens and results, clinics, beds and records. A simulation with fictional patients: no real diagnosis or prescribing.',
+  toolsIntro:
+    'Your work is done in Ward Systems, the hospital’s patient record, laboratory, pharmacy, clinic and bed systems, with letters and leaflets in Word Craft.',
+  skills: [
+    'patient-safety',
+    'clinical-observation',
+    'clinical-documentation',
+    'confidentiality',
+    'customer-service',
+    'accuracy',
+    'ai-use',
+  ],
+  apps: ['docs'],
+  tools: [
+    {
+      tool: 'clinical',
+      sections: { pharmacy: 'healthcare-assistant', beds: 'senior-healthcare-assistant' },
+    },
+  ],
+  levels: [
+    {
+      id: 'healthcare-trainee',
+      title: 'Healthcare Support Trainee',
+      xpRequired: 0,
+      minReputation: 0,
+    },
+    {
+      id: 'healthcare-assistant',
+      title: 'Healthcare Assistant',
+      xpRequired: 300,
+      minReputation: 35,
+    },
+    {
+      id: 'senior-healthcare-assistant',
+      title: 'Senior Healthcare Assistant',
+      xpRequired: 700,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'ward-coordinator',
+      title: 'Ward Coordinator',
+      xpRequired: 1050,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
+
 export function getCareer(id: string): Career {
   return CAREERS.find((career) => career.id === id) ?? CAREERS[0]
 }

@@ -10,6 +10,14 @@ export const COMPANY = {
     'A mid-sized consulting firm with about 120 staff. The Finance & Administration team keeps the office running and the money in order.',
 } as const
 
+/** An organisation the player can work for. */
+export interface Employer {
+  name: string
+  shortName: string
+  emailDomain: string
+  description: string
+}
+
 export interface Person {
   id: string
   name: string

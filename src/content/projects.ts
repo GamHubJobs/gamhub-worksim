@@ -92,6 +92,33 @@ const PROGRAMME_PROJECTS: z.input<typeof ProjectSchema>[] = PROGRAMME_PARTS.map(
   }),
 )
 
+/** The hospital's own programme (healthcare is not part of Cobalt Ridge's). */
+const HOSPITAL_PROJECTS: z.input<typeof ProjectSchema>[] = [
+  {
+    id: 'discharge-lounge',
+    careerId: 'healthcare',
+    levelId: 'senior-healthcare-assistant',
+    title: 'Opening the discharge lounge',
+    brief:
+      'Riverside Community Hospital opened a discharge lounge so that patients well enough to go home free their ward bed earlier. Ward 4 piloted it: deciding safely which patients could use it, then advising the project board whether other wards should follow.',
+    objectives: [
+      'Apply safety criteria to a new way of working',
+      'Measure the effect of a pilot',
+      'Advise a project board with conditions',
+    ],
+    deliverables: [
+      'The first day’s lounge plan',
+      'A recommendation to the project board',
+    ],
+    assessment: [
+      'Each stage is checked like a case and must pass',
+      'The project score is the average of the two stages',
+    ],
+    stages: ['prog-hc-lounge', 'prog-hc-lounge-review'],
+    stageType: 'cases',
+  },
+]
+
 const SOURCES: z.input<typeof ProjectSchema>[] = [
   {
     id: 'quarter-close',
@@ -237,9 +264,11 @@ const SOURCES: z.input<typeof ProjectSchema>[] = [
   },
 ]
 
-export const PROJECTS: Project[] = [...SOURCES, ...PROGRAMME_PROJECTS].map((p) =>
-  ProjectSchema.parse(p),
-)
+export const PROJECTS: Project[] = [
+  ...SOURCES,
+  ...PROGRAMME_PROJECTS,
+  ...HOSPITAL_PROJECTS,
+].map((p) => ProjectSchema.parse(p))
 
 export function getProject(id: string | undefined): Project | undefined {
   return id ? PROJECTS.find((p) => p.id === id) : undefined

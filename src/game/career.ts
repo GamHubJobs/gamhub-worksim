@@ -8,7 +8,7 @@ import { assessmentAtLevel, hasPassed } from './assessments'
 import { ASSIGNMENTS } from '../content/assignments'
 import { getCareer, SKILL_LEVELS } from '../content/careers'
 import { departmentFor } from '../content/departments'
-import { COMPANY } from '../content/company'
+import { employerFor } from '../content/departments'
 import { REVIEW_RATINGS, type Assignment } from '../content/schemas'
 import type {
   AssignmentProgress,
@@ -62,10 +62,10 @@ export function welcomeMessage(
     from: 'hr',
     kind: 'welcome',
     receivedAt: now,
-    subject: `Welcome to ${COMPANY.name}!`,
+    subject: `Welcome to ${employerFor(careerId).name}!`,
     body: `Hi ${firstName(name)},
 
-Welcome to ${COMPANY.name}! We are delighted to have you join the ${department.name} team as ${/^[AEIOU]/.test(level) ? 'an' : 'a'} ${level}. ${department.intro}
+Welcome to ${employerFor(careerId).name}! We are delighted to have you join the ${department.name} team as ${/^[AEIOU]/.test(level) ? 'an' : 'a'} ${level}. ${department.intro}
 
 Here is how things work:
 • Your manager, ${department.manager.name}, will send you tasks by email. You will also find them in the Tasks app.

@@ -27,7 +27,7 @@ import {
   type RefObject,
 } from 'react'
 import { Vector3, type Group, type Material, type Mesh, type WebGLRenderer } from 'three'
-import { COMPANY } from '../../content/company'
+import { activeEmployer } from '../../content/departments'
 import { activeDepartment, fill } from '../../content/departments'
 import {
   SPOTS,
@@ -895,7 +895,7 @@ function Reception() {
         zIndexRange={[10, 0]}
       >
         <div className="text-center text-white">
-          <p className="text-2xl font-bold tracking-wide">{COMPANY.name}</p>
+          <p className="text-2xl font-bold tracking-wide">{activeEmployer().name}</p>
           <p className="text-[9px] tracking-[0.4em] text-blue-200 uppercase">
             Consulting · Finance · Advisory
           </p>

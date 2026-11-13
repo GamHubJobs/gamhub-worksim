@@ -17,7 +17,7 @@ import {
   getQuestion,
   type JobAd,
 } from '../content/careerLife'
-import { COMPANY } from '../content/company'
+import { activeEmployer } from '../content/departments'
 import { formatMoney } from '../content/life'
 import type { ProfileData } from '../game/career'
 import {
@@ -138,8 +138,9 @@ function Jobs({ profile, onAct }: { profile: ProfileData; onAct: Act }) {
     <>
       <p className="text-sm text-slate-600">
         Other employers are hiring. They look at your real record: your level, work done
-        to standard and your latest review. Your career in WorkSim stays at {COMPANY.name}
-        ; an offer shows what you are worth, and you can raise it when you ask for a rise.
+        to standard and your latest review. Your career in WorkSim stays at{' '}
+        {activeEmployer().name}; an offer shows what you are worth, and you can raise it
+        when you ask for a rise.
       </p>
       <ul className="mt-3 space-y-2">
         {JOB_ADS.map((job) => {
@@ -378,7 +379,8 @@ function Business({ profile, onAct }: { profile: ProfileData; onAct: Act }) {
         <p className="font-medium text-slate-900">{running.name}</p>
         <p className="text-xs text-slate-600">
           {businessLevel(career)} regular customer(s) · earned{' '}
-          {formatMoney(career.business.earned)} so far · declared to {COMPANY.name}
+          {formatMoney(career.business.earned)} so far · declared to{' '}
+          {activeEmployer().name}
         </p>
         <p className="mt-1 text-xs text-slate-600">
           More evenings bring more regulars and better pay. More than {BUSINESS_EVENINGS}{' '}
@@ -409,8 +411,8 @@ function Business({ profile, onAct }: { profile: ProfileData; onAct: Act }) {
   return (
     <>
       <p className="text-sm text-slate-600">
-        Earn a little on the side in the evenings. {COMPANY.name} asks staff to declare
-        outside work; starting one here declares it.
+        Earn a little on the side in the evenings. {activeEmployer().name} asks staff to
+        declare outside work; starting one here declares it.
       </p>
       <ul className="mt-2 space-y-2">
         {SIDE_BUSINESSES.map((b) => {

@@ -37,6 +37,7 @@ describe('career content loading', () => {
         'digital-marketing': 'marketing',
         'data-analytics': 'data',
         'software-development': 'dev',
+        healthcare: 'healthcare',
       }[id]!
       const { PACK } = (await import(`./packs/${key}.ts`)) as {
         PACK: {

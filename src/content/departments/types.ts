@@ -1,9 +1,16 @@
 /** The shape of a department: its people and what working there sounds like. */
-import type { Person } from '../company'
+import type { Employer, Person } from '../company'
 
 export interface Department {
   /** The career this department belongs to. */
   careerId: string
+  /**
+   * The organisation, when it is not Cobalt Ridge (e.g. a hospital). Careers
+   * at another employer have their own workplace and their own shared staff.
+   */
+  employer?: Employer
+  /** Reception, facilities and HR at that employer (by the same role IDs). */
+  sharedPeople?: Record<string, Person>
   /** e.g. "Finance & Administration". */
   name: string
   /** The sign on the office wall, e.g. "FINANCE & ADMINISTRATION". */

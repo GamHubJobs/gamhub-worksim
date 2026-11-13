@@ -1,7 +1,7 @@
 /** The first screen for a new player: what WorkSim is, and their name. */
 import { useState, type FormEvent } from 'react'
 import { CAREERS } from '../content/careers'
-import { COMPANY } from '../content/company'
+import { employerFor } from '../content/departments'
 import { STORY_TITLES } from '../game/story/titles'
 
 /** Asks the desk to begin the story when it first opens (see Desktop). */
@@ -44,9 +44,7 @@ export function Onboarding({
         <p className="text-sm font-semibold tracking-wide text-blue-700 uppercase">
           GamHub WorkSim
         </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">
-          Your first day at {COMPANY.name}
-        </h1>
+        <h1 className="mt-2 text-3xl font-bold text-slate-900">Your first day at work</h1>
         <p className="mt-3 text-slate-700">
           Choose the team you are joining. Your manager will send you real-world tasks
           that you do in working office apps; you get instant feedback, and build skills
@@ -78,6 +76,9 @@ export function Onboarding({
                     {career.name}
                   </span>
                   <span className="block text-slate-600">{career.description}</span>
+                  <span className="block text-xs text-slate-500">
+                    at {employerFor(career.id).name}
+                  </span>
                   <span className="mt-1 block text-xs text-slate-500">
                     Starts as {career.levels[0].title}
                   </span>

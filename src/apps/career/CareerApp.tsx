@@ -2,7 +2,7 @@
 import { getSkill } from '../../content/careers'
 import { CareersSection } from './CareersSection'
 import { PortfolioSection, type PortfolioFileKind } from './PortfolioSection'
-import { COMPANY } from '../../content/company'
+import { employerFor } from '../../content/departments'
 import { getPerson } from '../../content/departments'
 import { isMentor } from '../../game/conversations'
 import { RATING_NAMES, REVIEW_AREAS } from '../../game/reviews'
@@ -384,7 +384,7 @@ export function CareerApp({
       <div className="mx-auto max-w-4xl space-y-5 p-6">
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <p className="text-sm text-slate-500">
-            {COMPANY.name} · {career.department}
+            {employerFor(career.id).name} · {career.department}
           </p>
           <h1 className="mt-1 text-2xl font-bold text-slate-900">{profile.name}</h1>
           <p className="text-lg text-blue-800" data-testid="career-title">
