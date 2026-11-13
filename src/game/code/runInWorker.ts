@@ -9,6 +9,7 @@ import { failedCodeChecks } from './grading'
 import type { CheckResult } from '../grading'
 import type { CallResult, RunResult, SourceFile } from './runner'
 import type { WorkerRequest } from './codeWorker'
+import type { DebugRun } from './debugger'
 
 export const TIME_LIMIT_MS = 5000
 export const TOO_SLOW = `The code did not finish within ${TIME_LIMIT_MS / 1000} seconds. Is there a loop that never ends?`
@@ -54,6 +55,28 @@ export async function callInWorker(
       logs: [],
       error: error instanceof Error ? error.message : String(error),
       line: null,
+    }
+  }
+}
+
+/** Runs one function in the debugger, recording each line it reaches. */
+export async function debugInWorker(
+  files: SourceFile[],
+  file: string,
+  fn: string,
+  args: unknown[],
+): Promise<DebugRun> {
+  try {
+    return await inWorker<DebugRun>({ type: 'debug', files, file, fn, args })
+  } catch (error) {
+    return {
+      value: null,
+      logs: [],
+      error: error instanceof Error ? error.message : String(error),
+      line: null,
+      steps: [],
+      truncated: false,
+      skipped: [],
     }
   }
 }

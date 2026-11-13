@@ -7,6 +7,7 @@ import {
   openMainFileInPortfolio,
   startCareerIfNeeded,
 } from './helpers.ts'
+import { expectReadOnly, getCode, setCode } from './codeEditor.ts'
 
 const apps = (page: Page) => page.getByRole('navigation', { name: 'Apps' })
 
@@ -358,20 +359,21 @@ test('a Software Development career: a bug fixed in Code, tested and handed in',
     .getByRole('navigation', { name: 'Files' })
     .getByText('invoice.test.js')
     .click()
-  await expect(page.getByTestId('code-editor')).toHaveAttribute('readonly', '')
+  await expectReadOnly(page.getByTestId('code-editor'))
 
   // Code that never finishes is stopped instead of freezing the page.
   await page.getByRole('navigation', { name: 'Files' }).getByText('invoice.js').click()
   const editor = page.getByTestId('code-editor')
-  const original = await editor.inputValue()
-  await editor.fill(`export function invoiceTotals() {\n  while (true) {}\n}\n`)
+  const original = await getCode(editor)
+  await setCode(editor, `export function invoiceTotals() {\n  while (true) {}\n}\n`)
   await page.getByTestId('run-tests').click()
   await expect(page.getByTestId('run-error')).toContainText('did not finish', {
     timeout: 15_000,
   })
 
   // Fix the three bugs.
-  await editor.fill(
+  await setCode(
+    editor,
     original
       .replace('let i = 1', 'let i = 0')
       .replace('quantity + lines', 'quantity * lines')

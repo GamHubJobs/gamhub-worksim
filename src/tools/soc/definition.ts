@@ -30,7 +30,7 @@ function gradeCheck(check: SocCheck, player: SocState) {
         reached >= wanted ? 1 : reached / wanted,
         reached >= wanted
           ? []
-          : [`The incident is at â€œ${STAGE_NAMES[player.incident.stage]}â€.`],
+          : [`The incident is at “${STAGE_NAMES[player.incident.stage]}”.`],
       )
     }
     case 'no-mistakes': {
@@ -108,11 +108,11 @@ export const soc: ToolDefinition<SocState, SocCheck> = {
     topics: [
       {
         title: 'Investigate before you act',
-        body: 'Compare the sign-ins with what is normal for the person: where, when, which device. Check the email that started it: does the senderâ€™s address match the name? Where do the links really go? Look for changes the attacker made, such as a mailbox rule forwarding mail outside the company.',
+        body: 'Compare the sign-ins with what is normal for the person: where, when, which device. Check the email that started it: does the sender’s address match the name? Where do the links really go? Look for changes the attacker made, such as a mailbox rule forwarding mail outside the company.',
       },
       {
         title: 'Contain the right thing',
-        body: 'End the accountâ€™s sessions and reset its password, and isolate the device that runs something it should not. Do not disable or isolate anything that is not affected.',
+        body: 'End the account’s sessions and reset its password, and isolate the device that runs something it should not. Do not disable or isolate anything that is not affected.',
       },
       {
         title: 'Eradicate, recover, document',

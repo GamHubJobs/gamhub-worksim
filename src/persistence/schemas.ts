@@ -620,12 +620,12 @@ export const TicketsDocumentSchema = DocumentBaseSchema.extend({
 // ---------------------------------------------------------------------------
 
 export const CodeFileSchema = z.object({
-  /** A plain file name such as "invoice.js" (no folders). */
+  /** A file name such as "invoice.js", or a path in folders such as "lib/tax.js". */
   name: z
     .string()
     .min(1)
-    .max(60)
-    .regex(/^[\w.-]+$/),
+    .max(120)
+    .regex(/^[\w.-]+(\/[\w.-]+)*$/),
   text: z.string().max(200_000),
   /** Files the task provides that must not be changed, e.g. the code under test. */
   readOnly: z.boolean().default(false),
@@ -633,7 +633,7 @@ export const CodeFileSchema = z.object({
 
 export const CodeContentSchema = z.object({
   language: z.literal('javascript'),
-  files: z.array(CodeFileSchema).min(1).max(20),
+  files: z.array(CodeFileSchema).min(1).max(40),
   /** The project's Git repository (created by the first git command). */
   git: GitSchema.optional(),
   /** The terminal's history. */
@@ -650,7 +650,7 @@ export const CodeContentSchema = z.object({
   debug: z
     .array(
       z.object({
-        file: z.string().max(60),
+        file: z.string().max(120),
         fn: z.string().max(60),
         args: z.string().max(2000),
         value: z.string().max(500).nullable(),
@@ -658,6 +658,24 @@ export const CodeContentSchema = z.object({
       }),
     )
     .max(100)
+    .optional(),
+  /** The editor's own state: open tabs, breakpoints and installed extensions. */
+  ide: z
+    .object({
+      tabs: z.array(z.string().max(120)).max(20).default([]),
+      breakpoints: z
+        .array(z.object({ file: z.string().max(120), line: z.number().int().min(1) }))
+        .max(200)
+        .default([]),
+      extensions: z.array(z.string().max(60)).max(30).default([]),
+      /** A merge waiting for its conflicts to be resolved. */
+      merge: z
+        .object({
+          branch: z.string().max(100),
+          files: z.array(z.string().max(120)).max(40),
+        })
+        .optional(),
+    })
     .optional(),
 })
 

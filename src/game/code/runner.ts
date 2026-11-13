@@ -41,18 +41,18 @@ export function toCommonJs(source: string): string {
   let code = source
     // import { a, b as c } from './x'
     .replace(
-      /^[ \t]*import\s*\{([^}]*)\}\s*from\s*(['"][^'"]+['"])\s*;?/gm,
+      /^[ \t]*import\s*\{([^}]*)\}\s*from\s*(['"][^'"]+['"])[ \t]*;?/gm,
       (_, names: string, from: string) =>
         `const {${names.replace(/\s+as\s+/g, ': ')}} = require(${from});`,
     )
     // import * as x from './x'
     .replace(
-      /^[ \t]*import\s*\*\s*as\s+(\w+)\s+from\s*(['"][^'"]+['"])\s*;?/gm,
+      /^[ \t]*import\s*\*\s*as\s+(\w+)\s+from\s*(['"][^'"]+['"])[ \t]*;?/gm,
       (_, name: string, from: string) => `const ${name} = require(${from});`,
     )
     // import x from './x'
     .replace(
-      /^[ \t]*import\s+(\w+)\s+from\s*(['"][^'"]+['"])\s*;?/gm,
+      /^[ \t]*import\s+(\w+)\s+from\s*(['"][^'"]+['"])[ \t]*;?/gm,
       (_, name: string, from: string) => `const ${name} = require(${from}).default;`,
     )
     // export function f / export const f / export class C
@@ -83,8 +83,15 @@ export function toCommonJs(source: string): string {
   return code
 }
 
-function normalise(spec: string): string {
-  const name = spec.replace(/^\.\//, '')
+function normalise(spec: string, from = ''): string {
+  // Relative to the importing file's folder ("./x", "../lib/x").
+  const parts = from.split('/').slice(0, -1)
+  for (const part of spec.split('/')) {
+    if (part === '.' || part === '') continue
+    if (part === '..') parts.pop()
+    else parts.push(part)
+  }
+  const name = parts.join('/')
   return /\.(c|m)?js$/.test(name) ? name : `${name}.js`
 }
 
@@ -232,7 +239,12 @@ export function isTestFile(name: string): boolean {
  * Loads the test files among `files` (or just `only`, if given) and runs
  * every test in them. Nothing here is asynchronous: tests run in order.
  */
-export function runTests(files: SourceFile[], only?: string[]): RunResult {
+export function runTests(
+  files: SourceFile[],
+  only?: string[],
+  /** Extra names every file can use (the debugger's tracer). */
+  extras: Record<string, unknown> = {},
+): RunResult {
   const logs: string[] = []
   const log = (...values: unknown[]) => {
     if (logs.length < MAX_LOGS) {
@@ -258,8 +270,8 @@ export function runTests(files: SourceFile[], only?: string[]): RunResult {
   }
   const expect = makeExpect()
 
-  const load = (spec: string): Record<string, unknown> => {
-    const name = normalise(spec)
+  const load = (spec: string, from = ''): Record<string, unknown> => {
+    const name = normalise(spec, from)
     const cached = cache.get(name)
     if (cached) return cached.exports
     const file = byName.get(name)
@@ -277,6 +289,7 @@ export function runTests(files: SourceFile[], only?: string[]): RunResult {
         'it',
         'describe',
         'expect',
+        ...Object.keys(extras),
         `"use strict";\n${toCommonJs(file.text)}\n//# sourceURL=${name}`,
       ) as typeof run
     } catch (error) {
@@ -284,7 +297,17 @@ export function runTests(files: SourceFile[], only?: string[]): RunResult {
       throw new Error(`${name} has a mistake in its code. ${describeError(error)}`)
     }
     try {
-      run(module, module.exports, load, fakeConsole, test, test, describe, expect)
+      run(
+        module,
+        module.exports,
+        (child: string) => load(child, name),
+        fakeConsole,
+        test,
+        test,
+        describe,
+        expect,
+        ...Object.values(extras),
+      )
     } catch (error) {
       cache.delete(name)
       throw error
@@ -339,6 +362,7 @@ export function callFunction(
   file: string,
   fn: string,
   args: unknown[],
+  extras: Record<string, unknown> = {},
 ): CallResult {
   const suite = `const __m = require(${JSON.stringify(`./${file}`)})
 test('call', () => {
@@ -357,7 +381,7 @@ test('call', () => {
   }
 })`
   const name = '__debug__.test.js'
-  const run = runTests([...files, { name, text: suite }], [name])
+  const run = runTests([...files, { name, text: suite }], [name], extras)
   if (run.error) return { value: null, logs: run.logs, error: run.error, line: null }
   const logs = run.logs.filter((l) => !l.startsWith(RESULT) && !l.startsWith(FAILED))
   const result = run.logs.find((l) => l.startsWith(RESULT))

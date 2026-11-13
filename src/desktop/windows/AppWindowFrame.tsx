@@ -144,7 +144,7 @@ export function AppWindowFrame({
         </TitleButton>
         <TitleButton label={`Close ${title}`} onClick={onClose} danger>
           <span aria-hidden className="text-sm leading-none">
-            âœ•
+            ✕
           </span>
         </TitleButton>
       </div>

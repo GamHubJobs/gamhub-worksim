@@ -294,3 +294,19 @@ body[data-onsite] .onsite-hide {
     display: none;
   }
 }
+
+/* The Code app's editor (Monaco): breakpoints and highlighted lines. */
+.ide-breakpoint {
+  background: #ef4444;
+  border-radius: 9999px;
+  width: 0.6rem !important;
+  height: 0.6rem !important;
+  margin-left: 0.3rem;
+  margin-top: 0.35rem;
+}
+.ide-debug-line {
+  background: rgb(250 204 21 / 0.22);
+}
+.ide-error-line {
+  background: rgb(239 68 68 / 0.28);
+}

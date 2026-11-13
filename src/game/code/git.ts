@@ -374,3 +374,110 @@ export function diff(git: Git, working: Files, file?: string, staged = false): s
     ]
   })
 }
+
+// ---------------------------------------------------------------------------
+// Merging with conflicts to resolve (the editor's Source Control view)
+// ---------------------------------------------------------------------------
+
+export type GitResult = Result
+
+/**
+ * One file as Git writes it when both branches changed the same lines:
+ * the shared lines stay, the differing part shows both versions.
+ */
+export function conflictMarkers(ours: string, theirs: string, branch: string): string {
+  const a = ours.split('\n')
+  const b = theirs.split('\n')
+  let start = 0
+  while (start < a.length && start < b.length && a[start] === b[start]) start++
+  let endA = a.length
+  let endB = b.length
+  while (endA > start && endB > start && a[endA - 1] === b[endB - 1]) {
+    endA--
+    endB--
+  }
+  return [
+    ...a.slice(0, start),
+    '<<<<<<< HEAD',
+    ...a.slice(start, endA),
+    '=======',
+    ...b.slice(start, endB),
+    `>>>>>>> ${branch}`,
+    ...a.slice(endA),
+  ].join('\n')
+}
+
+export const hasConflictMarkers = (text: string) =>
+  /^(<<<<<<< |=======$|>>>>>>> )/m.test(text)
+
+/**
+ * Merges `name` into the current branch. Where both changed the same file,
+ * the file gets conflict markers for the player to resolve, then
+ * `completeMerge` records the merge. Without conflicts it is `merge`.
+ */
+export function startMerge(
+  git: Git,
+  working: Files,
+  name: string,
+): Result & { conflicts: string[] } {
+  const plain = merge(git, working, name)
+  if (!plain.output.some((l) => l.startsWith('CONFLICT')))
+    return { ...plain, conflicts: [] }
+  const theirs = commitById(git, git.branches[name])!
+  const ours = headCommit(git)!
+  const oursHistory = new Set(history(git, ours.id).map((c) => c.id))
+  const base = history(git, theirs.id).find((c) => oursHistory.has(c.id))?.files ?? {}
+  const files: Files = {}
+  const conflicts: string[] = []
+  for (const file of new Set([
+    ...Object.keys(ours.files),
+    ...Object.keys(theirs.files),
+  ])) {
+    const b = base[file]
+    const o = ours.files[file]
+    const t = theirs.files[file]
+    if (o !== undefined && t !== undefined && o !== t && o !== b && t !== b) {
+      files[file] = conflictMarkers(o, t, name)
+      conflicts.push(file)
+    } else {
+      const pick = o === t ? o : o === b ? t : o
+      if (pick !== undefined) files[file] = pick
+    }
+  }
+  return {
+    git,
+    working: files,
+    output: [
+      ...conflicts.map((f) => `CONFLICT (content): Merge conflict in ${f}`),
+      'Resolve the conflicts, then complete the merge.',
+    ],
+    conflicts,
+  }
+}
+
+/** Records a merge whose conflicts the player resolved. */
+export function completeMerge(git: Git, working: Files, name: string): Result {
+  const theirs = commitById(git, git.branches[name])
+  const ours = headCommit(git)
+  if (!theirs || !ours)
+    return fail(git, working, `merge: ${name} - not something we can merge`)
+  const left = Object.keys(working).filter((f) => hasConflictMarkers(working[f]))
+  if (left.length)
+    return fail(git, working, `Conflict markers are still in ${left.join(', ')}.`)
+  const g = { ...git, index: { ...working } }
+  const c = makeCommit(
+    g,
+    `Merge branch '${name}' into ${git.head}`,
+    [ours.id, theirs.id],
+    working,
+  )
+  return {
+    git: {
+      ...g,
+      commits: [...g.commits, c],
+      branches: { ...g.branches, [git.head]: c.id },
+    },
+    working,
+    output: [`[${git.head} ${c.id}] ${c.message}`],
+  }
+}

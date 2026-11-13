@@ -190,6 +190,91 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · The Code editor becomes a full IDE
+
+Part 4 of the consolidated prompt: an IDE inspired by VS Code and VSCodium.
+Full description, including the licensing decision: `docs/IDE.md`.
+
+### Key decision
+
+- **VSCodium itself is not used.** The local VSCodium 1.143 build was only read:
+  - It is an Electron desktop program; its workbench needs Node.js and
+    Electron, so it cannot run in the browser game.
+  - Nothing from it is copied or bundled: no exe, no binaries, no icons.
+- **The editor is Monaco** (`monaco-editor` 0.52.2, MIT licence: the editor
+  component of VS Code):
+  - installed from npm and bundled with the game;
+  - loaded only when the Code app opens, with no CDN.
+- **WorkSim's own code** for everything around the editor.
+
+### What was built
+
+- **Layout:**
+  - menu bar and command palette (Ctrl+Shift+P, F1);
+  - Go to File (Ctrl+P);
+  - activity bar and side bar;
+  - tabs and breadcrumbs;
+  - panel (Problems, Tests, Terminal, Debug Console);
+  - status bar.
+- **Explorer:**
+  - folders (`lib/tax.js`); imports between folders now resolve;
+  - new, rename, delete and copy path from a right-click menu.
+- **Search:**
+  - across every file;
+  - match case, whole word and regular expressions;
+  - replace all.
+- **Problems:** from Monaco's JavaScript checker, for every file.
+- **Source Control** on the existing Git model:
+  - stage, discard and commit;
+  - branches and merge;
+  - history;
+  - side-by-side diffs.
+  - **New:** conflicting merges write conflict markers to resolve, then
+    complete with a two-parent merge commit.
+- **Run and Debug:**
+  - breakpoints in the gutter (or F9);
+  - a function run with chosen arguments, recorded line by line in the
+    sandboxed worker;
+  - Continue, Step over, Step back, Stop, with the variables and call stack at
+    each step (`game/code/debugger.ts`).
+- **Extensions:** a simulated marketplace whose six extensions switch on real
+  editor features. Nothing is downloaded.
+- **Saved with the project:**
+  - open tabs, breakpoints and extensions;
+  - a merge in progress.
+  - All of it is optional, so older saves load unchanged.
+
+### Fixed
+
+- **The import converter:**
+  - It joined the line after an `import` onto the import's line, which moved
+    every line number below it.
+  - An `export` straight after an import then failed.
+- **Text-encoding damage:**
+  - in the window close button (shown as `âœ•`, from the guidance work);
+  - in three Security Console messages.
+
+### Tests
+
+- **Unit tests:** `ide.test.ts` (debugger recording, folders, search,
+  palette, a merge conflict resolved).
+- **New browser test:** `tests/e2e/ide.spec.ts`. In the real app it covers:
+  - a file in a folder;
+  - Problems;
+  - search;
+  - the palette;
+  - a commit;
+  - a breakpoint and stepping;
+  - an extension.
+- **Updated browser tests:** the existing code tests now read and set code
+  through Monaco (`tests/e2e/codeEditor.ts`).
+
+### Not yet
+
+- The NPC assignments written for the new editor features, the IT Help Desk
+  and Data Analysis links, and AI edits applied after the player approves
+  them. These follow in a later stage.
+
 ## 2026-11-13 · The HUD layout: nothing over the world overlaps
 
 From a report with a screenshot. In the office at 1366 × 768, several things

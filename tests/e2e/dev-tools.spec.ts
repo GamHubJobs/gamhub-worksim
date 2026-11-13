@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { openApp } from './helpers.ts'
+import { expectCode, getCode, setCode } from './codeEditor.ts'
 
 async function startTask(page: Page, id: string, title: RegExp, testId: string) {
   await page.goto('/')
@@ -46,8 +47,10 @@ test('Git: a fix on a branch, tested, committed and merged', async ({ page }) =>
   await expect(out).toContainText("Switched to a new branch 'fix/late-fees'")
 
   const editor = page.getByTestId('code-editor')
-  const original = await editor.inputValue()
-  await editor.fill(
+  const original = await getCode(editor)
+  await setCode(
+    editor,
+
     original
       .replace('daysLate > 60', 'daysLate >= 60')
       .replace('daysLate > 30', 'daysLate >= 30'),
@@ -61,10 +64,10 @@ test('Git: a fix on a branch, tested, committed and merged', async ({ page }) =>
   await expect(out).toContainText('[fix/late-fees ')
   await terminal(page, 'git checkout main')
   // main still has the old code until the branch is merged.
-  await expect(editor).toHaveValue(original)
+  await expectCode(editor, original)
   await terminal(page, 'git merge fix/late-fees')
   await expect(out).toContainText('Fast-forward')
-  await expect(editor).not.toHaveValue(original)
+  await expect.poll(() => getCode(editor)).not.toBe(original)
   await terminal(page, 'git status')
   await expect(out).toContainText('nothing to commit, working tree clean')
   await expect(await submit(page)).toHaveText('100%')
@@ -83,8 +86,10 @@ test('Debug console: reproduce NaN, fix it, commit', async ({ page }) => {
   await expect(page.getByTestId('debug-result')).toContainText('returned 3.78')
 
   const editor = page.getByTestId('code-editor')
-  const code = await editor.inputValue()
-  await editor.fill(
+  const code = await getCode(editor)
+  await setCode(
+    editor,
+
     code
       .replace(
         '  let total = 0\n  for (const entry of entries) {\n    total += entry.hours\n  }\n  return total / entries.length',

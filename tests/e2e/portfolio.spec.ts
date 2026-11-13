@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { strFromU8, unzipSync } from 'fflate'
 import { expect, test, type Download, type Page } from '@playwright/test'
 import { openApp } from './helpers.ts'
+import { expectCode, expectReadOnly, getCode, setCode } from './codeEditor.ts'
 
 /** Reads every row of a table straight from the browser's database. */
 function readTable(page: Page, table: string): Promise<unknown[]> {
@@ -22,7 +23,7 @@ function readTable(page: Page, table: string): Promise<unknown[]> {
 }
 
 async function submitCode(page: Page, code: string) {
-  await page.getByTestId('code-editor').fill(code)
+  await setCode(page.getByTestId('code-editor'), code)
   await page.getByRole('button', { name: /Submit (again )?to Samuel/ }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click()
   const score = page.getByTestId('submission-results').getByTestId('score')
@@ -44,7 +45,7 @@ test('passing a task captures exactly what was handed in, once', async ({ page }
     .getByRole('button', { name: 'Start task' })
     .click()
   await expect(page.getByTestId('code-app')).toBeVisible()
-  const original = await page.getByTestId('code-editor').inputValue()
+  const original = await getCode(page.getByTestId('code-editor'))
   const fixed = original
     .replace('let i = 1', 'let i = 0')
     .replace('quantity + lines', 'quantity * lines')
@@ -98,8 +99,8 @@ test('passing a task captures exactly what was handed in, once', async ({ page }
   await expect(itemPage.getByTestId('item-attempts').getByRole('listitem')).toHaveCount(3)
   await itemPage.getByRole('button', { name: /^Main file/ }).click()
   const viewer = itemPage.getByTestId('evidence-viewer')
-  await expect(viewer.getByTestId('code-editor')).toHaveValue(/\/\/ passed version/)
-  await expect(viewer.getByTestId('code-editor')).not.toBeEditable()
+  await expectCode(viewer.getByTestId('code-editor'), /\/\/ passed version/)
+  await expectReadOnly(viewer.getByTestId('code-editor'))
 
   // A note and the include choice are kept; the score cannot be changed here.
   await itemPage.getByLabel('Your note').fill('Found three bugs with the tests.')
@@ -180,7 +181,7 @@ test('passed work missing from the portfolio is added back when WorkSim opens', 
     .getByTestId('task-detail')
     .getByRole('button', { name: 'Start task' })
     .click()
-  const original = await page.getByTestId('code-editor').inputValue()
+  const original = await getCode(page.getByTestId('code-editor'))
   const fixed = original
     .replace('let i = 1', 'let i = 0')
     .replace('quantity + lines', 'quantity * lines')
@@ -245,7 +246,7 @@ test('the portfolio, reports, profile and items download as PDFs, ZIPs and a web
     .getByTestId('task-detail')
     .getByRole('button', { name: 'Start task' })
     .click()
-  const original = await page.getByTestId('code-editor').inputValue()
+  const original = await getCode(page.getByTestId('code-editor'))
   const fixed = original
     .replace('let i = 1', 'let i = 0')
     .replace('quantity + lines', 'quantity * lines')
