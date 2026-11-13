@@ -241,6 +241,12 @@ export function Desktop({
   onOpenStorage,
 }: DesktopProps) {
   const { saveAll } = useAppServices()
+  // Hands-on IT work in the office keeps its jobs and held-up colleagues in step.
+  const { syncFieldJobs, syncDisruptions } = career
+  const officeSync = useMemo(
+    () => ({ syncFieldJobs, syncDisruptions }),
+    [syncFieldJobs, syncDisruptions],
+  )
   // Where the player is: in the office (a spot), or at the computer (an app).
   const [view, setViewState] = useState<View>(() => readLastView() ?? DEFAULT_VIEW)
   const [helpOpen, setHelpOpen] = useState(false)
@@ -763,6 +769,7 @@ export function Desktop({
             onGo={(spot) => setView({ app: 'office', spot })}
             onUseComputer={(open) => setView(open ?? { app: 'mail' })}
             onAct={act}
+            sync={officeSync}
           />
         )}
       </div>

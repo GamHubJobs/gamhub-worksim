@@ -20,6 +20,7 @@ import {
   deliverDue,
   enableArchive,
   nodeState,
+  powerCycle,
   rebootNode,
   registerAsset,
   registerProblems,
@@ -75,11 +76,12 @@ describe('IT Operations state', () => {
 })
 
 describe('Server Room', () => {
-  it('a hung switch comes back after a reboot, and only it was touched', () => {
+  it('a hung switch cannot be reached remotely; a power-cycle at the cabinet brings it back', () => {
     let s = withFaults()
     const sw = s.nodes.find((n) => n.id === 'SW-F2')!
     expect(nodeState(s, sw)).toBe('down')
-    s = ok(rebootNode(s, 'SW-F2'))
+    expect(rebootNode(s, 'SW-F2').problems[0]).toMatch(/power-cycle it there/)
+    s = ok(powerCycle(s, 'SW-F2'))
     expect(
       nodeState(
         s,
@@ -105,7 +107,7 @@ describe('Server Room', () => {
           : n,
       ),
     }
-    const s = ok(rebootNode(s0, 'WLC-01'))
+    const s = ok(powerCycle(s0, 'WLC-01'))
     expect(
       nodeState(
         s,
@@ -460,7 +462,7 @@ describe('Tickets react to IT Operations', () => {
     let next = applyEnvironmentChange(
       content,
       'itops',
-      (s) => rebootNode(s, 'SW-F2').state,
+      (s) => powerCycle(s, 'SW-F2').state,
       when,
     )
     expect(next.tickets[0].status).not.toBe('resolved')

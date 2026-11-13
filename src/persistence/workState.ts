@@ -60,6 +60,7 @@ export function startingWorkState(seed = 0): WorkState {
     life: LifeSchema.parse({}),
     disruptions: [],
     kbBookmarks: [],
+    fieldJobs: [],
   }
 }
 

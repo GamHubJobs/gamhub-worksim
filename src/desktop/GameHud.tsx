@@ -83,7 +83,7 @@ export function GameHud({
     'pointer-events-auto rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-white shadow ring-1 ring-white/15 hover:bg-slate-900'
   return (
     <div
-      className="pointer-events-none fixed right-3 bottom-3 z-10 flex flex-col items-end gap-2"
+      className="onsite-hide pointer-events-none fixed right-3 bottom-3 z-10 flex flex-col items-end gap-2"
       data-testid="hud"
     >
       <MiniMap profile={profile} />

@@ -158,6 +158,41 @@ export function rebootNode(state: ItopsState, id: string): Result {
     )
   if (node.status === 'off')
     return fail(state, `${node.name} is powered off: power it on.`)
+  if (!onSiteOnly(node).remote) return fail(state, onSiteOnly(node).why)
+  return restart(state, node, 'Reboot')
+}
+
+/**
+ * What can be done to a device from the console. Servers have out-of-band
+ * management; a network device that has stopped responding cannot be reached
+ * over the network at all, so it is power-cycled where it is.
+ */
+export function onSiteOnly(node: Node): { remote: boolean; why: string } {
+  const unreachable = node.status === 'off' || node.fault !== 'none'
+  if (node.kind === 'server' || node.kind === 'isp' || !unreachable)
+    return { remote: true, why: '' }
+  return {
+    remote: false,
+    why: `${node.id} is not answering on the management network, so it cannot be restarted from here. Go to the ${node.location.toLowerCase()} and power-cycle it there.`,
+  }
+}
+
+/** At the cabinet: switch the device's power outlet off and on again. */
+export function powerCycle(state: ItopsState, id: string): Result {
+  const node = nodeById(state, id)
+  if (!node) return fail(state, `There is no ${id}.`)
+  if (node.kind === 'isp' || node.kind === 'server')
+    return fail(state, `${node.name} is not in this cabinet.`)
+  return restart(
+    node.status === 'off'
+      ? setNode(state, node.id, (n) => ({ ...n, status: 'up' }))
+      : state,
+    node.status === 'off' ? { ...node, status: 'up' } : node,
+    'Power-cycle',
+  )
+}
+
+function restart(state: ItopsState, node: Node, action: string): Result {
   const wasHealthy = nodeWorking(state, node)
   const affected = node.users
   const risk = wasHealthy && affected > 0
@@ -178,7 +213,7 @@ export function rebootNode(state: ItopsState, id: string): Result {
         ? 'It was hung; after the restart it responds again.'
         : 'Restarted.'
   return {
-    state: logged(next, 'Reboot', node.id, detail, risk),
+    state: logged(next, action, node.id, detail, risk),
     problems: [],
     note: detail,
   }
@@ -210,6 +245,7 @@ export function powerOnNode(state: ItopsState, id: string): Result {
   const node = nodeById(state, id)
   if (!node) return fail(state, `There is no ${id}.`)
   if (node.status !== 'off') return fail(state, `${node.name} is not powered off.`)
+  if (!onSiteOnly(node).remote) return fail(state, onSiteOnly(node).why)
   return {
     state: logged(
       setNode(state, node.id, (n) => ({ ...n, status: 'up', uptimeDays: 0 })),

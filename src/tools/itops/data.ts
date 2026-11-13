@@ -17,6 +17,9 @@ import type {
 
 export const DOMAIN = 'cobaltridge.example'
 
+/** The network cabinet in the office (the floor switches and the wireless controller). */
+export const OFFICE_CABINET = 'Office comms cabinet'
+
 function node(n: Partial<Node> & Pick<Node, 'id' | 'kind' | 'ip' | 'zone'>): Node {
   return {
     name: n.id,
@@ -179,7 +182,7 @@ export function companyNodes(): Node[] {
       kind: 'switch',
       ip: '10.0.11.1',
       zone: 'Floor 1',
-      location: 'Floor 1 comms cupboard',
+      location: OFFICE_CABINET,
       upstream: 'FW-01',
       uptimeDays: 120,
       users: 70,
@@ -190,7 +193,7 @@ export function companyNodes(): Node[] {
       kind: 'switch',
       ip: '10.0.12.1',
       zone: 'Floor 2',
-      location: 'Floor 2 comms cupboard',
+      location: OFFICE_CABINET,
       upstream: 'FW-01',
       uptimeDays: 120,
       users: 80,
@@ -201,6 +204,7 @@ export function companyNodes(): Node[] {
       kind: 'controller',
       ip: '10.0.30.2',
       zone: 'Wireless',
+      location: OFFICE_CABINET,
       upstream: 'FW-01',
       uptimeDays: 77,
       users: 110,

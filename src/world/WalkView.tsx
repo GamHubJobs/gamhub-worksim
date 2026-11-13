@@ -24,6 +24,94 @@ export interface WalkApi {
 /** One-shot controls (the rest are held). */
 const ONCE = new Set<Control>(['interact', 'jump', 'vehicle'])
 
+const VIEW_STORAGE = 'worksim.view.v1'
+
+function readOverhead(): boolean {
+  try {
+    return window.localStorage.getItem(VIEW_STORAGE) === 'overhead'
+  } catch {
+    return false
+  }
+}
+
+/** A finger-sized pad on touch screens: a stick to walk (far out to run), and a Use button. */
+function TouchControls({
+  controls,
+  interact,
+}: {
+  controls: RefObject<Controls>
+  interact: string
+}) {
+  const base = useRef<HTMLDivElement>(null)
+  const [knob, setKnob] = useState({ x: 0, y: 0 })
+  const steer = (clientX: number, clientY: number) => {
+    const r = base.current!.getBoundingClientRect()
+    const radius = r.width / 2
+    let x = (clientX - (r.left + radius)) / radius
+    let y = (clientY - (r.top + radius)) / radius
+    const len = Math.hypot(x, y)
+    if (len > 1) {
+      x /= len
+      y /= len
+    }
+    setKnob({ x, y })
+    const held = controls.current!.held
+    for (const c of ['forward', 'back', 'left', 'right', 'run'] as const) held.delete(c)
+    if (y < -0.3) held.add('forward')
+    if (y > 0.3) held.add('back')
+    if (x < -0.3) held.add('left')
+    if (x > 0.3) held.add('right')
+    if (Math.min(1, len) > 0.92) held.add('run')
+  }
+  const release = () => {
+    setKnob({ x: 0, y: 0 })
+    for (const c of ['forward', 'back', 'left', 'right', 'run'] as const)
+      controls.current!.held.delete(c)
+  }
+  return (
+    <div
+      className="pointer-events-none absolute inset-x-0 bottom-24 z-30 flex items-end justify-between px-6"
+      data-testid="touch-controls"
+    >
+      <div
+        ref={base}
+        className="pointer-events-auto relative h-32 w-32 touch-none rounded-full bg-slate-900/40 ring-2 ring-white/40"
+        role="group"
+        aria-label="Walk: drag the stick"
+        onPointerDown={(e) => {
+          e.stopPropagation()
+          e.currentTarget.setPointerCapture(e.pointerId)
+          steer(e.clientX, e.clientY)
+        }}
+        onPointerMove={(e) => {
+          if (e.buttons || e.pointerType === 'touch') steer(e.clientX, e.clientY)
+        }}
+        onPointerUp={release}
+        onPointerCancel={release}
+      >
+        <span
+          className="absolute h-14 w-14 rounded-full bg-white/80 shadow"
+          style={{
+            left: `calc(50% - 1.75rem + ${knob.x * 2.25}rem)`,
+            top: `calc(50% - 1.75rem + ${knob.y * 2.25}rem)`,
+          }}
+        />
+      </div>
+      <button
+        type="button"
+        className="pointer-events-auto h-20 w-20 rounded-full bg-amber-500 text-lg font-bold text-white shadow-lg active:bg-amber-600"
+        onPointerDown={(e) => {
+          e.stopPropagation()
+          controls.current!.pressed.push('interact')
+        }}
+        aria-label={`Use (${interact})`}
+      >
+        {interact}
+      </button>
+    </div>
+  )
+}
+
 export function WalkView({
   label,
   className,
@@ -56,6 +144,16 @@ export function WalkView({
     null,
   )
   const [locked, setLocked] = useState(false)
+  // Top-down (looking straight down on the floor) or from behind the character.
+  const [overhead, setOverhead] = useState(readOverhead)
+  useEffect(() => {
+    controls.current.overhead = overhead
+  }, [overhead])
+  // Touch screens get an on-screen stick and Use button.
+  const [touch] = useState(
+    () =>
+      typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches,
+  )
   const [keys, setKeys] = useState(keymap)
   useEffect(() => onKeymapChange(() => setKeys(keymap())), [])
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null)
@@ -182,7 +280,25 @@ export function WalkView({
         </div>
       ) : null}
 
+      {touch && <TouchControls controls={controls} interact={interact} />}
+
       <div className="absolute top-2 right-2 flex gap-1">
+        <button
+          type="button"
+          aria-pressed={overhead}
+          onClick={() => {
+            const next = !overhead
+            setOverhead(next)
+            try {
+              window.localStorage.setItem(VIEW_STORAGE, next ? 'overhead' : 'behind')
+            } catch {
+              // Storage blocked: the view applies until the page closes.
+            }
+          }}
+          className="rounded bg-slate-900/70 px-2 py-0.5 text-xs text-white hover:bg-slate-900"
+        >
+          {overhead ? 'View: top-down' : 'View: from behind'}
+        </button>
         <button
           type="button"
           onClick={() => {

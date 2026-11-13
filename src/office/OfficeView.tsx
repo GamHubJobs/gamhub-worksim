@@ -78,8 +78,17 @@ import type { Profile } from '../persistence/schemas'
 import { Avatar } from '../ui/Avatar'
 import { supportsWebGL } from './webgl'
 import { deskLayout } from '../game/desk'
+import type { FieldJob } from '../persistence/schemas'
+import { OnSiteWork, type OnSitePlace, type OnSiteSync } from './OnSiteWork'
 
 const OfficeScene = lazy(() => import('./scene/OfficeScene'))
+
+/** Where an IT job is done in person. */
+function placeOf(job: FieldJob): OnSitePlace {
+  if (job.kind === 'cabinet') return 'cabinet'
+  if (job.kind === 'repair' || job.kind === 'build') return 'bench'
+  return `desk:${job.target.slice('person:'.length)}`
+}
 
 type Act = (change: (profile: ProfileData) => ProfileData) => Promise<unknown>
 
@@ -91,6 +100,8 @@ interface OfficeViewProps {
   onGo: (spot: SpotId) => void
   onUseComputer: (open?: DialogueAction['open']) => void
   onAct: Act
+  /** Keeps the office's IT jobs and held-up colleagues in step after hands-on work. */
+  sync?: OnSiteSync
 }
 
 /** Falls back to the floor plan if the 3D view fails for any reason. */
@@ -145,7 +156,46 @@ export function OfficeView({
   onGo,
   onUseComputer,
   onAct,
+  sync,
 }: OfficeViewProps) {
+  // Hands-on IT work open in person (the cabinet, the bench, a colleague's desk).
+  const [onsite, setOnsite] = useState<OnSitePlace | null>(null)
+  const fieldJobs = profile.work.fieldJobs
+  const itJobs = JSON.stringify(
+    fieldJobs.map((j) => ({
+      target: j.target,
+      kind: j.kind,
+      name: j.target.startsWith('person:') ? getPerson(j.target.slice(7)).name : '',
+    })),
+  )
+  /** The ticket queue the work at a place belongs to: its job's, or the task in hand. */
+  function queueFor(place: OnSitePlace): { document: string; assignment: string } | null {
+    const job = fieldJobs.find((j) => placeOf(j) === place)
+    if (job) return { document: job.document, assignment: job.assignment }
+    const current = Object.values(profile.assignments)
+      .filter((p) => {
+        const a = getAssignment(p.assignmentId)
+        return a?.kind === 'tickets' && !isPassed(a, p)
+      })
+      .sort((a, b) => b.startedAt - a.startedAt)[0]
+    return current
+      ? { document: current.documentId, assignment: current.assignmentId }
+      : null
+  }
+  function openOnSite(place: OnSitePlace) {
+    if (!queueFor(place)) {
+      setDialogue({
+        speaker: null,
+        title: place === 'cabinet' ? 'The comms cabinet' : 'The IT workbench',
+        lines: [
+          'Everything here is working, and there is no IT task in hand that needs it.',
+        ],
+        actions: [],
+      })
+      return
+    }
+    setOnsite(place)
+  }
   const [webgl] = useState(supportsWebGL)
   const [dialogue, setDialogue] = useState<Dialogue | null>(() =>
     openEvent && profile.work.events.pending.some((p) => p.id === openEvent)
@@ -222,6 +272,11 @@ export function OfficeView({
     }
     if (next !== spot) void onAct(walk)
     onGo(next)
+  }
+
+  /** Arrived at equipment and used it (E): close in on it. */
+  function arriveOnSite(action: string) {
+    openOnSite(action.slice('onsite:'.length) as OnSitePlace)
   }
 
   function interact(id: InteractionId) {
@@ -397,6 +452,7 @@ export function OfficeView({
     meetPerson,
     joinMeeting,
     blocked,
+    arriveOnSite,
   })
   useEffect(() => {
     handlers.current = {
@@ -407,6 +463,7 @@ export function OfficeView({
       meetPerson,
       joinMeeting,
       blocked,
+      arriveOnSite,
     }
   })
   const sceneGo = useCallback((next: SpotId) => handlers.current.go(next), [])
@@ -425,7 +482,9 @@ export function OfficeView({
     const meeting = meetingOf(action)
     if (meeting) {
       if (completed) handlers.current.joinMeeting(meeting)
-    } else if (completed && action?.startsWith('person:'))
+    } else if (completed && action?.startsWith('onsite:'))
+      handlers.current.arriveOnSite(action)
+    else if (completed && action?.startsWith('person:'))
       handlers.current.meetPerson(action.slice('person:'.length))
     else if (completed && action && isInteraction(action))
       handlers.current.interact(action)
@@ -483,6 +542,7 @@ export function OfficeView({
                     onGo={sceneGo}
                     onInteract={sceneInteract}
                     talkingTo={dialogue?.speaker ?? null}
+                    itJobs={itJobs}
                   />
                 </Suspense>
               </SceneBoundary>
@@ -565,6 +625,36 @@ export function OfficeView({
           </p>
         )}
 
+        {fieldJobs.length > 0 && (
+          <div className="mt-3 rounded-md bg-amber-50 p-2" data-testid="it-jobs">
+            <p className="text-xs font-semibold tracking-wide text-amber-900 uppercase">
+              IT jobs in the office
+            </p>
+            <ul className="mt-1 space-y-1">
+              {fieldJobs.map((job) => {
+                const place = placeOf(job)
+                return (
+                  <li
+                    key={`${job.kind}-${job.subject}-${job.target}`}
+                    className="flex items-center gap-2 text-sm text-amber-950"
+                  >
+                    <span className="min-w-0 flex-1">{job.label}</span>
+                    <button
+                      type="button"
+                      className="shrink-0 rounded bg-amber-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-amber-600"
+                      onClick={() =>
+                        walkable ? ask(`onsite:${place}`) : openOnSite(place)
+                      }
+                      aria-label={`Go: ${job.label}`}
+                    >
+                      Go
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
         <ul className="mt-3 space-y-1.5">
           {interactionsAt(spot).map((interaction) => (
             <li key={interaction.id}>
@@ -607,6 +697,23 @@ export function OfficeView({
         ))}
       </nav>
 
+      {onsite &&
+        (() => {
+          const q = queueFor(onsite)
+          return q ? (
+            <OnSiteWork
+              place={onsite}
+              documentId={q.document}
+              assignmentId={q.assignment}
+              personName={
+                onsite.startsWith('desk:') ? getPerson(onsite.slice(5)).name : ''
+              }
+              work={{ day: work.day, minute: work.minute }}
+              sync={sync}
+              onClose={() => setOnsite(null)}
+            />
+          ) : null
+        })()}
       {storyScene && (
         <StoryScenePanel
           key={storyScene.scene.id}

@@ -22,6 +22,7 @@ import {
 } from '../../game/incidents'
 import type {
   Disruption,
+  FieldJob,
   TicketActivity,
   TicketsContent,
 } from '../../persistence/schemas'
@@ -35,6 +36,7 @@ import { OverviewPanel } from './OverviewPanel'
 import { ReportsPanel } from './ReportsPanel'
 import { arrivedTickets } from '../../game/sla'
 import { presenceOf } from '../../game/presence'
+import { fieldJobsOf } from '../../game/fieldJobs'
 
 interface HelpDeskWindowProps {
   documentId: string
@@ -248,6 +250,17 @@ export function HelpDeskWindow({
     }, 1000)
     return () => clearInterval(timer)
   }, [inTransit, updateQueue])
+
+  // The hands-on work waiting in the office follows the queue too (game/fieldJobs.ts).
+  const { syncFieldJobs } = career
+  const fieldKey =
+    content && assignmentKey
+      ? JSON.stringify(fieldJobsOf(content, assignmentKey, documentId))
+      : null
+  useEffect(() => {
+    if (fieldKey && assignmentKey)
+      void syncFieldJobs(assignmentKey, JSON.parse(fieldKey) as FieldJob[])
+  }, [fieldKey, assignmentKey, syncFieldJobs])
 
   useEffect(() => {
     if (held && assignmentKey && hasSystems)

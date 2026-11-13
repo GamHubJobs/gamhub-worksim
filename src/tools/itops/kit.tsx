@@ -184,4 +184,23 @@ export interface SectionProps {
   open: (section: string) => void
   tickets: Array<{ id: string; title: string; open: boolean }>
   setFeedback: (f: Feedback) => void
+  /** At the equipment in person (hands-on work is only possible there). */
+  onSite: boolean
+}
+
+/** Shown for hands-on work opened from the Help Desk computer: where to go instead. */
+export function GoThere({ where, children }: { where: string; children?: ReactNode }) {
+  return (
+    <div
+      className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"
+      data-testid="go-there"
+    >
+      <p className="font-semibold">Hands-on work: {where}</p>
+      <p className="mt-1">
+        Leave the computer, walk there in the office (W, A, S and D, or the IT jobs list),
+        and press E at the equipment. Its marker shows where it is.
+      </p>
+      {children}
+    </div>
+  )
 }

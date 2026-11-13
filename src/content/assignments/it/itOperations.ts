@@ -7,7 +7,7 @@ import {
   deleteRule,
   deliverDue,
   enableArchive,
-  rebootNode,
+  powerCycle,
   reclaimLicence,
   registerAsset,
   releaseMessage,
@@ -170,7 +170,7 @@ const RESENT = morning.messages.find((m) => m.subject.endsWith('(resent)'))!.id
 
 function morningSolution(): ItopsState {
   let s = morning
-  s = must(rebootNode(s, 'SW-F2'))
+  s = must(powerCycle(s, 'SW-F2'))
   s = must(restartNodeService(s, 'PRINT01', 'Print Spooler'))
   s = must(enableArchive(s, mail('owen.price')))
   s = must(releaseMessage(s, AUDIT))
@@ -201,6 +201,8 @@ Seven tickets this morning, and none of them are about one person’s laptop. Th
 - **Mail Admin**: message trace, mailbox storage and archive, inbox rules.
 - **Mail Security**: the filter’s quarantine and the blocked senders.
 
+Some of this is hands-on: a network device that has stopped answering has to be dealt with at the comms cabinet in the office, in person.
+
 Two of these tickets are one problem. One message in quarantine must stay there. Restart only what is broken: a healthy switch or server you restart takes everyone below it down with it.
 
 Ravi`,
@@ -225,8 +227,8 @@ Ravi`,
       id: 'fix-infra',
       title: 'Fix the floor and the printing',
       instructions:
-        'Reboot the broken switch. For printing, look at **Servers**: start the stopped service rather than restarting the whole server.',
-      hint: 'SW-F2 is hung. PRINT01’s Print Spooler is stopped.',
+        'The broken switch does not answer the console, so it cannot be restarted from your desk: walk to the **comms cabinet** in the office (the IT corner, on the right), read the labels and lights, and power-cycle only that switch. For printing, look at **Servers**: start the stopped service rather than restarting the whole server.',
+      hint: 'SW-F2 is hung (amber light, dark ports): its outlet on the power strip, off then on. PRINT01’s Print Spooler is stopped.',
     },
     {
       id: 'trace',
@@ -649,7 +651,7 @@ Ravi`,
       id: 'builds',
       title: 'Build the two computers',
       instructions:
-        'A laptop for Rosa and a desktop for Sam, each with the right method. If the network boot does not answer, look at the deployment server in the Server Room.',
+        'Builds are hands-on: walk to the **IT workbench** in the office (the IT corner, on the right) and build a laptop for Rosa and a desktop for Sam, each with the right method. If the network boot does not answer, look at the deployment server in the Server Room.',
       hint: 'Rosa: Server Imaging. Sam (Warehouse): Manual Domain Enrollment.',
     },
     {
@@ -674,7 +676,7 @@ Ravi`,
       id: 'repair',
       title: 'Dana’s laptop on the Repair Bench',
       instructions:
-        'Book A-1003 in on the **Repair Bench** and test it: the symptoms name the part. Undo the screws, lift the cover, **disconnect the battery** before touching anything, fit the right replacement, close it up and prove it boots.',
+        'Walk to Dana’s desk and collect her laptop (A-1003), then repair it at the **IT workbench**: test it (the symptoms name the part), undo the screws, lift the cover, **disconnect the battery** before touching anything, fit the right replacement, close it up and prove it boots. Then take it back to her desk and hand it over.',
       hint: 'Three beeps and no picture is the memory. The laptop takes DDR5 SO-DIMM.',
     },
     {

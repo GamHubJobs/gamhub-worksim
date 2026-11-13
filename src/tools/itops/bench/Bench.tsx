@@ -962,7 +962,8 @@ export function Bench({ run, editable, onConnect, onDisconnect }: BenchProps) {
       <svg
         ref={svg}
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full touch-none rounded-xl border border-slate-300 bg-gradient-to-b from-slate-100 to-slate-200 select-none"
+        style={{ maxHeight: 'max(26rem, calc(100vh - 15rem))' }}
+        className="mx-auto block w-full touch-none rounded-xl border border-slate-300 bg-gradient-to-b from-slate-100 to-slate-200 select-none"
         role="application"
         aria-label="Workbench"
         onPointerMove={move}

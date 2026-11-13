@@ -115,3 +115,47 @@ plug in, progress, equipment that reacts) and draws everything itself.
 No text, images, layouts, names or step lists were copied. Limitations: only
 public pages were read; the reference's own app (behind a sign-in) was not
 opened, so its exact behaviour is unknown and was not needed.
+
+## Hands-on work in the office
+
+Hardware jobs are done in person, in the 3D office, not from the Help Desk
+computer:
+
+- **The IT corner** (right-hand side of the office): the comms cabinet (the
+  floor switches and the wireless controller) and the IT workbench, with a
+  sign. Both are solid (collisions) and always usable.
+- **IT jobs** (`game/fieldJobs.ts`) are worked out from the ticket queue and
+  kept with the player's work (`work.fieldJobs`), like the colleagues held up
+  by a fault:
+  - a cabinet device that stopped responding;
+  - a colleague's faulty laptop to collect, repair and return;
+  - a computer to build.
+- **Finding a job:** each job shows a turning amber marker over its equipment,
+  and a line in the office panel ("IT jobs in the office") with a Go button
+  that walks the character there.
+- **Starting it:** walking up shows "Press E to …" only within reach. A
+  colleague's desk only offers this while their laptop waits.
+- **The animations:** opening the cabinet, clearing the bench, talking to the
+  colleague and unplugging their laptop, plugging it back in.
+- **The close-up** (`office/OnSiteWork.tsx`): the view zooms in over the
+  office (which stays where it was underneath) onto the simulation, on the
+  same ticket queue:
+  - the comms cabinet: identify the hung device by its label and lights,
+    switch its outlet off and on, and it boots;
+  - the IT workbench: Build (Computer Deployment) and Repair (Repair Bench);
+  - a colleague's desk: take the laptop to the bench, or hand it back once
+    it is proven, which resolves the ticket. The colleague answers.
+
+  Esc or "Step back to the office" returns exactly where the player stood. The
+  office's jobs, markers and held-up colleagues update straight away.
+
+- **What can no longer be done remotely:**
+  - a network device that has stopped answering cannot be rebooted from the
+    Server Room ("power-cycle it at the office comms cabinet"); servers keep
+    their remote management;
+  - Computer Deployment and the Repair Bench at the computer say where the
+    work is and what state it is in.
+- **Moving:** WASD and the arrow keys as before. There is now a top-down view
+  (the camera looks straight down on the floor, chosen once and remembered)
+  beside the view from behind, and an on-screen stick and Use button on touch
+  screens.

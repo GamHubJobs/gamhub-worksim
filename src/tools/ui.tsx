@@ -27,6 +27,8 @@ export interface ToolWorkspaceProps<State> {
   officeTime?: () => string
   /** Opens another section of the tool from inside it (e.g. the PC Shelf's "Open Ship Manager"). */
   onOpenSection?: (section: string) => void
+  /** Opened in person at the equipment (in the office), not from the Help Desk computer. */
+  onSite?: boolean
 }
 
 // oxlint-disable-next-line no-explicit-any -- each tool has its own state type

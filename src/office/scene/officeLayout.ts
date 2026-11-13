@@ -9,6 +9,11 @@ import { fill } from '../../content/departments'
 import { SPOTS, type InteractionId, type SpotId } from '../../content/office'
 import type { Box } from '../../world/character/controller'
 import type { Activity } from '../../world/interaction/activity'
+import { OFFICE_PEOPLE, OFFICE_PLACES, STANDING_DESK } from './officeCast'
+
+/** The IT corner, on the right-hand side: the comms cabinet and the IT workbench. */
+export const IT_CABINET = { x: 11.5, z: 2.2 }
+export const IT_BENCH = { x: 11.3, z: 5.6 }
 
 const box = (x: number, z: number, hx: number, hz: number, top = 1.1): Box => ({
   x,
@@ -49,7 +54,111 @@ export const OFFICE_BOXES: Box[] = [
   box(-11.4, -7.45, 0.42, 0.36, 1.9),
   box(-7.4, -3.6, 0.62, 0.62, 0.8),
   box(-4.8, -7.4, 0.22, 0.22, 1.3),
+  // The IT corner: the comms cabinet and the workbench.
+  box(IT_CABINET.x, IT_CABINET.z, 0.35, 0.34, 2.0),
+  box(IT_BENCH.x, IT_BENCH.z, 0.45, 0.95, 0.95),
 ]
+
+const faceTo = (x: number, z: number, tx: number, tz: number) =>
+  Math.atan2(-(tx - x), -(tz - z))
+
+/** Where a colleague's own computer is (their desk), and where to stand at it. */
+export function deskOf(person: string): {
+  at: { x: number; z: number }
+  stand: { x: number; z: number; heading: number }
+} | null {
+  const own = OFFICE_PEOPLE.find((p) => p.id === person)?.own
+  const place = own ? OFFICE_PLACES[own] : undefined
+  if (!own || !place) return null
+  const at =
+    own === 'standing'
+      ? { x: STANDING_DESK.x, z: STANDING_DESK.z }
+      : own.startsWith('desk:')
+        ? { x: place.x, z: place.z > 0 ? 1.1 : -0.45 }
+        : { x: place.x, z: place.z }
+  const stand =
+    own === 'standing'
+      ? { x: at.x + 0.75, z: at.z + 0.55 }
+      : own.startsWith('desk:')
+        ? { x: place.x + 0.65, z: place.z > 0 ? 1.8 : -1.2 }
+        : { x: place.x + 0.6, z: place.z + 0.3 }
+  return { at, stand: { ...stand, heading: faceTo(stand.x, stand.z, at.x, at.z) } }
+}
+
+/** Where an IT job's equipment is: the cabinet, the bench, or a colleague's desk. */
+export function equipmentAt(target: string): { x: number; z: number } | null {
+  if (target === 'cabinet') return IT_CABINET
+  if (target === 'bench') return IT_BENCH
+  if (target.startsWith('person:'))
+    return deskOf(target.slice('person:'.length))?.at ?? null
+  return null
+}
+
+/**
+ * Hands-on IT work, done in person: the cabinet and the bench are always
+ * there; a colleague's desk only while there is a laptop to collect or return.
+ */
+export function itActivities(
+  desks: Array<{ person: string; kind: 'collect' | 'return'; name: string }>,
+): Activity[] {
+  return [
+    {
+      id: 'onsite:cabinet',
+      action: 'onsite:cabinet',
+      prompt: 'open the comms cabinet',
+      spot: { x: IT_CABINET.x - 0.7, z: IT_CABINET.z, reach: 1.1 },
+      anchor: { x: IT_CABINET.x - 0.78, z: IT_CABINET.z, heading: -Math.PI / 2 },
+      stages: [
+        { clip: 'reach', seconds: 1.2, label: 'Unlocking and opening the cabinet' },
+      ],
+      sounds: [{ at: 0.6, id: 'door' }],
+    },
+    {
+      id: 'onsite:bench',
+      action: 'onsite:bench',
+      prompt: 'work at the IT workbench',
+      spot: { x: IT_BENCH.x - 0.75, z: IT_BENCH.z, reach: 1.2 },
+      anchor: { x: IT_BENCH.x - 0.82, z: IT_BENCH.z, heading: -Math.PI / 2 },
+      stages: [{ clip: 'reach', seconds: 1.0, label: 'Clearing a space on the bench' }],
+    },
+    ...desks.flatMap((d): Activity[] => {
+      const desk = deskOf(d.person)
+      if (!desk) return []
+      const first = d.name.split(' ')[0]
+      return [
+        {
+          id: `onsite:desk:${d.person}`,
+          action: `onsite:desk:${d.person}`,
+          prompt:
+            d.kind === 'collect'
+              ? `collect ${first}’s laptop`
+              : `hand ${first}’s laptop back`,
+          spot: { x: desk.stand.x, z: desk.stand.z, reach: 1.2 },
+          anchor: desk.stand,
+          stages:
+            d.kind === 'collect'
+              ? [
+                  {
+                    clip: 'talk',
+                    seconds: 1.4,
+                    label: `Telling ${first} you will take it to the bench`,
+                  },
+                  {
+                    clip: 'reach',
+                    seconds: 1.2,
+                    label: 'Unplugging the laptop and picking it up',
+                    hold: { right: 'document' },
+                  },
+                ]
+              : [
+                  { clip: 'reach', seconds: 1.2, label: 'Plugging the laptop back in' },
+                  { clip: 'talk', seconds: 1.4, label: `Showing ${first} it starts` },
+                ],
+        },
+      ]
+    }),
+  ]
+}
 
 /** The area of the office a point is in. */
 export function spotAt(x: number, z: number): SpotId {
@@ -242,5 +351,6 @@ export const meetingOf = (action: string | null): string | null =>
 
 export const isInteraction = (action: string): action is InteractionId =>
   !action.startsWith('go:') &&
+  !action.startsWith('onsite:') &&
   !action.startsWith('meeting:') &&
   !action.startsWith('person:')

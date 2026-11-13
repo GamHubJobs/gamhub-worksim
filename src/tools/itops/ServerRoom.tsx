@@ -20,6 +20,7 @@ import {
   cpuOfNode,
   ispLatency,
   nodeState,
+  onSiteOnly,
   powerOnNode,
   rebootNode,
   restartNodeService,
@@ -63,6 +64,17 @@ function NodeActions({ node, ...p }: SectionProps & { node: Node }) {
       <button type="button" className={BUTTON} onClick={() => p.act(checkIsp)}>
         Check ISP status
       </button>
+    )
+  if (!onSiteOnly(node).remote)
+    return (
+      <span
+        className="inline-flex max-w-xs items-start gap-1 rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-950"
+        data-testid="on-site-only"
+      >
+        <Icon name="user" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        Not answering remotely: power-cycle it at the {node.location.toLowerCase()} (walk
+        there in the office).
+      </span>
     )
   if (node.status === 'off')
     return (

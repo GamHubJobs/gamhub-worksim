@@ -47,7 +47,16 @@ import {
   type Hands,
   type Prompt,
 } from '../../world/PlayerRig'
-import { OFFICE_BOXES, officeActivities, spotAt, standIn } from './officeLayout'
+import {
+  equipmentAt,
+  IT_BENCH,
+  IT_CABINET,
+  itActivities,
+  OFFICE_BOXES,
+  officeActivities,
+  spotAt,
+  standIn,
+} from './officeLayout'
 
 /** With reduced motion, the camera jumps between places and nothing moves by itself. */
 const STILL = prefersReducedMotion()
@@ -215,6 +224,26 @@ export interface OfficeSceneProps {
   minute: number
   /** Walking the office in third person (instead of the camera moving between areas). */
   walk?: OfficeWalk
+  /**
+   * Hands-on IT work waiting in the office, as JSON (a string so the scene
+   * only redraws when it changes): [{ target, kind, name }] (see game/fieldJobs.ts).
+   */
+  itJobs?: string
+}
+
+export interface ItJobMark {
+  target: string
+  kind: 'cabinet' | 'collect' | 'repair' | 'return' | 'build'
+  /** The colleague's name, for a desk. */
+  name: string
+}
+
+const readJobs = (json: string | undefined): ItJobMark[] => {
+  try {
+    return json ? (JSON.parse(json) as ItJobMark[]) : []
+  } catch {
+    return []
+  }
 }
 
 export interface OfficeWalk {
@@ -311,7 +340,12 @@ function OfficeScene(props: OfficeSceneProps) {
       <Lighting lowPower={!full} />
       {full && !STILL && <SlowWatch onSlow={() => setLowPower(true)} />}
       {props.walk ? (
-        <OfficeWalker walk={props.walk} spot={props.spot} low={lowPower} />
+        <OfficeWalker
+          walk={props.walk}
+          spot={props.spot}
+          low={lowPower}
+          itJobs={props.itJobs}
+        />
       ) : (
         <CameraRig spot={props.spot} />
       )}
@@ -324,6 +358,7 @@ function OfficeScene(props: OfficeSceneProps) {
           onInteract={props.onInteract}
         />
         <ManagerOffice />
+        <ItCorner itJobs={props.itJobs} />
         <BreakRoom onInteract={props.onInteract} />
         <Crowd
           people={OFFICE_PEOPLE}
@@ -513,15 +548,26 @@ function OfficeWalker({
   walk,
   spot,
   low,
+  itJobs,
 }: {
   walk: OfficeWalk
   spot: SpotId
   low: boolean
+  itJobs?: string
 }) {
   const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
   const hands = useRef<Hands>({ left: null, right: null })
   const [start] = useState(() => standIn(spot))
-  const [activities] = useState(officeActivities)
+  const [base] = useState(officeActivities)
+  // The IT corner is always there; a colleague's desk only while their laptop waits.
+  const activities = useMemo(() => {
+    const desks = readJobs(itJobs).flatMap((j) =>
+      (j.kind === 'collect' || j.kind === 'return') && j.target.startsWith('person:')
+        ? [{ person: j.target.slice('person:'.length), kind: j.kind, name: j.name }]
+        : [],
+    )
+    return [...base, ...itActivities(desks)]
+  }, [base, itJobs])
   const area = useRef<SpotId>(spot)
   const onArea = walk.onArea
   // A new area counts once the player has been in it for a moment (so standing on
@@ -1128,6 +1174,130 @@ function AlertBubble({ position }: { position: Vector }) {
   return (
     <group ref={group} position={position}>
       <Box size={[0.22, 0.15, 0.02]} color="#f59e0b" emissive="#f59e0b" radius={0.01} />
+    </group>
+  )
+}
+
+/**
+ * The IT corner: the comms cabinet (its lights show a device in trouble) and
+ * the IT workbench, with a marker over any equipment that needs a technician.
+ */
+function ItCorner({ itJobs }: { itJobs?: string }) {
+  const jobs = readJobs(itJobs)
+  const cabinetTrouble = jobs.some((j) => j.kind === 'cabinet')
+  const marks = [...new Set(jobs.map((j) => j.target))]
+    .map((t) => ({ t, at: equipmentAt(t) }))
+    .filter((m): m is { t: string; at: { x: number; z: number } } => !!m.at)
+  return (
+    <group>
+      {/* The comms cabinet, its glass door facing the room. */}
+      <Place position={[IT_CABINET.x, 0, IT_CABINET.z]}>
+        <Box
+          size={[0.7, 2.0, 0.68]}
+          position={[0, 1.0, 0]}
+          color="#1f2937"
+          radius={0.02}
+        />
+        <Box
+          size={[0.02, 1.8, 0.56]}
+          position={[-0.36, 1.0, 0]}
+          color="#0f172a"
+          opacity={0.55}
+        />
+        {[0, 1, 2].map((i) => (
+          <group key={i}>
+            <Box
+              size={[0.03, 0.12, 0.5]}
+              position={[-0.33, 1.55 - i * 0.22, 0]}
+              color="#334155"
+            />
+            <Box
+              size={[0.035, 0.03, 0.03]}
+              position={[-0.36, 1.55 - i * 0.22, 0.2]}
+              color={cabinetTrouble && i === 1 ? '#f59e0b' : '#22c55e'}
+              emissive={cabinetTrouble && i === 1 ? '#f59e0b' : '#22c55e'}
+            />
+          </group>
+        ))}
+        <Box size={[0.03, 0.3, 0.5]} position={[-0.33, 0.3, 0]} color="#111827" />
+      </Place>
+      {/* The IT workbench: anti-static mat, a bench monitor, a laptop, a toolbox. */}
+      <Place position={[IT_BENCH.x, 0, IT_BENCH.z]}>
+        <Box
+          size={[0.9, 0.05, 1.9]}
+          position={[0, 0.92, 0]}
+          color={COLORS.wood}
+          radius={0.01}
+        />
+        {[-0.8, 0.8].map((z) => (
+          <Box
+            key={z}
+            size={[0.7, 0.9, 0.06]}
+            position={[0, 0.45, z]}
+            color={COLORS.metal}
+          />
+        ))}
+        <Box size={[0.6, 0.01, 1.2]} position={[0, 0.95, 0.1]} color="#1d4ed8" />
+        <Box
+          size={[0.08, 0.42, 0.7]}
+          position={[0.3, 1.2, -0.45]}
+          color="#0f172a"
+          radius={0.01}
+        />
+        <Box
+          size={[0.01, 0.36, 0.64]}
+          position={[0.25, 1.2, -0.45]}
+          color="#0ea5e9"
+          emissive="#0369a1"
+        />
+        <Box size={[0.3, 0.02, 0.4]} position={[-0.05, 0.97, 0.35]} color="#94a3b8" />
+        <Box
+          size={[0.25, 0.14, 0.4]}
+          position={[0.2, 1.02, 0.75]}
+          color="#dc2626"
+          radius={0.02}
+        />
+      </Place>
+      <Html
+        transform
+        position={[11.88, 2.35, 3.9]}
+        rotation={[0, -Math.PI / 2, 0]}
+        distanceFactor={4}
+        pointerEvents="none"
+        zIndexRange={[10, 0]}
+      >
+        <span className="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-semibold tracking-[0.25em] text-teal-200">
+          IT SERVICE DESK
+        </span>
+      </Html>
+      {marks.map((m) => (
+        <JobMarker
+          key={m.t}
+          position={[m.at.x, m.t === 'cabinet' ? 2.35 : 1.75, m.at.z]}
+        />
+      ))}
+    </group>
+  )
+}
+
+/** A floating amber marker over equipment that needs a technician (it turns slowly). */
+function JobMarker({ position }: { position: Vector }) {
+  const group = useRef<Group>(null)
+  useFrame(({ clock }) => {
+    if (STILL || !group.current) return
+    group.current.rotation.y = clock.elapsedTime * 1.4
+    group.current.position.y = position[1] + Math.sin(clock.elapsedTime * 2.5) * 0.05
+  })
+  return (
+    <group ref={group} position={position}>
+      <mesh rotation={[0, 0, Math.PI / 4]}>
+        <boxGeometry args={[0.16, 0.16, 0.05]} />
+        <meshStandardMaterial
+          color="#f59e0b"
+          emissive="#f59e0b"
+          emissiveIntensity={0.8}
+        />
+      </mesh>
     </group>
   )
 }

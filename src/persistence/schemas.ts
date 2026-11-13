@@ -1408,6 +1408,28 @@ export const WorkStateSchema = z.object({
     .default([]),
   /** Knowledge Base articles the player bookmarked (article IDs). */
   kbBookmarks: z.array(z.string().max(60)).max(100).default([]),
+  /**
+   * Hands-on IT work waiting in the office (a hung switch in the comms
+   * cabinet, a laptop to collect, repair and return, a computer to build),
+   * kept in step with the ticket queues (see game/fieldJobs.ts).
+   */
+  fieldJobs: z
+    .array(
+      z.object({
+        assignment: z.string().max(100),
+        /** The ticket queue document the work changes. */
+        document: z.string().max(100),
+        ticket: z.string().max(30),
+        kind: z.enum(['cabinet', 'collect', 'repair', 'return', 'build']),
+        /** Where: 'cabinet', 'bench', or 'person:<office person ID>'. */
+        target: z.string().max(60),
+        label: z.string().max(160),
+        /** The asset or device it is about. */
+        subject: z.string().max(40).default(''),
+      }),
+    )
+    .max(30)
+    .default([]),
 })
 
 /** Current format of player profiles; raise it (with an upgrade) when the shape changes. */
@@ -1579,6 +1601,7 @@ export type TicketActivity = z.infer<typeof TicketActivitySchema>
 export type TicketActivityKind = (typeof TICKET_ACTIVITY_KINDS)[number]
 export type TicketEnvironment = z.infer<typeof TicketEnvironmentSchema>
 export type Disruption = WorkState['disruptions'][number]
+export type FieldJob = WorkState['fieldJobs'][number]
 export type TicketsDocument = z.infer<typeof TicketsDocumentSchema>
 export type CodeFile = z.infer<typeof CodeFileSchema>
 export type CodeContent = z.infer<typeof CodeContentSchema>

@@ -25,7 +25,13 @@ import {
 import { Vector3, type Group } from 'three'
 import { audio, type Surface } from '../audio/manager'
 import { Person, type Motion, type PersonLook } from '../office/scene/people'
-import { cameraAt, clampOrbit, clearance, type Orbit } from './character/camera'
+import {
+  cameraAt,
+  clampOrbit,
+  clearance,
+  ORBIT_LIMITS,
+  type Orbit,
+} from './character/camera'
 import {
   BIKE_SPEED,
   body as makeBody,
@@ -119,6 +125,8 @@ export interface Controls {
   dx: number
   dy: number
   zoom: number
+  /** The camera looks straight down on the character (a top-down view of the floor). */
+  overhead?: boolean
 }
 
 export interface PlayerRigProps {
@@ -545,6 +553,11 @@ export function PlayerRig(props: PlayerRigProps) {
       turned = true
     }
     Object.assign(o, clampOrbit(o))
+    // Top-down: high above, looking down on the floor (the wheel still zooms a little).
+    if (c.overhead) {
+      o.pitch = 1.42
+      o.distance = 9 + (o.distance - ORBIT_LIMITS.minDistance) * 0.4
+    }
 
     const m = mode.current
     // The phone is out: the character holds it up and stands still (keys go to the phone).

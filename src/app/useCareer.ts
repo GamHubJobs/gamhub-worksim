@@ -76,6 +76,7 @@ import { createId } from '../lib/ids'
 import type {
   AnyDocument,
   Disruption,
+  FieldJob,
   DocContent,
   MailMessage,
   PortfolioFileRole,
@@ -517,6 +518,30 @@ export function useCareer() {
     [profileId, show],
   )
 
+  /**
+   * Keeps the hands-on IT work waiting in the office in step with a task's
+   * queue (see game/fieldJobs.ts): only that task's entries are replaced, and
+   * nothing is saved when nothing changed.
+   */
+  const syncFieldJobs = useCallback(
+    async (assignmentId: string, entries: FieldJob[]) => {
+      if (!profileId) return
+      let changed = false
+      const profile = await updateProfile(profileId, (latest) => {
+        const others = latest.work.fieldJobs.filter((j) => j.assignment !== assignmentId)
+        const mine = latest.work.fieldJobs.filter((j) => j.assignment === assignmentId)
+        if (JSON.stringify(mine) === JSON.stringify(entries)) return latest
+        changed = true
+        return {
+          ...latest,
+          work: { ...latest.work, fieldJobs: [...others, ...entries].slice(-30) },
+        }
+      })
+      if (changed) show(profile)
+    },
+    [profileId, show],
+  )
+
   /** Bookmarks or un-bookmarks a Knowledge Base article (kept with the player). */
   const toggleBookmark = useCallback(
     async (articleId: string) => {
@@ -876,6 +901,7 @@ export function useCareer() {
     markRead,
     toggleStep,
     syncDisruptions,
+    syncFieldJobs,
     toggleBookmark,
     act,
     saveCaseStep,

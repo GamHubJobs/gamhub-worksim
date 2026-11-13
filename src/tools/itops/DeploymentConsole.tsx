@@ -6,7 +6,7 @@
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Icon } from '../../ui/Icon'
-import { BUTTON, CARD, INPUT, Pill, PRIMARY, type SectionProps } from './kit'
+import { BUTTON, CARD, GoThere, INPUT, Pill, PRIMARY, type SectionProps } from './kit'
 import { Bench } from './bench/Bench'
 import {
   advance,
@@ -942,6 +942,29 @@ export default function Deployment(p: SectionProps) {
   const [hints, setHints] = useState(false)
   const [menu, setMenu] = useState(!run)
   const [docs, setDocs] = useState(false)
+  if (!p.onSite)
+    return (
+      <div className="space-y-4 p-4" data-testid="deployment-menu">
+        <h2 className="text-xl font-semibold text-slate-900">Computer Deployment</h2>
+        <GoThere where="the IT workbench, on the right-hand side of the office">
+          {run && (
+            <p className="mt-2">
+              On the bench: <b>{BUILD_NAMES[run.method]}</b>
+              {run.unit ? ` (${run.unit})` : ''}, {progressOf(run)}% done, at “
+              {STEP_INFO[currentStep(run)].title}”.
+            </p>
+          )}
+        </GoThere>
+        <button type="button" className={BUTTON} onClick={() => setDocs((d) => !d)}>
+          {docs ? 'Hide the build SOP' : 'Read the build SOP'}
+        </button>
+        {docs && (
+          <div className={CARD}>
+            <SopDocument />
+          </div>
+        )}
+      </div>
+    )
   if (run && !menu) {
     return (
       <div className="space-y-3 p-4">

@@ -190,6 +190,102 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · IT Help Desk 11: hands-on IT work in person, in the office
+
+Hardware support is now done by walking to the equipment in the 3D office
+and working on it close up. It is no longer done from buttons at the
+computer. The office stays the place the game is played in; the technical
+simulations are close-ups of the equipment in it.
+
+### What was built
+
+- **Moving about:**
+  - **A top-down view:** the camera looks straight down on the floor, in the
+    spirit of top-down office games. It is a choice next to the view from
+    behind, and it is remembered.
+  - **Touch screens:** an on-screen stick (push far to run) and a Use button.
+  - **Unchanged:** WASD and arrow keys, collisions, walking animations, people
+    and the existing camera.
+- **The IT corner** in the office (right-hand side): a comms cabinet with
+  status lights (amber when a device is in trouble), an IT workbench (mat,
+  monitor, laptop, toolbox) and a sign. Both are solid.
+- **IT jobs** (`game/fieldJobs.ts`), worked out from the ticket queue and kept
+  with the player's work so the office knows. A hung switch, a laptop to
+  collect, repair or return, or a computer to build each gets:
+  - a turning amber marker over its equipment;
+  - a line with a Go button in the office panel;
+  - "Press E to …" when the player is in reach. A colleague's desk only
+    offers this while their laptop is waiting.
+- **The close-ups** (`office/OnSiteWork.tsx`): the view zooms in over the
+  office onto the simulation. Esc steps back to the same place. The work
+  changes the same ticket queue as the Help Desk, so tickets resolve,
+  colleagues react, and the office's jobs and markers update at once.
+  - **The comms cabinet** (new): a drawn 19-inch rack.
+    - **What is in it:** a patch panel, the two floor switches with port
+      lights, the wireless controller, a UPS with its load display, and a
+      switched power strip with labelled outlets.
+    - **The fault:** a hung switch shows an amber system light and dark
+      ports. Inspect it, switch its outlet off and on, and it boots.
+    - **Mistakes count:** cycling a healthy device cuts its people off and is
+      logged as risky.
+  - **The IT workbench:** Build (Computer Deployment) and Repair (Repair
+    Bench).
+  - **A colleague's desk:** collect the faulty laptop for the bench, and hand
+    it back once it is proven, which resolves the ticket. The colleague
+    answers.
+- **What cannot be done remotely any more:**
+  - a network device that has stopped answering cannot be rebooted from the
+    Server Room (servers keep their remote management);
+  - Computer Deployment and the Repair Bench at the computer show where the
+    work is and how far it has got. Stock laptops can still be repaired at
+    the bench.
+- **The tasks:** "The server room and the mail system" now sends the player
+  to the cabinet for the hung floor switch. "A dead laptop, a new supervisor
+  and a parcel" has the builds at the bench, and Dana's laptop collected,
+  repaired and returned in person.
+- **Fixes:**
+  - the bench drawing now fits the screen height;
+  - the HUD (minimap, needs) steps aside during a close-up.
+
+### Tests
+
+- **Unit:**
+  - `game/fieldJobs.test.ts` (5): the cabinet job until the switch is
+    power-cycled; collect, then repair, then return, with the ticket resolving
+    only on hand-over; the build job; every place and desk in the IT corner;
+    desk interactions only while a laptop waits.
+  - `itops.test.ts` was updated: a hung switch is refused remotely and
+    power-cycled on site.
+- **Browser** (`deskops-tools.spec.ts`, 4):
+  - **The hung switch:** the remote refusal, then the player leaves the desk.
+    The IT jobs list and the top-down view are captured, and the character
+    walks across the office; its position at the cabinet is checked. The
+    switch is inspected and power-cycled, the job disappears, and the ticket
+    is resolved with "Power-cycle SW-F2" in its history.
+  - **A build at the workbench** in the office, then registered and shipped
+    from the computer.
+  - **The Tools in the first task.**
+  - **Dana's laptop:** collected at her desk, repaired at the bench, and
+    handed back at her desk, with her ticket resolved.
+- **Results:**
+  - `npm run check` passes: 2,567 unit tests.
+  - The 4 new browser tests pass.
+  - The office, movement and Help Desk browser tests (collisions, people,
+    meetings, interactions, the game screen, the company outage, devices):
+    7 passed and 2 flaky. The company outage test failed twice in that busy
+    run and passed on its own.
+
+### Limits
+
+- **The office is 3D,** seen from behind or from above. It is not a 2D game:
+  the existing world was kept and the top-down view added.
+- **No other technician joins in.** Work that needs a second technician is
+  not built.
+- **Builds use one bench job:** a second build has no marker while a built
+  unit is on the shelf, but the bench is always usable.
+
+---
+
 ## 2026-11-13 · IT Help Desk 10: the Tools menu (Server Room, Computer Deployment, PC Shelf, Repair Bench, Mail Admin, Mail Security, Asset Management, Ship Manager) and the hands-on simulations
 
 The Help Desk now has an always-available **Tools** menu that works on the

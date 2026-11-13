@@ -17,12 +17,14 @@ const ShipManager = lazy(() => import('./ShipManager'))
 const MailAdmin = lazy(() => import('./MailAdmin'))
 const MailSecurity = lazy(() => import('./MailSecurity'))
 const RepairBench = lazy(() => import('./RepairBench'))
+const CommsCabinet = lazy(() => import('./CommsCabinet'))
 
 const ITOPS_SECTIONS = [
   'server-room',
   'deployment',
   'shelf',
   'repair',
+  'cabinet',
   'assets',
   'ship',
   'mail-admin',
@@ -39,6 +41,7 @@ export default function ItopsWorkspace({
   officeTime = () => '',
   tickets = [],
   onOpenSection,
+  onSite = false,
 }: ToolWorkspaceProps<ItopsState>) {
   const [section, setSection] = useState<ItopsSection>(
     (ITOPS_SECTIONS as readonly string[]).includes(initialSection ?? '')
@@ -55,6 +58,7 @@ export default function ItopsWorkspace({
     officeTime,
     tickets,
     setFeedback,
+    onSite,
     act: (fn, done) => {
       const result = fn(state)
       if (!editable) return result
@@ -108,6 +112,8 @@ export default function ItopsWorkspace({
           <Shelf {...props} />
         ) : section === 'repair' ? (
           <RepairBench {...props} />
+        ) : section === 'cabinet' ? (
+          <CommsCabinet {...props} />
         ) : section === 'assets' ? (
           <Assets {...props} />
         ) : section === 'ship' ? (

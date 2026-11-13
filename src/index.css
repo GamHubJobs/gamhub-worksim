@@ -157,3 +157,8 @@
     content: none;
   }
 }
+
+/* Hands-on IT work in the office (OnSiteWork) has the whole view: the HUD steps aside. */
+body[data-onsite] .onsite-hide {
+  display: none;
+}

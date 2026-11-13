@@ -6,7 +6,7 @@
  * failed fan is clogged with dust). Tests give the machine's real symptoms.
  */
 import { useState } from 'react'
-import { BUTTON, CARD, Pill, PRIMARY, type SectionProps } from './kit'
+import { BUTTON, CARD, GoThere, Pill, PRIMARY, type SectionProps } from './kit'
 import { assetByTag, personById } from './model'
 import {
   bookable,
@@ -309,7 +309,40 @@ export default function RepairBench(p: SectionProps) {
   const [part, setPart] = useState<string | null>(null)
   const job = tag ? jobFor(state, tag) : undefined
   const asset = tag ? assetByTag(state, tag) : undefined
-  const waiting = bookable(state)
+  // On the bench: stock laptops are here already; a colleague's is collected from their desk.
+  const waiting = bookable(state).filter((a) => !a.assignedTo)
+
+  if (!p.onSite)
+    return (
+      <div className="space-y-3 p-4" data-testid="repair-bench">
+        <h2 className="text-xl font-semibold text-slate-900">Repair Bench</h2>
+        <GoThere where="the IT workbench, on the right-hand side of the office">
+          <ul className="mt-2 list-disc pl-5">
+            {state.assets
+              .filter((a) => a.hwFault || jobFor(state, a.tag))
+              .map((a) => {
+                const holder = personById(state, a.assignedTo ?? '')?.name
+                const j = jobFor(state, a.tag)
+                return (
+                  <li key={a.tag}>
+                    {a.tag}
+                    {holder ? ` (${holder})` : ''}:{' '}
+                    {!j
+                      ? holder
+                        ? `collect it from ${holder.split(' ')[0]}’s desk`
+                        : 'waiting at the bench'
+                      : j.verified && !j.coverOff && j.screwsOut.length === 0
+                        ? holder
+                          ? `repaired: take it back to ${holder.split(' ')[0]}`
+                          : 'repaired'
+                        : 'on the bench'}
+                  </li>
+                )
+              })}
+          </ul>
+        </GoThere>
+      </div>
+    )
 
   return (
     <div className="space-y-3 p-4" data-testid="repair-bench">
@@ -613,14 +646,25 @@ export default function RepairBench(p: SectionProps) {
                     job.results.map((r, i) => <li key={i}>{r}</li>)
                   )}
                 </ol>
-                <button
-                  type="button"
-                  className={`${PRIMARY} mt-2`}
-                  disabled={!p.editable}
-                  onClick={() => p.act((s) => finishRepair(s, job.tag))}
-                >
-                  Repair complete: return it
-                </button>
+                {asset.assignedTo ? (
+                  <p
+                    className="mt-2 rounded-md bg-teal-50 p-2 text-sm text-teal-950"
+                    data-testid="return-hint"
+                  >
+                    {job.verified && !job.coverOff && job.screwsOut.length === 0
+                      ? `Fixed and proven: take it back to ${personById(state, asset.assignedTo)?.name ?? 'its owner'}’s desk and hand it over.`
+                      : 'When it is closed up and boots, take it back to its owner’s desk.'}
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    className={`${PRIMARY} mt-2`}
+                    disabled={!p.editable}
+                    onClick={() => p.act((s) => finishRepair(s, job.tag))}
+                  >
+                    Repair complete: back to stock
+                  </button>
+                )}
               </section>
             </div>
           </div>
