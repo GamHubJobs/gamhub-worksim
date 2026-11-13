@@ -92,11 +92,11 @@ describe('every career has its own story', () => {
     )
   })
 
-  it('seven campaigns, one per career, each with its own title and people', () => {
-    expect(CAMPAIGNS).toHaveLength(7)
-    expect(new Set(CAMPAIGNS.map((c) => c.careerId)).size).toBe(7)
-    expect(new Set(CAMPAIGNS.map((c) => c.title)).size).toBe(7)
-    expect(new Set(CAMPAIGNS.map((c) => c.cast.manager)).size).toBe(7)
+  it('eight campaigns, one per career, each with its own title and people', () => {
+    expect(CAMPAIGNS).toHaveLength(8)
+    expect(new Set(CAMPAIGNS.map((c) => c.careerId)).size).toBe(8)
+    expect(new Set(CAMPAIGNS.map((c) => c.title)).size).toBe(8)
+    expect(new Set(CAMPAIGNS.map((c) => c.cast.manager)).size).toBe(8)
   })
 
   for (const c of CAMPAIGNS)

@@ -11,4 +11,5 @@ export const STORY_TITLES: Record<string, string> = {
   'data-analytics': 'Signal and Noise',
   'software-development': 'Release Day',
   healthcare: 'Bay A',
+  legal: 'Good Law',
 }

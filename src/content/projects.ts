@@ -117,6 +117,26 @@ const HOSPITAL_PROJECTS: z.input<typeof ProjectSchema>[] = [
     stages: ['prog-hc-lounge', 'prog-hc-lounge-review'],
     stageType: 'cases',
   },
+  {
+    id: 'advice-clinic',
+    careerId: 'legal',
+    levelId: 'senior-paralegal',
+    title: 'Opening the free advice clinic',
+    brief:
+      'Kestrel & Vane opened a free legal advice clinic one evening a week at the community centre. The first term had to be planned safely (conflicts, supervision, capacity) and then reviewed for the partners.',
+    objectives: [
+      'Apply professional rules to free (pro bono) advice',
+      'Plan a service’s capacity',
+      'Recommend changes from a review',
+    ],
+    deliverables: ['The first evening’s plan', 'A recommendation to the partners'],
+    assessment: [
+      'Each stage is checked like a case and must pass',
+      'The project score is the average of the two stages',
+    ],
+    stages: ['prog-law-clinic', 'prog-law-clinic-review'],
+    stageType: 'cases',
+  },
 ]
 
 const SOURCES: z.input<typeof ProjectSchema>[] = [

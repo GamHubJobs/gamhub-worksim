@@ -190,6 +190,55 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Law 2: the career at Kestrel & Vane LLP, with a mock hearing and the story “Good Law”
+
+Full description: `docs/LEGAL.md`.
+
+### What was built
+
+- **The firm:** Kestrel & Vane LLP (fictional) as the career's employer.
+  - The people: the partner, the senior associate, reception, office
+    services and the training principal.
+  - The team at the desks; its own area names and a budget.
+  - A law firm is an office, so the walkable floor is the office's, with
+    the firm's names.
+- **The career:**
+  - four levels and four new skills;
+  - Matter Desk on the dock, with contract review and document review
+    unlocking with promotion.
+- **Five tasks in Matter Desk,** each with a model answer built from the
+  player's own actions:
+  1. intake and a conflict;
+  2. research with good law;
+  3. deadlines and time;
+  4. a contract review;
+  5. disclosure and billing.
+- **Fifteen cases,** in the same set and difficulty as every career:
+  - **The meeting is a mock hearing:** a skeleton argument prepared, the
+    judge answered candidly about an overruled case, and actions followed
+    up.
+  - **The free advice clinic,** in two stages: the firm's own project.
+  - Variants of four cases.
+- **Two readiness assessments,** each with two versions, different figures
+  and different practical tasks.
+- **The story “Good Law”:** two chapters with a side mission. Whether the
+  player checks an old case changes the ending.
+
+### Tests
+
+- **Unit tests:** 2,889 pass (eight campaigns, and the content, balance and
+  assessment tests).
+- **New browser tests:** `tests/e2e/legal.spec.ts`:
+  - the intake task done in the app and marked 100%;
+  - the deadline calculator.
+- **Changed counts in existing tests:** assessments are now 17 and
+  campaigns 8. Both followed from the new career.
+
+### Not yet
+
+- **A walkable courthouse.** The mock hearing takes place in the firm's
+  training courtroom as a meeting.
+
 ## 2026-11-13 · Law 1: Matter Desk, a law firm's systems (simulation)
 
 Part 3 of the consolidated prompt, in stages like Healthcare. This stage is

@@ -67,7 +67,7 @@ describe('readiness assessment content', () => {
       )
       expect(career.levels.length).toBeGreaterThanOrEqual(4)
     }
-    expect(ASSESSMENTS).toHaveLength(15)
+    expect(ASSESSMENTS).toHaveLength(17)
   })
 
   it.each(ALL.map((a) => [`${a.id} version ${a.version}`, a] as const))(

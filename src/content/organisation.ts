@@ -67,6 +67,14 @@ export const ORG_DEPARTMENTS: OrgDepartment[] = [
     quarterBudget: 22000,
     committed: 0.85,
   },
+  // Not part of Cobalt Ridge: the legal career's team at Kestrel & Vane LLP.
+  {
+    id: 'law',
+    name: 'Litigation & Commercial, Kestrel & Vane LLP',
+    head: { name: 'Eleanor Vane', role: 'Partner' },
+    quarterBudget: 26000,
+    committed: 0.8,
+  },
   {
     id: 'people',
     name: 'People & Culture',

@@ -562,6 +562,81 @@ CAREERS.push({
   ],
 })
 
+SKILLS.push(
+  {
+    id: 'legal-research',
+    name: 'Legal research',
+    description:
+      'Finding the statutes and cases that apply, checking they are still good law, and using them accurately.',
+  },
+  {
+    id: 'legal-drafting',
+    name: 'Legal drafting',
+    description:
+      'Clear, precise documents and correspondence: clauses, letters, notes and skeleton arguments.',
+  },
+  {
+    id: 'professional-ethics',
+    name: 'Professional ethics',
+    description:
+      'Conflicts of interest, confidentiality and privilege, honesty with the court, and acting in the client’s best interests.',
+  },
+  {
+    id: 'case-management',
+    name: 'Case management',
+    description:
+      'Running matters: intake, deadlines, documents, time and billing, without anything slipping.',
+  },
+)
+
+/**
+ * Law & Legal Services, at Kestrel & Vane LLP (fictional), in the fictional
+ * jurisdiction of Westmark. A simulation: no legal advice.
+ */
+CAREERS.push({
+  id: 'legal',
+  name: 'Law & Legal Services',
+  department: 'Litigation & Commercial',
+  description:
+    'Work in a law firm: client intake and conflict checks, legal research, contract review, court deadlines, time and billing, document review, and a mock hearing. Set in a fictional jurisdiction: no legal advice.',
+  toolsIntro:
+    'Your work is done in Matter Desk, the firm’s matters, research, contracts, calendar, billing and document review system, with letters and notes in Word Craft.',
+  skills: [
+    'legal-research',
+    'legal-drafting',
+    'professional-ethics',
+    'case-management',
+    'customer-service',
+    'accuracy',
+    'ai-use',
+  ],
+  apps: ['docs'],
+  tools: [
+    {
+      tool: 'legal',
+      sections: { contracts: 'paralegal', discovery: 'senior-paralegal' },
+    },
+  ],
+  levels: [
+    { id: 'legal-trainee', title: 'Trainee Paralegal', xpRequired: 0, minReputation: 0 },
+    { id: 'paralegal', title: 'Paralegal', xpRequired: 300, minReputation: 35 },
+    {
+      id: 'senior-paralegal',
+      title: 'Senior Paralegal',
+      xpRequired: 700,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'legal-associate',
+      title: 'Associate (Legal Executive)',
+      xpRequired: 1050,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
+
 export function getCareer(id: string): Career {
   return CAREERS.find((career) => career.id === id) ?? CAREERS[0]
 }

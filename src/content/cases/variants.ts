@@ -17,6 +17,43 @@ export interface CaseVariant {
 }
 
 export const CASE_VARIANTS: Record<string, CaseVariant[]> = {
+  // Law ---------------------------------------------------------------------
+  'law-disbursements': [
+    {
+      id: 'dearer-courier',
+      text: [
+        ['£35', '£48'],
+        ['550', '563'],
+      ],
+      numbers: [[550, 563]],
+    },
+  ],
+  'law-adv-settlement': [
+    {
+      id: 'higher-costs',
+      text: [
+        ['£6,000', '£8,000'],
+        ['15,000', '13,000'],
+        ['15000', '13000'],
+      ],
+      numbers: [[15000, 13000]],
+    },
+  ],
+  'law-adv-costs-estimate': [
+    {
+      id: 'higher-rate',
+      text: [
+        ['£160', '£175'],
+        ['4,800', '5,250'],
+        ['4800', '5250'],
+        ['£960', '£1,050'],
+        ['£1,600', '£1,750'],
+        ['£2,240', '£2,450'],
+      ],
+      numbers: [[4800, 5250]],
+    },
+  ],
+  'law-will-i-win': [{ id: 'thursday', text: [['next week', 'on Thursday']] }],
   // Healthcare -------------------------------------------------------------
   'hc-supplies-count': [
     {
