@@ -41,6 +41,23 @@ import type { DevicesState } from '../tools/devices/schema'
 import type { CommsState } from '../tools/comms/schema'
 import type { SocState } from '../tools/soc/schema'
 import { STAGE_NAMES } from '../tools/soc/model'
+import type { ItopsState } from '../tools/itops/schema'
+import {
+  assetByTag,
+  blockedEntry,
+  computersOf,
+  downstreamOf,
+  EQUIPMENT_NAMES,
+  mailboxOf,
+  mailboxStatus,
+  nodeById,
+  nodeState,
+  overQuota,
+  personById,
+  serviceUp,
+  STATUS_NAMES,
+} from '../tools/itops/model'
+import { BUILD_NAMES } from '../tools/itops/deployment'
 import { TicketConditionSchema, type WorkState } from '../persistence/schemas'
 import { changeReputation, changeTrust } from './relationships'
 import type { NetworkState } from '../tools/network/schema'
@@ -60,6 +77,7 @@ export const SYSTEM_NAMES: Record<SystemId, string> = {
   devices: 'Devices',
   comms: 'Communications',
   soc: 'Security Console',
+  itops: 'IT Operations',
 }
 
 /** Which system a condition is checked in. */
@@ -80,6 +98,19 @@ export function systemOf(condition: TicketCondition): SystemId {
       return 'devices'
     case 'incident-closed':
       return 'soc'
+    case 'node-up':
+    case 'node-service':
+    case 'mailbox-receiving':
+    case 'message-delivered':
+    case 'sender-allowed':
+    case 'sender-blocked':
+    case 'rule-removed':
+    case 'has-computer':
+    case 'asset-status':
+    case 'licence-assigned':
+    case 'delivered':
+    case 'hardware-ok':
+      return 'itops'
     default:
       return 'directory'
   }
@@ -262,6 +293,12 @@ function evaluateDirectory(
             state: `${who} is not in ${group?.name ?? condition.group}.`,
           }
     }
+    default:
+      return {
+        label: 'A directory check',
+        passed: false,
+        state: 'This cannot be checked.',
+      }
   }
 }
 
@@ -401,6 +438,189 @@ function evaluateSoc(
       }
 }
 
+const NODE_STATE_WORDS = {
+  up: 'is up',
+  down: 'is not responding',
+  off: 'is powered off',
+  unreachable: 'is up but cut off by a fault above it',
+}
+
+function evaluateItops(
+  condition: TicketCondition,
+  state: ItopsState,
+): Omit<ConditionResult, 'condition'> {
+  const nameOf = (id: string) => personById(state, id)?.name ?? id
+  switch (condition.type) {
+    case 'node-up': {
+      const node = nodeById(state, condition.node)
+      const label = `${condition.node} is up`
+      if (!node) return { label, passed: false, state: `There is no ${condition.node}.` }
+      const s = nodeState(state, node)
+      return { label, passed: s === 'up', state: `${node.name} ${NODE_STATE_WORDS[s]}.` }
+    }
+    case 'node-service': {
+      const label = `${condition.service} is running on ${condition.node}`
+      const ok = serviceUp(state, condition.node, condition.service)
+      const node = nodeById(state, condition.node)
+      const svc = node?.services.find((s) => s.name === condition.service)
+      return {
+        label,
+        passed: ok,
+        state: ok
+          ? `${condition.service} is running on ${condition.node}.`
+          : !node || nodeState(state, node) !== 'up'
+            ? `${condition.node} cannot be reached.`
+            : `${condition.service} on ${condition.node} is ${svc?.state === 'hung' ? 'not responding' : 'stopped'}.`,
+      }
+    }
+    case 'mailbox-receiving': {
+      const box = mailboxOf(state, condition.mailbox)
+      const label = `${condition.mailbox} can receive mail`
+      if (!box)
+        return {
+          label,
+          passed: false,
+          state: `There is no mailbox ${condition.mailbox}.`,
+        }
+      return {
+        label,
+        passed: !overQuota(box),
+        state: `${box.address}: ${box.usedGb.toFixed(2)} of ${box.quotaGb} GB, ${mailboxStatus(box)}.`,
+      }
+    }
+    case 'message-delivered': {
+      const msg = state.messages.find((m) => m.id === condition.message)
+      const label = msg
+        ? `“${msg.subject}” has reached ${msg.to}`
+        : `Message ${condition.message} delivered`
+      if (!msg)
+        return {
+          label,
+          passed: false,
+          state: `There is no message ${condition.message}.`,
+        }
+      const detail = msg.code
+        ? ` (${msg.code})`
+        : msg.status === 'quarantined'
+          ? ` (SCL ${msg.scl})`
+          : ''
+      return {
+        label,
+        passed: msg.status === 'delivered',
+        state: `“${msg.subject}” from ${msg.from}: ${msg.status}${detail}.`,
+      }
+    }
+    case 'sender-allowed':
+    case 'sender-blocked': {
+      const entry = blockedEntry(state, condition.sender)
+      const want = condition.type === 'sender-blocked'
+      return {
+        label: `Mail from ${condition.sender} is ${want ? 'blocked' : 'not blocked'}`,
+        passed: want === !!entry,
+        state: entry
+          ? `${entry.address} is on the blocked list (${entry.reason}).`
+          : `${condition.sender} is not on the blocked list.`,
+      }
+    }
+    case 'rule-removed': {
+      const box = mailboxOf(state, condition.mailbox)
+      const rule = box?.rules.find((r) => r.id === condition.rule)
+      return {
+        label: `The inbox rule ${condition.rule} in ${condition.mailbox} is removed or off`,
+        passed: !rule || !rule.enabled,
+        state: rule
+          ? `“${rule.name}” is ${rule.enabled ? 'on' : 'off'}: ${rule.action}.`
+          : `The rule is gone from ${condition.mailbox}.`,
+      }
+    }
+    case 'has-computer': {
+      const held = computersOf(state, condition.user)
+      const right = held.filter((a) => a.build === condition.build)
+      const who = nameOf(condition.user)
+      const wrong = held
+        .map(
+          (a) =>
+            `${a.hostname ?? a.tag} (${a.build ? BUILD_NAMES[a.build] : 'no build'})`,
+        )
+        .join(', ')
+      return {
+        label: `${who} has a working computer (${BUILD_NAMES[condition.build]} build)`,
+        passed: right.length > 0,
+        state: right.length
+          ? `${who} has ${right.map((a) => a.hostname ?? a.tag).join(', ')}.`
+          : held.length
+            ? `${who} has ${wrong}: the wrong build.`
+            : `${who} has no working computer.`,
+      }
+    }
+    case 'asset-status': {
+      const asset = assetByTag(state, condition.tag)
+      const want =
+        STATUS_NAMES[condition.status as keyof typeof STATUS_NAMES] ?? condition.status
+      const label = `${condition.tag} is ${want}`
+      if (!asset)
+        return { label, passed: false, state: `There is no asset ${condition.tag}.` }
+      return {
+        label,
+        passed: asset.status === condition.status,
+        state: `${asset.tag} is ${STATUS_NAMES[asset.status]}${asset.assignedTo ? ` (with ${nameOf(asset.assignedTo)})` : ''}.`,
+      }
+    }
+    case 'licence-assigned': {
+      const lic = state.licences.find((l) => l.product === condition.product)
+      const ok = !!lic?.assigned.includes(condition.user)
+      const who = nameOf(condition.user)
+      return {
+        label: `${who} has a ${condition.product} licence`,
+        passed: ok,
+        state: ok
+          ? `${who} holds a seat of ${condition.product}.`
+          : `${who} has no ${condition.product} seat (${lic ? `${lic.assigned.length} of ${lic.seats} in use` : 'no such licence'}).`,
+      }
+    }
+    case 'delivered': {
+      const item = condition.item as keyof typeof EQUIPMENT_NAMES
+      const what = EQUIPMENT_NAMES[item] ?? condition.item
+      const who = nameOf(condition.user)
+      const mine = state.shipments.filter(
+        (s) => s.to === condition.user && s.items.includes(item),
+      )
+      const done = mine.find((s) => s.status === 'delivered')
+      return {
+        label: `${what} delivered to ${who}`,
+        passed: !!done,
+        state: done
+          ? `${done.id} was delivered to ${who}.`
+          : mine.length
+            ? `${mine[0].id} is on its way to ${who}.`
+            : `Nothing like that has been sent to ${who}.`,
+      }
+    }
+    case 'hardware-ok': {
+      const asset = assetByTag(state, condition.tag)
+      const label = `${condition.tag} works and is back with its user`
+      if (!asset)
+        return { label, passed: false, state: `There is no asset ${condition.tag}.` }
+      const onBench = state.repairs.some((j) => j.tag === asset.tag)
+      return {
+        label,
+        passed: !asset.hwFault && !onBench && asset.status === 'deployed',
+        state: onBench
+          ? `${asset.tag} is on the Repair Bench.`
+          : asset.hwFault
+            ? `${asset.tag} still has a hardware fault.`
+            : `${asset.tag} is ${STATUS_NAMES[asset.status]}.`,
+      }
+    }
+    default:
+      return {
+        label: 'An IT operations check',
+        passed: false,
+        state: 'This cannot be checked.',
+      }
+  }
+}
+
 /** Checks one condition against the systems as they are now. */
 export function evaluateCondition(
   condition: TicketCondition,
@@ -424,7 +644,9 @@ export function evaluateCondition(
         ? evaluateDevices(condition, state as DevicesState)
         : system === 'soc'
           ? evaluateSoc(condition, state as SocState)
-          : evaluateDirectory(condition, state as DirectoryState)
+          : system === 'itops'
+            ? evaluateItops(condition, state as ItopsState)
+            : evaluateDirectory(condition, state as DirectoryState)
   return { condition, ...result }
 }
 
@@ -569,6 +791,89 @@ export function socChanges(before: SocState, after: SocState): SystemChange[] {
   ]
 }
 
+/**
+ * What changed in IT Operations: a node (and everything below it), a
+ * mailbox, a message, the blocked list, an asset (and who held it), a
+ * licence, a shipment; with the player's actions for the histories.
+ */
+export function itopsChanges(before: ItopsState, after: ItopsState): SystemChange[] {
+  const changes: SystemChange[] = []
+  function diff<T>(
+    a: T[],
+    b: T[],
+    key: (x: T) => string,
+    entities: (x: T, old?: T) => string[],
+  ) {
+    const old = new Map(a.map((x) => [key(x), x]))
+    for (const x of b)
+      if (!same(old.get(key(x)), x))
+        changes.push({ system: 'itops', entities: entities(x, old.get(key(x))) })
+    const now = new Set(b.map(key))
+    for (const x of a)
+      if (!now.has(key(x))) changes.push({ system: 'itops', entities: entities(x) })
+  }
+  diff(
+    before.nodes,
+    after.nodes,
+    (n) => n.id,
+    (n) => [n.id, ...downstreamOf(after, n.id).map((d) => d.id)],
+  )
+  if (before.ispOutage !== after.ispOutage)
+    changes.push({ system: 'itops', entities: after.nodes.map((n) => n.id) })
+  diff(
+    before.mailboxes,
+    after.mailboxes,
+    (m) => m.address,
+    (m) => [m.address, m.address.split('@')[0]],
+  )
+  diff(
+    before.messages,
+    after.messages,
+    (m) => m.id,
+    (m) => [m.id],
+  )
+  diff(
+    before.blocked,
+    after.blocked,
+    (b) => b.address,
+    (b) => [b.address],
+  )
+  diff(
+    before.assets,
+    after.assets,
+    (a) => a.tag,
+    (a, old) => [a.tag, a.assignedTo, old?.assignedTo].filter((x): x is string => !!x),
+  )
+  diff(
+    before.licences,
+    after.licences,
+    (l) => l.product,
+    (l, old) => [...new Set([...l.assigned, ...(old?.assigned ?? [])])],
+  )
+  diff(
+    before.shipments,
+    after.shipments,
+    (s) => s.id,
+    (s) => [s.to],
+  )
+  diff(
+    before.repairs,
+    after.repairs,
+    (j) => j.tag,
+    (j) => [j.tag],
+  )
+  const last = before.log.reduce((max, e) => Math.max(max, e.seq), 0)
+  for (const entry of after.log.filter((e) => e.seq > last)) {
+    if (entry.action === 'Start build') continue
+    changes.push({
+      system: 'itops',
+      entities: [entry.target, entry.target.split(':')[0]],
+      action: [entry.action, entry.target].join(' '),
+    })
+  }
+  return changes
+}
+
 /** The devices, records or accounts a condition is about. */
 function entitiesOf(condition: TicketCondition): string[] {
   switch (condition.type) {
@@ -584,6 +889,24 @@ function entitiesOf(condition: TicketCondition): string[] {
       return [condition.device]
     case 'incident-closed':
       return [condition.incident]
+    case 'node-up':
+    case 'node-service':
+      return [condition.node]
+    case 'mailbox-receiving':
+    case 'rule-removed':
+      return [condition.mailbox, condition.mailbox.split('@')[0]]
+    case 'message-delivered':
+      return [condition.message]
+    case 'sender-allowed':
+    case 'sender-blocked':
+      return [condition.sender, condition.sender.split('@').at(-1) ?? condition.sender]
+    case 'asset-status':
+    case 'hardware-ok':
+      return [condition.tag]
+    case 'has-computer':
+    case 'licence-assigned':
+    case 'delivered':
+      return [condition.user]
     case 'can-reach':
       return [condition.from, condition.host]
     case 'dns-record':
@@ -949,7 +1272,9 @@ export function applyEnvironmentChange<S extends SystemId>(
         ? devicesChanges(before as DevicesState, updated as DevicesState)
         : system === 'soc'
           ? socChanges(before as SocState, updated as SocState)
-          : directoryChanges(before as DirectoryState, updated as DirectoryState)
+          : system === 'itops'
+            ? itopsChanges(before as ItopsState, updated as ItopsState)
+            : directoryChanges(before as DirectoryState, updated as DirectoryState)
   if (changes.length === 0) return { ...content, environment, tickets }
   const next = {
     ...content,

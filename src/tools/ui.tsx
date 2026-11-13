@@ -25,6 +25,8 @@ export interface ToolWorkspaceProps<State> {
   presence?: (person: string) => 'available' | 'busy' | 'away'
   /** The office clock as shown, e.g. "09:42" (for messages). */
   officeTime?: () => string
+  /** Opens another section of the tool from inside it (e.g. the PC Shelf's "Open Ship Manager"). */
+  onOpenSection?: (section: string) => void
 }
 
 // oxlint-disable-next-line no-explicit-any -- each tool has its own state type
@@ -36,6 +38,7 @@ const WORKSPACES: Record<string, Workspace> = {
   devices: lazy(() => import('./devices/DevicesWorkspace')),
   comms: lazy(() => import('./comms/CommsWorkspace')),
   soc: lazy(() => import('./soc/SecurityConsole')),
+  itops: lazy(() => import('./itops/ItopsWorkspace')),
   network: lazy(() => import('./network/NetworkWorkspace')),
   social: lazy(() => import('./social/SocialWorkspace')),
   seo: lazy(() => import('./seo/SeoWorkspace')),

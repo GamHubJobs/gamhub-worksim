@@ -75,7 +75,7 @@ export const securityIncident: AssignmentInput = {
   version: 1,
   careerId: 'it-support',
   levelId: 'senior-support-analyst',
-  order: 13,
+  order: 15,
   kind: 'tickets',
   title: 'Incident response: a compromised account',
   summary:

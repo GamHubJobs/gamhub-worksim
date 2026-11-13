@@ -19,6 +19,7 @@ import { serviceDeskComms } from '../assignments/it/serviceDeskComms'
 import { securityIncident } from '../assignments/it/securityIncident'
 import { companyOutage } from '../assignments/it/companyOutage'
 import { fullDay } from '../assignments/it/fullDay'
+import { hardwareLogistics, serverRoomMail } from '../assignments/it/itOperations'
 import {
   outageDiagnosis,
   outageReview,
@@ -52,6 +53,8 @@ export const PACK: CareerPack = {
     securityIncident,
     companyOutage,
     fullDay,
+    serverRoomMail,
+    hardwareLogistics,
     outageDiagnosis,
     outageReview,
     outageTriage,

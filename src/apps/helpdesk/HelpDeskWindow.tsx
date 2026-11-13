@@ -26,6 +26,8 @@ import type {
   TicketsContent,
 } from '../../persistence/schemas'
 import { getWorkspace } from '../../tools/ui'
+import { companyItops } from '../../tools/itops/data'
+import { deliverDue } from '../../tools/itops/model'
 import { deviceByName, onNetwork } from '../../tools/network/simulation'
 import { Icon, type IconName } from '../../ui/Icon'
 import { KnowledgeBasePanel } from './KnowledgeBasePanel'
@@ -53,7 +55,40 @@ type Tab =
   | 'remote'
   | 'voicemail'
   | 'calls'
+  | ToolTab
   | SystemId
+
+/** The Tools menu: the shared IT estate (IT Operations), always available. */
+const TOOL_GROUPS: Array<{
+  name: string
+  items: Array<{ section: string; label: string; icon: IconName }>
+}> = [
+  {
+    name: 'Infrastructure',
+    items: [
+      { section: 'server-room', label: 'Server Room', icon: 'server' },
+      { section: 'deployment', label: 'Computer Deployment', icon: 'desktop' },
+      { section: 'shelf', label: 'PC Shelf', icon: 'storage' },
+      { section: 'repair', label: 'Repair Bench', icon: 'settings' },
+    ],
+  },
+  {
+    name: 'Email',
+    items: [
+      { section: 'mail-admin', label: 'Mail Admin', icon: 'mail' },
+      { section: 'mail-security', label: 'Mail Security', icon: 'shield' },
+    ],
+  },
+  {
+    name: 'Asset management',
+    items: [
+      { section: 'assets', label: 'Asset Management', icon: 'device' },
+      { section: 'ship', label: 'Ship Manager', icon: 'send' },
+    ],
+  },
+]
+type ToolTab = `tool:${string}`
+const isToolTab = (tab: string): tab is ToolTab => tab.startsWith('tool:')
 
 const SYSTEM_ICONS: Record<SystemId, IconName> = {
   network: 'network',
@@ -61,6 +96,7 @@ const SYSTEM_ICONS: Record<SystemId, IconName> = {
   devices: 'device',
   comms: 'chat',
   soc: 'shield',
+  itops: 'server',
 }
 
 /** Now, for ticket histories: the real time and the office clock. */
@@ -173,6 +209,46 @@ export function HelpDeskWindow({
     content && assignmentKey
       ? JSON.stringify(disruptionsOf(content, assignmentKey))
       : null
+  // The Tools work on the company's shared estate: a queue that has none gets it.
+  const live = state.status === 'ready'
+  const needsEstate = live && isToolTab(tab) && !content?.environment?.itops
+  const { update: updateQueue } = queue
+  useEffect(() => {
+    if (needsEstate)
+      updateQueue((latest) =>
+        latest.environment?.itops
+          ? latest
+          : {
+              ...latest,
+              environment: { ...(latest.environment ?? {}), itops: companyItops() },
+            },
+      )
+  }, [needsEstate, updateQueue])
+
+  // Parcels in transit arrive on time, whichever section is open.
+  const inTransit = content?.environment?.itops?.shipments.some(
+    (s) => s.status === 'in-transit',
+  )
+  const workRef = useRef(profile?.work)
+  useEffect(() => {
+    workRef.current = profile?.work
+  })
+  useEffect(() => {
+    if (!inTransit) return
+    const timer = setInterval(() => {
+      const now = Date.now()
+      updateQueue((latest) =>
+        applyEnvironmentChange(
+          latest,
+          'itops',
+          (s) => deliverDue(s, now),
+          officeMoment(workRef.current),
+        ),
+      )
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [inTransit, updateQueue])
+
   useEffect(() => {
     if (held && assignmentKey && hasSystems)
       void syncDisruptions(assignmentKey, JSON.parse(held) as Disruption[])
@@ -253,8 +329,9 @@ export function HelpDeskWindow({
                 : null
           if (!shown) return null
           // The system a section shows (Remote Desktop is a section of Devices).
-          const system: SystemId | null =
-            tab === 'remote'
+          const system: SystemId | null = isToolTab(tab)
+            ? 'itops'
+            : tab === 'remote'
               ? 'devices'
               : tab === 'voicemail' || tab === 'calls'
                 ? 'comms'
@@ -265,6 +342,13 @@ export function HelpDeskWindow({
                   ? null
                   : tab
           const Workspace = system ? getWorkspace(system) : null
+          // A read-only earlier version without the estate shows it as it starts.
+          const systemState =
+            system === 'itops' && !shown.content.environment?.itops && !shown.live
+              ? companyItops()
+              : system
+                ? shown.content.environment?.[system]
+                : undefined
           const open = (
             officeNow === undefined
               ? shown.content.tickets
@@ -328,6 +412,14 @@ export function HelpDeskWindow({
                   },
                 ]
               : []),
+            ...TOOL_GROUPS.map((g) => ({
+              name: g.name,
+              items: g.items.map((i) => ({
+                id: `tool:${i.section}` as Tab,
+                label: i.label,
+                icon: i.icon,
+              })),
+            })),
             ...(shown.content.environment?.soc
               ? [
                   {
@@ -448,20 +540,26 @@ export function HelpDeskWindow({
                     openArticle={article}
                     onOpenArticle={setArticle}
                   />
-                ) : !system || !Workspace || !shown.content.environment?.[system] ? (
-                  <TicketsEditor
-                    key={`${shown.key}-${focus ?? ''}`}
-                    content={shown.content}
-                    readOnly={!shown.live}
-                    onUpdate={shown.live ? queue.update : undefined}
-                    moment={moment}
-                    initialTicket={focus}
-                    officeNow={officeNow}
-                    onOpenArticle={(id) => {
-                      setArticle(id)
-                      setTab('knowledge')
-                    }}
-                  />
+                ) : !system || !Workspace || !systemState ? (
+                  isToolTab(tab) ? (
+                    <p className="p-6 text-sm text-slate-600">
+                      Opening the company’s IT estate…
+                    </p>
+                  ) : (
+                    <TicketsEditor
+                      key={`${shown.key}-${focus ?? ''}`}
+                      content={shown.content}
+                      readOnly={!shown.live}
+                      onUpdate={shown.live ? queue.update : undefined}
+                      moment={moment}
+                      initialTicket={focus}
+                      officeNow={officeNow}
+                      onOpenArticle={(id) => {
+                        setArticle(id)
+                        setTab('knowledge')
+                      }}
+                    />
+                  )
                 ) : (
                   <Suspense
                     fallback={
@@ -472,15 +570,18 @@ export function HelpDeskWindow({
                   >
                     <Workspace
                       key={`${shown.key}-${tab}`}
-                      state={shown.content.environment[system]}
+                      state={systemState}
                       readOnly={!shown.live}
                       lockedSections={lockedSections[system] ?? {}}
                       now={() => moment().at}
                       initialSection={
-                        tab === 'remote' || tab === 'voicemail' || tab === 'calls'
-                          ? tab
-                          : undefined
+                        isToolTab(tab)
+                          ? tab.slice(5)
+                          : tab === 'remote' || tab === 'voicemail' || tab === 'calls'
+                            ? tab
+                            : undefined
                       }
+                      onOpenSection={(section) => setTab(`tool:${section}`)}
                       tickets={shown.content.tickets.map((t) => ({
                         id: t.id,
                         title: t.subject,

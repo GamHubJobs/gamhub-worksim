@@ -58,6 +58,7 @@ export const IT_COMPETENCIES: ItCompetencyDef[] = [
       { task: 'wifi-outage', checks: ['finding-ap', 'evidence'] },
       { task: 'network-intranet' },
       { task: 'company-outage', checks: ['finding-file', 'finding-dev', 'finding-dns'] },
+      { task: 'server-room-mail', checks: ['floor2-fixed', 'print-fixed', 'no-risk'] },
     ],
   },
   {
@@ -104,7 +105,14 @@ export const IT_COMPETENCIES: ItCompetencyDef[] = [
     name: 'Device management',
     description:
       'Keep the company’s devices healthy: apps, services, updates, storage, settings.',
-    sources: [{ task: 'device-support' }, { task: 'full-day' }],
+    sources: [
+      { task: 'device-support' },
+      { task: 'full-day' },
+      {
+        task: 'hardware-logistics',
+        checks: ['imaging-build', 'manual-build', 'register'],
+      },
+    ],
   },
   {
     id: 'professional-communication',
@@ -133,6 +141,7 @@ export const IT_COMPETENCIES: ItCompetencyDef[] = [
     sources: [
       { task: 'security-incident', checks: ['closed', 'accurate'] },
       { task: 'major-incident' },
+      { task: 'server-room-mail', checks: ['marcus-fixed', 'look-alike-held'] },
     ],
   },
   {

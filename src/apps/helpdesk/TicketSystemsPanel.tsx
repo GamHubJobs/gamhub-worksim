@@ -47,6 +47,26 @@ function subjectOf(result: ConditionResult, environment?: TicketEnvironment): st
       return c.device
     case 'incident-closed':
       return `Security incident ${c.incident}`
+    case 'node-up':
+    case 'node-service':
+      return c.node
+    case 'mailbox-receiving':
+    case 'rule-removed':
+      return `Mailbox ${c.mailbox}`
+    case 'message-delivered':
+      return `Message ${c.message}`
+    case 'sender-allowed':
+    case 'sender-blocked':
+      return `Sender ${c.sender}`
+    case 'asset-status':
+    case 'hardware-ok':
+      return `Asset ${c.tag}`
+    case 'has-computer':
+    case 'licence-assigned':
+    case 'delivered': {
+      const name = environment?.itops?.people.find((p) => p.id === c.user)?.name
+      return name ?? c.user
+    }
     default: {
       const name = environment?.directory?.users.find((u) => u.id === c.user)?.name
       return `${name ?? c.user}’s account`

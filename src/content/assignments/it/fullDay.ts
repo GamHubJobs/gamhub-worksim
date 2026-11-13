@@ -94,7 +94,7 @@ export const fullDay: AssignmentInput = {
   version: 1,
   careerId: 'it-support',
   levelId: 'service-desk-lead',
-  order: 18,
+  order: 20,
   kind: 'tickets',
   title: 'A full day on the desk',
   summary:

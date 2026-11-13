@@ -12,6 +12,7 @@ import { DirectoryStateSchema } from '../tools/directory/schema'
 import { DevicesStateSchema } from '../tools/devices/schema'
 import { CommsStateSchema } from '../tools/comms/schema'
 import { SocStateSchema } from '../tools/soc/schema'
+import { ItopsStateSchema } from '../tools/itops/schema'
 import { NetworkStateSchema } from '../tools/network/schema'
 import { isId } from '../lib/ids'
 
@@ -464,6 +465,39 @@ export const TicketConditionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('print-queue-clear'), device: SystemName }),
   // Security Console (tools/soc): the incident has been worked through to the end.
   z.object({ type: z.literal('incident-closed'), incident: SystemName }),
+  // IT Operations (tools/itops): the shared estate.
+  /** Server Room: the node is up and everything above it works. */
+  z.object({ type: z.literal('node-up'), node: SystemName }),
+  /** Server Room: a service on a server is running. */
+  z.object({ type: z.literal('node-service'), node: SystemName, service: SystemName }),
+  /** Mail Admin: the mailbox is under its quota (it can receive mail). */
+  z.object({ type: z.literal('mailbox-receiving'), mailbox: SystemName }),
+  /** Mail Admin / Security: a message has reached the mailbox. */
+  z.object({ type: z.literal('message-delivered'), message: SystemName }),
+  /** Mail Security: the sender is not on the blocked list. */
+  z.object({ type: z.literal('sender-allowed'), sender: SystemName }),
+  /** Mail Security: the sender is on the blocked list. */
+  z.object({ type: z.literal('sender-blocked'), sender: SystemName }),
+  /** Mail Admin: an inbox rule is gone or switched off. */
+  z.object({ type: z.literal('rule-removed'), mailbox: SystemName, rule: SystemName }),
+  /** Assets: the person holds a working computer with this build. */
+  z.object({
+    type: z.literal('has-computer'),
+    user: SystemName,
+    build: z.enum(['imaging', 'manual']),
+  }),
+  /** Assets: the asset is in this status. */
+  z.object({ type: z.literal('asset-status'), tag: SystemName, status: SystemName }),
+  /** Assets: the person holds a seat of the licence. */
+  z.object({
+    type: z.literal('licence-assigned'),
+    user: SystemName,
+    product: SystemName,
+  }),
+  /** Ship Manager: equipment has been delivered to the person. */
+  z.object({ type: z.literal('delivered'), user: SystemName, item: SystemName }),
+  /** Repair Bench: the laptop's failed part is replaced and it is back with its holder. */
+  z.object({ type: z.literal('hardware-ok'), tag: SystemName }),
 ])
 
 export const TICKET_ACTIVITY_KINDS = [
@@ -562,6 +596,7 @@ export const TicketEnvironmentSchema = z.object({
   devices: DevicesStateSchema.optional(),
   comms: CommsStateSchema.optional(),
   soc: SocStateSchema.optional(),
+  itops: ItopsStateSchema.optional(),
 })
 
 export const TicketsContentSchema = z.object({

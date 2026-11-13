@@ -24,6 +24,8 @@ function startingEnvironment(assignment: Assignment): TicketEnvironment | undefi
   if (environment.comms)
     out.comms = getTool('comms')!.state.parse(environment.comms.start)
   if (environment.soc) out.soc = getTool('soc')!.state.parse(environment.soc.start)
+  if (environment.itops)
+    out.itops = getTool('itops')!.state.parse(environment.itops.start)
   return out
 }
 
@@ -79,28 +81,30 @@ export function gradeEnvironment(
 ): CheckResult[] {
   const environment = assignment.queue?.environment
   if (!environment) return []
-  return (['network', 'directory', 'devices', 'comms', 'soc'] as const).flatMap((id) => {
-    const task = environment[id]
-    const tool = getTool(id)
-    if (!task || !tool || task.checks.length === 0) return []
-    const checks = task.checks as CheckInfo[]
-    const state = queue?.environment?.[id]
-    if (!state)
-      return checks.map((check) =>
-        checkResult(check, 0, [`The work in ${tool.name} was not handed in.`]),
-      )
-    try {
-      return tool.grade(task.checks, state, {
-        start: task.start,
-        solution: task.solution,
-      })
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error)
-      return checks.map((check) =>
-        checkResult(check, 0, [`The work could not be checked: ${reason}`]),
-      )
-    }
-  })
+  return (['network', 'directory', 'devices', 'comms', 'soc', 'itops'] as const).flatMap(
+    (id) => {
+      const task = environment[id]
+      const tool = getTool(id)
+      if (!task || !tool || task.checks.length === 0) return []
+      const checks = task.checks as CheckInfo[]
+      const state = queue?.environment?.[id]
+      if (!state)
+        return checks.map((check) =>
+          checkResult(check, 0, [`The work in ${tool.name} was not handed in.`]),
+        )
+      try {
+        return tool.grade(task.checks, state, {
+          start: task.start,
+          solution: task.solution,
+        })
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error)
+        return checks.map((check) =>
+          checkResult(check, 0, [`The work could not be checked: ${reason}`]),
+        )
+      }
+    },
+  )
 }
 
 const FIELD_NAMES = {
@@ -262,6 +266,9 @@ export function applyTicketSolution(
             : {}),
           ...(environment.soc
             ? { soc: getTool('soc')!.state.parse(environment.soc.solution) }
+            : {}),
+          ...(environment.itops
+            ? { itops: getTool('itops')!.state.parse(environment.itops.solution) }
             : {}),
         }
       : queue.environment

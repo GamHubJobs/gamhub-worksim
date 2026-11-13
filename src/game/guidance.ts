@@ -17,6 +17,7 @@ import { STAGE_GOALS } from '../tools/soc/model'
 import {
   evaluateTicket,
   isMonitored,
+  systemOf,
   type ConditionResult,
   type Moment,
 } from './incidents'
@@ -312,6 +313,79 @@ function securityHints(focus: ConditionResult, content: TicketsContent): Hint[] 
   )
 }
 
+/** Hints for a ticket about the shared estate: the Tools menu's screens. */
+function itopsHints(focus: ConditionResult): Hint[] {
+  const c = focus.condition
+  const tools =
+    'In the Help Desk sidebar, the Tools are under Infrastructure, Email and Asset management.'
+  const [where, next, article] = ((): [string, string, string] => {
+    switch (c.type) {
+      case 'node-up':
+        return [
+          `${tools} Open Server Room: the Overview lists what is down, and Topology shows what sits above whom.`,
+          `${c.node} is the device to look at. If it is hung, reboot that device only; if it is fine, look at what is above it.`,
+          'kb-server-room',
+        ]
+      case 'node-service':
+        return [
+          `${tools} Open Server Room → Servers and find ${c.node}.`,
+          `Start or restart ${c.service} on ${c.node}. Rebooting the whole server would cut off everyone else who uses it.`,
+          'kb-server-room',
+        ]
+      case 'mailbox-receiving':
+      case 'message-delivered':
+        return [
+          `${tools} Open Mail Admin → Message Trace for the mailbox: the status column says what happened.`,
+          'A full mailbox: Mailbox Admin, enable the archive. Held by the filter: Mail Security, release it if it is genuine. Rejected by policy: the sender is blocked.',
+          'kb-mail-trace',
+        ]
+      case 'sender-allowed':
+      case 'sender-blocked':
+        return [
+          `${tools} Open Mail Security → Blocked senders.`,
+          c.type === 'sender-allowed'
+            ? `Find the entry that covers ${c.sender} and read its reason. An old manual block on a genuine partner can be removed.`
+            : `Block ${c.sender} with the right reason so it cannot reach anyone else.`,
+          'kb-quarantine',
+        ]
+      case 'rule-removed':
+        return [
+          `${tools} Open Mail Admin → Inbox Rules for ${c.mailbox}.`,
+          'A rule that applies to all messages and forwards outside the company is not the user’s: delete it, then treat the account as compromised.',
+          'kb-quarantine',
+        ]
+      case 'has-computer':
+      case 'asset-status':
+        return [
+          `${tools} Build in Computer Deployment, then Asset Management: register the unit and check it out (or ship it to someone at home).`,
+          'Check the build SOP for which build the person’s department needs; the ticket only closes with the right one.',
+          c.type === 'has-computer' ? 'kb-deployment' : 'kb-assets',
+        ]
+      case 'hardware-ok':
+        return [
+          `${tools} Open Repair Bench and book the laptop in.`,
+          'Test it first: the symptoms point to the part. Then undo the screws, lift the cover, disconnect the battery, swap the part for the right replacement, close up and prove it boots.',
+          'kb-repair',
+        ]
+      case 'licence-assigned':
+        return [
+          `${tools} Open Asset Management → Licences.`,
+          'If every seat is used, look for someone who no longer needs theirs: a holder who is not in the directory has left.',
+          'kb-assets',
+        ]
+      case 'delivered':
+        return [
+          `${tools} Open Ship Manager.`,
+          'Confirm the address with the person first, reference the ticket, and include a return label with a computer. Delivery takes a moment.',
+          'kb-shipping',
+        ]
+      default:
+        return [tools, 'Look at what the ticket says still fails.', 'kb-server-room']
+    }
+  })()
+  return make([focus.state, where, next, concept(article)], 'knowledge', article)
+}
+
 /** Hints for a ticket without conditions (triage, a reply): from the knowledge base. */
 function classicHints(ticket: Ticket): Hint[] {
   const match: KbArticle | undefined = searchKnowledge(
@@ -359,11 +433,13 @@ export function guidanceFor(ticket: Ticket, content: TicketsContent): Guidance {
     focus.condition.type === 'can-reach' ||
     focus.condition.type === 'dns-record'
       ? networkHints(focus, content)
-      : 'device' in focus.condition
-        ? deviceHints(focus)
-        : focus.condition.type === 'incident-closed'
-          ? securityHints(focus, content)
-          : directoryHints(focus, ticket, content)
+      : systemOf(focus.condition) === 'itops'
+        ? itopsHints(focus)
+        : 'device' in focus.condition
+          ? deviceHints(focus)
+          : focus.condition.type === 'incident-closed'
+            ? securityHints(focus, content)
+            : directoryHints(focus, ticket, content)
   return {
     status: 'working',
     focus,

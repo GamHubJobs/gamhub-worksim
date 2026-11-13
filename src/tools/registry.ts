@@ -11,6 +11,7 @@ import { campaigns } from './campaigns/definition'
 import { dataStudio } from './datastudio/definition'
 import { comms } from './comms/definition'
 import { soc } from './soc/definition'
+import { itops } from './itops/definition'
 import { devices } from './devices/definition'
 import { directory } from './directory/definition'
 import { network } from './network/definition'
@@ -24,6 +25,7 @@ const TOOLS: AnyTool[] = [
   devices,
   comms,
   soc,
+  itops,
   network,
   social,
   seo,

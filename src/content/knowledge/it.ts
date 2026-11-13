@@ -456,6 +456,248 @@ export const IT_KNOWLEDGE: KbArticle[] = [
     ],
     keywords: ['reply', 'update', 'documentation', 'notes', 'writing', 'communication'],
   },
+  {
+    id: 'kb-server-room',
+    title: 'One laptop or one floor: using the Server Room',
+    category: 'Network',
+    summary:
+      'Before working on one person’s computer, check whether a switch, controller or server above them is down. Restart only what is broken.',
+    symptoms: [
+      'Several people in one area report the same thing at once',
+      'A whole service (printing, shared drives, mail) stops for everyone',
+    ],
+    diagnose: [
+      'Open Server Room → Overview: is every node up? What needs attention is listed.',
+      'Topology: find the lowest box that sits above everyone affected. Boxes below a dead one show as cut off.',
+      'Servers: a server can be up with one service stopped or not responding (high CPU).',
+      'Devices: for an internet-wide problem, Check ISP status before touching your own equipment.',
+    ],
+    resolve: [
+      'A hung switch, controller or access point: reboot that device only.',
+      'A stopped or hung service: start or restart the service, not the whole server.',
+      'A provider outage: nothing to restart. Tell people, and keep the ticket updated with what the provider says.',
+    ],
+    escalate:
+      'A device that comes back with a hardware fault after a restart goes to the infrastructure team or the vendor.',
+    concept:
+      'Everything below a device depends on it. Restarting healthy equipment cuts off everyone below it for minutes, which turns one ticket into many.',
+    keywords: [
+      'switch',
+      'floor',
+      'outage',
+      'server',
+      'service',
+      'topology',
+      'reboot',
+      'isp',
+      'spooler',
+    ],
+  },
+  {
+    id: 'kb-mail-trace',
+    title: 'Mail that did not arrive',
+    category: 'Email',
+    summary:
+      'A message trace says what happened to a message: delivered, failed with a code, held by the filter, or waiting to retry.',
+    symptoms: [
+      '“They say they sent it and I don’t have it”',
+      'A sender gets a bounce (a non-delivery report)',
+    ],
+    diagnose: [
+      'Mail Admin → Message Trace for the recipient, over a wide enough window, with the sender if known.',
+      '552 5.2.2 / 452 4.2.2: the mailbox is full. Mailbox Admin shows storage and status.',
+      '550 5.7.1 rejected by policy: the sender is blocked (Mail Security → Blocked senders).',
+      'Quarantined with a spam score: the filter is holding it (Mail Security → Quarantine).',
+      'Delivered: it reached the mailbox. Check the user’s folders and Inbox Rules.',
+    ],
+    resolve: [
+      'Full mailbox: enable the online archive (older mail moves out; waiting mail is then delivered).',
+      'Held genuine mail: release it. Wrongly blocked sender: remove the entry, if its reason does not hold.',
+    ],
+    concept:
+      'Each answer comes from the record, not from guessing: the trace’s status column is the same information a real message trace shows.',
+    keywords: [
+      'email',
+      'bounce',
+      'trace',
+      'quota',
+      'mailbox full',
+      'archive',
+      '552',
+      '550',
+      'missing',
+    ],
+  },
+  {
+    id: 'kb-quarantine',
+    title: 'Quarantine, look-alikes and break-in rules',
+    category: 'Security',
+    summary:
+      'Release only genuine mail. Read the sender domain letter by letter; a rule that forwards everything outside is the sign of a compromised mailbox.',
+    symptoms: [
+      'A genuine message from a partner is held by the filter',
+      'Mail to someone “vanishes” and their inbox is unusually quiet',
+    ],
+    diagnose: [
+      'Mail Security → Review the mailbox. Compare each sender’s domain with the real one: a zero for an o, an extra word, a different ending.',
+      'Urgent requests for passwords or payment are phishing whatever the sender says.',
+      'Mail Admin → Inbox Rules: a rule applying to all messages that forwards outside the company and deletes the original was created by an attacker.',
+    ],
+    resolve: [
+      'Release the genuine message only. Leave look-alikes held; block the domain if it targets several people.',
+      'Delete the forwarding rule, then treat the account as compromised: password reset, sign-in review, and the security team.',
+    ],
+    escalate:
+      'A break-in rule is a security incident: report it, even after removing the rule.',
+    keywords: [
+      'phishing',
+      'quarantine',
+      'release',
+      'spoof',
+      'look-alike',
+      'forward',
+      'rule',
+      'compromised',
+    ],
+  },
+  {
+    id: 'kb-deployment',
+    title: 'Building a computer (Computer Deployment)',
+    category: 'Devices',
+    summary:
+      'Two builds: network imaging for standard staff, and a hand build for shared and warehouse machines. The SOP has the steps, passwords and naming rule.',
+    symptoms: ['A new starter or replacement needs a machine', 'The PC Shelf is empty'],
+    diagnose: [
+      'Check the SOP: which build does the person’s department get?',
+      'Bench setup: every cable to the port its plug fits; the network lead in the DATA socket.',
+      'Imaging needs the deployment server (DEPLOY01) answering; a domain join needs a domain controller.',
+    ],
+    resolve: [
+      'Server Imaging: F12 at the logo, network boot on IPv4, the service account, the standard task sequence, the name by the convention.',
+      'Manual: Shift+F10 then start ms-cxh:localonly, a unique local admin password, privacy off, join the domain with the delegated account, baseline apps from the Company Portal.',
+      'Prove the join with the build-check domain account, then shelve the unit and register it.',
+    ],
+    concept:
+      'A build is a procedure: done the same way every time, from the runbook, so every machine is supportable. Hints are counted; the SOP is free.',
+    keywords: [
+      'build',
+      'image',
+      'pxe',
+      'deploy',
+      'new computer',
+      'laptop',
+      'domain join',
+      'sop',
+      'naming',
+    ],
+  },
+  {
+    id: 'kb-assets',
+    title: 'The asset register and licences',
+    category: 'Documentation',
+    summary:
+      'Every device has one record with one status and one holder, and they must agree. Licence seats come back from people who leave.',
+    symptoms: [
+      'A new unit needs to go to someone',
+      'No free seats for a licence',
+      'A device is returned, broken or lost',
+    ],
+    diagnose: [
+      'Asset Management → New asset: built units are registered before they can be checked out.',
+      'By users: who holds what, and who has no computer.',
+      'Licences: who holds each seat; anyone not in the directory has left.',
+    ],
+    resolve: [
+      'Register the unit, then check it out to someone in the office (or ship it to someone at home).',
+      'Returned computers are checked in and re-imaged before they go out again.',
+      'Broken, lost and decommissioned records stay in the register.',
+      'Reclaim a seat from a leaver, then assign it.',
+    ],
+    concept:
+      'The register is what an auditor reads. A record that says Deployed with nobody holding it is hardware the company can no longer account for.',
+    keywords: [
+      'asset',
+      'register',
+      'inventory',
+      'warranty',
+      'licence',
+      'license',
+      'seat',
+      'check out',
+      'tag',
+    ],
+  },
+  {
+    id: 'kb-shipping',
+    title: 'Sending hardware to remote staff',
+    category: 'Devices',
+    summary:
+      'Confirm the address with the person, reference the ticket, and send a computer with a return label for the old one.',
+    symptoms: [
+      'A remote worker’s device has failed',
+      'A remote new starter needs equipment',
+    ],
+    diagnose: [
+      'Ship Manager: message the person to confirm where they are now; the address on file can be years old.',
+      'Is there a built, suitable unit on the PC Shelf, with the right build for their role?',
+    ],
+    resolve: [
+      'Recipient from the staff list, their confirmed address, the ticket as reference, the equipment, the speed.',
+      'A whole computer always goes with a prepaid return label to the IT department or warehouse.',
+      'Tell the person what is coming, when, and what to do with the old device.',
+    ],
+    concept:
+      'A shipping ticket is mostly record-keeping: who confirmed the address, which unit went, which label, and the next expected event.',
+    keywords: [
+      'ship',
+      'courier',
+      'remote',
+      'parcel',
+      'return label',
+      'delivery',
+      'address',
+      'headset',
+    ],
+  },
+  {
+    id: 'kb-repair',
+    title: 'Repairing a laptop on the bench',
+    category: 'Devices',
+    summary:
+      'Let the symptoms point to the part, work safely inside, fit an exact replacement, and prove it boots before it goes back.',
+    symptoms: [
+      'Beeps at power-on and no picture',
+      '“No bootable device”',
+      'Shuts down with a fan error',
+      'Dies when unplugged; the base is raised',
+    ],
+    diagnose: [
+      'Repair Bench: book the laptop in and run the power-on test and the built-in diagnostics.',
+      'Beep code 3 (memory) means diagnostics cannot run; a failed drive, fan or battery is named by the diagnostics with its code.',
+      'Battery health in the firmware shows a worn or swollen battery.',
+    ],
+    resolve: [
+      'Undo every base screw (into the tray), lift the cover, and disconnect the battery before touching anything.',
+      'Take out the failed part and fit the exact replacement for this model: the parts bin has look-alikes that do not fit.',
+      'Reconnect the battery, refit the cover and screws, and run the power-on test until it boots to Windows.',
+    ],
+    escalate:
+      'A swollen battery is a fire risk: store it in the fireproof bin and send it for recycling, never in normal waste.',
+    concept:
+      'Working on a board with the battery connected can short it. Parts are keyed by size and type, so the model number decides what fits.',
+    keywords: [
+      'repair',
+      'beep',
+      'memory',
+      'ram',
+      'ssd',
+      'battery',
+      'fan',
+      'hardware',
+      'replace',
+      'diagnostics',
+    ],
+  },
 ]
 
 export function getArticle(id: string): KbArticle | undefined {

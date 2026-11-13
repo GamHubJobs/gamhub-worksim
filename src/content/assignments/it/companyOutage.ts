@@ -62,7 +62,7 @@ export const companyOutage: AssignmentInput = {
   version: 1,
   careerId: 'it-support',
   levelId: 'service-desk-lead',
-  order: 17,
+  order: 19,
   kind: 'tickets',
   title: 'One morning, five departments',
   summary:

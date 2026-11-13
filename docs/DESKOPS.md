@@ -10,7 +10,7 @@ still called Help Desk).
   opens as a full IT operations application.
 
 Phase by phase, with the details of each: the development log (IT Help Desk 1
-to 9), [STATE_AWARE_TICKETS.md](STATE_AWARE_TICKETS.md),
+to 10), [IT_OPERATIONS_TOOLS.md](IT_OPERATIONS_TOOLS.md), [STATE_AWARE_TICKETS.md](STATE_AWARE_TICKETS.md),
 [IDENTITY_VERIFICATION.md](IDENTITY_VERIFICATION.md), and the continuation
 record [DESKOPS_CONTINUATION.md](DESKOPS_CONTINUATION.md).
 
@@ -33,11 +33,13 @@ Help Desk window (the shell: a sidebar of sections)
  ├─ Service desk:    Overview · Ticket queue · Knowledge Base · Reports
  ├─ Systems:         Network Tools · Directory · Device Management · Remote Desktop
  ├─ Communications:  Chat · Voicemail · Calls
- └─ Security:        Security Console
+ ├─ Security:        Security Console
+ └─ Tools (always):  Server Room · Computer Deployment · PC Shelf · Repair Bench ·
+                     Mail Admin · Mail Security · Asset Management · Ship Manager
 
 One saved document per scenario (a "tickets" document):
  tickets[]           conditions, history (with office time), assignee, hints, impact, SLA data
- environment         network · directory · devices · comms · soc  (each a tool's own state)
+ environment         network · directory · devices · comms · soc · itops  (each a tool's own state)
  officeDay           when the queue started, for SLAs
 ```
 
@@ -61,19 +63,22 @@ One saved document per scenario (a "tickets" document):
 | Devices   | `src/tools/devices`   | Computers: apps, services, processes, storage, updates, settings, print queue, event log |
 | Comms     | `src/tools/comms`     | Chat channels, voicemail, support calls and the communication assessment                 |
 | Security  | `src/tools/soc`       | Sign-ins, alerts, endpoints, emails, mailboxes, accounts, and an incident with 8 stages  |
+| IT Ops    | `src/tools/itops`     | Server room, mail and filter, asset register and shelf, shipping, licences, builds       |
 
 ## What the player learns, task by task
 
-| IT order | Task                                     | Level   | What is new                                         |
-| -------- | ---------------------------------------- | ------- | --------------------------------------------------- |
-| 7        | Floor 2 has lost its Wi-Fi               | Analyst | Tickets checked against the systems                 |
-| 8        | The Account Unlock Request               | Analyst | Identity verification and authorisation             |
-| 9        | Slow laptops and stubborn apps           | Analyst | Device Management and Remote Desktop                |
-| 10       | Phones, voicemail and chat               | Analyst | Communications and the communication assessment     |
-| 13       | Incident response: a compromised account | Senior  | The Security Console and incident response          |
-| 17       | One morning, five departments            | Lead    | Business impact, prioritisation, consequences       |
-| 18       | A full day on the desk                   | Lead    | SLAs on the office clock, arrivals, reports         |
-| Final    | Readiness: run the service desk          | Lead    | Unguided practical work and the judgement around it |
+| IT order | Task                                      | Level   | What is new                                            |
+| -------- | ----------------------------------------- | ------- | ------------------------------------------------------ |
+| 7        | Floor 2 has lost its Wi-Fi                | Analyst | Tickets checked against the systems                    |
+| 8        | The Account Unlock Request                | Analyst | Identity verification and authorisation                |
+| 9        | Slow laptops and stubborn apps            | Analyst | Device Management and Remote Desktop                   |
+| 10       | Phones, voicemail and chat                | Analyst | Communications and the communication assessment        |
+| 11       | The server room and the mail system       | Analyst | The Tools menu: Server Room, Mail Admin, Mail Security |
+| 12       | A dead laptop, a new supervisor, a parcel | Analyst | Computer Deployment, PC Shelf, assets, Ship Manager    |
+| 15       | Incident response: a compromised account  | Senior  | The Security Console and incident response             |
+| 19       | One morning, five departments             | Lead    | Business impact, prioritisation, consequences          |
+| 20       | A full day on the desk                    | Lead    | SLAs on the office clock, arrivals, reports            |
+| Final    | Readiness: run the service desk           | Lead    | Unguided practical work and the judgement around it    |
 
 ## Learning support
 
@@ -84,7 +89,7 @@ One saved document per scenario (a "tickets" document):
 
   Each hint takes 5% off the task's XP (at most 30%), never the score.
 
-- **The IT Knowledge Base** (`src/content/knowledge/it.ts`): 22 articles, with
+- **The IT Knowledge Base** (`src/content/knowledge/it.ts`): 29 articles, with
   search and bookmarks; offline.
 - **WorkSim AI** (the existing assistant, with a built-in offline guide or the
   player's own provider) sees the ticket's real situation. It explains and

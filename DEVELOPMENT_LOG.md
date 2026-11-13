@@ -190,6 +190,185 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · IT Help Desk 10: the Tools menu (Server Room, Computer Deployment, PC Shelf, Repair Bench, Mail Admin, Mail Security, Asset Management, Ship Manager) and the hands-on simulations
+
+The Help Desk now has an always-available **Tools** menu that works on the
+company's shared IT estate. The player does the technician's real jobs:
+diagnosing infrastructure, building computers, running the mail system,
+keeping the asset register and shipping hardware. Full description:
+`docs/IT_OPERATIONS_TOOLS.md`.
+
+### What was built
+
+- **A new system, IT Operations** (`src/tools/itops/`), beside network,
+  directory, devices, comms and soc:
+  - **Server Room:** an overview (provider, network health, devices and
+    servers up, what needs attention), the topology from the internet to each
+    zone (cut-off nodes shown), the equipment table (reboot, shut down, power
+    on, check the provider) and the servers with their services (start,
+    restart).
+    - A hung device recovers after a reboot; a hardware fault does not.
+    - Restarting or shutting down healthy equipment people depend on is
+      logged as risky.
+  - **Computer Deployment:** two builds worked from an SOP (with passwords,
+    the naming rule and which department gets which build).
+    - **Bench cabling:** pick a cable, choose a port. A plug that does not fit
+      is refused; the network lead in the VOICE socket is caught.
+    - **Server Imaging:** catch the boot menu (F12, by keyboard or Send
+      keys), network boot on IPv4, the deployment account, the task sequence,
+      the computer name, the run, proving the domain join.
+    - **Manual Domain Enrollment:** region and keyboard, getting past the
+      online-account screen (Shift+F10 and the command), the local
+      administrator and password policy, privacy settings, the domain join in
+      System Properties, proving the join, and the baseline apps from the
+      Company Portal (sponsored web results are junkware).
+    - Wrong answers are refused with the reason and counted; hints are
+      optional and counted; a build can be paused, continued or discarded.
+    - Builds depend on the real systems: no PXE answer if DEPLOY01's
+      responder is stopped, no domain join without a domain controller.
+    - Returned units can be re-imaged.
+  - **PC Shelf:** the built units with name, build and status.
+  - **Asset Management:** the register by asset, by person (with a sync from
+    the directory) and by site; registering new stock; check out, check in
+    (computers then need re-imaging), broken, lost, decommissioned;
+    warranties; licences with seats, assign and reclaim. Record problems
+    (status and holder disagreeing) are shown and graded.
+  - **Ship Manager:** recipient, address, ticket reference, equipment, the
+    computer from the shelf, speed and return label.
+    - The address must be the person's real one: the address on file can be
+      out of date, so the player messages them to confirm it.
+    - A near miss (a misspelt city) offers the matching record.
+    - A computer only ships with a return label.
+    - The parcel counts down and is delivered whichever section is open; the
+      recipient says whether it is the right build.
+  - **Mail Admin:** message trace (window and sender) with the real SMTP
+    codes, mailbox storage and status, the online archive (waiting mail is
+    delivered once there is room), and inbox rules.
+  - **Mail Security:** quarantine (release, undo) and the company-wide
+    blocked senders (remove, block).
+- **Tickets react** through `applyEnvironmentChange`, with eleven new
+  conditions. Examples: a switch up, a service running, a mailbox receiving,
+  a message delivered, a rule removed, a person holding a computer of the
+  right build, a licence assigned, a parcel delivered.
+- **The menu works in every queue:** a queue without the estate gets the
+  healthy one the first time a tool is opened. Older saves stay valid.
+- **Guidance and knowledge:** hints for every new condition, and six new
+  Knowledge Base articles (28 in all).
+- **Two new tasks** (Service Desk Analyst, IT orders 11 and 12; later tasks
+  moved down two):
+  - **"The server room and the mail system":**
+    - a dead floor reported twice (one cause) and a stopped print service;
+    - a full mailbox, the auditor's mail held by the filter next to a
+      look-alike that must stay held, and a partner blocked by an old
+      clean-up;
+    - a break-in forwarding rule in an executive's mailbox.
+  - **"A dead laptop, a new supervisor and a parcel":**
+    - both builds, registration, and a hand-over in the office;
+    - a shipment to a remote worker's confirmed address with a return label;
+    - a licence seat freed from a leaver, and a headset sent.
+- **Competencies:** the new tasks count towards network troubleshooting,
+  device management and incident response.
+
+### The hands-on simulations (visual reconstruction)
+
+- **The physical setup bench** replaces the list of cable buttons. It is one
+  full-width vector drawing of real hardware:
+  - **What is on it:** a laptop you turn to its left side, right side or open
+    lid (or a tower's rear and front), a USB-C dock, a monitor with its port
+    panel, and the floor box's DATA and VOICE sockets.
+  - **Ports and plugs:** each port is drawn in its real shape, and every
+    cable in the tray has its own drawn connector.
+  - **Connecting:** drag a connector onto a port (or click, then click).
+    Compatible ports are outlined while a plug is held. A plug that does not
+    fit is refused and the port shakes. A connected cable stays in its port
+    with its run hanging behind the equipment, and dragging it away unplugs
+    it.
+  - **The equipment responds only to what is really connected:**
+    - the dock and charge lights;
+    - the tower's power-supply fan;
+    - the network link light (only from the DATA socket);
+    - the monitor (off, "No signal", then a picture).
+  - Front USB ports were added to the tower.
+- **The bench monitor:** every build screen is shown on a monitor with a
+  bezel and stand. The firmware screen, Windows setup, the deployment wizard
+  and sign-in each have their own background.
+- **The Repair Bench** (a new tool): a faulty laptop upside down on an
+  anti-static mat.
+  - **Testing:** a power-on test, the built-in diagnostics and the battery
+    health give the real symptoms.
+  - **Opening it:** undo eight screws into the screw tray and lift the cover.
+    The inside is drawn: fan and heat pipe, memory, M.2 drive, battery and
+    its connector. A swollen battery bulges and a failed fan is dusty.
+  - **The rules:**
+    - parts cannot come out with the battery connected (refused and logged
+      as risky);
+    - look-alike parts are refused with the reason;
+    - the laptop goes back only when it is closed and boots.
+  - **A new condition, `hardware-ok`, and a fifth hardware ticket:** Dana's
+    laptop beeps three times (failed memory). The task also gained a step,
+    a Knowledge Base article (29 in all) and a hint.
+
+### The reference
+
+The public course pages of an existing service desk training product were
+studied with REA browser captures (public pages only; nothing behind a
+sign-in). Only the list of jobs each kind of tool covers was taken. The
+screens, data, wording, SOP, steps and scenarios are WorkSim's own. Observed
+versus decided is in `docs/IT_OPERATIONS_TOOLS.md`.
+
+### Tests
+
+- **Unit** (`tools/itops/itops.test.ts`, 15):
+  - the healthy estate;
+  - Server Room: reboots, risk, hardware faults, services;
+  - mail: archive and delivery, risky releases and unblocks;
+  - the register rules;
+  - shipping: a stale address, the return label, a near miss, delivery;
+  - both builds end to end, and refusals and blocked steps;
+  - tickets resolving only when the systems are fixed, and only with the
+    right build.
+- **Content:** the two tasks' model answers grade to full marks with the
+  existing content checks.
+- **Unit, Repair Bench and bench drawing** (3 more):
+  - the repair rules end to end;
+  - a repair ticket staying open until the laptop is fixed and back;
+  - every port having a place on the bench drawing.
+- **Browser** (`tests/e2e/deskops-tools.spec.ts`, 4):
+  - the Tools menu; the switch, the spooler and a full mailbox fixed; the
+    look-alike in quarantine;
+  - a laptop built through every screen:
+    - a real mouse drag of a cable onto the dock;
+    - a refused plug;
+    - all ten cables connected, the monitor showing a picture, and the
+      laptop turned to its other side;
+    - then registered, shipped, and Rosa's ticket resolving on delivery;
+  - the Tools in the very first (classic) queue;
+  - Dana's repair: the beep code, the screws, the refusals with the battery
+    connected and for the wrong memory, the swap, the proof, and her ticket
+    resolving.
+- **Visual check** found three things, all fixed:
+  - the cabling port panels had lost their dark background;
+  - a server with a stopped service counted as healthy on the overview;
+  - hanging cables were drawn over the monitor's text, and now run behind
+    the equipment.
+- **Results:**
+  - `npm run check` passes: formatting, lint, types and 2,562 unit tests.
+  - The 4 new browser tests pass.
+  - The full browser run was stopped after 177 of 237 tests on an overloaded machine. The 7 tests that had failed there all timed out before the desktop appeared, in Data Studio, Deck Craft, Grid Craft and the 3D office; none of them touches the Help Desk.
+  - Re-run on their own with 2 workers: 19 passed and 5 flaky (failed once, passed on retry; Deck Craft, the café, the interiors and the whole-journey test).
+  - The production build passes.
+
+### Limits
+
+- **Cloud provisioning is not built** (shown as not available).
+- **Shipping times are seconds,** not days: Standard 40 s down to same-day.
+- **The return leg is not tracked** after delivery.
+- **Ship Manager does not check the recipient against the ticket:** the
+  ticket's own conditions decide whether the right person got the right
+  machine.
+
+---
+
 ## 2026-11-12 · IT Help Desk 9: competencies, portfolio evidence, the final readiness assessment and career completion
 
 The last phase ties the IT operations work into the career: what the player
