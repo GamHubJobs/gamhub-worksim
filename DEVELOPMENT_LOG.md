@@ -190,6 +190,74 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Healthcare 1: Ward Systems, the hospital's systems (simulation)
+
+Part 2 of the consolidated prompt, built in stages. This first stage is the
+software a hospital ward runs on. The career itself (its people, tasks,
+assessments and story) and the walkable hospital follow in the next stages.
+
+### Key decisions
+
+- **One tool, several systems.** The systems are sections of one console
+  (`src/tools/clinical`), as many hospitals present them. The sections are:
+  - the patient record (EHR);
+  - appointments;
+  - the laboratory system;
+  - pharmacy;
+  - beds and admissions;
+  - an audit log.
+- **Safety by design:**
+  - Every patient, clinician, medicine and test range is fictional, and every
+    screen says so.
+  - The medicines are invented names, grouped as real allergy records are.
+  - The player never diagnoses or prescribes. Prescriptions come from
+    fictional doctors; the player's part is the safe process around them:
+    - privacy;
+    - identity checks;
+    - allergies;
+    - escalation;
+    - labelling;
+    - documentation.
+- **A simplified early-warning score,** in the style of hospital charts but
+  labelled as a teaching score, which decides how urgently to escalate.
+
+### What was built
+
+- **Patient record:**
+  - search by name, hospital number or date of birth;
+  - patients outside your care need a reason to open, which is recorded;
+  - a banner with allergies and alerts;
+  - observations with a live score and what to do;
+  - notes (signed or draft), and escalation in SBAR form;
+  - the medicines chart, with bedside identity and allergy checks, and a
+    reason for any dose not given;
+  - tests, labelled at the bedside.
+- **Appointments:** clinic lists; booking without double-booking; arrived,
+  seen, cancelled and did not attend, in order.
+- **Laboratory:**
+  - the worklist shows each label beside its request;
+  - mismatched labels are rejected and the specimen re-requested;
+  - results are flagged against teaching ranges;
+  - critical results must be phoned to a named person.
+- **Pharmacy:** verifying, querying and dispensing, with allergy and
+  duplicate alerts that the pharmacist must act on.
+- **Beds:** a bed board; admission only to clean, empty beds; cleaning;
+  discharge only after a signed discharge summary.
+- **Grading checks:**
+  - privacy;
+  - observations;
+  - notes (with required content);
+  - medicines (status, dose, query content);
+  - laboratory requests;
+  - appointments;
+  - patients;
+  - no unsafe medicine going ahead.
+
+### Tests
+
+- Unit tests of every rule and of the grading.
+- The shared tool tests (practice data, guide, schema) cover the new tool too.
+
 ## 2026-11-13 · The Code editor becomes a full IDE
 
 Part 4 of the consolidated prompt: an IDE inspired by VS Code and VSCodium.
