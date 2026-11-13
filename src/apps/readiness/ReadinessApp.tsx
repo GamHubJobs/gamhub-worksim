@@ -19,6 +19,7 @@ import { levelNumber, minutesLeft } from '../../game/cases'
 import { formatDuration } from '../../game/clock'
 import type { AssessmentAttempt, Profile } from '../../persistence/schemas'
 import { CaseDetail } from '../cases/CasesApp'
+import { ItReadiness } from './ItReadiness'
 
 const shortTitle = (def: Case) => def.title.replace(/^Readiness assessment: /, '')
 
@@ -83,9 +84,26 @@ export function ReadinessApp({
             )
           })}
         </ul>
+        {profile.careerId === 'it-support' && (
+          <button
+            type="button"
+            onClick={() => onSelect('it-operations')}
+            aria-current={selected === 'it-operations' ? 'true' : undefined}
+            className={`mt-4 w-full rounded-lg border p-3 text-left text-sm hover:bg-slate-50 ${selected === 'it-operations' ? 'border-blue-400 bg-blue-50' : 'border-slate-200'}`}
+          >
+            <span className="block font-medium text-slate-900">
+              IT operations competencies
+            </span>
+            <span className="block text-xs text-slate-600">
+              Your competencies, service record and completion
+            </span>
+          </button>
+        )}
       </nav>
       <main className="min-w-0 flex-1 overflow-y-auto">
-        {chosen ? (
+        {selected === 'it-operations' && profile.careerId === 'it-support' ? (
+          <ItReadiness profile={profile} />
+        ) : chosen ? (
           <AssessmentView
             key={chosen.id}
             def={chosen}

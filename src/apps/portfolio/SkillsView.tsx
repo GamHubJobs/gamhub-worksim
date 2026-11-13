@@ -15,6 +15,7 @@ import {
 } from '../../game/competencies'
 import { toolName } from '../../game/portfolio'
 import type { PortfolioItem, Profile } from '../../persistence/schemas'
+import { ItCompetencyTable } from '../readiness/ItReadiness'
 
 const LEVEL_STYLES: Record<CompetencyLevel, string> = {
   'not-yet': 'bg-slate-100 text-slate-600',
@@ -156,6 +157,23 @@ export function SkillsView({
           ))}
         </ul>
       </section>
+
+      {profiles
+        .filter((p) => p.careerId === 'it-support')
+        .map((p) => (
+          <section
+            key={p.id}
+            className="rounded-xl border border-slate-200 bg-white p-6"
+            aria-label="IT operations competencies"
+          >
+            <h2 className="font-semibold text-slate-900">IT operations competencies</h2>
+            <p className="mt-1 mb-3 text-sm text-slate-600">
+              The IT support and operations competencies shown in your passed Help Desk
+              work. Work done without hints counts as stronger evidence.
+            </p>
+            <ItCompetencyTable profile={p} />
+          </section>
+        ))}
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="font-semibold text-slate-900">To improve</h2>

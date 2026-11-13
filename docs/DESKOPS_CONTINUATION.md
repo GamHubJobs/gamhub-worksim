@@ -50,56 +50,9 @@ every phase.
 | 5     | Chat, voicemail, support calls, communication assessment        | Done `4faf405` |
 | 6     | Security operations: console, investigations, incident response | Done `1f71ab7` |
 | 7     | Cross-department incidents, consequences, prioritisation        | Done `aef82fa` |
-| 8     | SLAs (office time), reports, workload, manager reviews          | Done           |
-| 9     | Competencies, portfolio evidence, readiness, career completion  | In progress    |
+| 8     | SLAs (office time), reports, workload, manager reviews          | Done `dd81d0e` |
+| 9     | Competencies, portfolio evidence, readiness, career completion  | Done           |
 
 ## Next steps
 
-**Phase 7: done.**
-
-**Phase 7 (as planned, for reference): cross-department incidents, consequences, prioritisation.**
-
-- Tickets gain an optional `impact` (business service, people affected,
-  deadline), passed from `QueueSchema`. The Overview shows a Business impact
-  panel: per department, the people held up and what is at risk.
-- **Consequences** (existing systems): when a Help Desk task is first
-  submitted, each requester's trust changes with their ticket's outcome
-  (fixed, or not), and reputation follows the overall outcome. This lives in
-  `useCareer.submitAssignment`, via a pure `serviceOutcomes(content)` in
-  `game/incidents.ts`, applied with `changeTrust` and `changeReputation`.
-- **Task "One fault, five departments"** (service-desk-lead, IT order 17, at
-  the end, so nothing is renumbered). On the network:
-  - file-01's file sharing has stopped (Finance, Accounting, Data);
-  - a development server is down (Engineering);
-  - Marketing's publishing tool cannot reach the intranet;
-  - low-priority requests interrupt.
-
-  It is graded on the fixes and on the priorities (`field` checks).
-
-**Phase 8: SLAs on the office clock, reports, workload, manager reviews.** Drafted in the scratchpad (`p8/`: sla.ts, serviceReport.ts, ReportsPanel.tsx).
-
-- `TicketActivity` gains `office` (absolute office minutes, from `Moment`).
-  The queue gains `officeDay`.
-- **`game/sla.ts`:** targets by priority, response and resolution due, time
-  remaining, met, at risk or breached. Shown in the queue, the ticket and the
-  Overview.
-- **A Reports section:** `serviceReport` over all the player's IT queues
-  (loaded with `getDocument`). It shows received, resolved, reopened, average
-  resolution, overdue, categories, departments, escalations, first-contact
-  resolution, and satisfaction (each formula documented).
-- **Workload:** tickets can arrive later in the office day (`arrives`
-  minutes); a task with arrivals.
-- **Manager reviews:** `reviewFor` adds IT service evidence (fixes, security
-  checks, communication checks, documentation) from the attempts' checks.
-
-**Phase 9: competencies, portfolio, readiness, completion.**
-
-- **`game/itCompetencies.ts`:** 14 IT operations competencies, mapped to tasks
-  and checks. Levels come from passed portfolio items' checks; independent
-  work (no hints) counts as stronger evidence. Shown in Portfolio and
-  Readiness for the IT career.
-- **Portfolio:** DeskOps evidence summaries (tickets, incidents,
-  investigations, communication assessments, manager feedback).
-- **The IT readiness assessment** is extended with a practical scenario.
-- **A career completion record** reflects the demonstrated competencies, and
-  is clearly not a real-world certification.
+All nine phases are done. The whole system is described in [DESKOPS.md](DESKOPS.md); each phase in the development log (IT Help Desk 1 to 9). Possible later work: more scenarios that combine several systems in one task, drag-and-drop windows in Remote Desktop, and a separate department performance score.

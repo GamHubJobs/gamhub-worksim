@@ -59,12 +59,15 @@ const figures = (def: Case) =>
   def.steps.flatMap((s) => (s.kind === 'figure' ? [s.answer] : []))
 
 describe('readiness assessment content', () => {
-  it('gives every career an assessment at level 2 and at level 3', () => {
+  it('gives every career an assessment at level 2 and at level 3 (IT also a final one)', () => {
     for (const career of CAREERS) {
-      expect(careerAssessments(career.id).map((a) => a.minLevel)).toEqual([2, 3])
+      // IT support also ends with a final readiness assessment at its last level.
+      expect(careerAssessments(career.id).map((a) => a.minLevel)).toEqual(
+        career.id === 'it-support' ? [2, 3, 4] : [2, 3],
+      )
       expect(career.levels.length).toBeGreaterThanOrEqual(4)
     }
-    expect(ASSESSMENTS).toHaveLength(12)
+    expect(ASSESSMENTS).toHaveLength(13)
   })
 
   it.each(ALL.map((a) => [`${a.id} version ${a.version}`, a] as const))(

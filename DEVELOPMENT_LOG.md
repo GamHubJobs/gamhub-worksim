@@ -190,6 +190,85 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-12 · IT Help Desk 9: competencies, portfolio evidence, the final readiness assessment and career completion
+
+The last phase ties the IT operations work into the career: what the player
+has demonstrated, a record of their service, a final unguided assessment, and
+a completion record. The whole system is described in `docs/DESKOPS.md`.
+
+### What was built
+
+- **The IT operations competency framework** (`game/itCompetencies.ts`): 14
+  competencies.
+  - **The list:** ticket management, incident management, network
+    troubleshooting, directory administration, identity verification, access
+    management, remote support, device management, professional
+    communication, security investigation, incident response, knowledge and
+    documentation, SLA management, IT service reporting.
+  - **Evidence:** each is shown by specific checks of specific tasks; a passed
+    task counts only if those checks passed.
+  - **Levels:** one piece of evidence demonstrates a competency, two practise
+    it, and two with at least one done without hints make it proficient.
+  - **Nothing is stored:** it is worked out from the career record each time.
+- **In Readiness (IT career): "IT operations competencies":**
+  - the 14 competencies, each with its evidence (score, and whether done
+    without hints);
+  - a service record from the player's own queues: tickets, resolved,
+    overdue, first-contact resolution, average resolution, reopened, calls,
+    estimated satisfaction;
+  - the career completion record.
+- **In the Portfolio's skills view:** the same competency evidence.
+- **The final readiness assessment, "Run the service desk"** (Service Desk
+  Lead, the last level; the existing assessment system):
+  - **Practical work** in the Help Desk, from a fresh start and without the
+    guide: the five-department outage (version a) or the security incident
+    (version b).
+  - **Judging the shift:** priority over arrival order, verification under
+    pressure, no blanket containment.
+  - **A calculation:** the minutes left on a P1's target.
+  - **A decision:** what to do next.
+  - **Writing:** a shift report in Word Craft, and a handover.
+
+  It cannot block anything: the last level has no promotion after it.
+
+- **Career completion:**
+  - it needs every IT task and the final assessment;
+  - the record states what was demonstrated;
+  - it says it is a record of work in a simulation, not a certification, and
+    not a promise of employment.
+
+### Tests
+
+- **Unit** (`game/itCompetencies.test.ts`, 7):
+  - every task and check the framework names exists;
+  - nothing shown before any work;
+  - a task counts only with its relevant checks passed;
+  - practised, or proficient with independent work;
+  - a failed task does not count;
+  - completion needs every task and the final assessment;
+  - the final assessment's versions have practical Help Desk work, and its
+    arithmetic is right.
+- **One existing test updated:** `game/assessments.test.ts` expected every
+  career to have assessments at exactly levels 2 and 3. IT support now also
+  has its final one at level 4.
+- **Browser** (`tests/e2e/deskops-readiness.spec.ts`):
+  - the final assessment listed and ready at the last level;
+  - the 14 competencies;
+  - the completion record (not yet complete, final assessment ready to take);
+  - the not-a-certification wording.
+- **Visual check:** the completion line said the assessment "opens at Service
+  Desk Lead" to a lead. Fixed.
+- **Results after:** `npm run check` clean (112 files, 2,519 tests). The full regression: Chromium browser tests 229 passed, 1 failed, 2 flaky, 3 skipped. The failed one (`week.spec.ts`, the Accounting first week, which has timed out under load in every full run since Phase 1) and both flaky ones passed when rerun alone with one worker. Offline (PWA) 6 passed; other browsers 8 passed, 1 skipped; production build passed; start screen 332 kB, 3.0 s. Screenshots went to a scratch folder (`WORKSIM_SHOTS`), so `docs/screenshots` was not touched.
+
+### Limits
+
+- **The service record counts saved queues.** Tasks done before office times
+  were kept (Phase 8) have no resolution times.
+- **The competency rules are this game's,** written down in the code and shown
+  with each level; they are not an external framework.
+
+---
+
 ## 2026-11-12 · IT Help Desk 8: SLAs on the office clock, reports, a full day, and the manager's review
 
 Service levels measured on the game's own clock, tickets that arrive during

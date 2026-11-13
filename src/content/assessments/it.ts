@@ -302,6 +302,170 @@ Analyse last month’s tickets, estimate the time a fix would save, decide what 
   })
 }
 
+/**
+ * Level 4 (the final level): running the desk for a shift. Practical work in
+ * the Help Desk (a cross-department outage, or a security incident) and the
+ * judgement around it: priority, verification, containment, SLAs, handover.
+ */
+function itShift(p: {
+  version: string
+  practical: string
+  received: string
+  now: string
+  minutesLeft: number
+}) {
+  return assessment({
+    practical: p.practical,
+    id: 'ready-it-lead',
+    careerId: 'it-support',
+    level: 4,
+    title: 'Readiness assessment: run the service desk',
+    summary:
+      'Run the desk through a difficult shift: the practical work in the Help Desk, the decisions around it, and the handover.',
+    brief: `This final assessment checks that you can run the service desk on your own.
+
+Do the practical work in the Help Desk without the guide, judge what matters most in the shift below, work out the time left on a service level, decide what comes first, write the shift report in Word Craft, and hand over to the next lead. You have 3 hours.`,
+    whyItMatters:
+      'A service desk lead keeps the whole company working: the right thing first, safely, on time, and with everyone informed. This is everything the career has built up to.',
+    objectives: [
+      'Resolve real problems in the systems, unguided',
+      'Prioritise by business impact and SLA',
+      'Keep security procedure under pressure',
+      'Hand over clearly',
+    ],
+    evidence: [
+      {
+        id: 'shift',
+        title: 'The shift so far',
+        table: {
+          head: ['Ticket', 'What', 'Priority', 'Received'],
+          rows: [
+            [
+              'INC-4101',
+              'Shared drive down for Finance and Accounting',
+              'P1',
+              p.received,
+            ],
+            [
+              'INC-4102',
+              'A caller asks for a password reset “urgently, from the CEO’s office”',
+              'P2',
+              '09:20',
+            ],
+            ['INC-4103', 'One laptop slow, user can still work', 'P3', '08:50'],
+            ['INC-4104', 'Request: second monitor', 'P4', '08:40'],
+          ],
+        },
+      },
+      {
+        id: 'targets',
+        title: 'Service levels',
+        text: `P1: respond within 15 minutes, fix within 4 hours. P2: 1 hour and 8 hours. P3: 4 hours and 3 days. P4: 2 days and 5 days. It is now ${p.now}.`,
+      },
+    ],
+    steps: [
+      {
+        id: 'review',
+        kind: 'review',
+        title: 'Judge the shift',
+        prompt: 'Tick every statement that is true.',
+        points: 25,
+        findings: [
+          {
+            id: 'p1-first',
+            text: 'The shared drive comes first: a key service is down for two departments.',
+            issue: true,
+            why: 'Business impact decides: many people and a key service is P1.',
+          },
+          {
+            id: 'verify',
+            text: 'The caller must be verified before any reset, whoever they say they are.',
+            issue: true,
+            why: 'Urgency and seniority are classic pressure tactics; verification is never skipped.',
+          },
+          {
+            id: 'oldest',
+            text: 'The monitor request should be done first because it arrived first.',
+            issue: false,
+            why: 'Arrival order is not priority: it is P4.',
+          },
+          {
+            id: 'contain-all',
+            text: 'If an account might be compromised, disabling every account in Finance is the safe choice.',
+            issue: false,
+            why: 'Contain only what the evidence shows: blanket action stops people working and destroys trust.',
+          },
+        ],
+      },
+      {
+        id: 'time-left',
+        kind: 'figure',
+        title: 'Time left on the P1',
+        prompt: `INC-4101 arrived at ${p.received}. It is now ${p.now}. How many minutes are left before its resolution target?`,
+        points: 15,
+        answer: p.minutesLeft,
+        tolerance: 0,
+        unit: 'minutes',
+        why: `A P1 must be fixed within 4 hours (240 minutes) of ${p.received}; at ${p.now} that leaves ${p.minutesLeft} minutes.`,
+      },
+      {
+        id: 'decide',
+        kind: 'decide',
+        title: 'What next',
+        prompt: 'You are alone on the desk. What do you do next?',
+        points: 15,
+        options: [
+          {
+            id: 'p1-and-verify',
+            label:
+              'Work the shared drive, tell the caller you will call back on the extension on record to verify them, and update Finance and Accounting',
+            verdict: 'best',
+            why: 'The biggest impact first, security kept, and people informed.',
+          },
+          {
+            id: 'reset-first',
+            label: 'Reset the caller’s password first, since it is for the CEO’s office',
+            verdict: 'poor',
+            why: 'An unverified reset under pressure is how accounts are taken over.',
+          },
+          {
+            id: 'in-order',
+            label: 'Work the tickets in the order they arrived',
+            verdict: 'acceptable',
+            why: 'Everything gets done eventually, but the P1 waits behind a monitor request.',
+          },
+        ],
+      },
+      report(
+        'Shift report',
+        [['Summary', 'Overview'], ['Incidents'], ['Next steps', 'Handover']],
+        [{ label: 'the minutes left on the P1 target', value: p.minutesLeft }],
+        [['shared drive', 'file'], ['verif']],
+      ),
+      {
+        id: 'handover',
+        kind: 'reply',
+        to: 'the next shift lead',
+        title: 'Hand over',
+        prompt:
+          'Write the handover to the next shift lead: what is fixed, what is open and its SLA, and anything to watch.',
+        points: 20,
+        minWords: 40,
+        model:
+          'Hi, handover from today’s shift. The shared drive for Finance and Accounting (INC-4101, P1) is fixed and confirmed from a user’s laptop. The password reset request (INC-4102) is waiting: the caller could not be verified yet, so I will call back on the extension on record; please do not reset it on a call. The slow laptop and the monitor request are within their SLAs. The shift report is attached. Thanks, {name}',
+        mentions: [['INC-4101', 'shared drive'], ['verif'], ['SLA', 'target']],
+        avoid: [
+          {
+            terms: ['reset it anyway', 'just reset'],
+            why: 'A handover must not pass on an unsafe shortcut.',
+          },
+        ],
+      },
+    ],
+    skills: { 'incident-management': 25, 'access-control': 15, 'technical-writing': 15 },
+  })
+}
+
 export const ASSESSMENTS_IT: Record<string, CaseInput[]> = {
   'ready-it-practitioner': [
     itOutage({
@@ -333,6 +497,24 @@ export const ASSESSMENTS_IT: Record<string, CaseInput[]> = {
       resets: 60,
       minutes: 10,
       printer: 'PR-1G-03',
+    }),
+  ],
+  'ready-it-lead': [
+    // 09:05 to 11:20 is 135 minutes: 240 − 135 = 105 left.
+    itShift({
+      version: 'a',
+      practical: 'company-outage',
+      received: '09:05',
+      now: '11:20',
+      minutesLeft: 105,
+    }),
+    // 08:45 to 10:15 is 90 minutes: 240 − 90 = 150 left.
+    itShift({
+      version: 'b',
+      practical: 'security-incident',
+      received: '08:45',
+      now: '10:15',
+      minutesLeft: 150,
     }),
   ],
 }
