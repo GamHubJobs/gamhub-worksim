@@ -637,6 +637,92 @@ CAREERS.push({
   ],
 })
 
+SKILLS.push(
+  {
+    id: 'engineering-analysis',
+    name: 'Engineering analysis',
+    description:
+      'Applying the right formula to the right problem, with units, and checking the answer makes sense.',
+  },
+  {
+    id: 'safe-systems-of-work',
+    name: 'Safe systems of work',
+    description:
+      'Permits to work, isolation and lockout-tagout, risk assessment, and stopping work that is not safe.',
+  },
+  {
+    id: 'design-judgement',
+    name: 'Design judgement',
+    description:
+      'Choosing a safe, economical solution, and knowing when a design needs checking by someone else.',
+  },
+  {
+    id: 'quality-control',
+    name: 'Quality and compliance',
+    description:
+      'Inspecting against drawings and tolerances, and keeping within environmental and other limits.',
+  },
+)
+
+/**
+ * Engineering & Technical Services, at Northbank Engineering Ltd
+ * (fictional). Standard formulas with simplified, fictional data: for
+ * learning, not real design.
+ */
+CAREERS.push({
+  id: 'engineering-services',
+  name: 'Engineering & Technical Services',
+  department: 'Projects & Maintenance',
+  description:
+    'Work in a multi-discipline engineering firm: circuits, structures, mechanical drives, project planning, safe maintenance with lockout-tagout, inspection and environmental monitoring. Real formulas, simplified data: for learning, not real design.',
+  toolsIntro:
+    'Your work is done in Works Desk, the firm’s circuits, beams, gears, planning, maintenance, inspection and environment tools, with reports in Word Craft.',
+  skills: [
+    'engineering-analysis',
+    'safe-systems-of-work',
+    'design-judgement',
+    'quality-control',
+    'technical-writing',
+    'accuracy',
+    'ai-use',
+  ],
+  apps: ['docs'],
+  tools: [
+    {
+      tool: 'engineering',
+      sections: {
+        gears: 'engineer',
+        planning: 'engineer',
+        inspection: 'senior-engineer',
+        environment: 'senior-engineer',
+      },
+    },
+  ],
+  levels: [
+    {
+      id: 'graduate-engineer',
+      title: 'Graduate Engineer',
+      xpRequired: 0,
+      minReputation: 0,
+    },
+    { id: 'engineer', title: 'Engineer', xpRequired: 300, minReputation: 35 },
+    {
+      id: 'senior-engineer',
+      title: 'Senior Engineer',
+      xpRequired: 700,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'lead-engineer',
+      title: 'Lead Engineer',
+      xpRequired: 1050,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
+
 export function getCareer(id: string): Career {
   return CAREERS.find((career) => career.id === id) ?? CAREERS[0]
 }

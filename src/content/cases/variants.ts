@@ -17,6 +17,58 @@ export interface CaseVariant {
 }
 
 export const CASE_VARIANTS: Record<string, CaseVariant[]> = {
+  // Engineering -------------------------------------------------------------
+  'eng-steel-order': [
+    {
+      id: 'eight-beams',
+      text: [
+        ['6 beams of NB-200', '8 beams of NB-200'],
+        ['6 × 6 m = 36 m, plus 10% = 39.6 m.', '8 × 6 m = 48 m, plus 10% = 52.8 m.'],
+        ['39.6 m (36 m plus 10%)', '52.8 m (48 m plus 10%)'],
+        [
+          'Four 12 m lengths (48 m): each cuts into two 6 m beams with no joints',
+          'Five 12 m lengths (60 m): each cuts into two 6 m beams with no joints',
+        ],
+        [
+          'Six 6 m beams need three 12 m lengths, plus one spare for the allowance.',
+          'Eight 6 m beams need four 12 m lengths, plus one spare for the allowance.',
+        ],
+        ['Three 12 m lengths (36 m)', 'Four 12 m lengths (48 m)'],
+        [
+          'please order four, which gives us the six beams with a spare',
+          'please order five, which gives us the eight beams with a spare',
+        ],
+        ['39.6', '52.8'],
+      ],
+      numbers: [[39.6, 52.8]],
+    },
+  ],
+  'eng-adv-voltage-drop': [
+    {
+      id: 'longer-run',
+      text: [
+        ['60 m', '70 m'],
+        ['(2 × 60 m)', '(2 × 70 m)'],
+        ['32 × 120 × 0.003 = 11.52 V, just over', '32 × 140 × 0.003 = 13.44 V, over'],
+        ['11.52', '13.44'],
+        ['The drop is just over the 11.5 V limit.', 'The drop is over the 11.5 V limit.'],
+        ['it’s only 0.02 V over', 'it’s only 1.94 V over'],
+      ],
+      numbers: [[11.52, 13.44]],
+    },
+  ],
+  'eng-adv-emissions': [
+    {
+      id: 'week-four',
+      text: [
+        ['(180 + 210 + 195 + 199) ÷ 4 = 196.', '(180 + 210 + 195 + 191) ÷ 4 = 194.'],
+        ['196', '194'],
+      ],
+      exact: [['199', '191']],
+      numbers: [[196, 194]],
+    },
+  ],
+  'eng-client-change': [{ id: 'press', text: [['packing machine', 'pallet press']] }],
   // Law ---------------------------------------------------------------------
   'law-disbursements': [
     {

@@ -75,6 +75,14 @@ export const ORG_DEPARTMENTS: OrgDepartment[] = [
     quarterBudget: 26000,
     committed: 0.8,
   },
+  // Not part of Cobalt Ridge: the engineering career's team at Northbank Engineering Ltd.
+  {
+    id: 'works',
+    name: 'Projects & Maintenance, Northbank Engineering Ltd',
+    head: { name: 'Helena Okoye', role: 'Engineering Manager' },
+    quarterBudget: 34000,
+    committed: 0.8,
+  },
   {
     id: 'people',
     name: 'People & Culture',

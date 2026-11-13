@@ -25,6 +25,7 @@ const PACKS: Record<string, () => Promise<{ PACK: CareerPack }>> = {
   'software-development': () => import('./packs/dev'),
   healthcare: () => import('./packs/healthcare'),
   legal: () => import('./packs/legal'),
+  'engineering-services': () => import('./packs/engineering'),
 }
 
 export const CAREER_IDS = Object.keys(PACKS)

@@ -190,6 +190,49 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Engineering 2: the career at Northbank Engineering Ltd, and the story “Safe Hands”
+
+Full description: `docs/ENGINEERING.md`.
+
+### What was built
+
+- **The firm:** Northbank Engineering Ltd (fictional) as the employer.
+  - The people: the engineering manager, the senior maintenance engineer,
+    site reception, a workshop supervisor, and health and safety.
+  - The team at the desks, one per discipline; its own area names and a
+    budget.
+- **The career:**
+  - four levels and four new skills;
+  - Works Desk on the dock, with sections unlocking by level.
+- **Five tasks,** one per discipline, each with a model answer built from
+  the player's own actions:
+  1. electrical;
+  2. structural;
+  3. maintenance under lockout-tagout;
+  4. mechanical and planning;
+  5. quality and environment.
+- **Fifteen cases,** in the same set and difficulty as every career:
+  - a design review meeting;
+  - an incident about a lock someone else cut off;
+  - a shift handover with its follow-up;
+  - the depot solar project;
+  - leadership;
+  - variants of four.
+- **Two readiness assessments,** each with two versions.
+- **The story “Safe Hands”:** holding to the permit and the independent
+  check changes the ending.
+
+### Tests
+
+- **Unit tests:** 3,037 pass (nine campaigns, and the content, balance and
+  assessment tests).
+- **New browser tests:** `tests/e2e/engineering-services.spec.ts`:
+  - the circuit task done in the app and marked 100%;
+  - lockout-tagout enforced.
+- **Changes to existing tests:**
+  - assessments are now 19 and campaigns 9;
+  - the `openApp` helper also accepts “Design office”.
+
 ## 2026-11-13 · Engineering 1: Works Desk, an engineering firm's tools (simulation)
 
 Part 5 of the consolidated prompt, in stages. This stage is the tools; the

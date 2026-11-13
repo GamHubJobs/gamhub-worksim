@@ -137,6 +137,29 @@ const HOSPITAL_PROJECTS: z.input<typeof ProjectSchema>[] = [
     stages: ['prog-law-clinic', 'prog-law-clinic-review'],
     stageType: 'cases',
   },
+  {
+    id: 'solar-retrofit',
+    careerId: 'engineering-services',
+    levelId: 'senior-engineer',
+    title: 'The depot solar retrofit',
+    brief:
+      'Northbank fitted solar panels to its own depot roof. The system had to be sized from the roof and checked before anything was fitted, then reviewed after a year to advise the directors on the second depot.',
+    objectives: [
+      'Size a system from its constraints',
+      'Identify the checks a design needs first',
+      'Review results against targets and recommend',
+    ],
+    deliverables: [
+      'The first sizing and the checks needed',
+      'A recommendation to the directors',
+    ],
+    assessment: [
+      'Each stage is checked like a case and must pass',
+      'The project score is the average of the two stages',
+    ],
+    stages: ['prog-eng-solar', 'prog-eng-solar-review'],
+    stageType: 'cases',
+  },
 ]
 
 const SOURCES: z.input<typeof ProjectSchema>[] = [
