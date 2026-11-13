@@ -190,6 +190,55 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Law 1: Matter Desk, a law firm's systems (simulation)
+
+Part 3 of the consolidated prompt, in stages like Healthcare. This stage is
+the software. The career, the firm and the courthouse (with a mock hearing)
+follow.
+
+### Key decisions
+
+- **A fictional jurisdiction.** The work is set in the Commonwealth of
+  Westmark, with invented, simplified rules: courts, deadlines (21 days for a
+  defence, 28 for an appeal, with weekends and holidays rolling forward),
+  limitation periods and six-minute billing.
+  - Every screen says it is not the law of a real country, and not legal
+    advice.
+- **Ready for localisation, safely.** All of the rules sit in one module
+  (`src/tools/legal/jurisdiction.ts`), so a real jurisdiction (e.g. The
+  Gambia) can be added later. Its header says that may only be done from
+  verified, current sources checked by a qualified person, never from
+  memory.
+
+### What was built
+
+- **Matters and intake:**
+  - the conflict check against current, former and adverse parties;
+  - a current client on the other side stops the matter, which is declined
+    with a reason;
+  - identity checks;
+  - engagement letters;
+  - a matter opens only when all of these are done.
+- **Research:** a searchable law library of fictional statutes and cases,
+  with overruled authorities flagged as not good law; authorities are saved
+  to matters.
+- **Contract review:** clause by clause against the firm's playbook
+  (accept, amend or reject), with comments required for changes.
+- **Calendar:** a deadline calculator with the rules, limitation dates, and
+  key dates per matter.
+- **Time and billing:** six-minute units, billable and non-billable time,
+  and invoices raised once from unbilled time.
+- **Document review:** relevant, not relevant, or privileged (with the basis
+  recorded).
+- **Audit log.**
+- **Checks for tasks:** matters, clients, key dates, authorities, clauses,
+  time, invoices, documents, and no conflicted matter opened.
+
+### Tests
+
+- **Unit tests:** the jurisdiction rules (deadline rolling, limitation,
+  billing units), every action, and the grading.
+
 ## 2026-11-13 · Healthcare 3: the walkable ward and the story “Bay A”
 
 ### Key decision

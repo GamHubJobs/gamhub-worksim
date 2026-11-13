@@ -13,6 +13,7 @@ import { comms } from './comms/definition'
 import { soc } from './soc/definition'
 import { itops } from './itops/definition'
 import { clinical } from './clinical/definition'
+import { legal } from './legal/definition'
 import { devices } from './devices/definition'
 import { directory } from './directory/definition'
 import { network } from './network/definition'
@@ -28,6 +29,7 @@ const TOOLS: AnyTool[] = [
   soc,
   itops,
   clinical,
+  legal,
   network,
   social,
   seo,
