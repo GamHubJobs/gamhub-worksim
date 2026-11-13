@@ -34,6 +34,10 @@ const ACTION_RULES: Record<string, string | ((mode: AiMode) => string)> = {
     'Task: at home, suggest a short plan for the rest of the evening (or the morning before work) from the needs, time and wellbeing given, keeping a full night of sleep and getting to work on time.',
   'learn-next':
     'Task: suggest what the player should learn or practise next for their career, from the skills, level and review given, with one small step for this week.',
+  'suggest-fix': (mode) =>
+    mode === 'learning'
+      ? 'Task: help the employee find why the tests fail. Point to the lines to look at and explain the bug, but do not write the corrected code.'
+      : 'Task: suggest a fix for the failing tests in the open file. Explain the bug in two or three sentences, then give the whole corrected file in one fenced code block. Change only what the fix needs. The employee will review the change before accepting it.',
   'resolve-ticket':
     'Task: suggest how to resolve the ticket: likely causes, the checks to make in order, and when to escalate. Refer to the knowledge base articles given, if any.',
 }

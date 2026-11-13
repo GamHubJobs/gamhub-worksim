@@ -106,7 +106,10 @@ export interface AiAnswer {
 }
 
 export type Proposal =
-  { kind: 'formula'; cell: string; formula: string } | { kind: 'text'; text: string }
+  | { kind: 'formula'; cell: string; formula: string }
+  | { kind: 'text'; text: string }
+  /** A new version of a whole file in Code: reviewed as a diff, then accepted or rejected there. */
+  | { kind: 'code'; file: string; code: string }
 
 export interface Availability {
   ready: boolean

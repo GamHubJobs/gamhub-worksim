@@ -33,7 +33,7 @@ import { isTestFile } from '../../game/code/runner'
 import type { CodeContent } from '../../persistence/schemas'
 import type { ContextItem } from '../../ai/types'
 import { AskAiMenu } from '../ai/AskAiMenu'
-import { useAiContext } from '../ai/hub'
+import { useAiApply, useAiContext } from '../ai/hub'
 
 const MonacoEditor = lazy(() => import('./MonacoEditor'))
 const MonacoDiff = lazy(() =>
@@ -113,6 +113,8 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
     original: string
     modified: string
     label: string
+    /** A change WorkSim AI proposed: accepted or rejected here. */
+    proposal?: boolean
   } | null>(null)
   const [session, setSession] = useState<DebugSession | null>(null)
   const [debugBusy, setDebugBusy] = useState(false)
@@ -135,7 +137,12 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
     canEdit && file
       ? () => {
           const items: ContextItem[] = [
-            { kind: 'code', label: `File: ${file.name}`, text: file.text },
+            {
+              kind: 'code',
+              label: `File: ${file.name}`,
+              text: file.text,
+              data: { file: file.name },
+            },
           ]
           if (run) {
             const failed = run.tests.filter((t) => !t.passed)
@@ -158,6 +165,23 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
         }
       : null,
   )
+
+  // WorkSim AI can propose a new version of a file. It is never applied
+  // directly: it opens here as a diff, to accept or reject.
+  useAiApply('code', canEdit ? ['code'] : null, (proposal) => {
+    if (proposal.kind !== 'code') return false
+    const target = content.files.find((f) => f.name === proposal.file)
+    if (!target || target.readOnly) return false
+    setActive(target.name)
+    setDiff({
+      name: target.name,
+      original: target.text,
+      modified: proposal.code,
+      label: `AI suggestion: ${target.name}`,
+      proposal: true,
+    })
+    return true
+  })
 
   const updateIde = (change: (ide: Ide) => Ide) =>
     onUpdate?.((c) => ({ ...c, ide: change(c.ide ?? EMPTY_IDE) }))
@@ -430,6 +454,11 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
                   action: 'explain-code',
                 },
                 { label: 'Which tests should I write?', action: 'write-tests' },
+                {
+                  label: 'Suggest a fix (you review it first)',
+                  question: 'Suggest a fix for the failing tests',
+                  action: 'suggest-fix',
+                },
               ]}
             />
           )}
@@ -591,64 +620,110 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
         )}
 
         <main className="flex min-w-0 flex-1 flex-col">
-          {/* Tabs */}
-          <div
-            role="tablist"
-            aria-label="Open files"
-            className="flex shrink-0 overflow-x-auto bg-slate-950"
-          >
-            {tabs.map((t) => (
-              <div
-                key={t}
-                className={`group flex shrink-0 items-center border-r border-slate-800 ${
-                  t === active && !diff ? 'bg-slate-900 text-white' : 'text-slate-300'
-                }`}
-              >
+          {/* Tabs: the tab list holds only tabs; the actions sit beside it. */}
+          <div className="flex shrink-0 items-center bg-slate-950">
+            <div
+              role="tablist"
+              aria-label="Open files"
+              className="flex min-w-0 flex-1 overflow-x-auto"
+            >
+              {tabs.map((t) => (
                 <button
+                  key={t}
                   type="button"
                   role="tab"
                   aria-selected={t === active && !diff}
                   onClick={() => open(t)}
                   onAuxClick={(e) => e.button === 1 && close(t)}
-                  className="py-1.5 pr-1 pl-3 font-mono text-[13px]"
-                  title={t}
+                  className={`group flex shrink-0 items-center gap-1 border-r border-slate-800 py-1.5 pr-1.5 pl-3 font-mono text-[13px] ${
+                    t === active && !diff ? 'bg-slate-900 text-white' : 'text-slate-300'
+                  }`}
+                  title={`${t} (middle-click or Ctrl+W to close)`}
                 >
                   {t.split('/').pop()}
                   {content.files.find((f) => f.name === t)?.readOnly && (
-                    <span className="ml-1 font-sans text-[11px] text-slate-400">
+                    <span className="font-sans text-[11px] text-slate-400">
                       (read only)
                     </span>
                   )}
+                  <span
+                    aria-hidden="true"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      close(t)
+                    }}
+                    className="rounded px-1 text-xs text-slate-400 hover:bg-slate-700 hover:text-white"
+                  >
+                    ✕
+                  </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => close(t)}
-                  aria-label={`Close ${t}`}
-                  className="mr-1 rounded px-1 text-xs text-slate-400 hover:bg-slate-700 hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-            {diff && (
-              <div className="flex shrink-0 items-center bg-slate-900 text-white">
+              ))}
+              {diff && (
                 <span
                   role="tab"
                   aria-selected="true"
-                  className="py-1.5 pr-1 pl-3 font-mono text-[13px]"
+                  className="shrink-0 bg-slate-900 py-1.5 pr-2 pl-3 font-mono text-[13px] text-white"
                 >
                   {diff.label} ↔
                 </span>
+              )}
+            </div>
+            <div
+              role="toolbar"
+              aria-label="Editor actions"
+              className="flex shrink-0 items-center gap-1 px-1"
+            >
+              {diff?.proposal && canEdit && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setText(diff.name, diff.modified)
+                      setDiff(null)
+                      setNotice(
+                        `Accepted the suggested change to ${diff.name}. Undo (Ctrl+Z) reverses it.`,
+                      )
+                    }}
+                    className="rounded bg-emerald-700 px-2 py-0.5 text-xs text-white hover:bg-emerald-600"
+                    data-testid="accept-proposal"
+                  >
+                    Accept the change
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDiff(null)
+                      setNotice('Rejected the suggested change: nothing was changed.')
+                    }}
+                    className="rounded bg-slate-700 px-2 py-0.5 text-xs text-white hover:bg-slate-600"
+                  >
+                    Reject
+                  </button>
+                </>
+              )}
+              {diff ? (
                 <button
                   type="button"
                   onClick={() => setDiff(null)}
                   aria-label="Close the changes view"
-                  className="mr-1 rounded px-1 text-xs text-slate-400 hover:bg-slate-700"
+                  className="rounded px-1.5 text-xs text-slate-300 hover:bg-slate-700"
                 >
                   ✕
                 </button>
-              </div>
-            )}
+              ) : (
+                active && (
+                  <button
+                    type="button"
+                    onClick={() => close(active)}
+                    aria-label={`Close ${active}`}
+                    title="Close the file (Ctrl+W)"
+                    className="rounded px-1.5 text-xs text-slate-300 hover:bg-slate-700"
+                  >
+                    ✕
+                  </button>
+                )
+              )}
+            </div>
           </div>
           {file && !diff && (
             <p
@@ -696,43 +771,44 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
             </EditorBoundary>
           </div>
 
-          {/* Panel */}
-          <div
-            className="flex shrink-0 items-center gap-1 border-t border-slate-700 bg-slate-900 px-2 pt-1"
-            role="tablist"
-            aria-label="Panel"
-          >
-            {(
-              [
-                ['problems', `Problems${problems.length ? ` (${problems.length})` : ''}`],
-                ['tests', 'Tests'],
-                ['terminal', 'Terminal'],
-                ['debug', 'Debug Console'],
-              ] as const
-            ).map(([id, name]) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={panelOpen && panel === id}
-                onClick={() => {
-                  setPanel(id)
-                  setPanelOpen(true)
-                }}
-                className={`rounded-t px-3 py-1 text-xs font-medium ${
-                  panelOpen && panel === id
-                    ? 'bg-slate-950 text-white'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                {name}
-              </button>
-            ))}
+          {/* Panel: the tab list holds only tabs. */}
+          <div className="flex shrink-0 items-center border-t border-slate-700 bg-slate-900 px-2 pt-1">
+            <div role="tablist" aria-label="Panel" className="flex flex-1 gap-1">
+              {(
+                [
+                  [
+                    'problems',
+                    `Problems${problems.length ? ` (${problems.length})` : ''}`,
+                  ],
+                  ['tests', 'Tests'],
+                  ['terminal', 'Terminal'],
+                  ['debug', 'Debug Console'],
+                ] as const
+              ).map(([id, name]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={panelOpen && panel === id}
+                  onClick={() => {
+                    setPanel(id)
+                    setPanelOpen(true)
+                  }}
+                  className={`rounded-t px-3 py-1 text-xs font-medium ${
+                    panelOpen && panel === id
+                      ? 'bg-slate-950 text-white'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={() => setPanelOpen((p) => !p)}
               aria-label={panelOpen ? 'Hide the panel' : 'Show the panel'}
-              className="ml-auto rounded px-2 text-xs text-slate-300 hover:bg-slate-700"
+              className="rounded px-2 text-xs text-slate-300 hover:bg-slate-700"
             >
               {panelOpen ? '▾' : '▴'}
             </button>

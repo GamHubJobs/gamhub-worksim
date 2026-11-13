@@ -159,6 +159,33 @@ describe('proposals from models', () => {
     ).toEqual({ kind: 'text', text: 'Dear Priya, thank you.' })
   })
 
+  it('turns a suggested fix into a new version of the open file, to review in Code', () => {
+    const file = {
+      kind: 'code' as const,
+      label: 'File: fees.js',
+      text: 'old',
+      data: { file: 'fees.js' },
+    }
+    const reply =
+      'The bug is the > sign.\n\n```js\nexport const late = (d) => d >= 30\n```\n'
+    expect(
+      withProposal(answer(reply), ask('x', [file], { action: 'suggest-fix' })).proposal,
+    ).toEqual({
+      kind: 'code',
+      file: 'fees.js',
+      code: 'export const late = (d) => d >= 30',
+    })
+    // No code block: just an explanation, nothing to review.
+    expect(
+      withProposal(answer('Look at line 3.'), ask('x', [file], { action: 'suggest-fix' }))
+        .proposal,
+    ).toBeUndefined()
+    // In Learning mode the model is told not to write the corrected code.
+    expect(
+      systemPrompt(ask('x', [file], { action: 'suggest-fix', mode: 'learning' })),
+    ).toContain('do not write the corrected code')
+  })
+
   it('makes no proposal for ordinary questions', () => {
     expect(withProposal(answer('=A1'), ask('x', [cell])).proposal).toBeUndefined()
   })

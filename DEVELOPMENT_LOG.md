@@ -190,6 +190,39 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Code: AI suggestions reviewed as a diff; an accessibility fix; the full regression
+
+### What was built
+
+- **AI fixes, approved by the player:**
+  - a new `code` proposal kind, taken from the model's code block when the
+    player asks it to suggest a fix;
+  - WorkSim AI offers _Review in Code_, which opens the suggestion as a
+    side-by-side diff with Accept and Reject; nothing changes until Accept;
+  - in Learning mode the model only explains;
+  - this fulfils the IDE's “AI with player approval”.
+
+### Fixed
+
+- **The Code app failed the automated accessibility check** (found by the
+  full regression). Its two tab lists also held other buttons: each tab's
+  close button, and the panel's hide button.
+  - Each tab list now holds only tabs.
+  - The close, accept and reject actions sit in a toolbar beside it (with
+    Ctrl+W and middle-click still closing files).
+
+### Tests
+
+- **Unit test:** the new proposal, both with and without a code block, and
+  the Learning-mode prompt.
+- **Full browser regression,** on a heavily loaded machine (1.7 hours):
+  - 217 passed and 19 were flaky (they passed on retry);
+  - of the 12 that failed, 11 passed when re-run alone. The twelfth was the
+    accessibility failure above, now fixed and passing;
+  - the accessibility, IDE and code tests pass;
+  - one code test failed once under load and passes alone.
+- **The full check** passes: 3,038 unit tests.
+
 ## 2026-11-13 · Engineering 2: the career at Northbank Engineering Ltd, and the story “Safe Hands”
 
 Full description: `docs/ENGINEERING.md`.

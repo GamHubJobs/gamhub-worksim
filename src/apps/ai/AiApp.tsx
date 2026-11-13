@@ -620,15 +620,23 @@ function ProposalCard({
       <p className="text-xs font-semibold text-slate-700">
         {proposal.kind === 'formula'
           ? `Proposed formula for cell ${proposal.cell}`
-          : 'Proposed text, to replace the original'}
+          : proposal.kind === 'code'
+            ? `Proposed change to ${proposal.file}: review it in Code before accepting`
+            : 'Proposed text, to replace the original'}
       </p>
       <pre className="mt-1.5 max-h-48 overflow-auto bg-white p-2 font-mono text-xs whitespace-pre-wrap text-slate-800">
-        {proposal.kind === 'formula' ? proposal.formula : proposal.text}
+        {proposal.kind === 'formula'
+          ? proposal.formula
+          : proposal.kind === 'code'
+            ? proposal.code
+            : proposal.text}
       </pre>
       {outcome ? (
         <p role="status" className="mt-2 text-xs text-slate-600">
           {outcome === 'applied'
-            ? 'Applied. Check the result, and undo it there if it is not right.'
+            ? proposal.kind === 'code'
+              ? 'Opened in Code as a side-by-side change: accept or reject it there.'
+              : 'Applied. Check the result, and undo it there if it is not right.'
             : outcome === 'dismissed'
               ? 'Not applied.'
               : 'It could not be applied (the app may have moved on or be read-only).'}
@@ -640,7 +648,7 @@ function ProposalCard({
             onClick={onApply}
             className="bg-[#1f6fbf] px-3 py-1 text-xs font-medium text-white hover:bg-[#185a9d]"
           >
-            Apply
+            {proposal.kind === 'code' ? 'Review in Code' : 'Apply'}
           </button>
           <button
             type="button"

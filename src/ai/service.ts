@@ -37,6 +37,15 @@ export function withProposal(answer: AiAnswer, request: AiRequest): AiAnswer {
     if (typeof cell === 'string' && formula)
       return { ...answer, proposal: { kind: 'formula', cell, formula } }
   }
+  if (request.action === 'suggest-fix') {
+    const file = request.context.items.find((i) => i.kind === 'code')?.data?.file
+    const code = answer.text.match(/```[a-z]*\n([\s\S]*?)```/)?.[1]
+    if (typeof file === 'string' && code?.trim())
+      return {
+        ...answer,
+        proposal: { kind: 'code', file, code: code.replace(/\n$/, '') },
+      }
+  }
   return answer
 }
 

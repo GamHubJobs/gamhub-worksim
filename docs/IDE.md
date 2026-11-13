@@ -36,6 +36,20 @@ what players learn carries over to the real thing.
 | Status bar      | Branch, problems, debugging, tests, cursor position, language. "Simulated workspace" says that code runs in the game.                                                                                                             |
 | Command palette | Ctrl+Shift+P (or F1) for every command; Ctrl+P to go to a file. A menu bar (File, Edit, View, Run, Terminal, Help) has the same commands.                                                                                         |
 
+## AI suggestions, reviewed before they change anything
+
+_Suggest a fix (you review it first)_ in the Ask AI menu asks the player's
+own AI model, if they have set one up, for a corrected version of the open
+file.
+
+- **It is never applied directly.** In WorkSim AI the button reads _Review
+  in Code_. It opens the suggestion in Code as a side-by-side diff with
+  **Accept the change** and **Reject**, and only Accept changes the file.
+  Undo still works.
+- **In Learning mode** the model is told to explain the bug, not to write
+  the corrected code.
+- **The built-in guide** explains instead: it never writes code.
+
 ## How the debugger works
 
 `game/code/debugger.ts` adds a call before each statement line inside a
