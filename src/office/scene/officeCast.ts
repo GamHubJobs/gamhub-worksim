@@ -14,7 +14,7 @@
  *   waters the plants.
  * Each has their own hours and habits: some quiet, some sociable.
  */
-import { getPerson } from '../../content/departments'
+import { activeDepartment, getPerson } from '../../content/departments'
 import { MEETINGS } from '../../content/workday'
 import type { Who } from '../../game/encounters'
 import type { Gathering, Person, Place } from '../../world/npc/schedule'
@@ -418,10 +418,11 @@ export function officeWho(): Record<string, Who> {
     const p = getPerson(id)
     return { id, name: p.name, role: p.role, kind, personality }
   }
+  const own = activeDepartment().team
   const team = (id: string, name: string, personality: Who['personality']): Who => ({
     id,
-    name,
-    role: OFFICE_PEOPLE.find((p) => p.id === id)!.role,
+    name: own?.[id]?.name ?? name,
+    role: own?.[id]?.role ?? OFFICE_PEOPLE.find((p) => p.id === id)!.role,
     kind: 'colleague',
     personality,
   })

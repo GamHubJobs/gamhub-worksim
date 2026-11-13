@@ -28,7 +28,9 @@ import {
 } from 'react'
 import { Vector3, type Group, type Material, type Mesh, type WebGLRenderer } from 'three'
 import { activeEmployer } from '../../content/departments'
-import { activeDepartment, fill } from '../../content/departments'
+import { activeDepartment, fill, onWard, placeText } from '../../content/departments'
+import { WardBay } from './ward'
+import { WARD_BOXES, wardActivities } from './wardLayout'
 import {
   SPOTS,
   getInteraction,
@@ -358,7 +360,7 @@ function OfficeScene(props: OfficeSceneProps) {
           onInteract={props.onInteract}
         />
         <ManagerOffice />
-        <ItCorner itJobs={props.itJobs} />
+        {onWard() ? <WardBay /> : <ItCorner itJobs={props.itJobs} />}
         <BreakRoom onInteract={props.onInteract} />
         <Crowd
           people={OFFICE_PEOPLE}
@@ -378,7 +380,7 @@ function OfficeScene(props: OfficeSceneProps) {
           key={s.id}
           hidden={s.id === props.spot}
           position={s.marker}
-          label={fill(s.name)}
+          label={fill(placeText(s).name)}
           onClick={() => props.onGo(s.id)}
         />
       ))}
@@ -544,6 +546,16 @@ function CameraRig({ spot }: { spot: SpotId }) {
 }
 
 /** The player in the office: walks about, and does things in person. */
+/** On the ward: the office's solids without the IT corner, plus the beds and the trolley. */
+const WARD_FLOOR_BOXES = [
+  ...OFFICE_BOXES.filter(
+    (b) =>
+      !(b.x === IT_CABINET.x && b.z === IT_CABINET.z) &&
+      !(b.x === IT_BENCH.x && b.z === IT_BENCH.z),
+  ),
+  ...WARD_BOXES,
+]
+
 function OfficeWalker({
   walk,
   spot,
@@ -566,7 +578,7 @@ function OfficeWalker({
         ? [{ person: j.target.slice('person:'.length), kind: j.kind, name: j.name }]
         : [],
     )
-    return [...base, ...itActivities(desks)]
+    return [...base, ...(onWard() ? wardActivities() : itActivities(desks))]
   }, [base, itJobs])
   const area = useRef<SpotId>(spot)
   const onArea = walk.onArea
@@ -591,7 +603,7 @@ function OfficeWalker({
   return (
     <PlayerRig
       start={start}
-      boxes={OFFICE_BOXES}
+      boxes={onWard() ? WARD_FLOOR_BOXES : OFFICE_BOXES}
       activities={activities}
       blocked={(a) => walk.blocked?.(a.action) ?? null}
       controls={walk.controls}
@@ -897,7 +909,7 @@ function Reception() {
         <div className="text-center text-white">
           <p className="text-2xl font-bold tracking-wide">{activeEmployer().name}</p>
           <p className="text-[9px] tracking-[0.4em] text-blue-200 uppercase">
-            Consulting · Finance · Advisory
+            {onWard() ? activeDepartment().sign : 'Consulting · Finance · Advisory'}
           </p>
         </div>
       </Html>

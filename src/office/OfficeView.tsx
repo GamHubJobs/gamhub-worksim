@@ -34,7 +34,7 @@ import {
 } from '../game/encounters'
 import { troubleOf } from '../game/incidents'
 import { isInteraction, meetingOf } from './scene/officeLayout'
-import { fill, getPerson } from '../content/departments'
+import { fill, getPerson, onWard, placeText } from '../content/departments'
 import {
   SPOTS,
   getSpot,
@@ -296,6 +296,11 @@ export function OfficeView({
     onGo(next)
   }
 
+  /** At the bedside or the medicines trolley (the ward): Ward Systems, there. */
+  function bedside() {
+    onUseComputer({ app: 'tool', tool: 'clinical' })
+  }
+
   /** Arrived at equipment and used it (E): close in on it. */
   function arriveOnSite(action: string) {
     openOnSite(action.slice('onsite:'.length) as OnSitePlace)
@@ -475,6 +480,7 @@ export function OfficeView({
     joinMeeting,
     blocked,
     arriveOnSite,
+    bedside,
   })
   useEffect(() => {
     handlers.current = {
@@ -486,6 +492,7 @@ export function OfficeView({
       joinMeeting,
       blocked,
       arriveOnSite,
+      bedside,
     }
   })
   const sceneGo = useCallback((next: SpotId) => handlers.current.go(next), [])
@@ -504,7 +511,8 @@ export function OfficeView({
     const meeting = meetingOf(action)
     if (meeting) {
       if (completed) handlers.current.joinMeeting(meeting)
-    } else if (completed && action?.startsWith('onsite:'))
+    } else if (completed && action === 'bedside') handlers.current.bedside()
+    else if (completed && action?.startsWith('onsite:'))
       handlers.current.arriveOnSite(action)
     else if (completed && action?.startsWith('person:'))
       handlers.current.meetPerson(action.slice('person:'.length))
@@ -606,9 +614,13 @@ export function OfficeView({
               {panelOpen ? '▴' : '▾'}
             </button>
           </div>
-          <h1 className="text-lg font-semibold text-slate-900">{fill(current.name)}</h1>
+          <h1 className="text-lg font-semibold text-slate-900">
+            {fill(placeText(current).name)}
+          </h1>
           {panelOpen && (
-            <p className="mt-1 text-sm text-slate-600">{fill(current.description)}</p>
+            <p className="mt-1 text-sm text-slate-600">
+              {fill(placeText(current).description)}
+            </p>
           )}
           <div hidden={!panelOpen}>
             {meetingNow && (
@@ -669,8 +681,21 @@ export function OfficeView({
             {!meetingNow && upcoming && (
               <p className="mt-2 text-xs text-slate-500">
                 Next: {fill(upcoming.title)} at {formatTime(upcoming.start)} (
-                {fill(getSpot(upcoming.spot).name)})
+                {fill(placeText(getSpot(upcoming.spot)).name)})
               </p>
+            )}
+
+            {onWard() && (
+              <div className="mt-3 rounded-md bg-teal-50 p-2" data-testid="ward-bay">
+                <p className="text-xs font-semibold text-teal-900">Bay A: beds 1–4</p>
+                <button
+                  type="button"
+                  onClick={() => (walkable ? ask('bedside') : bedside())}
+                  className="mt-1 text-left text-sm text-teal-800 underline"
+                >
+                  Go to the bedside (Ward Systems)
+                </button>
+              </div>
             )}
 
             {fieldJobs.length > 0 && (
@@ -743,7 +768,7 @@ export function OfficeView({
                   : 'text-slate-700 hover:bg-slate-100'
               }`}
             >
-              {fill(s.name)}
+              {fill(placeText(s).name)}
             </button>
           ))}
         </nav>
@@ -1023,7 +1048,9 @@ function FloorPlan({ spot, onGo }: { spot: SpotId; onGo: (spot: SpotId) => void 
                 here ? 'ring-blue-600' : 'ring-transparent hover:ring-slate-300'
               }`}
             >
-              <span className="font-semibold text-slate-800">{fill(s.name)}</span>
+              <span className="font-semibold text-slate-800">
+                {fill(placeText(s).name)}
+              </span>
               {here && <span className="mt-1 text-xs text-blue-700">You are here</span>}
             </button>
           )

@@ -67,13 +67,43 @@ One console with the systems a ward uses:
 - **Programme:** the hospital's own project, the discharge lounge, in place
   of Cobalt Ridge's Manchester office programme.
 
-## Not yet
+## The ward (walkable)
 
-- **The walkable hospital.** Leaving the desk still shows the Cobalt Ridge
-  office, with the hospital's name on the sign.
-- **A story campaign.** Story mode is not offered for this career yet.
+The walkable workplace is the office's floor plan, dressed as Ward 4. This is
+deliberate: the colleagues' routines, meetings and HUD all work unchanged.
 
-Both come in the next stage.
+- **The areas are renamed:**
+  - the ward desk (Rosa, the ward clerk);
+  - the nurses' station;
+  - Grace's office;
+  - the staff room.
+- **Bay A** stands where the IT corner is in the office:
+  - four beds with fictional patients;
+  - curtains, monitors, lockers and bed signs;
+  - hand gel, and a locked medicines trolley.
+- **At the bedside** (or the trolley), pressing E or choosing _Go to the
+  bedside_ walks there, cleans hands, checks the wristband and opens Ward
+  Systems.
+- **The colleagues at the desks** are the ward team: healthcare assistants,
+  doctors, a physiotherapist, the ward administrator and a pharmacy
+  technician.
+- **The signs** show the hospital and the ward.
+- **New department options** (`content/departments`):
+  - `workplace`, `places` and `team`;
+  - `{reception}`, `{facilities}` and `{employer}` in any text, so
+    shared dialogue names the right people.
+
+## Story: “Bay A”
+
+**Chapter 1 (Four beds):**
+
+- a first shift;
+- a patient whose observations show she is getting worse;
+- a side mission at the pharmacy hatch;
+- a family's complaint.
+
+**Chapter 2 (Speak up):** a colleague skips the wristband check. Whether
+the player reports the near miss changes the incident review and the ending.
 
 ## Tests
 

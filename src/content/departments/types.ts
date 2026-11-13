@@ -11,6 +11,17 @@ export interface Department {
   employer?: Employer
   /** Reception, facilities and HR at that employer (by the same role IDs). */
   sharedPeople?: Record<string, Person>
+  /** The colleagues at the other desks (by their office ID, e.g. backM), when not the office’s own. */
+  team?: Record<string, { name: string; role: string }>
+  /** How the walkable workplace is dressed: the office (default) or a hospital ward. */
+  workplace?: 'office' | 'ward'
+  /** The workplace's own names for the office's areas (reception, desk, manager, break room). */
+  places?: Partial<
+    Record<
+      'reception' | 'desk' | 'manager' | 'breakroom',
+      { name: string; description: string }
+    >
+  >
   /** e.g. "Finance & Administration". */
   name: string
   /** The sign on the office wall, e.g. "FINANCE & ADMINISTRATION". */

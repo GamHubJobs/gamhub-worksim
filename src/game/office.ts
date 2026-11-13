@@ -3,7 +3,7 @@
  * Pure functions, so the office always reflects the real state of the career.
  */
 import { caseFor } from './caseVariants'
-import { activeDepartment, fill } from '../content/departments'
+import { activeDepartment, fill, getPerson, onWard } from '../content/departments'
 import { PROGRAMME } from '../content/programme'
 import { minutesLeft, openCases } from './cases'
 import { formatDuration } from './clock'
@@ -27,7 +27,9 @@ export interface DialogueAction {
   label: string
   /** Opens the computer at this app (and task). */
   open: {
-    app: 'mail' | 'tasks' | 'sheets' | 'career' | 'cases'
+    app: 'mail' | 'tasks' | 'sheets' | 'career' | 'cases' | 'tool'
+    /** For a professional tool: which one, e.g. "clinical" (Ward Systems). */
+    tool?: string
     assignmentId?: string
     /** In Cases: the case to open. */
     item?: string
@@ -142,7 +144,7 @@ function receptionDialogue(profile: ProfileData): Dialogue {
   const unread = unreadCount(profile)
   return {
     speaker: 'reception',
-    title: 'Nina Patel',
+    title: getPerson('reception').name,
     lines: started
       ? [
           `Hi ${name}! Busy day?`,
@@ -151,8 +153,10 @@ function receptionDialogue(profile: ProfileData): Dialogue {
             : 'If you need anything (a new keyboard, a meeting room, a good lunch spot) just ask.',
         ]
       : [
-          `Good morning, and welcome to Cobalt Ridge, ${name}! I’m Nina.`,
-          'Your desk is in the open-plan area, just through there: the one with your name on it. {manager}’s office is at the back on the right, and the break room is on the left.',
+          `Good morning, and welcome to {employer}, ${name}! I’m {reception}.`,
+          onWard()
+            ? 'The nurses’ station is just through there, with Bay A’s beds on the right. {manager}’s office is at the back on the right, and the staff room is on the left.'
+            : 'Your desk is in the open-plan area, just through there: the one with your name on it. {manager}’s office is at the back on the right, and the break room is on the left.',
           '{manager} has already sent you your first task. You’ll find it on your computer.',
         ],
     actions: [],
@@ -164,7 +168,7 @@ function colleagueDialogue(tipIndex: number): Dialogue {
   const tip = tips[((tipIndex % tips.length) + tips.length) % tips.length]
   return {
     speaker: 'facilities',
-    title: 'Tom Becker',
+    title: getPerson('facilities').name,
     lines: [
       'Oh hey! Grabbing a coffee too?',
       `Here’s a tip I wish someone had told me: ${tip}`,

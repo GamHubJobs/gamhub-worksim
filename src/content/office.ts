@@ -81,8 +81,8 @@ export const INTERACTIONS: Interaction[] = [
   {
     id: 'receptionist',
     spot: 'reception',
-    label: 'Talk to Nina',
-    name: 'Nina Patel',
+    label: 'Talk to {reception}',
+    name: '{receptionFull}',
     minutes: 10,
   },
   { id: 'home', spot: 'reception', label: 'Go home', name: 'Exit' },
@@ -124,8 +124,8 @@ export const INTERACTIONS: Interaction[] = [
   {
     id: 'colleague',
     spot: 'breakroom',
-    label: 'Chat with Tom',
-    name: 'Tom Becker',
+    label: 'Chat with {facilities}',
+    name: '{facilitiesFull}',
     minutes: 10,
   },
   {

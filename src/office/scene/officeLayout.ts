@@ -5,7 +5,7 @@
  * activity for each thing the player can do there, at the object or person
  * it involves. Coordinates match OfficeScene.tsx.
  */
-import { fill } from '../../content/departments'
+import { fill, placeText } from '../../content/departments'
 import { SPOTS, type InteractionId, type SpotId } from '../../content/office'
 import type { Box } from '../../world/character/controller'
 import type { Activity } from '../../world/interaction/activity'
@@ -187,7 +187,7 @@ export const officeActivities = (): Activity[] => [
   ...SPOTS.map((s) => ({
     id: `go:${s.id}`,
     action: `go:${s.id}`,
-    prompt: fill(s.name),
+    prompt: fill(placeText(s).name),
     // Only asked for from the Places list or a floor marker: never offered nearby.
     spot: { x: 0, z: 0, reach: -1 },
     anchor: standIn(s.id),
@@ -235,10 +235,10 @@ export const officeActivities = (): Activity[] => [
   {
     id: 'receptionist',
     action: 'receptionist',
-    prompt: 'talk to Nina at reception',
+    prompt: fill('talk to {reception} at reception'),
     spot: { x: -6.2, z: 5.1, reach: 1.2 },
     anchor: { x: -6.2, z: 5.0, heading: 0 },
-    stages: talk('Saying hello to Nina'),
+    stages: talk(fill('Saying hello to {reception}')),
   },
   {
     id: 'home',
@@ -292,10 +292,10 @@ export const officeActivities = (): Activity[] => [
   {
     id: 'colleague',
     action: 'colleague',
-    prompt: 'chat with Tom',
+    prompt: fill('chat with {facilities}'),
     spot: { x: -8.4, z: -5.2, reach: 1.1 },
     anchor: { x: -8.4, z: -5.25, heading: 0 },
-    stages: talk('Saying hello to Tom'),
+    stages: talk(fill('Saying hello to {facilities}')),
   },
   {
     id: 'noticeboard',

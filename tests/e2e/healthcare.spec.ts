@@ -153,3 +153,36 @@ test('Healthcare: an unsafe prescription is queried, never given', async ({ page
   await page.screenshot({ path: `${shots}/healthcare/pharmacy.png` })
   await expect(ward.getByTestId('rx-M-305')).toHaveCount(0)
 })
+
+test('Healthcare: the ward in 3D, walked to the bedside, opens Ward Systems', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await startHealthcare(page)
+  // New staff arrive at the ward desk, in the 3D ward.
+  await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
+    timeout: 120_000,
+  })
+  const panel = page.getByTestId('office-panel')
+  await expect(panel).toContainText('Ward desk')
+  await expect(panel).toContainText('Talk to Rosa')
+  await expect(page.getByTestId('ward-bay')).toBeVisible()
+  await page.waitForTimeout(2500)
+  await page.screenshot({ path: `${shots}/healthcare/ward.png` })
+  // From above: Bay A’s four beds on the right.
+  await page.getByRole('button', { name: 'View: from behind' }).click()
+  await page.waitForTimeout(2000)
+  await page.screenshot({ path: `${shots}/healthcare/ward-top-down.png` })
+  await page.getByRole('button', { name: 'View: top-down' }).click()
+  await page
+    .getByTestId('ward-bay')
+    .getByRole('button', { name: 'Go to the bedside (Ward Systems)' })
+    .click()
+  // On the way: Bay A comes into view.
+  await page.waitForTimeout(8000)
+  await page.screenshot({ path: `${shots}/healthcare/ward-bay.png` })
+  const tool = page.getByRole('region', { name: 'Ward Systems window' })
+  await expect(tool).toBeVisible({ timeout: 120_000 })
+  await expect(tool).toContainText('How to use Ward Systems')
+})

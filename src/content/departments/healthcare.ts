@@ -65,6 +65,37 @@ export const healthcare: Department = {
       'Looks after training and competencies for support staff. Patient, thorough, and keen on reflective practice.',
     ),
   },
+  workplace: 'ward',
+  team: {
+    backM: { name: 'Lena Novak', role: 'Healthcare Assistant' },
+    backR: { name: 'Tom Ashworth', role: 'Senior Healthcare Assistant' },
+    backL: { name: 'Dr Hana Ito', role: 'Consultant Physician' },
+    front2: { name: 'Sami Haddad', role: 'Physiotherapist' },
+    coordinator: { name: 'Dr Felix Moreau', role: 'Junior Doctor' },
+    admin: { name: 'Bea Okoro', role: 'Ward Administrator' },
+    analyst: { name: 'Wei Zhang', role: 'Pharmacy Technician' },
+  },
+  places: {
+    reception: {
+      name: 'Ward desk',
+      description:
+        'The entrance to Ward 4. Rosa runs the ward desk: phones, visitors and the bed board.',
+    },
+    desk: {
+      name: 'Nurses’ station',
+      description:
+        'The computers where the ward team writes notes and checks results. Bay A’s beds are to the right.',
+    },
+    manager: {
+      name: '{manager}’s office',
+      description:
+        '{managerFull}, the ward manager. The door is open unless a family is in with her.',
+    },
+    breakroom: {
+      name: 'Staff room',
+      description: 'Tea, a fridge, and the rota on the wall. Ten minutes off your feet.',
+    },
+  },
   name: 'Ward 4 (Medical)',
   sign: 'WARD 4 · MEDICAL',
   manager: person(

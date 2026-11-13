@@ -53,6 +53,18 @@ export function findPerson(id: string): Person | undefined {
   return department.sharedPeople?.[id] ?? SHARED_PEOPLE[id]
 }
 
+/** An area's name and description in the active workplace (a ward calls reception the ward desk). */
+export function placeText(spot: { id: string; name: string; description: string }): {
+  name: string
+  description: string
+} {
+  const own = activeDepartment().places?.[spot.id as 'desk']
+  return own ?? { name: spot.name, description: spot.description }
+}
+
+/** Whether the walkable workplace is a hospital ward. */
+export const onWard = (): boolean => activeDepartment().workplace === 'ward'
+
 /** The organisation a career works for (Cobalt Ridge unless its department says otherwise). */
 export function employerFor(careerId: string): Employer {
   return DEPARTMENTS[careerId]?.employer ?? COMPANY
@@ -74,6 +86,10 @@ export function getPerson(id: string): Person {
 
 const first = (person: Person) => person.name.split(' ')[0]
 
+/** Reception or facilities at the department's employer. */
+const shared = (department: Department, id: string): Person =>
+  department.sharedPeople?.[id] ?? SHARED_PEOPLE[id]
+
 /**
  * Fills in role names in a text: {manager} and {senior} become first names,
  * {managerFull} and {seniorFull} full names, {department} the team's name and
@@ -87,4 +103,9 @@ export function fill(text: string, department: Department = activeDepartment()):
     .replaceAll('{senior}', first(department.senior))
     .replaceAll('{department}', department.name)
     .replaceAll('{director}', department.director)
+    .replaceAll('{receptionFull}', shared(department, 'reception').name)
+    .replaceAll('{reception}', first(shared(department, 'reception')))
+    .replaceAll('{facilitiesFull}', shared(department, 'facilities').name)
+    .replaceAll('{facilities}', first(shared(department, 'facilities')))
+    .replaceAll('{employer}', (department.employer ?? COMPANY).shortName)
 }

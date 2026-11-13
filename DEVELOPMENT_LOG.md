@@ -190,6 +190,56 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-13 · Healthcare 3: the walkable ward and the story “Bay A”
+
+### Key decision
+
+- **The same floor plan, dressed as a ward.** The office's walkable floor is
+  dressed as Ward 4 rather than built as a new building. All of these keep
+  working unchanged:
+  - the colleagues' routines and meetings;
+  - the HUD;
+  - the guidance and its tests.
+- **New department options** say how a workplace looks and who works there:
+  - `workplace`, `places` and `team`;
+  - `{reception}`, `{facilities}` and `{employer}` placeholders in text.
+
+### What was built
+
+- **The ward:**
+  - the areas are renamed: ward desk, nurses' station, Grace's office, staff
+    room;
+  - Bay A replaces the IT corner, with four beds and fictional patients,
+    curtains, monitors, lockers, bed signs, hand gel and a medicines
+    trolley; the beds are solid;
+  - the ward team works at the desks;
+  - the reception sign shows the hospital and “Ward 4 · Medical”.
+- **The bedside:**
+  - walking to Bay A (or the trolley) and pressing E cleans your hands,
+    checks the wristband and opens Ward Systems;
+  - a _Go to the bedside_ button in the panel does the same.
+- **Fixed for every career at another employer:** reception and facilities
+  were hard-coded as Nina and Tom of Cobalt Ridge, in labels and greetings.
+- **The story “Bay A”:**
+  - two chapters, with a side mission and a workplace mission (the family's
+    complaint, in Cases);
+  - a near miss whose handling changes the incident review and the ending.
+
+### Tests
+
+- **Unit tests:** 2,739 pass. The story tests now cover seven campaigns:
+  every scene is used, each campaign plays to the end, and the endings
+  differ.
+- **Browser tests:**
+  - new: arriving on the ward, walking to the bedside, and Ward Systems
+    opening there;
+  - the healthcare, office, talk, HUD layout and story tests pass (one
+    flaky, passed on retry).
+- **Changes to existing tests:**
+  - the `openApp` helper also accepts “Nurses’ station” for “Your desk”;
+  - the campaign count and the distinct-manager count in the story tests
+    are now 7.
+
 ## 2026-11-13 · Healthcare 2: the career at Riverside Community Hospital
 
 Full description: `docs/HEALTHCARE.md`.
