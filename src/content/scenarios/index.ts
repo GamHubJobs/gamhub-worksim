@@ -5,8 +5,10 @@ import { RELEASE } from './dev'
 import { SAFETY_WALK } from './engineering'
 import { SUPPLIER_VISIT } from './finance'
 import { WARD_ROUND } from './healthcare'
+import { ADMISSION } from './healthcareAdmission'
 import { DESK_SIDE } from './it'
 import { HEARING } from './legal'
+import { CLIENT_INTERVIEW } from './legalInterview'
 import { CAMPAIGN_REVIEW } from './marketing'
 import type { Scenario } from './types'
 
@@ -18,7 +20,9 @@ export const SCENARIOS: Scenario[] = [
   FINDINGS,
   RELEASE,
   WARD_ROUND,
+  ADMISSION,
   HEARING,
+  CLIENT_INTERVIEW,
   SAFETY_WALK,
 ]
 

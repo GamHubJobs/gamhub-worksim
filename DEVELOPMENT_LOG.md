@@ -190,6 +190,40 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Scenarios: walking, coaching from the player's own AI, and two more scenarios
+
+### What was built
+
+- **People walk** between places in a scene (a witness to the box and back),
+  facing where they go, instead of appearing there.
+- **AI coaching on spoken answers:**
+  - after an answer in their own words, a player who has turned on a model in
+    WorkSim AI (local, or their own key through the bridge) can ask it for
+    coaching;
+  - it is hidden with the built-in guide, and nothing is sent until asked
+    (what is sent is stated);
+  - the rubric still sets the score;
+  - it uses the existing AI service, daily limit and consent, at no cost to
+    GamHub.
+- **Law: first interview with a new client,** in the client meeting room:
+  conflict check, identity checks, facts, the contract term, honest
+  expectations, a letter before claim, fees, the attendance note.
+- **Healthcare: admitting a new patient:** consent, new confusion, falls
+  prevention, a pressure area, a confidentiality phone call, escalating pain,
+  the admission note.
+- **The judge** now sits higher, so he is seen above the bench.
+
+### Tests
+
+- **Unit tests:** the coaching request, and both new scenarios through all
+  the scenario checks (53 pass).
+- **Browser tests, all passing:**
+  - coaching with a faked bridge: the answer is shown with its source, the
+    request carries the answer but not the player's name, and the score is
+    unchanged;
+  - both new scenarios played to their best outcome. Screenshots inspected;
+    the interview camera was moved off reception's feature wall.
+
 ## 2026-11-15 · Live workplace scenarios: professional events played in person, one per career
 
 See [docs/SCENARIOS.md](docs/SCENARIOS.md).

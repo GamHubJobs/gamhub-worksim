@@ -136,6 +136,20 @@ test('Law: a poor hearing loses the case, and the court says why', async ({ page
 
 const CAREERS: Array<[string, RegExp, string, string, string]> = [
   [
+    'law-interview',
+    /Law & Legal Services/,
+    'First interview with a new client',
+    'Instructed: a new client who trusts the firm',
+    'document',
+  ],
+  [
+    'healthcare-admission',
+    /Healthcare & Medical Services/,
+    'Admitting a new patient: bed 4A-4',
+    'A safe admission: delirium, pressure damage and a possible fracture all caught early',
+    'skin',
+  ],
+  [
     'healthcare',
     /Healthcare & Medical Services/,
     'Ward round and emergency: bed 4A-2',

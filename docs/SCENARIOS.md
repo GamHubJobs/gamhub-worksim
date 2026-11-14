@@ -60,7 +60,17 @@ the player answers, and what they do changes the outcome and the career.
 | Data Analysis            | Presenting findings to the sales director         | The insights wall                            | leads with the insight, picks the right chart, resists causation claims and dropping data, explains sample size, recommends a test                                              |
 | Digital Marketing        | Campaign review with a client                     | The content studio                           | reads cost per booking, not clicks, turns down a misleading claim, proposes an A/B test, sets the plan                                                                          |
 
-Each also includes its career's meeting-case decision.
+Two more:
+
+- **Law, a first interview with a new client** in the client meeting room: a
+  conflict check before details, identity and an engagement letter, open
+  questions, the order confirmation, honest expectations, a letter before
+  claim, fees and the attendance note.
+- **Healthcare, admitting a new patient** to bed 4A-4: consent, new
+  confusion, falls prevention, a pressure area, a confidentiality phone call,
+  escalating hip pain and the admission note.
+
+The first scenario of each career also includes that career's meeting-case decision.
 
 ## Tests
 
@@ -79,7 +89,10 @@ Each also includes its career's meeting-case decision.
 - **No free-form AI conversation:** the cast's responses are written for
   each answer. Answers in the player's own words are marked by a rubric, not
   by an AI model.
-- **No walking:** people move between places between beats, without walking
-  there.
-- **One scenario per career** so far. The engine and stage take more without
-  code changes.
+- **Scenarios per career:** two in Law and Healthcare, one elsewhere. The
+  engine and stage take more without code changes.
+- **AI coaching:** a player with their own model turned on in WorkSim AI can
+  ask it for coaching after an answer in their own words. It never changes the
+  score.
+- **Walking:** people walk between places in a straight line, without
+  routing around furniture.
