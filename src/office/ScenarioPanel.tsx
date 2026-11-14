@@ -146,6 +146,32 @@ export function ScenarioPanel({
     </button>
   )
 
+  // With the player's own model on: the person asking may respond in their own words.
+  const reactWho = 'who' in beat && beat.kind !== 'say' ? beat.who : undefined
+  const reactToggle =
+    usingModel && reactWho ? (
+      <label className="mt-2 flex items-start gap-1.5 text-[11px] text-violet-900">
+        <input
+          type="checkbox"
+          checked={react}
+          onChange={(e) => {
+            setReact(e.target.checked)
+            writeReact(e.target.checked)
+          }}
+          className="mt-0.5"
+        />
+        <span>
+          Let {asker?.name ?? 'them'} respond to what you actually say or do (sends your
+          answer, without your name, to the AI model you turned on; your score is still
+          set by the marking rules)
+        </span>
+      </label>
+    ) : null
+  /** Asks for a response to this answer, if the player wants one. */
+  const reactTo = (answer: string) => {
+    if (usingModel && react && reactWho && beat.kind !== 'end' && beat.kind !== 'say')
+      askReaction(beat.id, reactWho, fill(beat.prompt), answer)
+  }
   let body: React.ReactNode
   // Just said something in their own words: coaching from their own AI model, if on.
   const last = live.run.answers.at(-1)
@@ -163,7 +189,7 @@ export function ScenarioPanel({
   if (replying) {
     body = (
       <>
-        {spoken && reaction?.beat === last!.beat && (
+        {live.step === 0 && last && reaction?.beat === last.beat && (
           <AiReaction reaction={reaction} name={cast(reaction.who)?.name ?? ''} />
         )}
         {said(live.reply[live.step])}
@@ -192,13 +218,17 @@ export function ScenarioPanel({
             <button
               key={o.id}
               type="button"
-              onClick={() => onChoose(o.id)}
+              onClick={() => {
+                reactTo(fill(o.label))
+                onChoose(o.id)
+              }}
               className="block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-800 hover:border-blue-400 hover:bg-blue-50"
             >
               {fill(o.label)}
             </button>
           ))}
         </div>
+        {reactToggle}
       </>
     )
   } else if (beat.kind === 'exhibit') {
@@ -213,7 +243,10 @@ export function ScenarioPanel({
               <p className="mt-0.5 text-xs text-amber-900">{e.text}</p>
               <button
                 type="button"
-                onClick={() => onPresent(e.id)}
+                onClick={() => {
+                  reactTo(`(presents ${e.title}: ${e.text})`)
+                  onPresent(e.id)
+                }}
                 className="mt-1.5 rounded bg-amber-700 px-2 py-1 text-xs font-medium text-white hover:bg-amber-800"
               >
                 Present {e.title.split(':')[0]}
@@ -221,6 +254,7 @@ export function ScenarioPanel({
             </li>
           ))}
         </ul>
+        {reactToggle}
       </>
     )
   } else if (beat.kind === 'speak') {
@@ -229,9 +263,7 @@ export function ScenarioPanel({
         onSubmit={(e) => {
           e.preventDefault()
           if (!text.trim()) return
-          const whoId = beat.who
-          if (usingModel && react && whoId)
-            askReaction(beat.id, whoId, fill(beat.prompt), text)
+          reactTo(text)
           onSpeak(text)
           setText('')
         }}
@@ -254,24 +286,7 @@ export function ScenarioPanel({
           At least {beat.minWords} words.{' '}
           {text.trim().split(/\s+/).filter(Boolean).length} so far.
         </p>
-        {usingModel && beat.who && (
-          <label className="mt-1 flex items-start gap-1.5 text-[11px] text-violet-900">
-            <input
-              type="checkbox"
-              checked={react}
-              onChange={(e) => {
-                setReact(e.target.checked)
-                writeReact(e.target.checked)
-              }}
-              className="mt-0.5"
-            />
-            <span>
-              Let {asker?.name ?? 'them'} respond to what you actually say (sends your
-              words, without your name, to the AI model you turned on; your score is still
-              set by the marking rules)
-            </span>
-          </label>
-        )}
+        {reactToggle}
         <button
           type="submit"
           disabled={!text.trim()}

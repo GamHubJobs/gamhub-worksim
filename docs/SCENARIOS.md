@@ -119,13 +119,15 @@ A scenario with `venue: 'court'` is played at Westmark County Court
 - While at court, the office panel, the Places bar, the office guide's next
   step and the street map step aside.
 
-## The cast responding to the player's own words
+## The cast responding to what the player says and does
 
-When the player answers in their own words and has their own AI model on,
-a box under the answer offers: _Let (the person asking) respond to what you
-actually say_. The choice is kept on this computer.
+When someone asks the player something (a choice, an exhibit to hand up, or
+words of their own) and the player has their own AI model on, a box under
+the answer offers: _Let (the person asking) respond to what you actually say
+or do_. The choice is kept on this computer.
 
-- When it is ticked, what the player wrote goes to their model (with the
+- When it is ticked, the player's answer (the choice they made, the exhibit
+  they handed up, or what they wrote) goes to their model (with the
   question, the scene, the cast and what has been said so far, but no
   marks, no outcome and no name), and that person responds in character
   in one to three sentences, above their written line.
@@ -170,10 +172,11 @@ When a scenario ends, the player can talk to anyone who was there
 
 ## Not done
 
-- **Mostly scripted in the scene:** the cast's lines are written for each
-  answer. With the player's own model on, the person asking can also respond
-  to an answer in the player's own words, but choices and exhibits get only
-  the written replies, and the rubric always sets the score.
+- **Written lines first:** the cast's lines are written for each answer, so
+  the game plays fully without a model. With the player's own model on, the
+  person asking can also respond in their own words to any answer; lines
+  said by no one in particular (the narrator) stay written, and the rubric
+  always sets the score.
 - **Scenarios per career:** two in every career, and a third for Law at
   court (19 in all). The engine and stage take more without code changes.
 - **Places:** only Law has a building away from the office (the court). It

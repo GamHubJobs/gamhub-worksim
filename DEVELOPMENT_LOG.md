@@ -190,6 +190,24 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · The cast responds to choices and exhibits too
+
+**Built**
+
+- The box that lets the person asking respond in their own words (with the
+  player's own AI model on) is now offered for choices and exhibits as well
+  as for answers in the player's own words. The model is sent the choice
+  made, or the exhibit handed up with its text.
+
+**Tested**
+
+- The AI hearing browser test ticks the box at the first choice the judge
+  asks, sees the judge respond through the faked bridge, and carries on to
+  the closing with it ticked. The full hearing without a model passes
+  unchanged.
+
+---
+
 ## 2026-11-15 · Westmark County Court on the high street
 
 **Built**

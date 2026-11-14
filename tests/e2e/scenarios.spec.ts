@@ -324,6 +324,7 @@ test('Law: coaching on the closing from the player’s own AI model, without cha
   await begin(page, 'Hearing: Brightwater v Millstone')
   const panel = page.getByTestId('scenario')
   // Play well up to the closing, then say something short of its own.
+  let reacted = false
   for (let guard = 0; guard < 150; guard++) {
     if (await panel.getByRole('textbox').isVisible()) break
     const cont = panel.getByRole('button', { name: 'Continue' })
@@ -337,13 +338,27 @@ test('Law: coaching on the closing from the player’s own AI model, without cha
     } | null
     if (!answer) continue
     const label = answer.label.replaceAll('{name}', 'Alex')
-    if (answer.kind === 'choose')
+    const toggle = panel.getByRole('checkbox', {
+      name: /respond to what you actually say/,
+    })
+    // The first time someone asks a choice: let them respond in their own words.
+    if (answer.kind === 'choose' && !reacted && (await toggle.isVisible())) {
+      await toggle.check()
+      await panel.getByRole('button', { name: label, exact: true }).click()
+      await expect(page.getByTestId('scenario-ai-reaction')).toContainText(
+        'in their own words',
+      )
+      await expect(page.getByTestId('scenario-ai-reaction')).toContainText('Name Harlow')
+      expect(sent).toContain('React in character')
+      reacted = true
+    } else if (answer.kind === 'choose')
       await panel.getByRole('button', { name: label, exact: true }).click()
     else if (answer.kind === 'exhibit')
       await panel
         .getByRole('button', { name: `Present ${label.split(':')[0]}`, exact: true })
         .click()
   }
+  expect(reacted).toBe(true)
   // The judge may respond to the player's own words, if the player wants.
   await panel.getByRole('checkbox', { name: /respond to what you actually say/ }).check()
   await panel
