@@ -105,8 +105,9 @@ showing through the wall reversed.
   meeting places: a much larger change than dressing.
 - **The courthouse is reached from work only.** Westmark County Court has
   its own interior and hearing (see [SCENARIOS.md](SCENARIOS.md#at-court)),
-  but it is not a building on the street map, and it cannot be visited
-  outside working hours (it would be closed).
+  and stands on the high street (columns, steps, its crest), marked on the
+  maps. In the street its door is shut, because the court only sits while
+  the player is at work.
 - **The desks keep the office's places.** Each workplace now has its own
   desks (drawing boards in engineering, clinical worktops in the hospital,
   walnut desks at the law firm), but in the same two rows, so colleagues sit

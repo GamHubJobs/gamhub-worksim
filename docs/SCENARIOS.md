@@ -176,7 +176,7 @@ When a scenario ends, the player can talk to anyone who was there
   the written replies, and the rubric always sets the score.
 - **Scenarios per career:** two in every career, and a third for Law at
   court (19 in all). The engine and stage take more without code changes.
-- **Places:** only Law has a building away from the office (the court). The
-  court is reached from work, not shown on the street map, and the trip is
-  not saved if the page is reloaded there (the player is back in the office;
-  the travel time is kept).
+- **Places:** only Law has a building away from the office (the court). It
+  stands on the high street, but is only open from work; the trip is not
+  saved if the page is reloaded there (the player is back in the office; the
+  travel time is kept).

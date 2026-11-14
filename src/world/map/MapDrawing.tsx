@@ -10,6 +10,7 @@ import {
   BUILDING_DEPTH,
   BUILDING_FRONT,
   BUILDINGS,
+  COURTHOUSE,
   CROSSINGS,
   ICONS,
   PARK,
@@ -104,6 +105,50 @@ export function MapDrawing({
           strokeWidth={0.2}
         />
       ))}
+      {/* Westmark County Court: a landmark, reached from work (court/) */}
+      <g data-testid="map-courthouse">
+        <rect
+          x={COURTHOUSE.x - COURTHOUSE.w / 2}
+          y={-BUILDING_FRONT - BUILDING_DEPTH}
+          width={COURTHOUSE.w}
+          height={BUILDING_DEPTH}
+          fill={COURTHOUSE.color}
+          stroke="#57534e"
+          strokeWidth={0.35}
+        />
+        <circle
+          cx={COURTHOUSE.door[0]}
+          cy={COURTHOUSE.door[1]}
+          r={2.8}
+          fill="#57534e"
+          stroke="#ffffff"
+          strokeWidth={0.5}
+        />
+        <text
+          x={COURTHOUSE.door[0]}
+          y={COURTHOUSE.door[1] + 1.2}
+          transform={upright(COURTHOUSE.door[0], COURTHOUSE.door[1])}
+          textAnchor="middle"
+          fontSize={3.2}
+        >
+          ⚖️
+        </text>
+        {labels && (
+          <text
+            x={COURTHOUSE.door[0]}
+            y={COURTHOUSE.door[1] - 4.2}
+            textAnchor="middle"
+            fontSize={2.4}
+            fontWeight={600}
+            fill="#1c1917"
+            stroke="#ffffff"
+            strokeWidth={0.6}
+            paintOrder="stroke"
+          >
+            {COURTHOUSE.name}
+          </text>
+        )}
+      </g>
       {route.length > 1 && (
         <polyline
           data-testid="map-route"

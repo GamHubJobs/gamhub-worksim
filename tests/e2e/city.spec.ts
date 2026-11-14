@@ -164,3 +164,30 @@ test('the morning: a gym shower and breakfast out, then walking to work', async 
   await city(page).locator('[data-commute="walk"]').click()
   await expect(page.getByTestId('office')).toBeVisible({ timeout: 30_000 })
 })
+
+test('Westmark County Court on the street: shut in the evening, with its hours, and on the map', async ({
+  page,
+}) => {
+  await endTheDay(page)
+  await goOut(page)
+  const street = city(page).getByTestId('city-3d')
+  test.skip((await street.count()) === 0, 'No 3D in this browser')
+  await expect(street.locator('canvas')).toBeVisible({ timeout: 30_000 })
+  await page.waitForFunction('typeof window.__worksimStreetWalk === "function"')
+  await page.evaluate("window.__worksimStreetWalk('door-court')")
+  // The character walks up and tries the door: it is shut, and says when it sits.
+  const notice = city(page).getByTestId('city-notice')
+  await expect(notice).toContainText('closed now', { timeout: 60_000 })
+  await expect(notice).toContainText('10 am to 4 pm')
+  await page.waitForTimeout(800)
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/city/courthouse.png`,
+  })
+  // Marked on the world map as the court, reached from work.
+  await street.focus()
+  await page.keyboard.press('m')
+  const map = page.getByTestId('world-map')
+  await expect(map.getByTestId('map-courthouse')).toBeVisible()
+  await expect(map).toContainText('Court (from work)')
+  await page.keyboard.press('Escape')
+})

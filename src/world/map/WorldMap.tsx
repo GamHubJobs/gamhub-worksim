@@ -219,6 +219,7 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
                 {ICONS[p.id]} {KINDS[p.id]}
               </li>
             ))}
+            <li>⚖️ Court (from work)</li>
             <li>🔵 You</li>
             <li>⭕ Destination</li>
           </ul>

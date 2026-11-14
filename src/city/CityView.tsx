@@ -19,6 +19,7 @@ import { PLACES, PLACE_ACTIONS, getPlace, type PlaceId } from '../content/city'
 import { formatMoney } from '../content/life'
 import { formatTime, nextWorkday, weekdayName } from '../game/clock'
 import { canEnter, minutesTo } from '../game/city'
+import { COURTHOUSE } from './worldMap'
 import { canDo, lifePhase } from '../game/life'
 import { unreadCount } from '../game/social'
 import { CommuteChoices } from '../home/CommuteChoices'
@@ -266,6 +267,17 @@ export function CityView({
       }),
     [outside, walkable, doThing],
   )
+  // Development builds: walk to and do a street activity by its ID (for browser tests).
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    Object.assign(window, {
+      __worksimStreetWalk: (id: string) =>
+        setStreetRequest((r) => ({ id, nonce: (r?.nonce ?? 0) + 1 })),
+    })
+    return () => {
+      delete (window as { __worksimStreetWalk?: unknown }).__worksimStreetWalk
+    }
+  }, [])
   // The conversation is over: they go back to what they were doing.
   useEffect(() => {
     if (!encounter && !storyScene) release()
@@ -391,6 +403,7 @@ export function CityView({
                 onProgress={api.onProgress}
                 onArea={onArea}
                 onDoor={go}
+                onCourt={() => setNotice(COURTHOUSE.closed)}
                 onEnter={go}
                 blocked={(id) => canEnter(profile, id)}
                 riding={life.city.riding}

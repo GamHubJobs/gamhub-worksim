@@ -190,6 +190,32 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Westmark County Court on the high street
+
+**Built**
+
+- The court stands on the north side of the high street, where a plain
+  building was: a stone front with four columns, steps, tall doors, a
+  pediment and the court's crest (`COURTHOUSE` in `city/worldMap.ts`, drawn
+  in `CityScene.tsx`).
+- Its door can be walked up to and tried. It is shut, and the street says
+  why: the court hears cases on weekdays from 10 am to 4 pm, and lawyers
+  come here from work. (The player is only in the street before and after
+  work.)
+- It is on the world map and the mini-map (⚖️), and in the map's key as
+  "Court (from work)".
+- A development-only hook, `__worksimStreetWalk`, walks to a street activity
+  for browser tests.
+
+**Tested**
+
+- Browser test: in the evening, the character walks to the court's door,
+  tries it, and the notice gives the hours. The world map shows the court.
+  The street and map suites pass (one retry: the street's 3D view was slow
+  to load under load). Screenshot checked.
+
+---
+
 ## 2026-11-15 · Tools used where they are, over the room
 
 **Built**

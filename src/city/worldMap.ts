@@ -28,7 +28,6 @@ export const BUILDINGS: Array<{
   { x: -40, side: -1, w: 16, h: 8, color: '#efe2d3' },
   { x: -23, side: -1, w: 14, h: 14, color: '#c9b8a6' },
   { x: 0, side: -1, w: 16, h: 7, color: '#e7e5e4' },
-  { x: 16, side: -1, w: 14, h: 16, color: '#bfb3a3' },
   { x: 64, side: -1, w: 10, h: 10, color: '#d4cbbd' },
   { x: -56, side: 1, w: 14, h: 11, color: '#cbbfae' },
   { x: -40, side: 1, w: 16, h: 18, color: '#b7795a' },
@@ -38,6 +37,25 @@ export const BUILDINGS: Array<{
   { x: 32, side: 1, w: 14, h: 15, color: '#d6c7b1' },
   { x: 48, side: 1, w: 14, h: 10, color: '#bdb0a0' },
 ]
+
+/**
+ * Westmark County Court (fictional), on the north side of the street: where a
+ * law career's hearings are held (see court/). Lawyers go there from work; it
+ * sits on weekdays from 10:00 to 16:00, so it is closed whenever the player is
+ * out in the street (before work, and in the evening).
+ */
+export const COURTHOUSE = {
+  x: 16,
+  side: -1 as const,
+  w: 14,
+  h: 13,
+  color: '#e7e2d6',
+  name: 'Westmark County Court',
+  /** Its door on the street (x, z). */
+  door: [16, -8] as [number, number],
+  closed:
+    'Westmark County Court is closed now: it hears cases on weekdays from 10 am to 4 pm. Lawyers come here from work.',
+}
 
 /** How deep the buildings are, back from the pavement (as drawn in 3D). */
 export const BUILDING_DEPTH = 14

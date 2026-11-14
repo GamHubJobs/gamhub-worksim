@@ -7,7 +7,7 @@
  * nothing moves, so it runs on ordinary laptops.
  */
 import { lowDpr } from '../../world/lowDpr'
-import { BUILDINGS } from '../worldMap'
+import { BUILDINGS, COURTHOUSE } from '../worldMap'
 import { useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import {
@@ -171,6 +171,8 @@ export interface CitySceneProps {
   onArea?: (area: Area) => void
   /** Called when the player clicks a door. */
   onDoor: (id: PlaceId) => void
+  /** The court's door was clicked (it is closed when the player is in the street). */
+  onCourt?: () => void
   /** Why a door cannot be used now (closed, too late), or null. */
   blocked: (id: PlaceId) => string | null
   onPrompt: (prompt: Prompt | null) => void
@@ -292,6 +294,13 @@ function CityScene(props: CitySceneProps) {
           )}
         </PeopleDetail>
       </Parking.Provider>
+      <Door
+        name={COURTHOUSE.name}
+        colour="#57534e"
+        labelled
+        position={[COURTHOUSE.door[0], 0.02, COURTHOUSE.door[1] + 0.6]}
+        onClick={() => props.onCourt?.()}
+      />
       {PLACES.map((place) => (
         <Door
           key={place.id}
@@ -314,27 +323,39 @@ const STREET_BOXES: Solid[] = [
   { x: BOUNDS.maxX + 3, z: 0, hx: 3, hz: 12, top: 14 },
 ]
 
-/** Going in at each door: walk up to it and push it open. */
+/** Going in at each door: walk up to it and push it open (the court's is shut). */
 function doorActivities(): Activity[] {
-  return PLACES.map((place) => {
-    const [x, z] = place.door
-    const side = Math.sign(z)
-    return {
-      id: `door-${place.id}`,
-      action: `enter:${place.id}`,
-      prompt:
-        place.id === 'home'
-          ? 'go inside: home'
-          : place.id === 'office'
-            ? 'go to work'
-            : `go into ${place.name}`,
-      // From the door out to about 4 m into the street.
-      spot: { x, z: z - side * 1.8, reach: 2.4 },
-      anchor: { x, z: z - side * 1.1, heading: side > 0 ? Math.PI : 0 },
-      stages: [{ clip: 'push-door', seconds: 0.8, label: `Going in: ${place.name}` }],
-      sounds: [{ at: 0.3, id: 'door' }],
-    }
-  })
+  const [cx, cz] = COURTHOUSE.door
+  const court: Activity = {
+    id: 'door-court',
+    action: 'court-door',
+    prompt: `go into ${COURTHOUSE.name}`,
+    spot: { x: cx, z: cz + 1.8, reach: 2.4 },
+    anchor: { x: cx, z: cz + 1.1, heading: 0 },
+    stages: [{ clip: 'push-door', seconds: 0.8, label: 'Trying the door' }],
+  }
+  return [
+    court,
+    ...PLACES.map((place): Activity => {
+      const [x, z] = place.door
+      const side = Math.sign(z)
+      return {
+        id: `door-${place.id}`,
+        action: `enter:${place.id}`,
+        prompt:
+          place.id === 'home'
+            ? 'go inside: home'
+            : place.id === 'office'
+              ? 'go to work'
+              : `go into ${place.name}`,
+        // From the door out to about 4 m into the street.
+        spot: { x, z: z - side * 1.8, reach: 2.4 },
+        anchor: { x, z: z - side * 1.1, heading: side > 0 ? Math.PI : 0 },
+        stages: [{ clip: 'push-door', seconds: 0.8, label: `Going in: ${place.name}` }],
+        sounds: [{ at: 0.3, id: 'door' }],
+      }
+    }),
+  ]
 }
 
 const DOORS = doorActivities()
@@ -381,7 +402,14 @@ function StreetPlayer(props: CitySceneProps & { low: boolean }) {
       start={{ x: start[0], z: start[1], heading: facingStreet(props.at) }}
       boxes={STREET_BOXES}
       activities={DOORS}
-      blocked={(a) => (a.action ? props.blocked(a.action.slice(6) as PlaceId) : null)}
+      blocked={(a) =>
+        // The court's door can be tried (it is shut: see onDone).
+        a.action === 'court-door'
+          ? null
+          : a.action
+            ? props.blocked(a.action.slice(6) as PlaceId)
+            : null
+      }
       controls={props.controls}
       request={props.request ?? null}
       onPrompt={props.onPrompt}
@@ -389,6 +417,7 @@ function StreetPlayer(props: CitySceneProps & { low: boolean }) {
       onDone={(a, completed) => {
         if (completed && a.action?.startsWith('person:'))
           props.onPerson?.(a.action.slice('person:'.length))
+        else if (completed && a.action === 'court-door') props.onCourt?.()
         else if (completed && a.action) props.onEnter(a.action.slice(6) as PlaceId)
       }}
       onReady={props.onReady}
@@ -520,6 +549,7 @@ function Street({ dark }: { dark: boolean }) {
       {BUILDINGS.map((b, i) => (
         <Building key={i} {...b} dark={dark} />
       ))}
+      <Courthouse dark={dark} />
       {/* Shop fronts: an awning in the place's colour over each door */}
       {PLACES.filter((p) => p.id !== 'park' && p.id !== 'office').map((p) => {
         const side = Math.sign(p.door[1])
@@ -609,6 +639,61 @@ function Building({
         position={[x, h + 0.2, front + side * (depth / 2)]}
         color="#78716c"
       />
+    </group>
+  )
+}
+
+/**
+ * Westmark County Court from the street: a stone front with columns, steps up
+ * to tall doors, the court's crest and name. Closed whenever the player is in
+ * the street (it sits on weekdays, 10 to 4: lawyers come from work).
+ */
+function Courthouse({ dark }: { dark: boolean }) {
+  const { x, w, h, color } = COURTHOUSE
+  const depth = 14
+  const front = -10
+  const stone = '#d6d0c2'
+  return (
+    <group>
+      <Box size={[w, h, depth]} position={[x, h / 2, front - depth / 2]} color={color} />
+      {/* The cornice and a low pediment over the columns */}
+      <Box
+        size={[w + 0.6, 0.6, depth + 0.6]}
+        position={[x, h + 0.3, front - depth / 2]}
+        color={stone}
+      />
+      <Box size={[9.4, 1.1, 1.6]} position={[x, 7.9, front + 0.6]} color={stone} />
+      <Box size={[7, 0.8, 1.5]} position={[x, 8.85, front + 0.6]} color={stone} />
+      {/* Four columns on a plinth, and three steps up */}
+      {[-3.6, -1.2, 1.2, 3.6].map((dx) => (
+        <mesh key={dx} position={[x + dx, 4.0, front + 0.9]}>
+          <cylinderGeometry args={[0.38, 0.42, 6.6, 16]} />
+          <meshStandardMaterial color="#f5f5f4" roughness={0.7} />
+        </mesh>
+      ))}
+      {[0, 1, 2].map((i) => (
+        <Box
+          key={i}
+          size={[10 - i * 0.6, 0.25, 2.2 - i * 0.5]}
+          position={[x, 0.12 + i * 0.25, front + 1.05 - i * 0.25]}
+          color="#a8a29e"
+        />
+      ))}
+      {/* Tall doors, shut, with lit windows either side in the evening */}
+      <Box size={[2.2, 3.4, 0.12]} position={[x, 2.45, front + 0.02]} color="#3f2a1d" />
+      {[-4.6, 4.6].map((dx) => (
+        <Box
+          key={dx}
+          size={[1.4, 2.4, 0.08]}
+          position={[x + dx, 3.2, front + 0.03]}
+          color={dark ? '#334155' : '#8fb3c7'}
+        />
+      ))}
+      {/* The crest */}
+      <mesh position={[x, 8.85, front + 1.4]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.45, 0.45, 0.08, 24]} />
+        <meshStandardMaterial color="#ca8a04" roughness={0.45} metalness={0.3} />
+      </mesh>
     </group>
   )
 }
