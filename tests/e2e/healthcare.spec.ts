@@ -182,6 +182,15 @@ test('Healthcare: the ward in 3D, walked to the bedside, opens Ward Systems', as
   // On the way: Bay A comes into view.
   await page.waitForTimeout(8000)
   await page.screenshot({ path: `${shots}/healthcare/ward-bay.png` })
+  // Used where it is: open over the room, not on the computer.
+  const here = page.getByTestId('in-place-tool')
+  await expect(here).toBeVisible({ timeout: 120_000 })
+  await expect(here).toContainText('Ward Systems')
+  await expect(here).toContainText('How to use Ward Systems', { timeout: 60_000 })
+  await expect(page.getByTestId('office-3d')).toBeVisible()
+  await page.screenshot({ path: `${shots}/healthcare/bedside-in-place.png` })
+  // For longer work, the same tool on the work computer.
+  await here.getByRole('button', { name: 'Open on the computer' }).click()
   const tool = page.getByRole('region', { name: 'Ward Systems window' })
   await expect(tool).toBeVisible({ timeout: 120_000 })
   await expect(tool).toContainText('How to use Ward Systems')

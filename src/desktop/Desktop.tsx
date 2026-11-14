@@ -78,6 +78,7 @@ import { modelAnswers } from '../game/caseModel'
 import { getCase } from '../content/cases'
 import { passTime } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
+import { InPlaceTool } from '../office/InPlaceTool'
 import { HomeView } from '../home/HomeView'
 import { CityView } from '../city/CityView'
 import { enterPlace, goOutside } from '../game/city'
@@ -254,6 +255,21 @@ export function Desktop({
   )
   // Where the player is: in the office (a spot), or at the computer (an app).
   const [view, setViewState] = useState<View>(() => readLastView() ?? DEFAULT_VIEW)
+  // A tool used where it is in the workplace (at the bedside, at counsel's table),
+  // open over the 3D room rather than on the work computer (office/InPlaceTool.tsx).
+  const [inPlace, setInPlace] = useState<{ view: View; where: string } | null>(null)
+  // Only in the office: on the computer (or after the day) it is put away.
+  useEffect(() => {
+    if (view.app !== 'office') setInPlace(null)
+  }, [view.app])
+  // Stepping back saves whatever was being worked on first.
+  const closeInPlace = useCallback(
+    () =>
+      void saveAll()
+        .catch(() => false)
+        .then(() => setInPlace(null)),
+    [saveAll],
+  )
   const [helpOpen, setHelpOpen] = useState(false)
   const [soundOpen, setSoundOpen] = useState(false)
   const [storyOpen, setStoryOpen] = useState(false)
@@ -916,15 +932,34 @@ export function Desktop({
             onCareer={act}
           />
         ) : (
-          <OfficeView
-            profile={profile}
-            spot={view.spot ?? 'reception'}
-            openEvent={view.event}
-            onGo={(spot) => setView({ app: 'office', spot })}
-            onUseComputer={(open) => setView(open ?? { app: 'mail' })}
-            onAct={act}
-            sync={officeSync}
-          />
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <OfficeView
+              profile={profile}
+              spot={view.spot ?? 'reception'}
+              openEvent={view.event}
+              onGo={(spot) => setView({ app: 'office', spot })}
+              onUseComputer={(open) => setView(open ?? { app: 'mail' })}
+              onUseHere={(open, where) => setInPlace({ view: open as View, where })}
+              onAct={act}
+              sync={officeSync}
+            />
+            {inPlace && (
+              <AiHubContext.Provider value={aiHub}>
+                <InPlaceTool
+                  where={inPlace.where}
+                  title={viewTitle(inPlace.view)}
+                  onClose={closeInPlace}
+                  onComputer={() => {
+                    const open = inPlace.view
+                    setInPlace(null)
+                    setView(open)
+                  }}
+                >
+                  <Suspense fallback={<AppLoading />}>{renderApp(inPlace.view)}</Suspense>
+                </InPlaceTool>
+              </AiHubContext.Provider>
+            )}
+          </div>
         )}
       </div>
     )
@@ -1253,6 +1288,16 @@ export function Desktop({
       (best, w) => (!best || w.z > best.z ? w : best),
       undefined,
     )
+
+  /** What a view is called, e.g. "Ward Systems". */
+  function viewTitle(v: View): string {
+    const key = v.app === 'tool' ? `tool:${v.tool}` : v.app
+    return (
+      launchables.find((a) => a.key === key)?.label ??
+      APPS.find((a) => a.id === v.app)?.label ??
+      'App'
+    )
+  }
 
   function windowMeta(win: AppWindow): { title: string; icon: IconName } {
     if (win.system === 'settings') return { title: 'Settings', icon: 'settings' }

@@ -128,6 +128,11 @@ interface OfficeViewProps {
   openEvent?: string
   onGo: (spot: SpotId) => void
   onUseComputer: (open?: DialogueAction['open']) => void
+  /**
+   * A tool used where it is (the bedside, counsel's table): opened over the
+   * room, not on the computer. Without it, on the computer.
+   */
+  onUseHere?: (open: NonNullable<DialogueAction['open']>, where: string) => void
   onAct: Act
   /** Keeps the office's IT jobs and held-up colleagues in step after hands-on work. */
   sync?: OnSiteSync
@@ -184,6 +189,7 @@ export function OfficeView({
   openEvent,
   onGo,
   onUseComputer,
+  onUseHere,
   onAct,
   sync,
 }: OfficeViewProps) {
@@ -317,8 +323,11 @@ export function OfficeView({
 
   /** In the workplace's own corner (the ward's bay, the workshop, the courtroom): its tool, there. */
   function bedside(action: string | null = 'bay') {
-    const opens = opensFor(action, activeBay())
-    if (opens) onUseComputer(opens)
+    const bayNow = activeBay()
+    const opens = opensFor(action, bayNow)
+    if (!opens) return
+    if (onUseHere) onUseHere(opens, room ?? bayNow?.room ?? fill(placeText(current).name))
+    else onUseComputer(opens)
   }
 
   /** Arrived at equipment and used it (E): close in on it. */
@@ -425,11 +434,11 @@ export function OfficeView({
         title: 'Lunch break',
         lines: company
           ? [
-              `You grab your lunch and join ${company} at the big table. 🥪`,
+              `You grab your lunch and join ${company} at the big table. ðŸ¥ª`,
               'Tom tells the story of the great printer flood of last spring. Nina tells you which meeting room never has working Wi-Fi. You laugh more than you have all week.',
             ]
           : [
-              'You grab your lunch from the fridge and sit by the window for a proper break. 🥪',
+              'You grab your lunch from the fridge and sit by the window for a proper break. ðŸ¥ª',
               'Away from the screen, your head clears. You feel ready for the afternoon.',
             ],
         actions: [],
@@ -576,12 +585,12 @@ export function OfficeView({
       setAway({
         ...away,
         signedIn: true,
-        note: 'The usher ticks you off the list: “Court 2, through the double doors. The judge will be in shortly: take your place at the claimant’s table.”',
+        note: 'The usher ticks you off the list: â€œCourt 2, through the double doors. The judge will be in shortly: take your place at the claimantâ€™s table.â€',
       })
     else if (action === 'court:list')
       setAway({
         ...away,
-        note: 'Court 2 · District Judge Hartley · 10:30 · Shah v Corner Lettings Ltd (small claim, about an hour).',
+        note: 'Court 2 Â· District Judge Hartley Â· 10:30 Â· Shah v Corner Lettings Ltd (small claim, about an hour).',
       })
     else if (action === 'court:leave' && !live) {
       setReady(false)
@@ -706,8 +715,8 @@ export function OfficeView({
                   fallback={
                     <div className="flex h-full items-center justify-center bg-slate-100 text-slate-500">
                       {away
-                        ? 'Arriving at Westmark County Court…'
-                        : 'Arriving at the office…'}
+                        ? 'Arriving at Westmark County Courtâ€¦'
+                        : 'Arriving at the officeâ€¦'}
                     </div>
                   }
                 >
@@ -801,7 +810,7 @@ export function OfficeView({
       {!away && (
         <HudSlot zone="top-left" hideWhen={live ? 'dialogue' : undefined}>
           <section
-            className="max-h-full w-full overflow-y-auto rounded-xl bg-white/90 p-4 shadow-lg ring-1 ring-slate-200 backdrop-blur"
+            className="onsite-hide max-h-full w-full overflow-y-auto rounded-xl bg-white/90 p-4 shadow-lg ring-1 ring-slate-200 backdrop-blur"
             aria-label="This area"
             data-testid="office-panel"
             data-collapsed={panelOpen ? 'false' : 'true'}
@@ -817,7 +826,7 @@ export function OfficeView({
                 aria-label={panelOpen ? 'Collapse this panel' : 'Expand this panel'}
                 className="-mt-1 -mr-1 rounded px-1.5 text-xs text-slate-500 hover:bg-slate-100"
               >
-                {panelOpen ? '▴' : '▾'}
+                {panelOpen ? 'â–´' : 'â–¾'}
               </button>
             </div>
             <h1 className="text-lg font-semibold text-slate-900">
@@ -877,7 +886,7 @@ export function OfficeView({
                       <p className="font-medium">
                         {person.name.split(' ')[0]} wants a word
                       </p>
-                      <p className="truncate text-xs">“{event.opener}”</p>
+                      <p className="truncate text-xs">â€œ{event.opener}â€</p>
                     </div>
                     <button
                       type="button"
@@ -1031,7 +1040,7 @@ export function OfficeView({
       {!away && (
         <HudSlot zone="bottom-center" order={2}>
           <nav
-            className="flex max-w-full flex-wrap justify-center gap-1 rounded-xl bg-white/90 p-1.5 shadow-lg ring-1 ring-slate-200 backdrop-blur"
+            className="onsite-hide flex max-w-full flex-wrap justify-center gap-1 rounded-xl bg-white/90 p-1.5 shadow-lg ring-1 ring-slate-200 backdrop-blur"
             aria-label="Places"
           >
             {SPOTS.map((s) => (
@@ -1311,15 +1320,15 @@ function DialogueBox({
 }
 
 /**
- * A line in a conversation: the speaker's words are quoted; "Name: “…”"
- * lines are someone else speaking; "*…*" lines describe what happens.
+ * A line in a conversation: the speaker's words are quoted; "Name: â€œâ€¦â€"
+ * lines are someone else speaking; "*â€¦*" lines describe what happens.
  */
 function SpokenLine({ line }: { line: string }) {
   if (line.startsWith('*') && line.endsWith('*')) {
     return <p className="text-slate-500 italic">{line.slice(1, -1)}</p>
   }
-  if (/^[A-Z][a-z]+: “/.test(line)) return <p>{line}</p>
-  return <p>“{line}”</p>
+  if (/^[A-Z][a-z]+: â€œ/.test(line)) return <p>{line}</p>
+  return <p>â€œ{line}â€</p>
 }
 
 /** A simple floor plan for computers without 3D graphics. */

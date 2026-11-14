@@ -107,6 +107,15 @@ test('Law: the moot courtroom in 3D, walked to counsel’s table, opens Matter D
     .click()
   await page.waitForTimeout(8000)
   await page.screenshot({ path: `${shots}/legal/courtroom.png` })
+  // Used where it is: open over the room, not on the computer.
+  const here = page.getByTestId('in-place-tool')
+  await expect(here).toBeVisible({ timeout: 120_000 })
+  await expect(here).toContainText('Matter Desk')
+  await expect(here).toContainText('How to use Matter Desk', { timeout: 60_000 })
+  await expect(page.getByTestId('office-3d')).toBeVisible()
+  await page.screenshot({ path: `${shots}/legal/counsel-table-in-place.png` })
+  // For longer work, the same tool on the work computer.
+  await here.getByRole('button', { name: 'Open on the computer' }).click()
   const tool = page.getByRole('region', { name: 'Matter Desk window' })
   await expect(tool).toBeVisible({ timeout: 120_000 })
   await expect(tool).toContainText('How to use Matter Desk')

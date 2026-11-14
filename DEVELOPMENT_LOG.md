@@ -190,6 +190,39 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Tools used where they are, over the room
+
+**Built**
+
+- `office/InPlaceTool.tsx`: a tool used at a thing in the workplace (Ward
+  Systems at the bedside, Matter Desk at counsel's table, Works Desk at the
+  test bench, and every other workplace object that opens a tool or app)
+  opens in a frame on the right of the 3D room. The player stays at the
+  object, and the room stays in view on the left. The frame is headed with
+  where they are ("At Bay A").
+- _Step back (Esc)_ saves and returns to the room at once. _Open on the
+  computer_ moves the same tool to the full work computer.
+- While it is open, the office panel, Places bar and HUD step aside. Keys
+  typed into the tool do not move the character (the 3D view only listens
+  to its own keys).
+- The work computer at the player's desk still opens the full desktop, as
+  before.
+
+**Tested**
+
+- The three "walked to the object" browser tests (hospital, law,
+  engineering) now check the frame over the room, then _Open on the
+  computer_. Screenshots checked: the first version covered nearly the whole
+  view, with the office panel showing behind it, so the frame was moved to
+  the right and the panel hidden.
+
+**Limitations**
+
+- It is a flat frame over the scene, not a screen or clipboard drawn in the
+  3D room.
+
+---
+
 ## 2026-11-15 · Each workplace's own desks
 
 **Built**
