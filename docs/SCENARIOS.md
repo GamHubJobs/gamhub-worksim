@@ -76,6 +76,21 @@ More scenarios:
   meeting. Declaring it, the supplier's status page, updates through channels
   that still work, resisting an untested fix under pressure, confirming with
   users, and the review.
+- **Accounting, the auditor's visit:** the sample pulled as filed, honesty
+  about a missing approval, a cut-off error, independence under pressure,
+  the findings.
+- **Finance & Administration, the payroll printout and the expense claims:**
+  personal data on the copier, a claim against the policy, a manager
+  approving their own claim.
+- **Software Development, sprint planning:** capacity from velocity, scope by
+  priority, splitting a big story, refusing to store readable passwords,
+  testable and accessible acceptance criteria, the sprint goal.
+- **Data Analysis, the dashboard that doubled overnight:** duplicate rows
+  from a join, correcting the directors openly, data minimisation, the
+  incident note.
+- **Digital Marketing, the photo shoot and the post:** consent to use a
+  customer's photo, image rights, labelling a paid post, alt text, an angry
+  comment.
 
 The first scenario of each career also includes that career's meeting-case decision.
 
@@ -96,7 +111,7 @@ The first scenario of each career also includes that career's meeting-case decis
 - **No free-form AI conversation:** the cast's responses are written for
   each answer. Answers in the player's own words are marked by a rubric, not
   by an AI model.
-- **Scenarios per career:** two in Law, Healthcare, Engineering and IT Help Desk, one elsewhere. The
+- **Scenarios per career:** two in every career (18 in all). The
   engine and stage take more without code changes.
 - **AI coaching:** a player with their own model turned on in WorkSim AI can
   ask it for coaching after an answer in their own words. It never changes the

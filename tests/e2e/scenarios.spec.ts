@@ -136,6 +136,41 @@ test('Law: a poor hearing loses the case, and the court says why', async ({ page
 
 const CAREERS: Array<[string, RegExp, string, string, string]> = [
   [
+    'accounting-audit',
+    /^Accounting/,
+    'The auditor’s visit',
+    'A clean audit outcome: findings corrected openly',
+    'honest',
+  ],
+  [
+    'finance-expenses',
+    /Office Administration & Finance/,
+    'The payroll printout and the expense claims',
+    'Personal data secured, the policy applied fairly, the rules kept',
+    'confidential',
+  ],
+  [
+    'dev-planning',
+    /Software Development/,
+    'Sprint planning at the board',
+    'A realistic, secure sprint the whole team believes in',
+    'security',
+  ],
+  [
+    'data-incident',
+    /Data Analysis/,
+    'The dashboard that doubled overnight',
+    'Error caught and corrected before anyone acted on it',
+    'cause',
+  ],
+  [
+    'marketing-shoot',
+    /Digital Marketing/,
+    'The photo shoot and the post',
+    'A legal, accessible post with happy customers',
+    'consent',
+  ],
+  [
     'engineering-review',
     /Engineering & Technical Services/,
     'Design review: Mill Lane footbridge',

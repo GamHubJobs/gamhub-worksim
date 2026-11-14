@@ -190,6 +190,27 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Scenarios: a second scenario for every remaining career (18 in all)
+
+- **Accounting, the auditor's visit:** the sample as filed, honesty about a
+  missing approval (not signing it afterwards), a cut-off error, independence
+  under a manager's pressure, the findings.
+- **Finance & Administration, payroll printout and expense claims:** personal
+  data on the copier, a claim checked against the policy, a manager
+  approving their own claim.
+- **Software Development, sprint planning:** capacity from velocity, scope by
+  priority, splitting a big story, salted hashes instead of readable
+  passwords, testable and accessible acceptance criteria.
+- **Data Analysis, the dashboard that doubled overnight:** duplicate rows
+  from a join, correcting the directors openly, data minimisation, the
+  incident note.
+- **Digital Marketing, the photo shoot:** consent, image rights, an ad
+  label, alt text, an angry comment.
+- **Tests:**
+  - all five pass every unit check (81 scenario checks) and were played to
+    their best outcome in the browser (5 of 5);
+  - screenshots inspected; the auditor was moved out from behind the panel.
+
 ## 2026-11-15 · Scenarios: a design review (Engineering) and a major incident (IT Help Desk)
 
 - **Engineering, design review for the Mill Lane footbridge** in the project
