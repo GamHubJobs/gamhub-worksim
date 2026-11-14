@@ -36,6 +36,8 @@ import {
 } from '../../content/departments'
 import { WardBay } from './ward'
 import { activeBay, activeTheme, floorBoxes, roomAt, workplaceActivities } from './bays'
+import { DeskDressing } from './deskStyles'
+import { deskStyleFor, deskTop } from './deskStyle'
 import { DevTeamArea, InsightsWall, PostRoom, RecordsRoom, Studio } from './corners'
 import { PALETTE } from './themeLayout'
 import { ThemeDressing } from './themes'
@@ -1119,6 +1121,10 @@ function Workspace({
   // Two rows of desks, back to back. The player's desk is front row, middle.
   const front = [-1.2, 0.6, 2.4]
   const back = [-1.2, 0.6, 2.4]
+  // Each workplace's own desks (deskStyles.tsx); the player's keeps its computer.
+  const theme = activeTheme()
+  const mine = deskStyleFor(theme, true)
+  const theirs = deskStyleFor(theme, false)
   return (
     <group>
       {front.map((x) =>
@@ -1129,21 +1135,38 @@ function Workspace({
             labelPosition={[0.6, 1.65, 0.9]}
             onInteract={onInteract}
           >
-            <Desk position={[0.6, 0, 1.1]} glow={computerAlert} mug={mug} />
+            <Desk
+              position={[0.6, 0, 1.1]}
+              glow={computerAlert}
+              mug={mug}
+              top={deskTop(mine)}
+            />
+            <DeskDressing style={mine} position={[0.6, 0, 1.1]} />
             <OfficeChair position={[0.75, 0, 1.85]} rotation={-0.35} color={chair} />
             <DeskDecor items={items} />
             {computerAlert && <AlertBubble position={[0.6, 1.55, 0.88]} />}
           </Interactive>
         ) : (
           <group key={x}>
-            <Desk position={[x, 0, 1.1]} />
+            <Desk
+              position={[x, 0, 1.1]}
+              top={deskTop(theirs)}
+              noComputer={theirs === 'drafting'}
+            />
+            <DeskDressing style={theirs} position={[x, 0, 1.1]} />
             <OfficeChair position={[x, 0, 1.68]} />
           </group>
         ),
       )}
       {back.map((x) => (
         <group key={x}>
-          <Desk position={[x, 0, -0.45]} rotation={Math.PI} />
+          <Desk
+            position={[x, 0, -0.45]}
+            rotation={Math.PI}
+            top={deskTop(theirs)}
+            noComputer={theirs === 'drafting'}
+          />
+          <DeskDressing style={theirs} position={[x, 0, -0.45]} rotation={Math.PI} />
           <OfficeChair position={[x, 0, -1.03]} rotation={Math.PI} />
         </group>
       ))}

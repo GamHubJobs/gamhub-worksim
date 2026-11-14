@@ -190,6 +190,37 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Each workplace's own desks
+
+**Built**
+
+- `office/scene/deskStyles.tsx` (with `deskStyle.ts`): the desks in the
+  two rows dressed for the workplace, without moving them:
+  - engineering: drawing boards, with a pinned drawing, a parallel rule, an
+    angled lamp and rolled drawings, instead of monitors;
+  - hospital: white worktops with a rack of patients' notes folders, gloves
+    and hand gel beside the computer;
+  - law: walnut tops, a green banker's lamp, a leather desk pad and a brief
+    tied with pink tape.
+- `Desk` takes a top finish, and can leave out the monitor and keyboard.
+  The player's own desk always keeps its computer.
+- Seats, anchors, routes and what is solid are unchanged.
+
+**Tested**
+
+- Unit test of which desks each workplace gets.
+- Workplace tour screenshots of the engineering design office, the nurses'
+  station and the law firm's desks, checked. The tour run was cut off by
+  the command's time limit after the area shots, before every activity shot
+  was taken.
+
+**Limitations**
+
+- Same two rows of desks; a standing-height nurses' station counter would
+  need new seats and routes.
+
+---
+
 ## 2026-11-15 · The cast responds to the player's own words
 
 **Built**

@@ -82,7 +82,16 @@ showing through the wall reversed.
   walk round the furniture between beats; a fixed camera frames each scene.
 - **The desk area:** the divider between the desk rows is a nurses' station
   counter (hospital), a run of pinned drawings (engineering) or lever-arch
-  files (law).
+  files (law). The desks are each workplace's own (`deskStyles.tsx`):
+  - engineering: drawing boards with a pinned drawing, a parallel rule, an
+    angled lamp and rolled drawings, instead of monitors;
+  - hospital: white worktops with patients' notes folders in a rack, gloves
+    and hand gel beside the computer;
+  - law: walnut desks with a green banker's lamp, a leather pad and a brief
+    tied with pink tape.
+
+  The player's own desk keeps its computer everywhere.
+
 - **Framing fixes from the screenshots:** the judge's chair, people blocking
   the camera, overhead signs in front of the camera at the desk, and prompts
   and the area panel stepping aside during scenes.
@@ -98,9 +107,11 @@ showing through the wall reversed.
   its own interior and hearing (see [SCENARIOS.md](SCENARIOS.md#at-court)),
   but it is not a building on the street map, and it cannot be visited
   outside working hours (it would be closed).
-- **The desks** are still the office's desks; only the divider between them
-  is dressed. Real counters or drawing boards would mean moving the
-  colleagues' seats and the player's computer.
+- **The desks keep the office's places.** Each workplace now has its own
+  desks (drawing boards in engineering, clinical worktops in the hospital,
+  walnut desks at the law firm), but in the same two rows, so colleagues sit
+  where they always did. A real nurses' station counter, at standing height,
+  would mean new seats and routes.
 - **Tools still open as windows on the work computer.** The activity happens
   at the object, then the computer screen replaces the 3D view.
 - **The city and home** were not part of this audit.

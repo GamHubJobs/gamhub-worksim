@@ -370,24 +370,48 @@ const deskGeometry = lazy(() => {
 /** The desk's keyboard, for whoever sits at it (on the +z side, facing −z). */
 const DESK_KEYS: AnchorSpec[] = [{ kind: 'keyboard', at: [0, 0.784, 0.08] }]
 
+/** A desk top in another finish (white laminate, walnut), shared between desks. */
+const tops = new Map<string, MeshStandardMaterial>()
+function topMaterial(color: string): MeshStandardMaterial {
+  let m = tops.get(color)
+  if (!m) {
+    m = new MeshStandardMaterial({ color, roughness: 0.5 })
+    tops.set(color, m)
+  }
+  return m
+}
+
 export function Desk({
   position,
   rotation = 0,
   glow = false,
   mug = '#f8fafc',
-}: Placed & { glow?: boolean; mug?: string }) {
+  top,
+  noComputer = false,
+}: Placed & {
+  glow?: boolean
+  mug?: string
+  /** Another finish for the top (see deskStyles.tsx); the office's wood otherwise. */
+  top?: string | null
+  /** No monitor or keyboard (a drawing board stands there instead). */
+  noComputer?: boolean
+}) {
   const g = deskGeometry()
   const m = materials()
   const ref = useAnchors(DESK_KEYS)
   return (
     <group ref={ref} position={position} rotation={[0, rotation, 0]}>
-      <mesh geometry={g.top} material={m.wood} />
+      <mesh geometry={g.top} material={top ? topMaterial(top) : m.wood} />
       <mesh geometry={g.steel} material={m.steel} />
       <mesh geometry={g.pedestal} material={m.pedestal} />
-      <mesh geometry={g.black} material={m.black} />
-      <mesh geometry={g.light} material={m.light} />
-      <mesh geometry={g.keys} material={m.keys} />
-      <mesh geometry={g.screen} material={glow ? m.screenAlert : m.screen} />
+      {!noComputer && (
+        <>
+          <mesh geometry={g.black} material={m.black} />
+          <mesh geometry={g.light} material={m.light} />
+          <mesh geometry={g.keys} material={m.keys} />
+          <mesh geometry={g.screen} material={glow ? m.screenAlert : m.screen} />
+        </>
+      )}
       <mesh geometry={g.paper} material={m.paper} />
       <mesh geometry={g.notebook} material={m.notebook} />
       <mesh geometry={g.mug} material={mugMaterial(mug)} />
