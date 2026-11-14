@@ -9,7 +9,7 @@
  * stopping part way gives nothing. Pure, so it can be tested.
  */
 import type { EffectId } from '../../audio/manager'
-import type { ClipId, Vec3 } from '../character/rig'
+import type { ClipId, Posture, Vec3 } from '../character/rig'
 
 /** Things the character can hold. */
 export type PropKind =
@@ -53,6 +53,11 @@ export interface Stage {
   clip: ClipId
   seconds: number
   hold?: { left?: PropKind; right?: PropKind }
+  /**
+   * For a clip of the arms only (typing, reading, writing): done on the feet,
+   * e.g. at a counter or a standing desk. Otherwise such clips are seated.
+   */
+  posture?: Posture
   /** Shown while it plays, e.g. "Rep 3 of 8". */
   label?: string
   /**

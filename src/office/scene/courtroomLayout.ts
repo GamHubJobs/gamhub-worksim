@@ -52,7 +52,9 @@ export function courtroomActivities(): Activity[] {
       prompt: 'check today’s court list (Matter Desk: calendar)',
       spot: { x: COURT_LIST.x, z: COURT_LIST.z + 0.8, reach: 1.0 },
       anchor: { x: COURT_LIST.x, z: COURT_LIST.z + 0.7, heading: Math.PI },
-      stages: [{ clip: 'read', seconds: 1.0, label: 'Finding your matter on the list' }],
+      stages: [
+        { clip: 'present', seconds: 1.0, label: 'Finding your matter on the list' },
+      ],
     },
   ]
 }

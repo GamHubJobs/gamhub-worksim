@@ -35,7 +35,11 @@ import {
   workplaceKind,
 } from '../../content/departments'
 import { WardBay } from './ward'
-import { activeBay, floorBoxes } from './bays'
+import { activeBay, activeTheme, floorBoxes, roomAt, workplaceActivities } from './bays'
+import { DevTeamArea, InsightsWall, PostRoom, RecordsRoom, Studio } from './corners'
+import { PALETTE } from './themeLayout'
+import { ThemeDressing } from './themes'
+import { useFrontOnly } from './frontOnly'
 import { Courtroom } from './courtroom'
 import { Workshop } from './workshop'
 import {
@@ -264,6 +268,8 @@ export interface OfficeWalk {
   onReady: () => void
   /** The player walked into another area. */
   onArea: (spot: SpotId) => void
+  /** The player walked into or out of a room within an area (null: the open floor). */
+  onRoom?: (room: string | null) => void
   /** Why something cannot be done now (a meeting that is not on), or null. */
   blocked?: (action: string | null) => string | null
 }
@@ -366,15 +372,8 @@ function OfficeScene(props: OfficeSceneProps) {
           onInteract={props.onInteract}
         />
         <ManagerOffice />
-        {workplaceKind() === 'ward' ? (
-          <WardBay />
-        ) : workplaceKind() === 'workshop' ? (
-          <Workshop />
-        ) : workplaceKind() === 'courtroom' ? (
-          <Courtroom />
-        ) : (
-          <ItCorner itJobs={props.itJobs} />
-        )}
+        <CornerFor itJobs={props.itJobs} />
+        <ThemeDressing theme={activeTheme()} />
         <BreakRoom onInteract={props.onInteract} />
         <Crowd
           people={OFFICE_PEOPLE}
@@ -584,15 +583,23 @@ function OfficeWalker({
         : [],
     )
     const bay = activeBay()
-    return [...base, ...(bay ? bay.activities() : itActivities(desks))]
+    const own = workplaceActivities(bay, activeTheme())
+    return [...base, ...own, ...(bay ? [] : itActivities(desks))]
   }, [base, itJobs])
   const area = useRef<SpotId>(spot)
   const onArea = walk.onArea
+  const room = useRef<string | null>(null)
+  const onRoom = walk.onRoom
   // A new area counts once the player has been in it for a moment (so standing on
   // a boundary does not flip between two, each costing office time).
   const entering = useRef<{ spot: SpotId; since: number } | null>(null)
   useFrame((_, dt) => {
     if (now.current.x === 0 && now.current.z === 0) return
+    const inRoom = roomAt(now.current.x, now.current.z, activeBay(), activeTheme())
+    if (inRoom !== room.current) {
+      room.current = inRoom
+      onRoom?.(inRoom)
+    }
     const here = spotAt(now.current.x, now.current.z)
     if (here === area.current) {
       entering.current = null
@@ -746,8 +753,24 @@ function Building({ playerName }: { playerName: string }) {
   return (
     <group>
       {/* Floors: wooden planks, with carpet tiles in the workspace */}
-      <Floor kind="wood" position={[0, 0, 0.5]} size={[24, 17]} />
-      <Floor kind="carpet" position={[0.8, 0.005, 0.6]} size={[8.6, 6.4]} />
+      {PALETTE[activeTheme()].floor ? (
+        <Box
+          size={[24, 0.01, 17]}
+          position={[0, -0.004, 0.5]}
+          color={PALETTE[activeTheme()].floor!}
+        />
+      ) : (
+        <Floor kind="wood" position={[0, 0, 0.5]} size={[24, 17]} />
+      )}
+      {PALETTE[activeTheme()].workspace ? (
+        <Box
+          size={[8.6, 0.01, 6.4]}
+          position={[0.8, 0.002, 0.6]}
+          color={PALETTE[activeTheme()].workspace!}
+        />
+      ) : (
+        <Floor kind="carpet" position={[0.8, 0.005, 0.6]} size={[8.6, 6.4]} />
+      )}
       {/* Back wall with large windows and a city skyline */}
       <Box
         size={[24, WALL_HEIGHT, 0.2]}
@@ -900,21 +923,32 @@ const BOOKSHELF_ANCHORS: AnchorSpec[] = [
   { kind: 'shelf', at: [0, 1.0, 0.25], carry: { left: 'document' } },
 ]
 
+const RECEPTION_SIGN: [number, number, number] = [-6.6, 1.95, 2.4]
+
 function Reception() {
+  // The name faces the entrance; from behind (the staff side) it is hidden.
+  const sign = useRef<HTMLDivElement>(null)
+  useFrontOnly(sign, RECEPTION_SIGN, 0)
   return (
     <group>
       {/* Feature wall with the company name */}
-      <Box size={[5.2, 2.7, 0.18]} position={[-6.6, 1.35, 2.3]} color={COLORS.accent} />
+      <Box
+        size={[5.2, 2.7, 0.18]}
+        position={[-6.6, 1.35, 2.3]}
+        color={PALETTE[activeTheme()].accent}
+      />
       <Html
         transform
-        position={[-6.6, 1.95, 2.4]}
+        position={RECEPTION_SIGN}
         distanceFactor={4}
         pointerEvents="none"
         zIndexRange={[10, 0]}
       >
-        <div className="text-center text-white">
+        <div ref={sign} className="text-center text-white">
           <p className="text-2xl font-bold tracking-wide">{activeEmployer().name}</p>
-          <p className="text-[9px] tracking-[0.4em] text-blue-200 uppercase">
+          <p
+            className={`text-[9px] tracking-[0.4em] uppercase ${PALETTE[activeTheme()].accentText}`}
+          >
             {activeDepartment().employer
               ? activeDepartment().sign
               : 'Consulting · Finance · Advisory'}
@@ -934,7 +968,11 @@ function Reception() {
         color={COLORS.wood}
         radius={0.02}
       />
-      <Box size={[3.2, 0.12, 0.02]} position={[-6.6, 0.35, 4.56]} color={COLORS.accent} />
+      <Box
+        size={[3.2, 0.12, 0.02]}
+        position={[-6.6, 0.35, 4.56]}
+        color={PALETTE[activeTheme()].accent}
+      />
       <Box size={[0.5, 0.32, 0.03]} position={[-7.3, 1.28, 3.95]} color={COLORS.screen} />
       <Anchors specs={RECEPTION_ANCHORS} />
       {/* Waiting area */}
@@ -1202,6 +1240,30 @@ function AlertBubble({ position }: { position: Vector }) {
  * The IT corner: the comms cabinet (its lights show a device in trouble) and
  * the IT workbench, with a marker over any equipment that needs a technician.
  */
+/** The workplace's own corner, where the IT team has its IT corner. */
+function CornerFor({ itJobs }: { itJobs?: string }) {
+  switch (workplaceKind()) {
+    case 'ward':
+      return <WardBay />
+    case 'workshop':
+      return <Workshop />
+    case 'courtroom':
+      return <Courtroom />
+    case 'postroom':
+      return <PostRoom />
+    case 'records':
+      return <RecordsRoom />
+    case 'studio':
+      return <Studio />
+    case 'insights':
+      return <InsightsWall />
+    case 'devteam':
+      return <DevTeamArea />
+    default:
+      return <ItCorner itJobs={itJobs} />
+  }
+}
+
 function ItCorner({ itJobs }: { itJobs?: string }) {
   const jobs = readJobs(itJobs)
   const cabinetTrouble = jobs.some((j) => j.kind === 'cabinet')

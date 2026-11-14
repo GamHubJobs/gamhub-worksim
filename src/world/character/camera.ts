@@ -84,7 +84,9 @@ export function cameraAt(
   // the character (rooms without a ceiling, like the cutaway home).
   // Under a ceiling, rising does not help: the camera just comes in closer.
   if (Number.isFinite(ceiling)) return place(target, orbit, boxes, ceiling).at
-  const near = Math.min(1.5, orbit.distance)
+  // Rise until most of the chosen distance is kept: settling 1.5 m behind the
+  // head in a small room leaves the character filling the view.
+  const near = Math.min(orbit.distance, Math.max(1.5, orbit.distance * 0.75))
   let best: { at: [number, number, number]; clear: number } | null = null
   const from = Number.isFinite(orbit.pitch) ? orbit.pitch : 0.3
   for (let i = 0; i < 12; i++) {

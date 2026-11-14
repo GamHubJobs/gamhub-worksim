@@ -4,6 +4,7 @@
  * office. Where things are (in metres-ish scene units), when they are open, and
  * what the player can do inside. Times are minutes; money is in pence.
  */
+import { activeEmployer } from './departments'
 import type { LifeAction } from './life'
 
 export type PlaceId = 'home' | 'office' | 'cafe' | 'shop' | 'gym' | 'park' | 'garage'
@@ -81,9 +82,14 @@ export const PLACES: Place[] = [
   },
   {
     id: 'office',
-    name: 'The office',
+    // Named for the player's own workplace: the hospital, the law firm, …
+    get name() {
+      return activeEmployer().shortName
+    },
     kind: 'The road to work',
-    description: 'The way to the business district and your office.',
+    get description() {
+      return `The way to work: ${activeEmployer().name}.`
+    },
     door: [62, 8],
     open: null,
     colour: '#475569',

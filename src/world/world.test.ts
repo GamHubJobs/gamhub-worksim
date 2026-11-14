@@ -126,8 +126,19 @@ describe('the camera', () => {
     expect(clear[1]).toBeGreaterThan(1.6)
     const behind: Box = { x: 0, z: 2, hx: 5, hz: 0.1, top: 3 }
     const blocked = cameraAt([0, 1.6, 0], { yaw: 0, pitch: 0.3, distance: 4 }, [behind])
-    expect(blocked[2]).toBeLessThan(1.9)
+    // Clear of the wall: in front of it, or looking down over its top.
+    expect(blocked[2] < 1.9 || blocked[1] > 3).toBe(true)
     expect(cameraAt([0, 1.6, 0], { yaw: 0, pitch: 1, distance: 6 }, [], 3)[1]).toBe(2.85)
+    // In a small walled room (like a manager's glass office) it rises to look
+    // down on the room instead of squashing up behind the character's head.
+    const room: Box[] = [
+      { x: 0, z: 1.8, hx: 3, hz: 0.06, top: 2.6 },
+      { x: 0, z: -3, hx: 3, hz: 0.06, top: 2.6 },
+      { x: 2.5, z: 0, hx: 0.06, hz: 3, top: 2.6 },
+      { x: -2.5, z: 0, hx: 0.06, hz: 3, top: 2.6 },
+    ]
+    const inRoom = cameraAt([0, 1.6, 0], { yaw: 0, pitch: 0.42, distance: 3.6 }, room)
+    expect(Math.hypot(inRoom[0], inRoom[1] - 1.6, inRoom[2])).toBeGreaterThan(2.6)
     expect(
       rayBox([0, 1, 0], [0, 1, 10], { x: 0, z: 5, hx: 1, hz: 1, top: 2 }),
     ).toBeCloseTo(0.4)

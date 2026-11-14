@@ -5,8 +5,8 @@
  * counsel's tables facing the bench and the public seats. Made from simple
  * shapes, like the rest of the office.
  */
-import { Html } from '@react-three/drei'
 import { Box } from './parts'
+import { Sign as Label } from './signs'
 import {
   BENCH,
   COUNSEL_TABLES,
@@ -14,33 +14,6 @@ import {
   GALLERY,
   WITNESS_BOX,
 } from './courtroomLayout'
-
-function Label({
-  position,
-  rotation = 0,
-  className,
-  children,
-}: {
-  position: [number, number, number]
-  rotation?: number
-  className: string
-  children: React.ReactNode
-}) {
-  return (
-    <Html
-      transform
-      position={position}
-      rotation={[0, rotation, 0]}
-      distanceFactor={4}
-      pointerEvents="none"
-      zIndexRange={[10, 0]}
-    >
-      <span className={`rounded px-1.5 py-0.5 font-semibold shadow ${className}`}>
-        {children}
-      </span>
-    </Html>
-  )
-}
 
 const WOOD = '#7c4a24'
 const WOOD_DARK = '#5b3417'

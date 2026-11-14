@@ -24,6 +24,7 @@
     "ai-bridge": "node scripts/ai-bridge/serve.ts",
     "shots:locations": "node scripts/location-shots.mjs",
     "shots:interactions": "node scripts/interaction-shots.mjs",
+    "shots:environments": "node scripts/environment-shots.mjs",
     "crafts": "node scripts/crafts/fetch.mjs",
     "crafts:fixture": "node scripts/crafts/fixture.mjs"
   },

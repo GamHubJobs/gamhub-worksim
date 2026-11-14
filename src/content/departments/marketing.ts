@@ -5,6 +5,7 @@ import type { Department } from './types'
 export const marketing: Department = {
   careerId: 'digital-marketing',
   name: 'Marketing',
+  workplace: 'studio',
   sign: 'MARKETING',
   manager: {
     id: 'manager',

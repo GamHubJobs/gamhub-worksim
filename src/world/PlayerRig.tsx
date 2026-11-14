@@ -811,7 +811,7 @@ export function PlayerRig(props: PlayerRigProps) {
           m.t = Math.min(m.t, startOf(a, now0.index))
         // On the real seat, hands on the real keyboard (see world/npc/activities.ts).
         rig.current = fitToWorld(
-          clipFrame(now0.stage.clip, now0.local),
+          clipFrame(now0.stage.clip, now0.local, now0.stage.posture),
           now0.stage.clip,
           now0.local,
           m.at,

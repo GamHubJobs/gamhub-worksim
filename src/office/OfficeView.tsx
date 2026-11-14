@@ -35,7 +35,7 @@ import {
 import { troubleOf } from '../game/incidents'
 import { isInteraction, meetingOf } from './scene/officeLayout'
 import { fill, getPerson, placeText } from '../content/departments'
-import { activeBay } from './scene/bays'
+import { activeBay, opensFor } from './scene/bays'
 import {
   SPOTS,
   getSpot,
@@ -299,9 +299,9 @@ export function OfficeView({
   }
 
   /** In the workplace's own corner (the ward's bay, the workshop, the courtroom): its tool, there. */
-  function bedside() {
-    const bay = activeBay()
-    if (bay) onUseComputer({ app: 'tool', tool: bay.tool })
+  function bedside(action: string | null = 'bay') {
+    const opens = opensFor(action, activeBay())
+    if (opens) onUseComputer(opens)
   }
 
   /** Arrived at equipment and used it (E): close in on it. */
@@ -504,6 +504,9 @@ export function OfficeView({
     [],
   )
   const onArea = useCallback((next: SpotId) => handlers.current.arrive(next), [])
+  // The room within the area, e.g. the treatment room off the nurses' station.
+  const [room, setRoom] = useState<string | null>(null)
+  const onRoom = useCallback((next: string | null) => setRoom(next), [])
   const onReady = useCallback(() => setReady(true), [])
   const sceneBlocked = useCallback(
     (action: string | null) => handlers.current.blocked(action),
@@ -514,8 +517,8 @@ export function OfficeView({
     const meeting = meetingOf(action)
     if (meeting) {
       if (completed) handlers.current.joinMeeting(meeting)
-    } else if (completed && (action === 'bedside' || action === 'bay'))
-      handlers.current.bedside()
+    } else if (completed && opensFor(action, activeBay()))
+      handlers.current.bedside(action)
     else if (completed && action?.startsWith('onsite:'))
       handlers.current.arriveOnSite(action)
     else if (completed && action?.startsWith('person:'))
@@ -525,6 +528,15 @@ export function OfficeView({
   }, [])
   // A click on someone: walk over to talk to them.
   useEffect(() => onTalkRequest((id) => ask(`person:${id}`)), [])
+  // Development builds: walk to and do an activity by its ID, as a click on
+  // its ringed object does (used by the environment screenshot tour).
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    Object.assign(window, { __worksimWalk: (id: string) => ask(id) })
+    return () => {
+      delete (window as { __worksimWalk?: unknown }).__worksimWalk
+    }
+  }, [])
   // The conversation is over: whoever it was goes back to their day.
   const conversing = !!dialogue || !!encounter || !!storyScene
   // In a conversation, non-essential HUD steps aside (ui/hud/Hud.tsx).
@@ -571,6 +583,7 @@ export function OfficeView({
                       onDone: onActivityDone,
                       onReady,
                       onArea,
+                      onRoom,
                       blocked: sceneBlocked,
                     }}
                     spot={spot}
@@ -621,6 +634,11 @@ export function OfficeView({
           <h1 className="text-lg font-semibold text-slate-900">
             {fill(placeText(current).name)}
           </h1>
+          {room && (
+            <p className="text-sm font-medium text-slate-700" data-testid="room-here">
+              Now in: {room}
+            </p>
+          )}
           {panelOpen && (
             <p className="mt-1 text-sm text-slate-600">
               {fill(placeText(current).description)}

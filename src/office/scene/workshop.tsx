@@ -4,36 +4,9 @@
  * maintenance, a steel test beam on trestles, the CAD station and the safety
  * equipment board. Made from simple shapes, like the rest of the office.
  */
-import { Html } from '@react-three/drei'
 import { Box } from './parts'
+import { Sign } from './signs'
 import { BEAM_RIG, CAD_DESK, PPE_BOARD, PUMP, TEST_BENCH } from './workshopLayout'
-
-function Sign({
-  position,
-  rotation = 0,
-  className,
-  children,
-}: {
-  position: [number, number, number]
-  rotation?: number
-  className: string
-  children: React.ReactNode
-}) {
-  return (
-    <Html
-      transform
-      position={position}
-      rotation={[0, rotation, 0]}
-      distanceFactor={4}
-      pointerEvents="none"
-      zIndexRange={[10, 0]}
-    >
-      <span className={`rounded px-1.5 py-0.5 font-semibold shadow ${className}`}>
-        {children}
-      </span>
-    </Html>
-  )
-}
 
 export function Workshop() {
   const b = TEST_BENCH

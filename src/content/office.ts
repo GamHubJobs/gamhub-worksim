@@ -28,7 +28,7 @@ export const SPOTS: Spot[] = [
   {
     id: 'desk',
     name: 'Your desk',
-    description: 'The open-plan workspace of the Finance & Administration team.',
+    description: 'The open-plan workspace of the {department} team.',
     camera: { position: [2.2, 3.0, 6.2], target: [0.6, 0.9, 1.1] },
     marker: [0.6, 0.02, 2.6],
   },

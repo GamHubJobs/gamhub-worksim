@@ -48,7 +48,7 @@ export function workshopActivities(): Activity[] {
       anchor: { x: BEAM_RIG.x, z: BEAM_RIG.z - 0.72, heading: 0 },
       stages: [
         {
-          clip: 'read',
+          clip: 'present',
           seconds: 1.2,
           label: 'Reading the span and the load off the label',
         },
@@ -60,7 +60,14 @@ export function workshopActivities(): Activity[] {
       prompt: 'open the drawings at the CAD station (Works Desk)',
       spot: { x: CAD_DESK.x - 0.85, z: CAD_DESK.z, reach: 1.1 },
       anchor: { x: CAD_DESK.x - 0.85, z: CAD_DESK.z, heading: -Math.PI / 2 },
-      stages: [{ clip: 'type', seconds: 1.0, label: 'Logging in to the CAD station' }],
+      stages: [
+        {
+          clip: 'type',
+          seconds: 1.0,
+          label: 'Logging in to the CAD station',
+          posture: 'standing',
+        },
+      ],
     },
   ]
 }

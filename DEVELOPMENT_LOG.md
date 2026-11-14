@@ -190,6 +190,79 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-14 · Workplace environments: an audit of every career, and each workplace made its own
+
+The full audit, the research and what is still missing are in
+[docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
+
+### Audit (in the real game, every career)
+
+A new screenshot tour (`npm run shots:environments`) visits every career's
+workplace: each area, then each workplace activity, with the character
+photographed at the object. It found:
+
+- **The camera:** in small rooms it sat behind the character's head, which
+  hid the room.
+- **One office for every career:** the hospital's nurses' station was office
+  desks, and its staff room was the office break room.
+- **The IT corner for everyone:** five Cobalt Ridge careers had the IT
+  team's corner.
+- **Signs through walls:** signs showed through walls, mirrored (the
+  hospital's name, huge, in the staff room).
+- **Seated poses standing up:** activities using the reading and writing
+  poses sat the character down on thin air.
+- **Wrong names:** the minimap said "At the office" everywhere; the desk area
+  of every Cobalt Ridge career was described as Finance & Administration's.
+
+### What was built
+
+- **A corner for each Cobalt Ridge department,** where the IT team has its IT
+  corner. Each activity there opens the career's own tool:
+  - Finance: the post and print room;
+  - Accounting: the records room;
+  - Marketing: the content studio;
+  - Data: the insights wall;
+  - Software Development: the dev team area.
+- **Whole-floor themes** for the hospital, the law firm and the engineering
+  firm: floors, colours, and the rooms those workplaces really have, each with
+  activities that open the career's tool.
+  - Hospital: a treatment room with the medicines, the sluice, a relatives'
+    room, a patient status board and lockers.
+  - Law firm: a library and file room, and a client meeting room off
+    reception.
+  - Engineering firm: a plot room and stores, a project room, and a site
+    reception with hard hats.
+- **Knowing where you are:** "Now in: …" for the room within the area, room
+  signs over the doors, and the employer on the minimap and the street.
+- **Camera:** in tight rooms it now rises and keeps most of its distance.
+- **Signs:** they hide when seen from behind.
+- **Postures:** a stage can now say it is done standing. Typing at the CAD
+  station or the ledger desk is done on the feet.
+- **Opening apps from the floor:** an activity can open any app
+  (`open:sheets`, `open:code`, `open:tool:books`), not only a career tool.
+
+Layouts follow published guidance: NHS Health Building Note 04-01 and its
+Scottish and Welsh versions for the ward; law firm design articles from the
+ABA, Stantec and Solicitors Journal; and engineering workplace pages. REA is a
+software reverse-engineering toolkit and cannot research room layouts, so web
+search was used.
+
+### Tests
+
+- **Unit tests** (`bays.test.ts`) cover all 8 corners with their themes:
+  - every activity can be stood at and reached from the desk, at the radius
+    the walking route uses (this caught three spots too close to tables);
+  - every everyday office activity and every colleague's place stays clear;
+  - nothing makes the character sit on thin air;
+  - the room names are right.
+- **Camera test:** in a small walled room, the camera stays back.
+- **The full check** passes: 3,155 unit tests.
+- **Browser tests:** 39 office-related tests pass (office, meetings, working
+  day, colleagues, collisions, HUD layout, map, street, accessibility, and
+  the healthcare, law, engineering and IT tests). Seven passed on a retry on
+  the loaded machine; the accessibility tests pass first time when run alone.
+- **The environment tour:** screenshots of all 9 careers were inspected.
+
 ## 2026-11-14 · Code: tasks that use the IDE, in Software Development, IT Help Desk and Data Analysis
 
 ### What was built

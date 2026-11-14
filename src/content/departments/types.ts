@@ -17,7 +17,16 @@ export interface Department {
    * How the walkable workplace is dressed: the office (default), or the office
    * with its IT corner replaced by a hospital bay, a workshop or a moot courtroom.
    */
-  workplace?: 'office' | 'ward' | 'workshop' | 'courtroom'
+  workplace?:
+    | 'office'
+    | 'ward'
+    | 'workshop'
+    | 'courtroom'
+    | 'postroom'
+    | 'records'
+    | 'studio'
+    | 'insights'
+    | 'devteam'
   /** The workplace's own names for the office's areas (reception, desk, manager, break room). */
   places?: Partial<
     Record<

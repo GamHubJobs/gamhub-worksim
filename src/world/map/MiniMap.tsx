@@ -6,6 +6,7 @@
  */
 import { PLACES, type PlaceId } from '../../content/city'
 import type { ProfileData } from '../../game/career'
+import { employerFor } from '../../content/departments'
 import { MapDrawing } from './MapDrawing'
 import { openMap, useMap } from './store'
 import { playerOnMap } from './where'
@@ -96,7 +97,9 @@ export function MiniMap({ profile }: { profile: ProfileData }) {
           aria-hidden
           className="absolute inset-x-0 bottom-3 text-center text-[10px] font-semibold text-white"
         >
-          {life.phase === 'work' ? 'At the office' : `In: ${here.name}`}
+          {life.phase === 'work'
+            ? `At ${employerFor(profile.careerId).shortName}`
+            : `In: ${here.name}`}
         </span>
       )}
     </button>

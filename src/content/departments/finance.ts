@@ -5,6 +5,7 @@ import type { Department } from './types'
 export const finance: Department = {
   careerId: 'office-admin-finance',
   name: 'Finance & Administration',
+  workplace: 'postroom',
   sign: 'FINANCE & ADMINISTRATION',
   manager: {
     id: 'manager',

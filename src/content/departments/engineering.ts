@@ -5,6 +5,7 @@ import type { Department } from './types'
 export const engineering: Department = {
   careerId: 'software-development',
   name: 'Engineering',
+  workplace: 'devteam',
   sign: 'ENGINEERING',
   manager: {
     id: 'manager',

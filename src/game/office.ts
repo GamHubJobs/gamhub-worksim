@@ -27,7 +27,17 @@ export interface DialogueAction {
   label: string
   /** Opens the computer at this app (and task). */
   open: {
-    app: 'mail' | 'tasks' | 'sheets' | 'career' | 'cases' | 'tool'
+    app:
+      | 'mail'
+      | 'tasks'
+      | 'sheets'
+      | 'docs'
+      | 'slides'
+      | 'helpdesk'
+      | 'code'
+      | 'career'
+      | 'cases'
+      | 'tool'
     /** For a professional tool: which one, e.g. "clinical" (Ward Systems). */
     tool?: string
     assignmentId?: string
