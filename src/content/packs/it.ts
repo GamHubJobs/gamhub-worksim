@@ -5,6 +5,7 @@
 import type { CareerPack } from '../loader'
 import { aiCases } from '../cases/ai'
 import { directoryJoiner } from '../assignments/it/directoryJoiner'
+import { ticketRouter } from '../assignments/it/ticketRouter'
 import { directoryLeaver } from '../assignments/it/directoryLeaver'
 import { majorIncident } from '../assignments/it/majorIncident'
 import { networkIntranet } from '../assignments/it/networkIntranet'
@@ -39,6 +40,7 @@ export const PACK: CareerPack = {
   careerId: 'it-support',
   assignments: [
     directoryJoiner,
+    ticketRouter,
     directoryLeaver,
     majorIncident,
     networkIntranet,

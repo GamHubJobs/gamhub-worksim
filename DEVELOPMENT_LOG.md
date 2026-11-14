@@ -190,6 +190,52 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-14 · Code: tasks that use the IDE, in Software Development, IT Help Desk and Data Analysis
+
+### What was built
+
+- **Software Development, two new tasks:**
+  - _The discount is too big_, from the senior colleague. A bug that appears
+    only on the second time round a loop: set a breakpoint, step through it in
+    Run and Debug, fix it and commit.
+  - _Tidy the money helpers into a folder_, from the manager. Make
+    `lib/money.js`, rename `fmt` to `formatMoney` everywhere with Search and
+    replace, delete the old file and commit.
+- **A new `stepped` check:** a run paused at one of the player's breakpoints
+  inside the function. The editor records it in the save (`ide.stepped`,
+  optional, so older saves load unchanged).
+- **IT Help Desk:** _The ticket-sorting script_. The script that sorts Help
+  Desk tickets into queues is fixed in Code: reproduced with real ticket
+  subjects in the Debug console, then made to ignore capitals, recognise
+  “Wi-Fi” and send unknown tickets to Triage, and committed.
+- **Data Analysis:** _Clean the survey export with code_. The monthly cleaning
+  rules become a tested function: trimming, case, numbers from text, the
+  0–10 range and duplicates.
+- **The Code app** is now on the IT Help Desk and Data Analysis desktops.
+
+### Fixed
+
+- **A slow start was reported as a slow run.** The 5-second limit on the
+  player's code included the time the worker took to load. On a busy machine,
+  a first run, Debug console call or **grading at submission** could fail with
+  "a loop that never ends".
+  - The worker now says when it has loaded, and only then does the limit begin.
+  - Loading has its own limit of 60 seconds.
+  - Data Studio's SQL runner had the same flaw and has the same fix.
+  - This was the cause of the flaky dev-tools Debug console test.
+
+### Tests
+
+- **Unit tests,** run automatically for every Code task: the model answer
+  earns full marks and the untouched project well under half, for all four
+  new tasks.
+- **Browser tests** (`ide-tasks.spec.ts`), each marked 100%:
+  - the discount task, played with a breakpoint, stepping, a fix and a commit;
+  - the IT script task, played in the IT Help Desk career.
+- **Also passing:** the dev-tools, Data Studio and Software Development career
+  browser tests. The first run in each now waits for the worker to load.
+- **The full check** passes: 3,111 unit tests.
+
 ## 2026-11-14 · Workplaces: the engineering workshop and the moot courtroom, in 3D
 
 ### What was built

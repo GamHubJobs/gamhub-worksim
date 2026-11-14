@@ -3,31 +3,48 @@ import type { Result } from './schema'
 import type { NamedTable } from './sql'
 
 const TIME_LIMIT_MS = 5000
+/** How long the worker and its database engine may take to start. */
+const START_LIMIT_MS = 60_000
+
+type Reply = { ready: true } | { ok: boolean; result?: Result; error?: string }
 
 export function runSql(tables: NamedTable[], sql: string): Promise<Result> {
   const worker = new Worker(new URL('./sqlWorker.ts', import.meta.url), {
     type: 'module',
   })
   return new Promise<Result>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      worker.terminate()
-      reject(
-        new Error(`The query did not finish within ${TIME_LIMIT_MS / 1000} seconds.`),
-      )
-    }, TIME_LIMIT_MS)
-    worker.onmessage = (
-      event: MessageEvent<{ ok: boolean; result?: Result; error?: string }>,
-    ) => {
+    const stop = (error: Error) => {
       clearTimeout(timer)
       worker.terminate()
-      if (event.data.ok && event.data.result) resolve(event.data.result)
-      else reject(new Error(event.data.error ?? 'The query could not be run.'))
+      reject(error)
     }
-    worker.onerror = (event) => {
+    // First the engine must load; only then does the query's own time limit begin.
+    let timer = setTimeout(
+      () => stop(new Error('The database engine did not start. Try again.')),
+      START_LIMIT_MS,
+    )
+    worker.onmessage = (event: MessageEvent<Reply>) => {
+      const reply = event.data
+      if ('ready' in reply) {
+        clearTimeout(timer)
+        timer = setTimeout(
+          () =>
+            stop(
+              new Error(
+                `The query did not finish within ${TIME_LIMIT_MS / 1000} seconds.`,
+              ),
+            ),
+          TIME_LIMIT_MS,
+        )
+        worker.postMessage({ tables, sql })
+        return
+      }
       clearTimeout(timer)
       worker.terminate()
-      reject(new Error(event.message || 'The query could not be run.'))
+      if (reply.ok && reply.result) resolve(reply.result)
+      else reject(new Error(reply.error ?? 'The query could not be run.'))
     }
-    worker.postMessage({ tables, sql })
+    worker.onerror = (event) =>
+      stop(new Error(event.message || 'The query could not be run.'))
   })
 }

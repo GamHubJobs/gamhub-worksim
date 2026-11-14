@@ -34,3 +34,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     })
   }
 }
+
+// Loaded and listening: the page starts the run's time limit from here, so a
+// slow start (a busy machine, the first download) is not taken for a slow run.
+self.postMessage({ ready: true })

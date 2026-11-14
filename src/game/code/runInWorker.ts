@@ -13,30 +13,40 @@ import type { DebugRun } from './debugger'
 
 export const TIME_LIMIT_MS = 5000
 export const TOO_SLOW = `The code did not finish within ${TIME_LIMIT_MS / 1000} seconds. Is there a loop that never ends?`
+/** How long the worker itself may take to start (a busy machine, a first download). */
+export const START_LIMIT_MS = 60_000
+export const NO_START =
+  'The code runner did not start. Close some other programs or tabs, then try again.'
+
+type Reply<T> = { ready: true } | { ok: boolean; result?: T; error?: string }
 
 function inWorker<T>(request: WorkerRequest): Promise<T> {
   const worker = new Worker(new URL('./codeWorker.ts', import.meta.url), {
     type: 'module',
   })
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      worker.terminate()
-      reject(new Error(TOO_SLOW))
-    }, TIME_LIMIT_MS)
-    worker.onmessage = (
-      event: MessageEvent<{ ok: boolean; result?: T; error?: string }>,
-    ) => {
+    const stop = (error: Error) => {
       clearTimeout(timer)
       worker.terminate()
-      if (event.data.ok) resolve(event.data.result as T)
-      else reject(new Error(event.data.error ?? 'The code could not be run.'))
+      reject(error)
     }
-    worker.onerror = (event) => {
+    // First the worker must start; only then does the run's own time limit begin.
+    let timer = setTimeout(() => stop(new Error(NO_START)), START_LIMIT_MS)
+    worker.onmessage = (event: MessageEvent<Reply<T>>) => {
+      const reply = event.data
+      if ('ready' in reply) {
+        clearTimeout(timer)
+        timer = setTimeout(() => stop(new Error(TOO_SLOW)), TIME_LIMIT_MS)
+        worker.postMessage(request)
+        return
+      }
       clearTimeout(timer)
       worker.terminate()
-      reject(new Error(event.message || 'The code could not be run.'))
+      if (reply.ok) resolve(reply.result as T)
+      else reject(new Error(reply.error ?? 'The code could not be run.'))
     }
-    worker.postMessage(request)
+    worker.onerror = (event) =>
+      stop(new Error(event.message || 'The code could not be run.'))
   })
 }
 

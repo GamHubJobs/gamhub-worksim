@@ -4,17 +4,25 @@ import initSqlJs from 'sql.js'
 import wasmUrl from 'sql.js/dist/sql-wasm-browser.wasm?url'
 import { runSqlWith, type NamedTable } from './sql'
 
+const fail = (error: unknown) =>
+  self.postMessage({
+    ok: false,
+    error: error instanceof Error ? error.message : String(error),
+  })
+
+// The engine loads first; the page starts the query's time limit once it is ready.
+const engine = initSqlJs({ locateFile: () => wasmUrl })
+
 self.onmessage = async (event: MessageEvent<{ tables: NamedTable[]; sql: string }>) => {
   try {
-    const SQL = await initSqlJs({ locateFile: () => wasmUrl })
+    const SQL = await engine
     self.postMessage({
       ok: true,
       result: runSqlWith(SQL, event.data.tables, event.data.sql),
     })
   } catch (error) {
-    self.postMessage({
-      ok: false,
-      error: error instanceof Error ? error.message : String(error),
-    })
+    fail(error)
   }
 }
+
+engine.then(() => self.postMessage({ ready: true }), fail)

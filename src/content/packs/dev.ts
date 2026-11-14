@@ -7,6 +7,7 @@ import { aiCases } from '../cases/ai'
 import { apiTesting } from '../assignments/dev/apiTesting'
 import { billingReport } from '../assignments/dev/billingReport'
 import { debugNaN } from '../assignments/dev/debugNaN'
+import { stepDiscount, tidyFolders } from '../assignments/dev/ideTasks'
 import { gitFirstFix } from '../assignments/dev/gitFirstFix'
 import { invoiceBug } from '../assignments/dev/invoiceBug'
 import { timesheetValidation } from '../assignments/dev/timesheetValidation'
@@ -39,6 +40,8 @@ export const PACK: CareerPack = {
     mileageChange,
     mileageRelease,
     mileageTests,
+    stepDiscount,
+    tidyFolders,
   ],
   cases: [
     ...aiCases('software-development'),

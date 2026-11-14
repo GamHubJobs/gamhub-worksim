@@ -26,7 +26,7 @@ import { RunDebug, type DebugSession } from './ide/RunDebug'
 import { SearchView } from './ide/SearchView'
 import { SourceControl } from './ide/SourceControl'
 import { debugInWorker, runProjectTests } from '../../game/code/runInWorker'
-import { nextBreakpoint } from '../../game/code/debugger'
+import { nextBreakpoint, type Step } from '../../game/code/debugger'
 import { COMMANDS, languageOf, replaceAllIn, type CommandId } from '../../game/code/ide'
 import type { RunResult } from '../../game/code/runner'
 import { isTestFile } from '../../game/code/runner'
@@ -266,6 +266,20 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
     setSession({ run: result, index: Math.max(0, index), target })
     const step = result.steps[Math.max(0, index)]
     if (step) open(step.file)
+    notePause(result.steps[index])
+  }
+
+  /** Paused on one of the player's breakpoints: remembered, for tasks that ask for it. */
+  function notePause(at: Step | undefined) {
+    if (!at || !canEdit) return
+    if (!ide.breakpoints.some((b) => b.file === at.file && b.line === at.line)) return
+    if ((ide.stepped ?? []).some((s) => s.fn === at.fn && s.file === at.file)) return
+    updateIde((i) => ({
+      ...i,
+      stepped: [...(i.stepped ?? []), { file: at.file, fn: at.fn, line: at.line }].slice(
+        -50,
+      ),
+    }))
   }
 
   function step(to: 'next' | 'back' | 'continue' | 'stop') {
@@ -284,6 +298,7 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
     setSession({ ...session, index })
     const s = session.run.steps[index]
     if (s && s.file !== active) open(s.file)
+    notePause(s)
   }
 
   function command(id: CommandId) {

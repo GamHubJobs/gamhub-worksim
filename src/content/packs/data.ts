@@ -4,6 +4,7 @@
  */
 import type { CareerPack } from '../loader'
 import { aiCases } from '../cases/ai'
+import { cleanScript } from '../assignments/data/cleanScript'
 import { cleanCustomers } from '../assignments/data/cleanCustomers'
 import {
   churnClean,
@@ -31,6 +32,7 @@ export const PACK: CareerPack = {
   careerId: 'data-analytics',
   assignments: [
     cleanCustomers,
+    cleanScript,
     churnClean,
     churnDashboard,
     churnFindings,

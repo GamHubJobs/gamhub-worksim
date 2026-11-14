@@ -668,6 +668,17 @@ export const CodeContentSchema = z.object({
         .max(200)
         .default([]),
       extensions: z.array(z.string().max(60)).max(30).default([]),
+      /** Where a debugging run paused at one of the player's breakpoints (for tasks). */
+      stepped: z
+        .array(
+          z.object({
+            file: z.string().max(120),
+            fn: z.string().max(60),
+            line: z.number().int().min(1),
+          }),
+        )
+        .max(50)
+        .optional(),
       /** A merge waiting for its conflicts to be resolved. */
       merge: z
         .object({

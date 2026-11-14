@@ -278,7 +278,7 @@ CAREERS.push({
   description:
     'Keep everyone working: triage and solve support tickets, help users in plain words, and handle incidents when systems fail.',
   toolsIntro:
-    'Your work is done in the Help Desk, our ticketing system, with articles and reports in Word Craft and briefings in Deck Craft.',
+    'Your work is done in the Help Desk, our ticketing system, with articles and reports in Word Craft, briefings in Deck Craft, and support scripts in Code.',
   skills: [
     'troubleshooting',
     'customer-service',
@@ -288,7 +288,7 @@ CAREERS.push({
     'access-control',
     'ai-use',
   ],
-  apps: ['helpdesk', 'docs', 'slides'],
+  apps: ['helpdesk', 'docs', 'slides', 'code'],
   tools: [
     { tool: 'directory', fromLevel: 'service-desk-trainee' },
     { tool: 'network', fromLevel: 'service-desk-analyst' },
@@ -383,7 +383,7 @@ CAREERS.push({
   description:
     'Turn data into decisions: clean messy exports, summarise and analyse, and explain what the numbers mean.',
   toolsIntro:
-    'Your work is done in Grid Craft for cleaning and analysis, Word Craft for insight memos and reports, and Deck Craft for presenting findings.',
+    'Your work is done in Grid Craft for cleaning and analysis, Word Craft for insight memos and reports, Deck Craft for presenting findings, and Code for cleaning scripts.',
   skills: [
     'data-cleaning',
     'data-analysis',
@@ -392,7 +392,7 @@ CAREERS.push({
     'formulas',
     'ai-use',
   ],
-  apps: ['sheets', 'docs', 'slides'],
+  apps: ['sheets', 'docs', 'slides', 'code'],
   tools: [
     {
       tool: 'datastudio',

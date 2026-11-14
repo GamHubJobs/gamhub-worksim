@@ -193,6 +193,11 @@ export const CodeCheckSchema = z.discriminatedUnion('type', [
     type: z.literal('debugged'),
     fn: z.string(),
   }),
+  /** The player paused a run of this function at a breakpoint in Run and Debug. */
+  FileCheckBaseSchema.extend({
+    type: z.literal('stepped'),
+    fn: z.string(),
+  }),
   /** The player's own tests in `file`: at least `minTests`, all passing. */
   FileCheckBaseSchema.extend({
     type: z.literal('own-tests'),

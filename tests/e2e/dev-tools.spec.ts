@@ -80,7 +80,10 @@ test('Debug console: reproduce NaN, fix it, commit', async ({ page }) => {
   await page.getByLabel('Debug function').selectOption('averageHours')
   await page.getByLabel('Debug arguments').fill('[[]]')
   await page.getByRole('button', { name: 'Call', exact: true }).click()
-  await expect(page.getByTestId('debug-result')).toContainText('returned NaN')
+  // The first call starts the code worker: slow on a busy machine.
+  await expect(page.getByTestId('debug-result')).toContainText('returned NaN', {
+    timeout: 30_000,
+  })
   await page.getByLabel('Debug arguments').fill('[[{"hours": "7.5"}, {"hours": "6"}]]')
   await page.getByRole('button', { name: 'Call', exact: true }).click()
   await expect(page.getByTestId('debug-result')).toContainText('returned 3.78')

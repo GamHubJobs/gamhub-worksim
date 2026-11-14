@@ -50,6 +50,20 @@ file.
   the corrected code.
 - **The built-in guide** explains instead: it never writes code.
 
+## Tasks that use it, in three careers
+
+| Career        | Task (from)                                      | What it needs                                                                                  |
+| ------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Software Dev. | _The discount is too big_ (the senior colleague) | A breakpoint, then stepping through a loop in Run and Debug: graded by the new `stepped` check |
+| Software Dev. | _Tidy the money helpers into a folder_ (manager) | A new file in a folder, a rename across the project with Search and replace, a commit          |
+| IT Help Desk  | _The ticket-sorting script_ (manager)            | Reproduce in the Debug console with real Help Desk ticket subjects, fix, test, commit          |
+| Data Analysis | _Clean the survey export with code_ (senior)     | The monthly cleaning rules written once as a tested function                                   |
+
+- **Code in other careers:** IT Help Desk and Data Analysis now have the Code
+  app on their desktop.
+- **The `stepped` check:** when a run pauses on one of the player's
+  breakpoints, the editor remembers the function (`ide.stepped` in the save).
+
 ## How the debugger works
 
 `game/code/debugger.ts` adds a call before each statement line inside a
@@ -58,6 +72,14 @@ runs in the same sandboxed Web Worker as the tests, and each call records the
 line and the variables in scope at that moment. The player steps through
 that recording, forwards or backwards. Code whose layout the debugger
 cannot follow still runs; the view says it was not stepped through.
+
+## Time limits
+
+Each run starts a fresh Web Worker. The worker first says it has loaded, and
+only then does the 5-second limit on the player's code begin (a run that goes
+past it is reported as a loop that never ends). Loading has its own limit of
+60 seconds, so a slow machine is not mistaken for slow code. Data Studio's SQL
+runner works the same way.
 
 ## Saves
 

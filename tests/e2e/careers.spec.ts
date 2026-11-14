@@ -351,7 +351,10 @@ test('a Software Development career: a bug fixed in Code, tested and handed in',
 
   // The tests show what is wrong before anything is changed.
   await page.getByTestId('run-tests').click()
-  await expect(page.getByTestId('run-summary')).toHaveText('0 passed, 3 failed')
+  // The first run starts the code worker: slow on a busy machine.
+  await expect(page.getByTestId('run-summary')).toHaveText('0 passed, 3 failed', {
+    timeout: 30_000,
+  })
   await expect(page.getByTestId('test-results')).toContainText('Expected 1420, received')
 
   // The test file cannot be edited.

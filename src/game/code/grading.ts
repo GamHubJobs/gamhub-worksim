@@ -151,6 +151,18 @@ function gradeCodeCheck(
           : [`Call ${check.fn} in the Debug console to see what it really returns.`],
       )
     }
+    case 'stepped': {
+      const paused = (content.ide?.stepped ?? []).some((s) => s.fn === check.fn)
+      return result(
+        check,
+        paused ? 1 : 0,
+        paused
+          ? []
+          : [
+              `Set a breakpoint inside ${check.fn} (click left of a line number), then run it in Run and Debug: it pauses there.`,
+            ],
+      )
+    }
     case 'tests': {
       if (check.on === 'main') {
         const committed =
