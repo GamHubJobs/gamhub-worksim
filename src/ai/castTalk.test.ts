@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { getScenario, SCENARIOS } from '../content/scenarios'
 import { playThrough } from '../game/scenarios'
-import { builtinReply, castContext, castRequest, TOPICS } from './castTalk'
+import {
+  builtinReply,
+  castContext,
+  castRequest,
+  reactionRequest,
+  TOPICS,
+} from './castTalk'
 
 const hearing = getScenario('law-hearing')!
 
@@ -51,5 +57,23 @@ describe('talking to the cast after a scenario', () => {
     expect(request.context.text).toContain('Outcome:')
     expect(request.context.text).toContain(run.answers[0].lesson.slice(0, 20))
     expect(castContext(hearing, run, judge)).not.toContain('{name}')
+  })
+
+  it('asks for a reaction in the room, without marks, an outcome or the player’s name', () => {
+    const run = playThrough(hearing, true)
+    const judge = hearing.cast[0]
+    const request = reactionRequest(
+      hearing,
+      run,
+      judge,
+      'Your closing, {name}',
+      'The mould was hidden, so we win.',
+    )
+    const text = request.messages[0].text
+    expect(text).toContain('React in character')
+    expect(text).toContain('The trainee said: The mould was hidden')
+    expect(text).not.toContain('{name}')
+    expect(request.context.text).not.toContain('Marked')
+    expect(request.context.text).not.toContain('Outcome')
   })
 })

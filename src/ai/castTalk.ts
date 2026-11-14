@@ -118,3 +118,40 @@ export function castRequest(
     },
   }
 }
+
+/**
+ * During a scene: what the player has just said in their own words, for the
+ * person they said it to to respond to in character (exported for tests).
+ * The record so far goes with it, without marks or an outcome: in the room,
+ * nobody has been marked yet.
+ */
+export function reactionRequest(
+  scenario: Scenario,
+  run: Run,
+  member: CastMember,
+  prompt: string,
+  said: string,
+): { messages: AiMessage[]; context: { label: string; text: string } } {
+  const others = scenario.cast
+    .filter((c) => c.id !== member.id)
+    .map((c) => `${c.name} (${c.role})`)
+    .join(', ')
+  const record = run.answers
+    .map((a) => `- Asked: ${a.prompt}\n  The trainee: ${a.answer}`)
+    .join('\n')
+  const brief = `You are ${member.name}, ${member.role}, in a workplace training game, in the middle of the scene below. React in character to what the trainee has just said, in 1 to 3 sentences of plain spoken English, as you would in the room: respond to what they actually said, including anything wrong or missing. Do not give a mark, do not announce the outcome, and do not invent events.`
+  return {
+    messages: [
+      {
+        role: 'user',
+        text: anon(`${brief}\n\nYou asked: ${prompt}\nThe trainee said: ${said}`),
+      },
+    ],
+    context: {
+      label: `Scenario: ${scenario.title}`,
+      text: anon(
+        `Scenario: ${scenario.title}, in ${scenario.room}. ${scenario.summary}\nAlso present: ${others}.\nSo far:\n${record || '(nothing yet)'}`,
+      ),
+    },
+  }
+}

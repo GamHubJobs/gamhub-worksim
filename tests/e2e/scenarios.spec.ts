@@ -344,10 +344,16 @@ test('Law: coaching on the closing from the player’s own AI model, without cha
         .getByRole('button', { name: `Present ${label.split(':')[0]}`, exact: true })
         .click()
   }
+  // The judge may respond to the player's own words, if the player wants.
+  await panel.getByRole('checkbox', { name: /respond to what you actually say/ }).check()
   await panel
     .getByRole('textbox')
     .fill('The mould was hidden inside the sacks, so we should win.')
   await panel.getByRole('button', { name: 'Say it' }).click()
+  const reaction = page.getByTestId('scenario-ai-reaction')
+  await expect(reaction).toContainText('District Judge Okonkwo, in their own words')
+  await expect(reaction).toContainText('Name Harlow and the storage log next time')
+  expect(sent).toContain('React in character')
   const coaching = page.getByTestId('scenario-ai')
   await coaching.getByRole('button', { name: /coaching on what you said/ }).click()
   await expect(coaching).toContainText('Name Harlow and the storage log next time')

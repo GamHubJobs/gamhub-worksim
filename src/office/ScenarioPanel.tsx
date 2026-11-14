@@ -11,8 +11,37 @@ import { describeEffects } from '../game/scenes'
 import { bandFor, beatOf, percentOf, type Run } from '../game/scenarios'
 import { ScenarioAiFeedback } from './ScenarioAiFeedback'
 import { ScenarioDebrief } from './ScenarioDebrief'
+import { reactionRequest } from '../ai/castTalk'
+import { askAi } from '../ai/service'
+import { effectiveEngine, readAiSettings } from '../ai/settings'
 
 const BAND_NAME = { excellent: 'Excellent', good: 'Good', pass: 'Pass', poor: 'Not yet' }
+
+/** The player's choice to let the cast respond to their own words (kept on this computer). */
+const REACT_KEY = 'gamhub-worksim:scenario-react'
+function readReact(): boolean {
+  try {
+    return localStorage.getItem(REACT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+function writeReact(on: boolean) {
+  try {
+    localStorage.setItem(REACT_KEY, on ? '1' : '0')
+  } catch {
+    // Storage blocked: the choice lasts until the page closes.
+  }
+}
+
+/** A response in the person's own words, from the player's AI model. */
+interface Reaction {
+  beat: string
+  who: string
+  text: string | null
+  source?: string
+  failed?: string
+}
 
 export interface LiveState {
   id: string
@@ -50,6 +79,40 @@ export function ScenarioPanel({
   className?: string
 }) {
   const [text, setText] = useState('')
+  const settings = readAiSettings()
+  const usingModel = effectiveEngine(settings) !== 'builtin'
+  const [react, setReact] = useState(readReact)
+  const [reaction, setReaction] = useState<Reaction | null>(null)
+  /** Asks the person to respond to what was said, in character (the score is the rubric's). */
+  function askReaction(beatId: string, whoId: string, prompt: string, said: string) {
+    const member = scenario.cast.find((c) => c.id === whoId)
+    if (!member) return
+    setReaction({ beat: beatId, who: whoId, text: null })
+    const request = reactionRequest(scenario, live.run, member, prompt, said)
+    askAi(
+      {
+        messages: request.messages,
+        context: { items: [{ kind: 'learning', ...request.context }], trimmed: 0 },
+        mode: settings.mode,
+        action: 'scenario-react',
+      },
+      settings,
+    )
+      .then((answer) =>
+        setReaction((r) =>
+          r?.beat !== beatId
+            ? r
+            : answer.fallback
+              ? { ...r, failed: answer.fallback }
+              : { ...r, text: answer.text, source: answer.source.label },
+        ),
+      )
+      .catch(() =>
+        setReaction((r) =>
+          r?.beat === beatId ? { ...r, failed: 'Stopped before an answer arrived.' } : r,
+        ),
+      )
+  }
   const fill = (s: string) => s.replaceAll('{name}', name)
   const cast = (id: string | undefined) => scenario.cast.find((c) => c.id === id)
   const beat = beatOf(scenario, live.run)
@@ -100,6 +163,9 @@ export function ScenarioPanel({
   if (replying) {
     body = (
       <>
+        {spoken && reaction?.beat === last!.beat && (
+          <AiReaction reaction={reaction} name={cast(reaction.who)?.name ?? ''} />
+        )}
         {said(live.reply[live.step])}
         {spoken && <ScenarioAiFeedback key={last!.beat} spoken={spoken} />}
         {continueButton}
@@ -163,6 +229,9 @@ export function ScenarioPanel({
         onSubmit={(e) => {
           e.preventDefault()
           if (!text.trim()) return
+          const whoId = beat.who
+          if (usingModel && react && whoId)
+            askReaction(beat.id, whoId, fill(beat.prompt), text)
           onSpeak(text)
           setText('')
         }}
@@ -185,6 +254,24 @@ export function ScenarioPanel({
           At least {beat.minWords} words.{' '}
           {text.trim().split(/\s+/).filter(Boolean).length} so far.
         </p>
+        {usingModel && beat.who && (
+          <label className="mt-1 flex items-start gap-1.5 text-[11px] text-violet-900">
+            <input
+              type="checkbox"
+              checked={react}
+              onChange={(e) => {
+                setReact(e.target.checked)
+                writeReact(e.target.checked)
+              }}
+              className="mt-0.5"
+            />
+            <span>
+              Let {asker?.name ?? 'them'} respond to what you actually say (sends your
+              words, without your name, to the AI model you turned on; your score is still
+              set by the marking rules)
+            </span>
+          </label>
+        )}
         <button
           type="submit"
           disabled={!text.trim()}
@@ -278,5 +365,30 @@ export function ScenarioPanel({
       </div>
       <div className="mt-3">{body}</div>
     </section>
+  )
+}
+
+function AiReaction({ reaction, name }: { reaction: Reaction; name: string }) {
+  return (
+    <div
+      className="mb-2 rounded-md border border-violet-200 bg-violet-50 p-2"
+      data-testid="scenario-ai-reaction"
+    >
+      <p className="text-xs font-semibold text-violet-900">{name}, in their own words</p>
+      {reaction.failed ? (
+        <p className="mt-1 text-xs text-violet-900/80">
+          (Your AI model could not answer: {reaction.failed})
+        </p>
+      ) : reaction.text === null ? (
+        <p className="mt-1 text-xs text-violet-900/80 italic">
+          Thinking about what you said…
+        </p>
+      ) : (
+        <>
+          <p className="mt-1 text-sm text-violet-950">“{reaction.text}”</p>
+          <p className="mt-0.5 text-[10px] text-violet-900/70">From {reaction.source}</p>
+        </>
+      )}
+    </div>
   )
 }

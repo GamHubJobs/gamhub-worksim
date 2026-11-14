@@ -119,6 +119,20 @@ A scenario with `venue: 'court'` is played at Westmark County Court
 - While at court, the office panel, the Places bar, the office guide's next
   step and the street map step aside.
 
+## The cast responding to the player's own words
+
+When the player answers in their own words and has their own AI model on,
+a box under the answer offers: _Let (the person asking) respond to what you
+actually say_. The choice is kept on this computer.
+
+- When it is ticked, what the player wrote goes to their model (with the
+  question, the scene, the cast and what has been said so far, but no
+  marks, no outcome and no name), and that person responds in character
+  in one to three sentences, above their written line.
+- The written lines still follow, and the rubric still sets the score, so
+  outcomes stay fair and repeatable.
+- If the model cannot answer, the reason is shown and the scene goes on.
+
 ## Talking to the cast afterwards
 
 When a scenario ends, the player can talk to anyone who was there
@@ -156,10 +170,10 @@ When a scenario ends, the player can talk to anyone who was there
 
 ## Not done
 
-- **Scripted in the scene:** while a scenario is running, the cast's
-  responses are written for each answer, and answers in the player's own
-  words are marked by a rubric. An AI model is used only for optional
-  coaching after a spoken answer, and for questions afterwards.
+- **Mostly scripted in the scene:** the cast's lines are written for each
+  answer. With the player's own model on, the person asking can also respond
+  to an answer in the player's own words, but choices and exhibits get only
+  the written replies, and the rubric always sets the score.
 - **Scenarios per career:** two in every career, and a third for Law at
   court (19 in all). The engine and stage take more without code changes.
 - **Places:** only Law has a building away from the office (the court). The

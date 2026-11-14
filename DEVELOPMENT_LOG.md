@@ -190,6 +190,33 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · The cast responds to the player's own words
+
+**Built**
+
+- In a scenario, when the player answers in their own words with their own
+  AI model on, they can tick _Let (the person) respond to what you actually
+  say_. That person then responds in character, from the player's model,
+  above the written reply. The choice is remembered on this computer.
+- `reactionRequest` in `ai/castTalk.ts`: the question, what was said, the
+  scene and what has been said so far. No marks, no outcome, and not the
+  player's name.
+- The written lines and the rubric's score are unchanged.
+
+**Tested**
+
+- Unit test of the request.
+- The AI hearing browser test now ticks the box and sees the judge's
+  response come from the faked bridge, then coaching and the debrief.
+  Passes; screenshot checked.
+
+**Limitations**
+
+- Only answers in the player's own words get a model response; choices and
+  exhibits get the written replies.
+
+---
+
 ## 2026-11-15 · Westmark County Court: a real hearing, at the court
 
 **Built**
