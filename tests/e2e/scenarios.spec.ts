@@ -131,6 +131,16 @@ test('Law: a poor hearing loses the case, and the court says why', async ({ page
   await expect(result).toContainText(
     'Misleading the court is serious professional misconduct.',
   )
+  // Afterwards the people who were there can be asked about it: set answers
+  // from how it went, the judge on their own part first.
+  const debrief = page.getByTestId('scenario-debrief')
+  await debrief.getByText('Talk to the people who were there').click()
+  await debrief.getByRole('button', { name: 'What could I have done better?' }).click()
+  await expect(debrief.getByTestId('debrief-line').nth(1)).toContainText('you said')
+  await debrief.getByRole('button', { name: 'What did I do well?' }).click()
+  await expect(debrief.getByTestId('debrief-line').nth(3)).toContainText('not much went')
+  await expect(debrief).toContainText('Turn on an AI model of your own')
+  await page.screenshot({ path: `${shots}/scenarios/law-hearing-debrief.png` })
   await result.getByRole('button', { name: 'Finish' }).click()
 })
 
@@ -351,4 +361,16 @@ test('Law: coaching on the closing from the player’s own AI model, without cha
   await panel.getByRole('button', { name: 'Continue' }).click()
   await panel.getByRole('button', { name: 'Continue' }).click()
   await expect(page.getByTestId('scenario-result')).toBeVisible()
+  // Then a question of the player's own to the judge, answered in character.
+  const debrief = page.getByTestId('scenario-debrief')
+  await debrief.getByText('Talk to the people who were there').click()
+  await debrief.getByRole('textbox').fill('Was my closing persuasive, judge?')
+  await debrief.getByRole('button', { name: 'Ask', exact: true }).click()
+  await expect(debrief.getByTestId('debrief-line').nth(1)).toContainText(
+    'Name Harlow and the storage log next time',
+  )
+  expect(sent).toContain('You are District Judge Okonkwo')
+  expect(sent).toContain('Was my closing persuasive')
+  expect(sent).not.toContain('Alex')
+  await page.screenshot({ path: `${shots}/scenarios/law-hearing-ai-debrief.png` })
 })

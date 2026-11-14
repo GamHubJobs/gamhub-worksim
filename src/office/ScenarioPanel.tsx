@@ -10,6 +10,7 @@ import type { Line, Scenario } from '../content/scenarios/types'
 import { describeEffects } from '../game/scenes'
 import { bandFor, beatOf, percentOf, type Run } from '../game/scenarios'
 import { ScenarioAiFeedback } from './ScenarioAiFeedback'
+import { ScenarioDebrief } from './ScenarioDebrief'
 
 const BAND_NAME = { excellent: 'Excellent', good: 'Good', pass: 'Pass', poor: 'Not yet' }
 
@@ -236,6 +237,7 @@ export function ScenarioPanel({
             ))}
           </ol>
         </details>
+        <ScenarioDebrief scenario={scenario} run={live.run} name={name} />
         <button
           type="button"
           onClick={onFinish}

@@ -190,6 +190,42 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Talking to the cast after a scenario
+
+**Built**
+
+- After any scenario, "Talk to the people who were there": pick anyone in the
+  cast and ask them a question.
+- Set answers to three questions (what went well, what could have been
+  better, what happens now), built from the record of that play. Each person
+  starts with their own part of it.
+- With the player's own AI model turned on, free questions answered in
+  character. The model is given the scenario, the record and the outcome. It
+  is not given the player's name.
+- `playThrough` moved from the scenario tests into `game/scenarios.ts`, so
+  other tests can use it.
+
+**Fixed on the way**
+
+- An effect that returned `scrollIntoView()` blanked the page in current
+  Chrome, where that call returns a promise. Effects now use braces.
+
+**Tested**
+
+- Unit tests: `ai/castTalk.test.ts` (every cast, every question, best and
+  worst play; the brief to the model).
+- In the browser: a poor hearing, then the judge's set answers; and the AI
+  hearing, with a question of the player's own answered through a faked
+  bridge. Both pass; screenshots were checked.
+
+**Limitations**
+
+- During the scenario itself, the cast's lines are still written for each
+  answer. AI is used only after a spoken answer (coaching) and after the end
+  (questions).
+
+---
+
 ## 2026-11-15 · Full browser regression after the scenario work
 
 - **The full suite** (284 tests, 3 at a time, one retry) took 2.1 hours on

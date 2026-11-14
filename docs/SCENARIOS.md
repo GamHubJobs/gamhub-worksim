@@ -94,6 +94,24 @@ More scenarios:
 
 The first scenario of each career also includes that career's meeting-case decision.
 
+## Talking to the cast afterwards
+
+When a scenario ends, the player can talk to anyone who was there
+(`office/ScenarioDebrief.tsx`, `ai/castTalk.ts`):
+
+- **Without a model:** three questions have set answers, built from the
+  record of that play: what went well, what could have been better, and what
+  happens now. Each person talks about the beats they spoke in first, so the
+  judge and the witness say different things.
+- **With the player's own AI model on** (WorkSim AI: a local model, or their
+  own key through the bridge): they can ask anything, and the person answers
+  in character. The model gets the scenario, the cast, every answer with its
+  mark and lesson, and the outcome, and is told not to invent events. The
+  player's name is replaced with "the trainee". If the model cannot answer,
+  the reason is shown and the set questions still work.
+- Nothing is sent until the player asks. The score was already set by the
+  rubric and never changes.
+
 ## Tests
 
 - `src/game/scenarios.test.ts`, for every scenario:
@@ -102,19 +120,22 @@ The first scenario of each career also includes that career's meeting-case decis
   - the best answers score 100% and the worst are poor;
   - XP is given once and the result recorded;
   - its case's meeting is joined and answered.
+- `src/ai/castTalk.test.ts`: every member of every cast has a set answer to
+  every question, drawn from how it was played; the model is briefed in
+  character, with the record, and never with the player's name.
 - `tests/e2e/scenarios.spec.ts`: plays every scenario on screen in the real
   game. The hearing is played both well (judgment with costs) and badly
-  (claim dismissed, with the lessons reviewed).
+  (claim dismissed, with the lessons reviewed, then the judge asked about
+  it). A second hearing test uses a faked AI bridge: coaching on the
+  closing, then a question of the player's own answered by the judge.
 
 ## Not done
 
-- **No free-form AI conversation:** the cast's responses are written for
-  each answer. Answers in the player's own words are marked by a rubric, not
-  by an AI model.
-- **Scenarios per career:** two in every career (18 in all). The
-  engine and stage take more without code changes.
-- **AI coaching:** a player with their own model turned on in WorkSim AI can
-  ask it for coaching after an answer in their own words. It never changes the
-  score.
-- **Walking:** people walk between places in a straight line, without
-  routing around furniture.
+- **Scripted in the scene:** while a scenario is running, the cast's
+  responses are written for each answer, and answers in the player's own
+  words are marked by a rubric. An AI model is used only for optional
+  coaching after a spoken answer, and for questions afterwards.
+- **Scenarios per career:** two in every career (18 in all). The engine and
+  stage take more without code changes.
+- **Places:** every scenario is played in the career's own workplace. There
+  is no separate courthouse or hospital building in the city yet.

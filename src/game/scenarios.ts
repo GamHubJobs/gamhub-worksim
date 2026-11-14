@@ -296,3 +296,24 @@ export function scenarioActivity(scenario: Scenario): Activity {
     ],
   }
 }
+
+/** Plays a scenario through, always taking the best (or the worst) answer (for tests and checks). */
+export function playThrough(s: Scenario, best: boolean): Run {
+  let run = startRun(s)
+  for (let guard = 0; guard < 200 && !isOver(s, run); guard++) {
+    const beat = beatOf(s, run)
+    if (beat.kind === 'say') run = advance(s, run)
+    else if (beat.kind === 'choose') {
+      const sorted = [...beat.options].sort((a, b) => b.score - a.score)
+      run = choose(s, run, (best ? sorted[0] : sorted[sorted.length - 1]).id).run
+    } else if (beat.kind === 'exhibit')
+      run = present(
+        s,
+        run,
+        best ? beat.correct : beat.items.find((i) => i !== beat.correct)!,
+      ).run
+    else if (beat.kind === 'speak')
+      run = speak(s, run, best ? beat.model : 'I agree.').run
+  }
+  return run
+}

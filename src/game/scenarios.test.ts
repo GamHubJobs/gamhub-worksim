@@ -3,7 +3,6 @@ import { CAREERS } from '../content/careers'
 import { getCase } from '../content/cases'
 import { departmentFor } from '../content/departments'
 import { SCENARIOS } from '../content/scenarios'
-import type { Scenario } from '../content/scenarios/types'
 import { HOURS } from '../content/workday'
 import { bayFor, floorWith } from '../office/scene/bays'
 import { themeOf } from '../office/scene/themeLayout'
@@ -11,40 +10,7 @@ import { buildGrid, findPath, standing } from '../world/physics/nav'
 import { newProfileData, type ProfileData } from './career'
 import { arriveCase } from './cases'
 import { now } from './deadlines'
-import {
-  advance,
-  applyScenario,
-  bandFor,
-  beatOf,
-  choose,
-  isOver,
-  percentOf,
-  present,
-  speak,
-  startRun,
-  type Run,
-} from './scenarios'
-
-/** Plays a scenario through, always taking the best (or the worst) answer. */
-export function playThrough(s: Scenario, best: boolean): Run {
-  let run = startRun(s)
-  for (let guard = 0; guard < 200 && !isOver(s, run); guard++) {
-    const beat = beatOf(s, run)
-    if (beat.kind === 'say') run = advance(s, run)
-    else if (beat.kind === 'choose') {
-      const sorted = [...beat.options].sort((a, b) => b.score - a.score)
-      run = choose(s, run, (best ? sorted[0] : sorted[sorted.length - 1]).id).run
-    } else if (beat.kind === 'exhibit')
-      run = present(
-        s,
-        run,
-        best ? beat.correct : beat.items.find((i) => i !== beat.correct)!,
-      ).run
-    else if (beat.kind === 'speak')
-      run = speak(s, run, best ? beat.model : 'I agree.').run
-  }
-  return run
-}
+import { applyScenario, bandFor, percentOf, playThrough } from './scenarios'
 
 function profileFor(careerId: string): ProfileData {
   const base = newProfileData('Alex', 1, careerId)
