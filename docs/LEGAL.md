@@ -90,8 +90,15 @@ is laid out like a courtroom of the fictional Westmark County Court.
   seats, and today's court list by the door.
 - **What it opens:** counsel's table and the court list each open Matter Desk
   there. The panel beside the view has _Take your place at counsel's table_.
-- **Not yet:** a separate courthouse building in the city. The mock hearing
-  is held in this room.
+- **The mock hearing** (Brightwater v Millstone) is held in this room.
+
+## Westmark County Court
+
+A real hearing is held at the court itself (`src/court/`): the player goes
+there from the office (20 minutes each way, while the court sits from 10:00
+to 16:00), goes through security, signs in with the usher, and appears in
+Court 2 for a tenant whose deposit was withheld (_At court: Shah v Corner
+Lettings_). See [SCENARIOS.md](SCENARIOS.md#at-court).
 
 ## Tests
 

@@ -62,6 +62,11 @@ the player answers, and what they do changes the outcome and the career.
 
 More scenarios:
 
+- **Law, at court: Shah v Corner Lettings**, played at Westmark County Court
+  (see below): reassuring a nervous client without coaching her, addressing a
+  district judge, the issues in a sentence, the check-in inventory, one fair
+  question for the other side's witness, objecting to late papers, candour
+  about the uncleaned oven, and a closing in the player's own words.
 - **Law, a first interview with a new client** in the client meeting room: a
   conflict check before details, identity and an engagement letter, open
   questions, the order confirmation, honest expectations, a letter before
@@ -93,6 +98,26 @@ More scenarios:
   comment.
 
 The first scenario of each career also includes that career's meeting-case decision.
+
+## At court
+
+A scenario with `venue: 'court'` is played at Westmark County Court
+(fictional), not in the office (`src/court/`, rules in `game/court.ts`):
+
+- The office panel offers it under **At court**, with _Go to Westmark County
+  Court (20 min)_. The court sits from 10:00 to 16:00, so the button is off
+  outside those hours, with the reason shown.
+- The journey takes 20 minutes of office time each way, and is noted in the
+  day's log.
+- The courthouse is its own 3D scene: an entrance hall (security arch and bag
+  scanner with an officer, the usher's desk, the day's cause list, benches)
+  and Court 2, with the same furniture as the firm's moot courtroom.
+- In order, at the things themselves (or from the panel): go through
+  security, sign in with the usher, then take your place at the claimant's
+  table. The hearing then plays as any scenario does. Afterwards, _Leave and
+  go back to the office_.
+- While at court, the office panel, the Places bar, the office guide's next
+  step and the street map step aside.
 
 ## Talking to the cast afterwards
 
@@ -135,7 +160,9 @@ When a scenario ends, the player can talk to anyone who was there
   responses are written for each answer, and answers in the player's own
   words are marked by a rubric. An AI model is used only for optional
   coaching after a spoken answer, and for questions afterwards.
-- **Scenarios per career:** two in every career (18 in all). The engine and
-  stage take more without code changes.
-- **Places:** every scenario is played in the career's own workplace. There
-  is no separate courthouse or hospital building in the city yet.
+- **Scenarios per career:** two in every career, and a third for Law at
+  court (19 in all). The engine and stage take more without code changes.
+- **Places:** only Law has a building away from the office (the court). The
+  court is reached from work, not shown on the street map, and the trip is
+  not saved if the page is reloaded there (the player is back in the office;
+  the travel time is kept).

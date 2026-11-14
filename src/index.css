@@ -163,6 +163,11 @@ body[data-onsite] .onsite-hide {
   display: none;
 }
 
+/* Away from the office (at court): the office guide's next step steps aside. */
+body[data-away] .away-hide {
+  display: none;
+}
+
 /*
  * The HUD layout (ui/hud/Hud.tsx): fixed zones over the 3D world that never
  * overlap. Sizes come from these variables and change with the screen.

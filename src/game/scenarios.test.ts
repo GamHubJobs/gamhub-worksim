@@ -6,11 +6,20 @@ import { SCENARIOS } from '../content/scenarios'
 import { HOURS } from '../content/workday'
 import { bayFor, floorWith } from '../office/scene/bays'
 import { themeOf } from '../office/scene/themeLayout'
+import { COURT_START, COURTHOUSE_BOXES } from '../court/courthouseLayout'
 import { buildGrid, findPath, standing } from '../world/physics/nav'
 import { newProfileData, type ProfileData } from './career'
 import { arriveCase } from './cases'
 import { now } from './deadlines'
 import { applyScenario, bandFor, percentOf, playThrough } from './scenarios'
+
+/** What is solid where it is played: the workplace, or the courthouse. */
+function floorFor(s: (typeof SCENARIOS)[number]) {
+  if (s.venue === 'court') return COURTHOUSE_BOXES
+  return s.workplace === 'office'
+    ? floorWith(null)
+    : floorWith(bayFor(s.workplace), themeOf(s.workplace))
+}
 
 function profileFor(careerId: string): ProfileData {
   const base = newProfileData('Alex', 1, careerId)
@@ -56,21 +65,16 @@ describe.each(SCENARIOS.map((s) => [s.id, s] as const))('scenario %s', (_, s) =>
 
   it('is played in its career’s own workplace, where the player can stand', () => {
     expect(departmentFor(s.careerId).workplace ?? 'office').toBe(s.workplace)
-    const boxes =
-      s.workplace === 'office'
-        ? floorWith(null)
-        : floorWith(bayFor(s.workplace), themeOf(s.workplace))
+    const boxes = floorFor(s)
     const grid = buildGrid(boxes, 0.32)
     expect(standing(grid, boxes, s.player.at)).toBe(true)
-    expect(findPath(grid, { x: 2.4, z: 2.4 }, s.player.at)).not.toBeNull()
+    // From the office's middle, or from the court's front door.
+    const from = s.venue === 'court' ? COURT_START : { x: 2.4, z: 2.4 }
+    expect(findPath(grid, from, s.player.at)).not.toBeNull()
   })
 
   it('gives every move a walkable route round the furniture', () => {
-    const boxes =
-      s.workplace === 'office'
-        ? floorWith(null)
-        : floorWith(bayFor(s.workplace), themeOf(s.workplace))
-    const grid = buildGrid(boxes, 0.28)
+    const grid = buildGrid(floorFor(s), 0.28)
     for (const c of s.cast) {
       let from = c.at
       for (const m of c.moves ?? []) {

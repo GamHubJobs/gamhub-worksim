@@ -94,10 +94,10 @@ showing through the wall reversed.
   walls and areas as the office. A real ward's layout (a corridor with several
   bays and side rooms) would need its own floor plan, colleague routes and
   meeting places: a much larger change than dressing.
-- **No separate courthouse building.** The hearing is played in the firm's
-  moot courtroom, laid out and run as the (fictional) Westmark County Court.
-  A courthouse in the city would need a new location (a save-format change),
-  its own interior, and the scenario system wired into city interiors.
+- **The courthouse is reached from work only.** Westmark County Court has
+  its own interior and hearing (see [SCENARIOS.md](SCENARIOS.md#at-court)),
+  but it is not a building on the street map, and it cannot be visited
+  outside working hours (it would be closed).
 - **The desks** are still the office's desks; only the divider between them
   is dressed. Real counters or drawing boards would mean moving the
   colleagues' seats and the player's computer.

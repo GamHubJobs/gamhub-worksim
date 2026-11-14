@@ -14,6 +14,7 @@ import { ADMISSION } from './healthcareAdmission'
 import { DESK_SIDE } from './it'
 import { MAJOR_INCIDENT } from './itIncident'
 import { HEARING } from './legal'
+import { SMALL_CLAIM } from './legalCourt'
 import { CLIENT_INTERVIEW } from './legalInterview'
 import { CAMPAIGN_REVIEW } from './marketing'
 import { PHOTO_SHOOT } from './marketingShoot'
@@ -36,6 +37,7 @@ export const SCENARIOS: Scenario[] = [
   ADMISSION,
   HEARING,
   CLIENT_INTERVIEW,
+  SMALL_CLAIM,
   SAFETY_WALK,
   DESIGN_REVIEW,
 ]

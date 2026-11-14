@@ -18,7 +18,15 @@ import {
 const WOOD = '#7c4a24'
 const WOOD_DARK = '#5b3417'
 
-export function Courtroom() {
+export function Courtroom({
+  sign = 'MOOT COURTROOM · ALL RISE',
+  list = 'Court list · 2 pm · Brightwater v Millstone',
+}: {
+  /** Over the doors, inside (the firm's moot courtroom by default). */
+  sign?: string
+  /** Today's court list by the door. */
+  list?: string
+} = {}) {
   return (
     <group>
       {/* Carpet (court green) and the raised dais for the bench */}
@@ -143,13 +151,13 @@ export function Courtroom() {
         position={[COURT_LIST.x, 1.5, COURT_LIST.z + 0.03]}
         className="bg-white text-[8px] text-slate-800"
       >
-        Court list · 2 pm · Brightwater v Millstone
+        {list}
       </Label>
       <Label
         position={[9.4, 2.45, -0.89]}
         className="bg-indigo-900 text-[11px] font-bold tracking-wide text-white"
       >
-        MOOT COURTROOM · ALL RISE
+        {sign}
       </Label>
     </group>
   )

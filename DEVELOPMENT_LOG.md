@@ -190,6 +190,49 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Westmark County Court: a real hearing, at the court
+
+**Built**
+
+- `src/court/`: the courthouse as its own 3D scene. An entrance hall with a
+  security arch, a bag scanner and an officer, the usher's desk, the day's
+  cause list and benches, and Court 2 through double doors (the moot
+  courtroom's furniture, shared at the same coordinates).
+- `game/court.ts`: going there from the office and back takes 20 minutes of
+  office time each way, only while the court sits (10:00 to 16:00). The
+  journey is noted in the day's log.
+- Scenarios can be played at a venue (`venue: 'court'`). A new Law scenario,
+  _At court: Shah v Corner Lettings_ (a withheld tenancy deposit): calming
+  the client without coaching her, addressing a district judge, the issues,
+  the check-in inventory, a fair question to the other side's witness, late
+  papers, candour about the oven, and the closing.
+- The office panel offers it under "At court". At the court, security comes
+  before signing in, and signing in before the hearing, at the things
+  themselves or from the court's own panel.
+- While away, the office panel, the Places bar, the office guide and the
+  street map step aside.
+- The cast's walking routes use the courthouse floor (`ScenarioStage` takes
+  the floor to plan on).
+
+**Tested**
+
+- Unit tests (`game/court.test.ts`): the sitting hours, the time each way,
+  walking from the door through the arch into Court 2, every activity
+  reachable. The scenario tests now plan routes on the courthouse for this
+  scenario.
+- In the browser (`tests/e2e/court.spec.ts`): from the office to the court,
+  security, the usher, the hearing played to judgment, and back. Passes;
+  screenshots checked. The first screenshots showed the camera squashed
+  against the entrance wall; the hall was made deeper and the start moved in.
+
+**Limitations**
+
+- The court is not on the street map, and is only reached from work.
+- Reloading the page while at court returns the player to the office (the
+  travel time already spent is kept).
+
+---
+
 ## 2026-11-15 · Talking to the cast after a scenario
 
 **Built**

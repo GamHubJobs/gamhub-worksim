@@ -128,6 +128,7 @@ export function ScenarioStage({
   beat,
   speaker,
   gesture = 'talk',
+  boxes,
 }: {
   scenario: Scenario
   /** The beat being played (for where everyone is). */
@@ -135,8 +136,10 @@ export function ScenarioStage({
   /** Who is speaking now, if anyone. */
   speaker: string | null
   gesture?: Gesture
+  /** What is solid where it is played (the office floor by default). */
+  boxes?: ReturnType<typeof floorBoxes>
 }) {
-  const grid = useMemo(() => buildGrid(floorBoxes(), 0.28), [])
+  const grid = useMemo(() => buildGrid(boxes ?? floorBoxes(), 0.28), [boxes])
   return (
     <group>
       {scenario.cast.map((member) => (

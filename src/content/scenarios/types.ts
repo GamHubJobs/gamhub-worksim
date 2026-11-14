@@ -135,6 +135,11 @@ export interface Scenario {
   summary: string
   /** The workplace corner it is played in (see office/scene/bays.ts). */
   workplace: NonNullable<Department['workplace']>
+  /**
+   * Played away from the office, at another building the player travels to:
+   * "court" is Westmark County Court (court/). Otherwise in the workplace.
+   */
+  venue?: 'court'
   /** The room it happens in, e.g. "The moot courtroom". */
   room: string
   /** From this career level (1 = the first). */

@@ -37,6 +37,8 @@ import { isInteraction, meetingOf } from './scene/officeLayout'
 import { fill, getPerson, placeText } from '../content/departments'
 import { activeBay, opensFor } from './scene/bays'
 import { ScenarioPanel, type LiveState } from './ScenarioPanel'
+import { CourtPanel, type CourtVisit } from '../court/CourtPanel'
+import { backFromCourt, canGoToCourt, COURT_TRAVEL, goToCourt } from '../game/court'
 import { getScenario, scenariosFor } from '../content/scenarios'
 import { workplaceKind } from '../content/departments'
 import { levelNumber } from '../game/cases'
@@ -99,6 +101,7 @@ import { HudLayout, HudSlot } from '../ui/hud/Hud'
 import { useHud } from '../ui/hud/hudContext'
 
 const OfficeScene = lazy(() => import('./scene/OfficeScene'))
+const CourthouseScene = lazy(() => import('../court/CourthouseScene'))
 
 const PANEL_KEY = 'worksim.hud.place'
 const readPanel = () => {
@@ -482,6 +485,7 @@ export function OfficeView({
   // Stable handlers for the 3D scene, so it does not redraw on every change.
   /** A meeting can be attended while it is on (see workday.ts), and not otherwise. */
   function blocked(action: string | null): string | null {
+    if (away) return courtBlocked(action)
     const id = meetingOf(action)
     if (!id || openMeeting(work)?.id === id) return null
     const m = getMeeting(id)
@@ -499,6 +503,7 @@ export function OfficeView({
     arriveOnSite,
     bedside,
     startLive,
+    court,
   })
   useEffect(() => {
     handlers.current = {
@@ -512,6 +517,7 @@ export function OfficeView({
       blocked,
       arriveOnSite,
       bedside,
+      court,
     }
   })
   const sceneGo = useCallback((next: SpotId) => handlers.current.go(next), [])
@@ -532,6 +538,58 @@ export function OfficeView({
   const offered = scenariosFor(profile.careerId).filter(
     (sc) => sc.workplace === workplaceKind() && levelNumber(profile) >= sc.minLevel,
   )
+  // Hearings at Westmark County Court (court/): the player goes there from the office.
+  const here = offered.filter((sc) => !sc.venue)
+  const atCourt = offered.filter((sc) => sc.venue === 'court')
+  const [away, setAway] = useState<CourtVisit | null>(null)
+  const [courtRoom, setCourtRoom] = useState<string | null>(null)
+  const onCourtRoom = useCallback((r: string) => setCourtRoom(r), [])
+  // The office guide's next step is about the office: it steps aside at court.
+  useEffect(() => {
+    if (!away) return
+    document.body.dataset.away = 'court'
+    return () => {
+      delete document.body.dataset.away
+    }
+  }, [away])
+  function goCourt() {
+    const sc = atCourt[0]
+    if (!sc || canGoToCourt(profile)) return
+    setReady(false)
+    setDialogue(null)
+    void onAct((p) => goToCourt(p, sc))
+    setAway({ security: false, signedIn: false, note: null })
+  }
+  function courtBlocked(action: string | null): string | null {
+    if (!away) return null
+    if (live && action !== null) return 'Not during the hearing'
+    if (action === 'court:usher' && !away.security) return 'Go through security first'
+    if (action?.startsWith('scenario:') && !away.signedIn)
+      return 'Sign in with the usher first'
+    return null
+  }
+  /** Something done at court (in person, or from the panel without 3D). */
+  function court(action: string) {
+    if (!away) return
+    if (action === 'court:security') setAway({ ...away, security: true, note: null })
+    else if (action === 'court:usher')
+      setAway({
+        ...away,
+        signedIn: true,
+        note: 'The usher ticks you off the list: “Court 2, through the double doors. The judge will be in shortly: take your place at the claimant’s table.”',
+      })
+    else if (action === 'court:list')
+      setAway({
+        ...away,
+        note: 'Court 2 · District Judge Hartley · 10:30 · Shah v Corner Lettings Ltd (small claim, about an hour).',
+      })
+    else if (action === 'court:leave' && !live) {
+      setReady(false)
+      setCourtRoom(null)
+      void onAct(backFromCourt)
+      setAway(null)
+    }
+  }
   function startLive(id: string) {
     const sc = getScenario(id)
     if (sc) setLive({ id, run: startRun(sc), reply: [], step: 0 })
@@ -570,7 +628,8 @@ export function OfficeView({
     const meeting = meetingOf(action)
     if (meeting) {
       if (completed) handlers.current.joinMeeting(meeting)
-    } else if (completed && action?.startsWith('scenario:'))
+    } else if (completed && action?.startsWith('court:')) handlers.current.court(action)
+    else if (completed && action?.startsWith('scenario:'))
       handlers.current.startLive(action.slice('scenario:'.length))
     else if (completed && opensFor(action, activeBay())) handlers.current.bedside(action)
     else if (completed && action?.startsWith('onsite:'))
@@ -646,43 +705,65 @@ export function OfficeView({
                 <Suspense
                   fallback={
                     <div className="flex h-full items-center justify-center bg-slate-100 text-slate-500">
-                      Arriving at the office…
+                      {away
+                        ? 'Arriving at Westmark County Court…'
+                        : 'Arriving at the office…'}
                     </div>
                   }
                 >
-                  <OfficeScene
-                    day={work.day}
-                    minute={work.minute}
-                    walk={{
-                      controls: api.controls,
-                      request,
-                      // No "Press E" prompts while a scenario is being played.
-                      onPrompt: (p) => api.onPrompt(liveOn.current ? null : p),
-                      onProgress: api.onProgress,
-                      onDone: onActivityDone,
-                      onReady,
-                      onArea,
-                      onRoom,
-                      blocked: sceneBlocked,
-                    }}
-                    spot={spot}
-                    computerAlert={unread > 0}
-                    playerName={profile.name}
-                    desk={Object.values(deskLayout(profile))
-                      .map((item) => item!.id)
-                      .join(',')}
-                    onGo={sceneGo}
-                    onInteract={sceneInteract}
-                    talkingTo={dialogue?.speaker ?? null}
-                    itJobs={itJobs}
-                    scenarios={offered.map((sc) => sc.id).join(',')}
-                    liveScenario={live?.id ?? null}
-                    liveBeat={live?.run.at}
-                    liveSpeaker={liveSpeaker}
-                    liveGesture={
-                      liveLine && 'gesture' in liveLine ? liveLine.gesture : undefined
-                    }
-                  />
+                  {away ? (
+                    <CourthouseScene
+                      controls={api.controls}
+                      request={request}
+                      onPrompt={(p) => api.onPrompt(liveOn.current ? null : p)}
+                      onProgress={api.onProgress}
+                      onDone={onActivityDone}
+                      onReady={onReady}
+                      blocked={sceneBlocked}
+                      onRoom={onCourtRoom}
+                      scenarios={atCourt.map((sc) => sc.id).join(',')}
+                      liveScenario={live?.id ?? null}
+                      liveBeat={live?.run.at}
+                      liveSpeaker={liveSpeaker}
+                      liveGesture={
+                        liveLine && 'gesture' in liveLine ? liveLine.gesture : undefined
+                      }
+                    />
+                  ) : (
+                    <OfficeScene
+                      day={work.day}
+                      minute={work.minute}
+                      walk={{
+                        controls: api.controls,
+                        request,
+                        // No "Press E" prompts while a scenario is being played.
+                        onPrompt: (p) => api.onPrompt(liveOn.current ? null : p),
+                        onProgress: api.onProgress,
+                        onDone: onActivityDone,
+                        onReady,
+                        onArea,
+                        onRoom,
+                        blocked: sceneBlocked,
+                      }}
+                      spot={spot}
+                      computerAlert={unread > 0}
+                      playerName={profile.name}
+                      desk={Object.values(deskLayout(profile))
+                        .map((item) => item!.id)
+                        .join(',')}
+                      onGo={sceneGo}
+                      onInteract={sceneInteract}
+                      talkingTo={dialogue?.speaker ?? null}
+                      itJobs={itJobs}
+                      scenarios={here.map((sc) => sc.id).join(',')}
+                      liveScenario={live?.id ?? null}
+                      liveBeat={live?.run.at}
+                      liveSpeaker={liveSpeaker}
+                      liveGesture={
+                        liveLine && 'gesture' in liveLine ? liveLine.gesture : undefined
+                      }
+                    />
+                  )}
                 </Suspense>
               </SceneBoundary>
             )}
@@ -696,223 +777,281 @@ export function OfficeView({
       <HudLayout />
 
       {/* Where you are and what you can do here */}
-      <HudSlot zone="top-left" hideWhen={live ? 'dialogue' : undefined}>
-        <section
-          className="max-h-full w-full overflow-y-auto rounded-xl bg-white/90 p-4 shadow-lg ring-1 ring-slate-200 backdrop-blur"
-          aria-label="This area"
-          data-testid="office-panel"
-          data-collapsed={panelOpen ? 'false' : 'true'}
-        >
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-xs font-medium tracking-wide text-blue-700 uppercase">
-              You are at
-            </p>
-            <button
-              type="button"
-              onClick={togglePanel}
-              aria-expanded={panelOpen}
-              aria-label={panelOpen ? 'Collapse this panel' : 'Expand this panel'}
-              className="-mt-1 -mr-1 rounded px-1.5 text-xs text-slate-500 hover:bg-slate-100"
-            >
-              {panelOpen ? '▴' : '▾'}
-            </button>
-          </div>
-          <h1 className="text-lg font-semibold text-slate-900">
-            {fill(placeText(current).name)}
-          </h1>
-          {room && (
-            <p className="text-sm font-medium text-slate-700" data-testid="room-here">
-              Now in: {room}
-            </p>
-          )}
-          {panelOpen && (
-            <p className="mt-1 text-sm text-slate-600">
-              {fill(placeText(current).description)}
-            </p>
-          )}
-          <div hidden={!panelOpen}>
-            {meetingNow && (
-              <div
-                className="mt-3 rounded-md bg-amber-50 p-2 text-sm text-amber-900"
-                data-testid="meeting-now"
-              >
-                <p>
-                  <strong>{fill(meetingNow.title)}</strong>{' '}
-                  {work.minute < meetingNow.start
-                    ? `starts at ${formatTime(meetingNow.start)}`
-                    : 'has started'}{' '}
-                  ({fill(getSpot(meetingNow.spot).name.toLowerCase())}).
-                </p>
-                <button
-                  type="button"
-                  onClick={() =>
-                    // In 3D, the player walks to the meeting and attends it in person.
-                    walkable
-                      ? ask(`meeting:${meetingNow.id}`)
-                      : meetingHere
-                        ? joinMeeting(meetingNow.id)
-                        : go(meetingNow.spot)
-                  }
-                  className="mt-1.5 w-full rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
-                >
-                  {meetingHere || walkable
-                    ? fill(`Join the ${meetingNow.title.toLowerCase()}`)
-                    : fill(`Go to ${getSpot(meetingNow.spot).name}`)}
-                </button>
-              </div>
+      {away && (
+        <HudSlot zone="top-left" hideWhen={live ? 'dialogue' : undefined}>
+          <CourtPanel
+            visit={away}
+            room={courtRoom}
+            hearings={atCourt}
+            records={Object.fromEntries(
+              atCourt.map((sc) => [sc.id, scenarioRecord(profile, sc.id)?.best ?? null]),
             )}
-            {pendingEvents(profile).map((event) => {
-              const person = getPerson(event.person)
-              return (
+            live={!!live}
+            blocked={courtBlocked}
+            onDo={(action) =>
+              walkable
+                ? ask(action.startsWith('court:') ? action.replace(':', '-') : action)
+                : action.startsWith('scenario:')
+                  ? startLive(action.slice('scenario:'.length))
+                  : court(action)
+            }
+          />
+        </HudSlot>
+      )}
+      {!away && (
+        <HudSlot zone="top-left" hideWhen={live ? 'dialogue' : undefined}>
+          <section
+            className="max-h-full w-full overflow-y-auto rounded-xl bg-white/90 p-4 shadow-lg ring-1 ring-slate-200 backdrop-blur"
+            aria-label="This area"
+            data-testid="office-panel"
+            data-collapsed={panelOpen ? 'false' : 'true'}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs font-medium tracking-wide text-blue-700 uppercase">
+                You are at
+              </p>
+              <button
+                type="button"
+                onClick={togglePanel}
+                aria-expanded={panelOpen}
+                aria-label={panelOpen ? 'Collapse this panel' : 'Expand this panel'}
+                className="-mt-1 -mr-1 rounded px-1.5 text-xs text-slate-500 hover:bg-slate-100"
+              >
+                {panelOpen ? '▴' : '▾'}
+              </button>
+            </div>
+            <h1 className="text-lg font-semibold text-slate-900">
+              {fill(placeText(current).name)}
+            </h1>
+            {room && (
+              <p className="text-sm font-medium text-slate-700" data-testid="room-here">
+                Now in: {room}
+              </p>
+            )}
+            {panelOpen && (
+              <p className="mt-1 text-sm text-slate-600">
+                {fill(placeText(current).description)}
+              </p>
+            )}
+            <div hidden={!panelOpen}>
+              {meetingNow && (
                 <div
-                  key={event.id}
-                  className="mt-3 flex items-center gap-2 rounded-md bg-blue-50 p-2 text-sm text-blue-900"
-                  data-testid="event-waiting"
+                  className="mt-3 rounded-md bg-amber-50 p-2 text-sm text-amber-900"
+                  data-testid="meeting-now"
                 >
-                  <Avatar personId={event.person} />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">
-                      {person.name.split(' ')[0]} wants a word
-                    </p>
-                    <p className="truncate text-xs">“{event.opener}”</p>
-                  </div>
+                  <p>
+                    <strong>{fill(meetingNow.title)}</strong>{' '}
+                    {work.minute < meetingNow.start
+                      ? `starts at ${formatTime(meetingNow.start)}`
+                      : 'has started'}{' '}
+                    ({fill(getSpot(meetingNow.spot).name.toLowerCase())}).
+                  </p>
                   <button
                     type="button"
-                    onClick={() => setDialogue(eventScene(profile, event.id))}
-                    className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-800"
+                    onClick={() =>
+                      // In 3D, the player walks to the meeting and attends it in person.
+                      walkable
+                        ? ask(`meeting:${meetingNow.id}`)
+                        : meetingHere
+                          ? joinMeeting(meetingNow.id)
+                          : go(meetingNow.spot)
+                    }
+                    className="mt-1.5 w-full rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
                   >
-                    Talk
+                    {meetingHere || walkable
+                      ? fill(`Join the ${meetingNow.title.toLowerCase()}`)
+                      : fill(`Go to ${getSpot(meetingNow.spot).name}`)}
                   </button>
                 </div>
-              )
-            })}
-            {!meetingNow && upcoming && (
-              <p className="mt-2 text-xs text-slate-500">
-                Next: {fill(upcoming.title)} at {formatTime(upcoming.start)} (
-                {fill(placeText(getSpot(upcoming.spot)).name)})
-              </p>
-            )}
-
-            {bay && (
-              <div
-                className={`mt-3 rounded-md p-2 ${bay.tone.box}`}
-                data-testid={`${bay.kind}-bay`}
-              >
-                <p className={`text-xs font-semibold ${bay.tone.title}`}>{bay.title}</p>
-                <button
-                  type="button"
-                  onClick={() => (walkable ? ask(bay.goTo) : bedside())}
-                  className={`mt-1 text-left text-sm underline ${bay.tone.button}`}
-                >
-                  {bay.button}
-                </button>
-              </div>
-            )}
-
-            {offered.length > 0 && (
-              <div
-                className="mt-3 rounded-md bg-indigo-50 p-2"
-                data-testid="live-scenarios"
-              >
-                <p className="text-xs font-semibold text-indigo-900">Live work here</p>
-                {offered.map((sc) => {
-                  const done = scenarioRecord(profile, sc.id)
-                  return (
-                    <div key={sc.id} className="mt-1">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          walkable ? ask(`scenario:${sc.id}`) : startLive(sc.id)
-                        }
-                        className="text-left text-sm font-medium text-indigo-800 underline"
-                      >
-                        {sc.title}
-                      </button>
-                      <p className="text-[11px] text-indigo-900/80">
-                        {sc.summary}
-                        {done ? ` Best so far: ${done.best}%.` : ''}
+              )}
+              {pendingEvents(profile).map((event) => {
+                const person = getPerson(event.person)
+                return (
+                  <div
+                    key={event.id}
+                    className="mt-3 flex items-center gap-2 rounded-md bg-blue-50 p-2 text-sm text-blue-900"
+                    data-testid="event-waiting"
+                  >
+                    <Avatar personId={event.person} />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">
+                        {person.name.split(' ')[0]} wants a word
                       </p>
+                      <p className="truncate text-xs">“{event.opener}”</p>
                     </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {fieldJobs.length > 0 && (
-              <div className="mt-3 rounded-md bg-amber-50 p-2" data-testid="it-jobs">
-                <p className="text-xs font-semibold tracking-wide text-amber-900 uppercase">
-                  IT jobs in the office
+                    <button
+                      type="button"
+                      onClick={() => setDialogue(eventScene(profile, event.id))}
+                      className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-800"
+                    >
+                      Talk
+                    </button>
+                  </div>
+                )
+              })}
+              {!meetingNow && upcoming && (
+                <p className="mt-2 text-xs text-slate-500">
+                  Next: {fill(upcoming.title)} at {formatTime(upcoming.start)} (
+                  {fill(placeText(getSpot(upcoming.spot)).name)})
                 </p>
-                <ul className="mt-1 space-y-1">
-                  {fieldJobs.map((job) => {
-                    const place = placeOf(job)
+              )}
+
+              {bay && (
+                <div
+                  className={`mt-3 rounded-md p-2 ${bay.tone.box}`}
+                  data-testid={`${bay.kind}-bay`}
+                >
+                  <p className={`text-xs font-semibold ${bay.tone.title}`}>{bay.title}</p>
+                  <button
+                    type="button"
+                    onClick={() => (walkable ? ask(bay.goTo) : bedside())}
+                    className={`mt-1 text-left text-sm underline ${bay.tone.button}`}
+                  >
+                    {bay.button}
+                  </button>
+                </div>
+              )}
+
+              {atCourt.length > 0 && (
+                <div
+                  className="mt-3 rounded-md bg-slate-100 p-2"
+                  data-testid="court-hearings"
+                >
+                  <p className="text-xs font-semibold text-slate-900">At court</p>
+                  {atCourt.map((sc) => {
+                    const done = scenarioRecord(profile, sc.id)
+                    const why = canGoToCourt(profile)
                     return (
-                      <li
-                        key={`${job.kind}-${job.subject}-${job.target}`}
-                        className="flex items-center gap-2 text-sm text-amber-950"
-                      >
-                        <span className="min-w-0 flex-1">{job.label}</span>
+                      <div key={sc.id} className="mt-1">
+                        <p className="text-sm font-medium text-slate-900">{sc.title}</p>
+                        <p className="text-[11px] text-slate-700">
+                          {sc.summary}
+                          {done ? ` Best so far: ${done.best}%.` : ''}
+                        </p>
                         <button
                           type="button"
-                          className="shrink-0 rounded bg-amber-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-amber-600"
-                          onClick={() =>
-                            walkable ? ask(`onsite:${place}`) : openOnSite(place)
-                          }
-                          aria-label={`Go: ${job.label}`}
+                          onClick={goCourt}
+                          disabled={!!why}
+                          className="mt-1 rounded bg-slate-800 px-2 py-1 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
                         >
-                          Go
+                          Go to Westmark County Court ({COURT_TRAVEL} min)
                         </button>
-                      </li>
+                        {why && (
+                          <p className="mt-0.5 text-[11px] text-slate-500">{why}</p>
+                        )}
+                      </div>
                     )
                   })}
-                </ul>
-              </div>
-            )}
-            <ul className="mt-3 space-y-1.5">
-              {interactionsAt(spot).map((interaction) => (
-                <li key={interaction.id}>
-                  <InteractionButton
-                    interaction={interaction}
-                    unread={unread}
-                    lunchOpen={lunchAvailability(work) === 'available'}
-                    onClick={() => doInteract(interaction.id)}
-                  />
-                </li>
-              ))}
-            </ul>
-            {webgl && (
-              <p className="mt-3 text-xs text-slate-500">
-                Tip: walk with W, A, S and D (or click the blue rings on the floor), and
-                press E next to people and things, or click them.
-              </p>
-            )}
-          </div>
-        </section>
-      </HudSlot>
+                </div>
+              )}
+
+              {here.length > 0 && (
+                <div
+                  className="mt-3 rounded-md bg-indigo-50 p-2"
+                  data-testid="live-scenarios"
+                >
+                  <p className="text-xs font-semibold text-indigo-900">Live work here</p>
+                  {here.map((sc) => {
+                    const done = scenarioRecord(profile, sc.id)
+                    return (
+                      <div key={sc.id} className="mt-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            walkable ? ask(`scenario:${sc.id}`) : startLive(sc.id)
+                          }
+                          className="text-left text-sm font-medium text-indigo-800 underline"
+                        >
+                          {sc.title}
+                        </button>
+                        <p className="text-[11px] text-indigo-900/80">
+                          {sc.summary}
+                          {done ? ` Best so far: ${done.best}%.` : ''}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {fieldJobs.length > 0 && (
+                <div className="mt-3 rounded-md bg-amber-50 p-2" data-testid="it-jobs">
+                  <p className="text-xs font-semibold tracking-wide text-amber-900 uppercase">
+                    IT jobs in the office
+                  </p>
+                  <ul className="mt-1 space-y-1">
+                    {fieldJobs.map((job) => {
+                      const place = placeOf(job)
+                      return (
+                        <li
+                          key={`${job.kind}-${job.subject}-${job.target}`}
+                          className="flex items-center gap-2 text-sm text-amber-950"
+                        >
+                          <span className="min-w-0 flex-1">{job.label}</span>
+                          <button
+                            type="button"
+                            className="shrink-0 rounded bg-amber-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-amber-600"
+                            onClick={() =>
+                              walkable ? ask(`onsite:${place}`) : openOnSite(place)
+                            }
+                            aria-label={`Go: ${job.label}`}
+                          >
+                            Go
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              )}
+              <ul className="mt-3 space-y-1.5">
+                {interactionsAt(spot).map((interaction) => (
+                  <li key={interaction.id}>
+                    <InteractionButton
+                      interaction={interaction}
+                      unread={unread}
+                      lunchOpen={lunchAvailability(work) === 'available'}
+                      onClick={() => doInteract(interaction.id)}
+                    />
+                  </li>
+                ))}
+              </ul>
+              {webgl && (
+                <p className="mt-3 text-xs text-slate-500">
+                  Tip: walk with W, A, S and D (or click the blue rings on the floor), and
+                  press E next to people and things, or click them.
+                </p>
+              )}
+            </div>
+          </section>
+        </HudSlot>
+      )}
 
       {/* Places */}
-      <HudSlot zone="bottom-center" order={2}>
-        <nav
-          className="flex max-w-full flex-wrap justify-center gap-1 rounded-xl bg-white/90 p-1.5 shadow-lg ring-1 ring-slate-200 backdrop-blur"
-          aria-label="Places"
-        >
-          {SPOTS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => go(s.id)}
-              aria-current={s.id === spot ? 'location' : undefined}
-              className={`rounded-lg px-4 py-2 text-sm font-medium ${
-                s.id === spot
-                  ? 'bg-blue-700 text-white'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              {fill(placeText(s).name)}
-            </button>
-          ))}
-        </nav>
-      </HudSlot>
+      {!away && (
+        <HudSlot zone="bottom-center" order={2}>
+          <nav
+            className="flex max-w-full flex-wrap justify-center gap-1 rounded-xl bg-white/90 p-1.5 shadow-lg ring-1 ring-slate-200 backdrop-blur"
+            aria-label="Places"
+          >
+            {SPOTS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => go(s.id)}
+                aria-current={s.id === spot ? 'location' : undefined}
+                className={`rounded-lg px-4 py-2 text-sm font-medium ${
+                  s.id === spot
+                    ? 'bg-blue-700 text-white'
+                    : 'text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                {fill(placeText(s).name)}
+              </button>
+            ))}
+          </nav>
+        </HudSlot>
+      )}
 
       {onsite &&
         (() => {

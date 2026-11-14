@@ -140,7 +140,7 @@ export function GuideBar({
       <button
         type="button"
         onClick={() => onCollapse(false)}
-        className={`onsite-hide ${at} flex items-center gap-1.5 rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-white shadow-lg hover:bg-slate-800`}
+        className={`onsite-hide away-hide ${at} flex items-center gap-1.5 rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-white shadow-lg hover:bg-slate-800`}
         data-tour="guide-bar"
         data-testid="guide-bar"
         data-collapsed="true"
@@ -153,7 +153,7 @@ export function GuideBar({
 
   return slot(
     <aside
-      className={`onsite-hide ${inGrid ? '' : 'pointer-events-none'} ${at} w-[min(26rem,calc(100vw-1rem))] max-w-full rounded-xl bg-slate-900/92 p-3 text-sm text-white shadow-xl ring-1 ring-white/10 backdrop-blur`}
+      className={`onsite-hide away-hide ${inGrid ? '' : 'pointer-events-none'} ${at} w-[min(26rem,calc(100vw-1rem))] max-w-full rounded-xl bg-slate-900/92 p-3 text-sm text-white shadow-xl ring-1 ring-white/10 backdrop-blur`}
       aria-label="Next step"
       data-tour="guide-bar"
       data-testid="guide-bar"
