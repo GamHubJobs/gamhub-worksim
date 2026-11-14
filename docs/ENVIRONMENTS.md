@@ -74,6 +74,19 @@ the street name the real employer.
 behind the character's head. Signs hide when seen from behind, instead of
 showing through the wall reversed.
 
+## Since the audit
+
+- **Live scenarios** (see [SCENARIOS.md](SCENARIOS.md)): 18 professional
+  events, two per career, played in person in these rooms. The people
+  involved are posed at their places, speak with gestures and name tags, and
+  walk round the furniture between beats; a fixed camera frames each scene.
+- **The desk area:** the divider between the desk rows is a nurses' station
+  counter (hospital), a run of pinned drawings (engineering) or lever-arch
+  files (law).
+- **Framing fixes from the screenshots:** the judge's chair, people blocking
+  the camera, overhead signs in front of the camera at the desk, and prompts
+  and the area panel stepping aside during scenes.
+
 ## Still not done
 
 - **One floor plan for every career.** The hospital, the law firm and the
@@ -81,11 +94,13 @@ showing through the wall reversed.
   walls and areas as the office. A real ward's layout (a corridor with several
   bays and side rooms) would need its own floor plan, colleague routes and
   meeting places: a much larger change than dressing.
-- **No separate courthouse building.** The moot courtroom inside the firm
-  stands in for it.
-- **The desks themselves** are the office's desks in every workplace (the
-  nurses' station is not a counter, the design office has no drawing boards).
-  Changing them means moving the colleagues' seats and the player's computer.
+- **No separate courthouse building.** The hearing is played in the firm's
+  moot courtroom, laid out and run as the (fictional) Westmark County Court.
+  A courthouse in the city would need a new location (a save-format change),
+  its own interior, and the scenario system wired into city interiors.
+- **The desks** are still the office's desks; only the divider between them
+  is dressed. Real counters or drawing boards would mean moving the
+  colleagues' seats and the player's computer.
 - **Tools still open as windows on the work computer.** The activity happens
   at the object, then the computer screen replaces the 3D view.
 - **The city and home** were not part of this audit.
