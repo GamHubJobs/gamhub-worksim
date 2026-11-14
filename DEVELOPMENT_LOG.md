@@ -190,6 +190,27 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Routes round furniture, and the desk area made each workplace's own
+
+- **Routes round furniture:** people in a scene plan a route on the same
+  walking grid as the player (built from the workplace's solids) and follow
+  it, instead of walking in a straight line. A unit test checks that every
+  move in every scenario has a route.
+- **The divider between the desk rows** is now each workplace's own:
+  - **Hospital:** a nurses' station counter with the patient-notes rack and
+    phones.
+  - **Engineering firm:** A1 drawings pinned along it, and rolled plans.
+  - **Law firm:** lever-arch files and document boxes.
+
+  No desks, seats or routes moved.
+
+- **Fixed:** the overhead area signs added earlier hung in front of the camera
+  at the desk (seen in the tour screenshots). They are removed; the panel
+  already names the area.
+- **Tests:** the full check passes (3,255 unit tests). The hearing was
+  replayed with the witnesses walking round the furniture, and the desk areas
+  were inspected in tour screenshots.
+
 ## 2026-11-15 · Scenarios: a second scenario for every remaining career (18 in all)
 
 - **Accounting, the auditor's visit:** the sample as filed, honesty about a

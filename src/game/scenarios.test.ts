@@ -99,6 +99,21 @@ describe.each(SCENARIOS.map((s) => [s.id, s] as const))('scenario %s', (_, s) =>
     expect(findPath(grid, { x: 2.4, z: 2.4 }, s.player.at)).not.toBeNull()
   })
 
+  it('gives every move a walkable route round the furniture', () => {
+    const boxes =
+      s.workplace === 'office'
+        ? floorWith(null)
+        : floorWith(bayFor(s.workplace), themeOf(s.workplace))
+    const grid = buildGrid(boxes, 0.28)
+    for (const c of s.cast) {
+      let from = c.at
+      for (const m of c.moves ?? []) {
+        expect(findPath(grid, from, m.at), `${c.id} at ${m.from}`).not.toBeNull()
+        from = m.at
+      }
+    }
+  })
+
   it('rewards the best answers and not the worst', () => {
     const best = playThrough(s, true)
     expect(percentOf(best)).toBe(100)

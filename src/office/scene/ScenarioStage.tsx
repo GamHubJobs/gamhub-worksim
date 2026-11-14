@@ -6,12 +6,14 @@
  */
 import { Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { Group } from 'three'
 import type { CastMember, Gesture, Place, Scenario } from '../../content/scenarios/types'
 import { placeAt } from '../../game/scenarios'
 import { clipFrame, type ClipId, type RigFrame } from '../../world/character/rig'
 import { Person, type Motion } from './people'
+import { floorBoxes } from './bays'
+import { buildGrid, findPath, type Grid, type Point } from '../../world/physics/nav'
 
 /** Facing from one point towards another (the same convention as the activities). */
 const facing = (from: Place, to: Place) => Math.atan2(-(to.x - from.x), -(to.z - from.z))
@@ -24,13 +26,18 @@ function Figure({
   place,
   speaking,
   gesture,
+  grid,
 }: {
   member: CastMember
   place: { at: Place; faces: Place; seated: boolean }
   speaking: boolean
   gesture: Gesture
+  /** The floor's walking grid, to route round furniture. */
+  grid: Grid
 }) {
   const rig = useRef<RigFrame | null>(null)
+  // The way to the current place: round the furniture, recomputed when it changes.
+  const route = useRef<{ key: string; points: Point[] }>({ key: '', points: [] })
   const motion = useRef<Motion>({ walking: false })
   const t = useRef(member.id.length * 0.7)
   const body = useRef<Group>(null)
@@ -42,14 +49,35 @@ function Figure({
   const invalidate = useThree((s) => s.invalidate)
   useFrame((_, dt) => {
     t.current += dt
-    const dx = place.at.x - pos.current.x
-    const dz = place.at.z - pos.current.z
+    const key = `${place.at.x},${place.at.z}`
+    if (route.current.key !== key) {
+      const far =
+        Math.hypot(place.at.x - pos.current.x, place.at.z - pos.current.z) > 0.04
+      route.current = {
+        key,
+        points: far ? (findPath(grid, pos.current, place.at) ?? [place.at]) : [],
+      }
+    }
+    // Next point on the way (the place itself at the end).
+    while (
+      route.current.points.length > 1 &&
+      Math.hypot(
+        route.current.points[0].x - pos.current.x,
+        route.current.points[0].z - pos.current.z,
+      ) < 0.08
+    )
+      route.current.points.shift()
+    const next = route.current.points[0] ?? place.at
+    const dx = next.x - pos.current.x
+    const dz = next.z - pos.current.z
     const away = Math.hypot(dx, dz)
-    const moving = away > 0.04
+    const moving = away > 0.04 || route.current.points.length > 1
     if (moving) {
       const step = Math.min(away, PACE * Math.min(dt, 0.1))
-      pos.current.x += (dx / away) * step
-      pos.current.z += (dz / away) * step
+      if (away > 1e-6) {
+        pos.current.x += (dx / away) * step
+        pos.current.z += (dz / away) * step
+      }
       motion.current.walking = true
       rig.current = null
       body.current?.rotation.set(0, Math.atan2(-dx, -dz), 0)
@@ -108,10 +136,12 @@ export function ScenarioStage({
   speaker: string | null
   gesture?: Gesture
 }) {
+  const grid = useMemo(() => buildGrid(floorBoxes(), 0.28), [])
   return (
     <group>
       {scenario.cast.map((member) => (
         <Figure
+          grid={grid}
           key={member.id}
           member={member}
           place={placeAt(scenario, member, beat)}

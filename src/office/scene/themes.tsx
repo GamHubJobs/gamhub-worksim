@@ -132,6 +132,106 @@ function Chair({
   )
 }
 
+/** The divider between the two rows of desks: x −2.2 to 3.4 along z 0.33, 1.2 m high. */
+const DIVIDER = { x0: -2.2, x1: 3.4, z: 0.33, top: 1.2 }
+
+/** The nurses' station: a counter top on the divider, the notes rack and phones. */
+function NursesStation() {
+  const mid = (DIVIDER.x0 + DIVIDER.x1) / 2
+  return (
+    <group>
+      <Box
+        size={[DIVIDER.x1 - DIVIDER.x0 + 0.1, 0.06, 0.5]}
+        position={[mid, DIVIDER.top + 0.03, DIVIDER.z]}
+        color="#e2e8f0"
+        radius={0.02}
+      />
+      <Box
+        size={[DIVIDER.x1 - DIVIDER.x0, 0.05, 0.04]}
+        position={[mid, DIVIDER.top - 0.12, DIVIDER.z + 0.26]}
+        color="#0f766e"
+      />
+      {/* The patient notes rack: one slot per bed */}
+      <group position={[DIVIDER.x1 - 0.4, DIVIDER.top + 0.06, DIVIDER.z]}>
+        <Box size={[0.6, 0.45, 0.3]} position={[0, 0.22, 0]} color="#94a3b8" />
+        {[-0.2, -0.07, 0.07, 0.2].map((dx, i) => (
+          <Box
+            key={dx}
+            size={[0.1, 0.36, 0.26]}
+            position={[dx, 0.24, 0.03]}
+            color={['#93c5fd', '#a7f3d0', '#fde68a', '#fbcfe8'][i]}
+          />
+        ))}
+      </group>
+      {[-1.4, 1.0].map((x) => (
+        <Box
+          key={x}
+          size={[0.22, 0.07, 0.16]}
+          position={[x, DIVIDER.top + 0.1, DIVIDER.z]}
+          color="#1f2937"
+        />
+      ))}
+      <Sign
+        position={[mid, DIVIDER.top + 0.45, DIVIDER.z + 0.27]}
+        className="bg-teal-700 text-[9px] text-white"
+      >
+        Nurses’ station · Bay A notes
+      </Sign>
+    </group>
+  )
+}
+
+/** The design office: A1 drawings pinned along the divider, rolled plans on top. */
+function DrawingDivider() {
+  return (
+    <group>
+      {[-1.5, -0.3, 0.9, 2.1].map((x, i) => (
+        <Box
+          key={x}
+          size={[0.84, 0.6, 0.01]}
+          position={[x, 0.85, DIVIDER.z + 0.06]}
+          color={i % 2 ? '#dbeafe' : '#f8fafc'}
+        />
+      ))}
+      {[0.2, 0.5, 2.9].map((x) => (
+        <mesh
+          key={x}
+          position={[x, DIVIDER.top + 0.06, DIVIDER.z]}
+          rotation={[0, 0, Math.PI / 2]}
+        >
+          <cylinderGeometry args={[0.04, 0.04, 0.7, 12]} />
+          <meshStandardMaterial color="#f1f5f9" />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+/** The paralegals' floor: lever-arch files and document boxes along the divider. */
+function FilesDivider() {
+  const colors = ['#1e3a8a', '#7f1d1d', '#14532d', '#78350f']
+  return (
+    <group>
+      {Array.from({ length: 10 }, (_, i) => (
+        <Box
+          key={i}
+          size={[0.08, 0.3, 0.26]}
+          position={[-1.9 + i * 0.1, DIVIDER.top + 0.15, DIVIDER.z]}
+          color={colors[i % 4]}
+        />
+      ))}
+      {[1.4, 2.0, 2.6].map((x) => (
+        <Box
+          key={x}
+          size={[0.4, 0.26, 0.3]}
+          position={[x, DIVIDER.top + 0.13, DIVIDER.z]}
+          color="#d6c4a1"
+        />
+      ))}
+    </group>
+  )
+}
+
 // Hospital ---------------------------------------------------------------------
 
 function HospitalDressing() {
@@ -259,7 +359,6 @@ function HospitalDressing() {
       >
         Patient status at a glance · Bay A
       </Sign>
-      <RoomSign position={[0.6, 2.5, 3.9]}>Nurses’ station</RoomSign>
 
       {/* Ward manager's office: the staff rota on the wall */}
       <Box size={[0.04, 1.0, 1.6]} position={[11.95, 1.5, -4.4]} color="#ffffff" />
@@ -377,7 +476,6 @@ function LawDressing() {
         rows={5}
         colors={LAW_BOOKS}
       />
-      <RoomSign position={[0.6, 2.5, 3.9]}>Litigation &amp; commercial team</RoomSign>
     </group>
   )
 }
@@ -510,7 +608,6 @@ function EngineeringDressing() {
       >
         Sign in here
       </Sign>
-      <RoomSign position={[0.6, 2.5, 3.9]}>Design office</RoomSign>
 
       {/* Mess room lockers and boots; a site plan in the manager's office */}
       <Lockers x={lockers.x} z={lockers.z} color="#64748b" />
@@ -533,8 +630,11 @@ export function ThemeDressing({ theme }: { theme: Theme }) {
     <group>
       <GlassRooms />
       {theme === 'hospital' && <HospitalDressing />}
+      {theme === 'hospital' && <NursesStation />}
       {theme === 'law' && <LawDressing />}
+      {theme === 'law' && <FilesDivider />}
       {theme === 'engineering' && <EngineeringDressing />}
+      {theme === 'engineering' && <DrawingDivider />}
     </group>
   )
 }
