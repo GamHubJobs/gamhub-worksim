@@ -65,6 +65,7 @@ export const legal: Department = {
       'Oversees trainees’ supervision and ethics training. Asks “and what would you tell the court?” a lot.',
     ),
   },
+  workplace: 'courtroom',
   places: {
     reception: {
       name: 'Reception',

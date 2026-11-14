@@ -65,6 +65,7 @@ export const engineeringServices: Department = {
       'Runs inductions, near-miss reporting and training. Believes most accidents are system failures, not people failures.',
     ),
   },
+  workplace: 'workshop',
   places: {
     reception: {
       name: 'Site reception',

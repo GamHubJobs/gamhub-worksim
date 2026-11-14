@@ -79,3 +79,27 @@ test('Engineering: no repair before the machine is isolated, locked and proved d
   await expect(wo).toContainText('Closed: reading 64')
   await page.screenshot({ path: `${shots}/engineering/lockout.png` })
 })
+
+test('Engineering: the workshop in 3D, walked to the test bench, opens Works Desk', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await startEngineering(page)
+  await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
+    timeout: 120_000,
+  })
+  const bay = page.getByTestId('workshop-bay')
+  await expect(bay).toContainText('safety glasses on')
+  await page.waitForTimeout(2500)
+  await page.getByRole('button', { name: 'View: from behind' }).click()
+  await page.waitForTimeout(2000)
+  await page.screenshot({ path: `${shots}/engineering/workshop-top-down.png` })
+  await page.getByRole('button', { name: 'View: top-down' }).click()
+  await bay.getByRole('button', { name: 'Go to the test bench (Works Desk)' }).click()
+  await page.waitForTimeout(8000)
+  await page.screenshot({ path: `${shots}/engineering/workshop.png` })
+  const tool = page.getByRole('region', { name: 'Works Desk window' })
+  await expect(tool).toBeVisible({ timeout: 120_000 })
+  await expect(tool).toContainText('How to use Works Desk')
+})

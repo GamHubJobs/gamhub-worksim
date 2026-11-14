@@ -28,9 +28,16 @@ import {
 } from 'react'
 import { Vector3, type Group, type Material, type Mesh, type WebGLRenderer } from 'three'
 import { activeEmployer } from '../../content/departments'
-import { activeDepartment, fill, onWard, placeText } from '../../content/departments'
+import {
+  activeDepartment,
+  fill,
+  placeText,
+  workplaceKind,
+} from '../../content/departments'
 import { WardBay } from './ward'
-import { WARD_BOXES, wardActivities } from './wardLayout'
+import { activeBay, floorBoxes } from './bays'
+import { Courtroom } from './courtroom'
+import { Workshop } from './workshop'
 import {
   SPOTS,
   getInteraction,
@@ -54,7 +61,6 @@ import {
   IT_BENCH,
   IT_CABINET,
   itActivities,
-  OFFICE_BOXES,
   officeActivities,
   spotAt,
   standIn,
@@ -360,7 +366,15 @@ function OfficeScene(props: OfficeSceneProps) {
           onInteract={props.onInteract}
         />
         <ManagerOffice />
-        {onWard() ? <WardBay /> : <ItCorner itJobs={props.itJobs} />}
+        {workplaceKind() === 'ward' ? (
+          <WardBay />
+        ) : workplaceKind() === 'workshop' ? (
+          <Workshop />
+        ) : workplaceKind() === 'courtroom' ? (
+          <Courtroom />
+        ) : (
+          <ItCorner itJobs={props.itJobs} />
+        )}
         <BreakRoom onInteract={props.onInteract} />
         <Crowd
           people={OFFICE_PEOPLE}
@@ -546,15 +560,6 @@ function CameraRig({ spot }: { spot: SpotId }) {
 }
 
 /** The player in the office: walks about, and does things in person. */
-/** On the ward: the office's solids without the IT corner, plus the beds and the trolley. */
-const WARD_FLOOR_BOXES = [
-  ...OFFICE_BOXES.filter(
-    (b) =>
-      !(b.x === IT_CABINET.x && b.z === IT_CABINET.z) &&
-      !(b.x === IT_BENCH.x && b.z === IT_BENCH.z),
-  ),
-  ...WARD_BOXES,
-]
 
 function OfficeWalker({
   walk,
@@ -578,7 +583,8 @@ function OfficeWalker({
         ? [{ person: j.target.slice('person:'.length), kind: j.kind, name: j.name }]
         : [],
     )
-    return [...base, ...(onWard() ? wardActivities() : itActivities(desks))]
+    const bay = activeBay()
+    return [...base, ...(bay ? bay.activities() : itActivities(desks))]
   }, [base, itJobs])
   const area = useRef<SpotId>(spot)
   const onArea = walk.onArea
@@ -603,7 +609,7 @@ function OfficeWalker({
   return (
     <PlayerRig
       start={start}
-      boxes={onWard() ? WARD_FLOOR_BOXES : OFFICE_BOXES}
+      boxes={floorBoxes()}
       activities={activities}
       blocked={(a) => walk.blocked?.(a.action) ?? null}
       controls={walk.controls}
@@ -909,7 +915,9 @@ function Reception() {
         <div className="text-center text-white">
           <p className="text-2xl font-bold tracking-wide">{activeEmployer().name}</p>
           <p className="text-[9px] tracking-[0.4em] text-blue-200 uppercase">
-            {onWard() ? activeDepartment().sign : 'Consulting · Finance · Advisory'}
+            {activeDepartment().employer
+              ? activeDepartment().sign
+              : 'Consulting · Finance · Advisory'}
           </p>
         </div>
       </Html>

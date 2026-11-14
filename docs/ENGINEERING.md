@@ -63,6 +63,19 @@ engineering firm.
   client wants issued before it is checked. Holding to the checks changes
   the ending.
 
+## The workshop, in 3D
+
+Northbank's floor has a small workshop where the office has its IT corner
+(`src/office/scene/workshop.tsx`, layout in `workshopLayout.ts`).
+
+- **What is there:** a circuit test bench, a pump locked out for maintenance
+  (with its red tag), a steel test beam on trestles, the CAD station, and the
+  safety equipment board at the entrance.
+- **Safety is taught in person:** at the test bench the player first puts on
+  safety glasses, then checks the supply is isolated and tested dead.
+- **What it opens:** the bench, the beam and the CAD station each open Works
+  Desk there. The panel beside the view has _Go to the test bench_.
+
 ## Tests
 
 - **Unit tests:**

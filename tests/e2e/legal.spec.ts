@@ -85,3 +85,29 @@ test('Law: the deadline calculator rolls past the weekend and a holiday', async 
   await expect(desk.getByTestId('calculated-deadline')).toContainText('2026-04-07')
   await page.screenshot({ path: `${shots}/legal/calendar.png` })
 })
+
+test('Law: the moot courtroom in 3D, walked to counsel’s table, opens Matter Desk', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await startLegal(page)
+  await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
+    timeout: 120_000,
+  })
+  const bay = page.getByTestId('courtroom-bay')
+  await expect(bay).toContainText('The moot courtroom')
+  await page.waitForTimeout(2500)
+  await page.getByRole('button', { name: 'View: from behind' }).click()
+  await page.waitForTimeout(2000)
+  await page.screenshot({ path: `${shots}/legal/courtroom-top-down.png` })
+  await page.getByRole('button', { name: 'View: top-down' }).click()
+  await bay
+    .getByRole('button', { name: 'Take your place at counsel’s table (Matter Desk)' })
+    .click()
+  await page.waitForTimeout(8000)
+  await page.screenshot({ path: `${shots}/legal/courtroom.png` })
+  const tool = page.getByRole('region', { name: 'Matter Desk window' })
+  await expect(tool).toBeVisible({ timeout: 120_000 })
+  await expect(tool).toContainText('How to use Matter Desk')
+})

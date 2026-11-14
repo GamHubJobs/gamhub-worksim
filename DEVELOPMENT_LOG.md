@@ -190,6 +190,47 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-14 · Workplaces: the engineering workshop and the moot courtroom, in 3D
+
+### What was built
+
+- **One way for a workplace to dress its own corner** (`src/office/scene/bays.ts`):
+  - a department's `workplace` can now be `ward`, `workshop` or `courtroom`;
+  - each corner lists what is solid there, what the player can do, which
+    tool it opens and the panel beside the view;
+  - it replaces the IT corner; the hospital ward now uses it too.
+- **Northbank's workshop:**
+  - a circuit test bench, a locked-out pump, a test beam on trestles, the CAD
+    station and the safety equipment board;
+  - at the test bench the player puts on safety glasses and checks the supply
+    is isolated and tested dead before Works Desk opens.
+- **Kestrel & Vane's moot courtroom,** laid out like a courtroom of the
+  fictional Westmark County Court:
+  - the judge's bench, the witness box, counsel's tables, the public seats
+    and the court list;
+  - counsel's table and the court list open Matter Desk.
+
+### Fixed
+
+- The subtitle on the reception sign said "Consulting · Finance · Advisory" at
+  the law and engineering firms. It now shows the department's own sign at
+  every employer other than Cobalt Ridge.
+
+### Tests
+
+- **Unit test** (`bays.test.ts`): every activity in the three corners has a
+  standing spot clear of furniture and a route from the desk, and each corner
+  replaces the IT corner.
+- **Browser tests:** walking to the test bench opens Works Desk; walking to
+  counsel's table opens Matter Desk; the ward's bedside test still passes.
+  Screenshots of both rooms were checked.
+- **The full check** passes: 3,051 unit tests.
+
+### Known limitations
+
+- There is still no separate courthouse building in the city: the moot
+  courtroom stands in for it.
+
 ## 2026-11-13 · Code: AI suggestions reviewed as a diff; an accessibility fix; the full regression
 
 ### What was built

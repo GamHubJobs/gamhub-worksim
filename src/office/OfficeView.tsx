@@ -34,7 +34,8 @@ import {
 } from '../game/encounters'
 import { troubleOf } from '../game/incidents'
 import { isInteraction, meetingOf } from './scene/officeLayout'
-import { fill, getPerson, onWard, placeText } from '../content/departments'
+import { fill, getPerson, placeText } from '../content/departments'
+import { activeBay } from './scene/bays'
 import {
   SPOTS,
   getSpot,
@@ -263,6 +264,7 @@ export function OfficeView({
   const [ready, setReady] = useState(false)
   const [sceneFailed, setSceneFailed] = useState(false)
   const walkable = webgl && !sceneFailed && ready
+  const bay = activeBay()
   const [request, setRequest] = useState<{ id: string; nonce: number } | null>(null)
   const ask = (id: string) => setRequest((r) => ({ id, nonce: (r?.nonce ?? 0) + 1 }))
 
@@ -296,9 +298,10 @@ export function OfficeView({
     onGo(next)
   }
 
-  /** At the bedside or the medicines trolley (the ward): Ward Systems, there. */
+  /** In the workplace's own corner (the ward's bay, the workshop, the courtroom): its tool, there. */
   function bedside() {
-    onUseComputer({ app: 'tool', tool: 'clinical' })
+    const bay = activeBay()
+    if (bay) onUseComputer({ app: 'tool', tool: bay.tool })
   }
 
   /** Arrived at equipment and used it (E): close in on it. */
@@ -511,7 +514,8 @@ export function OfficeView({
     const meeting = meetingOf(action)
     if (meeting) {
       if (completed) handlers.current.joinMeeting(meeting)
-    } else if (completed && action === 'bedside') handlers.current.bedside()
+    } else if (completed && (action === 'bedside' || action === 'bay'))
+      handlers.current.bedside()
     else if (completed && action?.startsWith('onsite:'))
       handlers.current.arriveOnSite(action)
     else if (completed && action?.startsWith('person:'))
@@ -685,15 +689,18 @@ export function OfficeView({
               </p>
             )}
 
-            {onWard() && (
-              <div className="mt-3 rounded-md bg-teal-50 p-2" data-testid="ward-bay">
-                <p className="text-xs font-semibold text-teal-900">Bay A: beds 1–4</p>
+            {bay && (
+              <div
+                className={`mt-3 rounded-md p-2 ${bay.tone.box}`}
+                data-testid={`${bay.kind}-bay`}
+              >
+                <p className={`text-xs font-semibold ${bay.tone.title}`}>{bay.title}</p>
                 <button
                   type="button"
-                  onClick={() => (walkable ? ask('bedside') : bedside())}
-                  className="mt-1 text-left text-sm text-teal-800 underline"
+                  onClick={() => (walkable ? ask(bay.goTo) : bedside())}
+                  className={`mt-1 text-left text-sm underline ${bay.tone.button}`}
                 >
-                  Go to the bedside (Ward Systems)
+                  {bay.button}
                 </button>
               </div>
             )}

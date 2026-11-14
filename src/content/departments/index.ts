@@ -69,6 +69,10 @@ export function placeText(spot: { id: string; name: string; description: string 
 /** Whether the walkable workplace is a hospital ward. */
 export const onWard = (): boolean => activeDepartment().workplace === 'ward'
 
+/** How the active walkable workplace is dressed (see Department.workplace). */
+export const workplaceKind = (): NonNullable<Department['workplace']> =>
+  activeDepartment().workplace ?? 'office'
+
 /** The organisation a career works for (Cobalt Ridge unless its department says otherwise). */
 export function employerFor(careerId: string): Employer {
   return DEPARTMENTS[careerId]?.employer ?? COMPANY

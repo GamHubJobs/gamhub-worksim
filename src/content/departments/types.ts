@@ -13,8 +13,11 @@ export interface Department {
   sharedPeople?: Record<string, Person>
   /** The colleagues at the other desks (by their office ID, e.g. backM), when not the office’s own. */
   team?: Record<string, { name: string; role: string }>
-  /** How the walkable workplace is dressed: the office (default) or a hospital ward. */
-  workplace?: 'office' | 'ward'
+  /**
+   * How the walkable workplace is dressed: the office (default), or the office
+   * with its IT corner replaced by a hospital bay, a workshop or a moot courtroom.
+   */
+  workplace?: 'office' | 'ward' | 'workshop' | 'courtroom'
   /** The workplace's own names for the office's areas (reception, desk, manager, break room). */
   places?: Partial<
     Record<

@@ -79,6 +79,20 @@ header says so.
   - an old case that would win the argument, if it were still good law.
   - Checking it changes the hearing and the ending.
 
+## The moot courtroom, in 3D
+
+Kestrel & Vane's floor has a training courtroom where the office has its IT
+corner (`src/office/scene/courtroom.tsx`, layout in `courtroomLayout.ts`). It
+is laid out like a courtroom of the fictional Westmark County Court.
+
+- **What is there:** the judge's raised bench under the court's crest, the
+  witness box, counsel's tables for the claimant and the defendant, the public
+  seats, and today's court list by the door.
+- **What it opens:** counsel's table and the court list each open Matter Desk
+  there. The panel beside the view has _Take your place at counsel's table_.
+- **Not yet:** a separate courthouse building in the city. The mock hearing
+  is held in this room.
+
 ## Tests
 
 - **Unit tests:**
