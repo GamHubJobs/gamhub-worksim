@@ -36,6 +36,20 @@ import { troubleOf } from '../game/incidents'
 import { isInteraction, meetingOf } from './scene/officeLayout'
 import { fill, getPerson, placeText } from '../content/departments'
 import { activeBay, opensFor } from './scene/bays'
+import { ScenarioPanel, type LiveState } from './ScenarioPanel'
+import { getScenario, scenariosFor } from '../content/scenarios'
+import { workplaceKind } from '../content/departments'
+import { levelNumber } from '../game/cases'
+import {
+  advance as advanceScenario,
+  applyScenario,
+  beatOf,
+  choose as chooseScenario,
+  present as presentScenario,
+  scenarioRecord,
+  speak as speakScenario,
+  startRun,
+} from '../game/scenarios'
 import {
   SPOTS,
   getSpot,
@@ -484,9 +498,11 @@ export function OfficeView({
     blocked,
     arriveOnSite,
     bedside,
+    startLive,
   })
   useEffect(() => {
     handlers.current = {
+      startLive,
       go,
       doInteract,
       interact,
@@ -507,6 +523,43 @@ export function OfficeView({
   // The room within the area, e.g. the treatment room off the nurses' station.
   const [room, setRoom] = useState<string | null>(null)
   const onRoom = useCallback((next: string | null) => setRoom(next), [])
+
+  // Live scenarios: professional events played in person here (content/scenarios).
+  const [live, setLive] = useState<LiveState | null>(null)
+  const liveOn = useRef(false)
+  liveOn.current = !!live
+  const liveScenario = live ? getScenario(live.id) : undefined
+  const offered = scenariosFor(profile.careerId).filter(
+    (sc) => sc.workplace === workplaceKind() && levelNumber(profile) >= sc.minLevel,
+  )
+  function startLive(id: string) {
+    const sc = getScenario(id)
+    if (sc) setLive({ id, run: startRun(sc), reply: [], step: 0 })
+  }
+  function liveContinue() {
+    if (!live || !liveScenario) return
+    if (live.step < live.reply.length) {
+      setLive({ ...live, step: live.step + 1 })
+      return
+    }
+    setLive({ ...live, run: advanceScenario(liveScenario, live.run) })
+  }
+  const answer = (made: { run: LiveState['run']; reply: LiveState['reply'] }) =>
+    live && setLive({ ...live, run: made.run, reply: made.reply, step: 0 })
+  // Who is speaking now, and how (for the people in the room).
+  const liveBeat = live && liveScenario ? beatOf(liveScenario, live.run) : null
+  const liveLine =
+    live && live.step < live.reply.length
+      ? live.reply[live.step]
+      : liveBeat && liveBeat.kind === 'say'
+        ? liveBeat
+        : null
+  const liveSpeaker =
+    liveLine && liveLine.who !== 'narrator'
+      ? liveLine.who
+      : liveBeat && 'who' in liveBeat && liveBeat.kind !== 'say'
+        ? (liveBeat.who ?? null)
+        : null
   const onReady = useCallback(() => setReady(true), [])
   const sceneBlocked = useCallback(
     (action: string | null) => handlers.current.blocked(action),
@@ -517,8 +570,9 @@ export function OfficeView({
     const meeting = meetingOf(action)
     if (meeting) {
       if (completed) handlers.current.joinMeeting(meeting)
-    } else if (completed && opensFor(action, activeBay()))
-      handlers.current.bedside(action)
+    } else if (completed && action?.startsWith('scenario:'))
+      handlers.current.startLive(action.slice('scenario:'.length))
+    else if (completed && opensFor(action, activeBay())) handlers.current.bedside(action)
     else if (completed && action?.startsWith('onsite:'))
       handlers.current.arriveOnSite(action)
     else if (completed && action?.startsWith('person:'))
@@ -529,16 +583,40 @@ export function OfficeView({
   // A click on someone: walk over to talk to them.
   useEffect(() => onTalkRequest((id) => ask(`person:${id}`)), [])
   // Development builds: walk to and do an activity by its ID, as a click on
-  // its ringed object does (used by the environment screenshot tour).
+  // its ringed object does (used by the environment screenshot tour); and the
+  // best or worst answer to the scenario beat on screen (for browser tests).
+  const liveNow = useRef<LiveState | null>(null)
+  liveNow.current = live
   useEffect(() => {
     if (!import.meta.env.DEV) return
-    Object.assign(window, { __worksimWalk: (id: string) => ask(id) })
+    const answerFor = (best: boolean) => {
+      const state = liveNow.current
+      const sc = state && getScenario(state.id)
+      if (!state || !sc || state.step < state.reply.length) return null
+      const beat = beatOf(sc, state.run)
+      if (beat.kind === 'choose') {
+        const sorted = [...beat.options].sort((x, y) => y.score - x.score)
+        return { kind: 'choose', label: (best ? sorted[0] : sorted.at(-1)!).label }
+      }
+      if (beat.kind === 'exhibit') {
+        const id = best ? beat.correct : beat.items.find((i) => i !== beat.correct)!
+        return { kind: 'exhibit', label: sc.exhibits!.find((e) => e.id === id)!.title }
+      }
+      if (beat.kind === 'speak')
+        return { kind: 'speak', label: best ? beat.model : 'I agree with that.' }
+      return { kind: beat.kind, label: '' }
+    }
+    Object.assign(window, {
+      __worksimWalk: (id: string) => ask(id),
+      __worksimScenarioAnswer: answerFor,
+    })
     return () => {
       delete (window as { __worksimWalk?: unknown }).__worksimWalk
+      delete (window as { __worksimScenarioAnswer?: unknown }).__worksimScenarioAnswer
     }
   }, [])
   // The conversation is over: whoever it was goes back to their day.
-  const conversing = !!dialogue || !!encounter || !!storyScene
+  const conversing = !!dialogue || !!encounter || !!storyScene || !!live
   // In a conversation, non-essential HUD steps aside (ui/hud/Hud.tsx).
   const hudMode = useHud()?.setMode
   useEffect(() => {
@@ -578,7 +656,8 @@ export function OfficeView({
                     walk={{
                       controls: api.controls,
                       request,
-                      onPrompt: api.onPrompt,
+                      // No "Press E" prompts while a scenario is being played.
+                      onPrompt: (p) => api.onPrompt(liveOn.current ? null : p),
                       onProgress: api.onProgress,
                       onDone: onActivityDone,
                       onReady,
@@ -596,6 +675,13 @@ export function OfficeView({
                     onInteract={sceneInteract}
                     talkingTo={dialogue?.speaker ?? null}
                     itJobs={itJobs}
+                    scenarios={offered.map((sc) => sc.id).join(',')}
+                    liveScenario={live?.id ?? null}
+                    liveBeat={live?.run.at}
+                    liveSpeaker={liveSpeaker}
+                    liveGesture={
+                      liveLine && 'gesture' in liveLine ? liveLine.gesture : undefined
+                    }
                   />
                 </Suspense>
               </SceneBoundary>
@@ -610,7 +696,7 @@ export function OfficeView({
       <HudLayout />
 
       {/* Where you are and what you can do here */}
-      <HudSlot zone="top-left">
+      <HudSlot zone="top-left" hideWhen={live ? 'dialogue' : undefined}>
         <section
           className="max-h-full w-full overflow-y-auto rounded-xl bg-white/90 p-4 shadow-lg ring-1 ring-slate-200 backdrop-blur"
           aria-label="This area"
@@ -720,6 +806,35 @@ export function OfficeView({
                 >
                   {bay.button}
                 </button>
+              </div>
+            )}
+
+            {offered.length > 0 && (
+              <div
+                className="mt-3 rounded-md bg-indigo-50 p-2"
+                data-testid="live-scenarios"
+              >
+                <p className="text-xs font-semibold text-indigo-900">Live work here</p>
+                {offered.map((sc) => {
+                  const done = scenarioRecord(profile, sc.id)
+                  return (
+                    <div key={sc.id} className="mt-1">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          walkable ? ask(`scenario:${sc.id}`) : startLive(sc.id)
+                        }
+                        className="text-left text-sm font-medium text-indigo-800 underline"
+                      >
+                        {sc.title}
+                      </button>
+                      <p className="text-[11px] text-indigo-900/80">
+                        {sc.summary}
+                        {done ? ` Best so far: ${done.best}%.` : ''}
+                      </p>
+                    </div>
+                  )
+                })}
               </div>
             )}
 
@@ -853,6 +968,27 @@ export function OfficeView({
               )
             }
             onClose={() => setEncounter(null)}
+          />
+        </HudSlot>
+      )}
+      {live && liveScenario && (
+        <HudSlot zone="right">
+          <ScenarioPanel
+            className="max-h-full w-[28rem] max-w-full overflow-y-auto"
+            scenario={liveScenario}
+            live={live}
+            name={profile.name.split(' ')[0]}
+            firstTime={!scenarioRecord(profile, live.id)}
+            onContinue={liveContinue}
+            onChoose={(id) => answer(chooseScenario(liveScenario, live.run, id))}
+            onPresent={(id) => answer(presentScenario(liveScenario, live.run, id))}
+            onSpeak={(text) => answer(speakScenario(liveScenario, live.run, text))}
+            onFinish={() => {
+              const run = live.run
+              setLive(null)
+              void onAct((p) => applyScenario(p, liveScenario, run))
+            }}
+            onLeave={() => setLive(null)}
           />
         </HudSlot>
       )}

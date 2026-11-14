@@ -1394,6 +1394,20 @@ export const WorkStateSchema = z.object({
   reviews: z.array(ReviewSchema),
   /** Cases by case ID (added in profile format 3). */
   cases: z.record(z.string(), CaseProgressSchema).default({}),
+  /** Live scenarios played in person (see content/scenarios), by ID. Optional. */
+  scenarios: z
+    .record(
+      z.string(),
+      z.object({
+        best: z.number().min(0).max(100),
+        last: z.number().min(0).max(100),
+        times: z.number().int().nonnegative(),
+        /** The office day it was last played. */
+        day: z.number().int(),
+        band: z.enum(['excellent', 'good', 'pass', 'poor']),
+      }),
+    )
+    .optional(),
   org: OrgStateSchema.default({
     indicators: { satisfaction: 70, risk: 30, discipline: 70 },
     spend: {},

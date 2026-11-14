@@ -39,6 +39,10 @@ import { activeBay, activeTheme, floorBoxes, roomAt, workplaceActivities } from 
 import { DevTeamArea, InsightsWall, PostRoom, RecordsRoom, Studio } from './corners'
 import { PALETTE } from './themeLayout'
 import { ThemeDressing } from './themes'
+import { ScenarioStage } from './ScenarioStage'
+import { getScenario, type Scenario } from '../../content/scenarios'
+import type { Gesture } from '../../content/scenarios/types'
+import { scenarioActivity } from '../../game/scenarios'
 import { useFrontOnly } from './frontOnly'
 import { Courtroom } from './courtroom'
 import { Workshop } from './workshop'
@@ -241,6 +245,13 @@ export interface OfficeSceneProps {
    * only redraws when it changes): [{ target, kind, name }] (see game/fieldJobs.ts).
    */
   itJobs?: string
+  /** The live scenarios on offer here, by ID, comma-separated (each a place to take). */
+  scenarios?: string
+  /** A live scenario being played: its ID, the beat, who is speaking and how. */
+  liveScenario?: string | null
+  liveBeat?: string
+  liveSpeaker?: string | null
+  liveGesture?: Gesture
 }
 
 export interface ItJobMark {
@@ -319,6 +330,7 @@ function sameProps(a: OfficeSceneProps, b: OfficeSceneProps): boolean {
 }
 
 function OfficeScene(props: OfficeSceneProps) {
+  const live = props.liveScenario ? (getScenario(props.liveScenario) ?? null) : null
   // Who everyone is (names follow the department).
   const who = useMemo(() => officeWho(), [])
   const start = getSpot(props.spot).camera
@@ -359,6 +371,8 @@ function OfficeScene(props: OfficeSceneProps) {
           spot={props.spot}
           low={lowPower}
           itJobs={props.itJobs}
+          scenarios={props.scenarios}
+          stage={live ? live.camera : null}
         />
       ) : (
         <CameraRig spot={props.spot} />
@@ -375,6 +389,14 @@ function OfficeScene(props: OfficeSceneProps) {
         <CornerFor itJobs={props.itJobs} />
         <ThemeDressing theme={activeTheme()} />
         <BreakRoom onInteract={props.onInteract} />
+        {live && (
+          <ScenarioStage
+            scenario={live}
+            beat={props.liveBeat ?? live.beats[0].id}
+            speaker={props.liveSpeaker ?? null}
+            gesture={props.liveGesture}
+          />
+        )}
         <Crowd
           people={OFFICE_PEOPLE}
           places={OFFICE_PLACES}
@@ -565,11 +587,15 @@ function OfficeWalker({
   spot,
   low,
   itJobs,
+  scenarios,
+  stage,
 }: {
   walk: OfficeWalk
   spot: SpotId
   low: boolean
   itJobs?: string
+  scenarios?: string
+  stage: Scenario['camera'] | null
 }) {
   const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
   const hands = useRef<Hands>({ left: null, right: null })
@@ -584,8 +610,12 @@ function OfficeWalker({
     )
     const bay = activeBay()
     const own = workplaceActivities(bay, activeTheme())
-    return [...base, ...own, ...(bay ? [] : itActivities(desks))]
-  }, [base, itJobs])
+    const live = (scenarios ?? '').split(',').flatMap((id) => {
+      const s = getScenario(id)
+      return s ? [scenarioActivity(s)] : []
+    })
+    return [...base, ...own, ...live, ...(bay ? [] : itActivities(desks))]
+  }, [base, itJobs, scenarios])
   const area = useRef<SpotId>(spot)
   const onArea = walk.onArea
   const room = useRef<string | null>(null)
@@ -631,6 +661,7 @@ function OfficeWalker({
       now={now}
       hands={hands}
       startOrbit={{ yaw: 0.5, pitch: 0.5, distance: 4.2 }}
+      stage={stage}
     />
   )
 }

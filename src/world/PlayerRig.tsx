@@ -135,6 +135,11 @@ export interface PlayerRigProps {
   ceiling?: number
   /** Where the camera looks from, when the player first comes in. */
   startOrbit?: Partial<Orbit>
+  /**
+   * A fixed camera for a scene played in this place (a hearing, a ward round):
+   * where it is and what it looks at, instead of following the player.
+   */
+  stage?: { from: [number, number, number]; looks: [number, number, number] } | null
   activities: Activity[]
   /** Why an activity cannot be done now (its game action), or null. */
   blocked: (a: Activity) => string | null
@@ -199,6 +204,8 @@ export function PlayerRig(props: PlayerRigProps) {
   const { ceiling, activities, controls, now, hands } = props
   const camera = useThree((s) => s.camera)
   const scene = useThree((s) => s.scene)
+  const stageView = useRef(props.stage ?? null)
+  stageView.current = props.stage ?? null
   // What is solid: the place's walls and everything drawn (read from the scene),
   // the tall things for the camera, and the walking grid (made when needed).
   const solids = useRef<{ all: Box[]; camera: Box[]; grid: Grid | null; sig: string }>({
@@ -891,6 +898,26 @@ export function PlayerRig(props: PlayerRigProps) {
 
   /** The camera follows smoothly and stays clear of walls. */
   function followCamera(s: Body, dt: number) {
+    // A scene's own camera, eased into place.
+    const fixed = stageView.current
+    if (fixed) {
+      const k = 1 - Math.exp(-dt * 4)
+      camera.position.set(
+        camera.position.x + (fixed.from[0] - camera.position.x) * k,
+        camera.position.y + (fixed.from[1] - camera.position.y) * k,
+        camera.position.z + (fixed.from[2] - camera.position.z) * k,
+      )
+      camera.lookAt(fixed.looks[0], fixed.looks[1], fixed.looks[2])
+      // Drawn again at full speed only while it is still moving into place
+      // (the slow ticker keeps the people in the scene going).
+      const away =
+        Math.abs(fixed.from[0] - camera.position.x) +
+        Math.abs(fixed.from[1] - camera.position.y) +
+        Math.abs(fixed.from[2] - camera.position.z)
+      if (away > 0.01) invalidate()
+      else camera.position.set(fixed.from[0], fixed.from[1], fixed.from[2])
+      return
+    }
     const o = orbit.current
     if (ride.current === 'car') {
       o.distance += (7 - o.distance) * Math.min(1, dt * 2)

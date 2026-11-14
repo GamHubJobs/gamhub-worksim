@@ -190,6 +190,85 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Live workplace scenarios: professional events played in person, one per career
+
+See [docs/SCENARIOS.md](docs/SCENARIOS.md).
+
+### What was built
+
+- **A reusable live-scenario system:**
+  - content: where, the cast and their places, the exhibits, and beats of
+    lines, choices, evidence and the player's own words;
+  - a pure engine for scoring, branching, outcome bands and consequences;
+  - a 3D stage: the cast is posed in the room, the speaker gestures with a
+    name tag, and witnesses move to the box and back;
+  - a fixed stage camera;
+  - a panel to play it in, with a review of every answer at the end.
+- **Nine scenarios, one per career, each in its own workplace corner:**
+  - **Law:** a full hearing with a judge, clerk, opposing counsel, two
+    witnesses, security and spectators. Examination, an objection,
+    cross-examination, exhibits, candour, an adjournment application, a
+    spoken closing, and judgment.
+  - **Healthcare:** a ward round and emergency. SBAR, identity checks,
+    escalating a NEWS of 8, speaking up about an allergy, a relative, a
+    deterioration, documentation.
+  - **Engineering:** a safety walk and project meeting. PPE, lockout before
+    live work, an overstressed beam, a near miss, an honest schedule, a
+    toolbox talk.
+  - **IT Help Desk:** desk-side support. Triage, a DHCP fault, one incident
+    for many users, a bad change at the switch, refusing to share admin
+    rights, the ticket.
+  - **Accounting:** a client month-end review. A reconciling item, refusing
+    to backdate, an accrual, a variance.
+  - **Finance & Administration:** a supplier visit. A three-way match, a
+    duplicate invoice, bank-details fraud, approval limits.
+  - **Software Development:** release day. Code review, a failing test, the
+    release call, a rollback, a blameless summary.
+  - **Data Analysis:** findings for the sales director. Chart choice,
+    causation, refusing to drop data, sample size, a recommendation.
+  - **Digital Marketing:** a client campaign review. Cost per booking, a
+    misleading claim, an A/B test, the plan.
+- **Consequences:**
+  - the outcome band and individual answers change trust and reputation
+    (once per office day);
+  - XP and skills the first time, then promotions checked;
+  - a record in the save (`work.scenarios`, optional);
+  - every scenario is linked to its career's meeting case: played while the
+    meeting is on, it joins the meeting and answers the case's meeting
+    decision.
+
+### Fixed along the way
+
+- **Continuous redraws:** the stage camera asked for a new frame every frame,
+  which on software 3D starved the page (clicks took minutes). It now
+  redraws only while moving into place.
+- **The judge's chair** was a solid block that hid the judge.
+- **HUD clutter during scenes:** the area panel and "Press E" prompts now
+  step aside during scenes and conversations.
+
+### Tests
+
+- **Unit tests** (`src/game/scenarios.test.ts`), for every scenario:
+  - the content is well formed;
+  - it is played in its own workplace, at a reachable spot;
+  - the best answers score 100% and the worst are poor;
+  - XP is given once;
+  - its case's meeting is joined and answered.
+- **The full check** passes: 3,200 unit tests.
+- **Browser tests** (`tests/e2e/scenarios.spec.ts`): all 9 scenarios were
+  played on screen to the best outcome, and the hearing also badly (claim
+  dismissed). 10 of 10 pass. Screenshots of every scenario were inspected and
+  used to fix framing (the judge, the engineering client blocking the view,
+  the prompts).
+
+### Not done
+
+- **No free-form AI conversation:** the cast's replies are written for each
+  answer, and spoken answers are marked by a rubric.
+- **No walking between places:** people change place between beats without
+  walking there.
+- **One scenario per career.**
+
 ## 2026-11-14 · Workplace environments: an audit of every career, and each workplace made its own
 
 The full audit, the research and what is still missing are in

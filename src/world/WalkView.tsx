@@ -236,6 +236,8 @@ export function WalkView({
       <HudSlot
         zone="bottom-center"
         order={1}
+        // In a conversation or a scene, "Press E" prompts step aside.
+        hideWhen="dialogue"
         passive
         fallback={(c) => (
           <div

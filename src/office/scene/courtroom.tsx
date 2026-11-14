@@ -40,11 +40,18 @@ export function Courtroom() {
         position={[BENCH.x - 0.25, 1.3, BENCH.z]}
         color={WOOD_DARK}
       />
+      {/* The judge's chair: a seat and a tall back (the judge sits in it during a hearing) */}
       <Box
-        size={[0.5, 1.3, 0.6]}
-        position={[BENCH.x + 0.4, 0.9, BENCH.z]}
+        size={[0.5, 0.1, 0.6]}
+        position={[BENCH.x + 0.4, 0.68, BENCH.z]}
         color="#7f1d1d"
-        radius={0.05}
+        radius={0.03}
+      />
+      <Box
+        size={[0.1, 1.2, 0.6]}
+        position={[BENCH.x + 0.68, 1.2, BENCH.z]}
+        color="#7f1d1d"
+        radius={0.04}
       />
       <mesh position={[12.0, 2.15, BENCH.z]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.32, 0.32, 0.05, 24]} />
