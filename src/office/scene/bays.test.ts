@@ -56,7 +56,11 @@ describe.each(BAY_KINDS)('the %s workplace', (kind) => {
 
   it('replaces the IT corner rather than adding to it', () => {
     expect(boxes.length).toBe(
-      floorWith(null).length - 2 + bay.boxes.length + THEME_BOXES[theme].length,
+      floorWith(null).length -
+        2 -
+        (bay.opensWall ? 1 : 0) +
+        bay.boxes.length +
+        THEME_BOXES[theme].length,
     )
   })
 })

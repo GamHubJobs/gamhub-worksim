@@ -50,17 +50,17 @@ layouts, so ordinary web search was used for this.
 
 ## What each workplace has now
 
-| Career                   | Its own corner (opens)                                                                        | Whole-floor theme and rooms                                                                                                                                                               |
-| ------------------------ | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Finance & Administration | Post & print room: supplies cupboard (Grid Craft), sorting table with the post (Mail), copier | The office                                                                                                                                                                                |
-| Accounting               | Records room: ledger desk and filing cabinets (Books), safe, archive                          | The office                                                                                                                                                                                |
-| IT Help Desk             | IT corner: comms cabinet and IT bench (on-site IT jobs)                                       | The office                                                                                                                                                                                |
-| Digital Marketing        | Content studio: photo set and campaign wall (Social Planner)                                  | The office                                                                                                                                                                                |
-| Data Analysis            | Insights wall: live dashboards (Data Studio), standing table (Grid Craft)                     | The office                                                                                                                                                                                |
-| Software Development     | Dev team area: pairing desk (Code), sprint board (Tasks), test devices, build monitor         | The office                                                                                                                                                                                |
-| Healthcare               | Bay A: four beds and the medicines trolley (Ward Systems)                                     | Hospital vinyl and teal; a treatment room with the medicines (Ward Systems), the sluice door, a relatives' room, a patient status board, staff lockers, a wheelchair at the ward entrance |
-| Law                      | Moot courtroom: counsel's table and the court list (Matter Desk)                              | Burgundy carpet; a library and file room and a client meeting room off reception (both Matter Desk); the partner's law reports                                                            |
-| Engineering              | Workshop: test bench, test beam, CAD station (Works Desk), locked-out pump, PPE board         | Grey lino and navy; a plot room and stores and a project room (both Works Desk); site reception with hard hats and a sign-in screen; mess room lockers                                    |
+| Career                   | Its own corner (opens)                                                                                                                                              | Whole-floor theme and rooms                                                                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Finance & Administration | Post & print room: supplies cupboard (Grid Craft), sorting table with the post (Mail), copier                                                                       | The office                                                                                                                                                                                |
+| Accounting               | Records room: ledger desk and filing cabinets (Books), safe, archive                                                                                                | The office                                                                                                                                                                                |
+| IT Help Desk             | IT corner: comms cabinet and IT bench (on-site IT jobs)                                                                                                             | The office                                                                                                                                                                                |
+| Digital Marketing        | Content studio: photo set and campaign wall (Social Planner)                                                                                                        | The office                                                                                                                                                                                |
+| Data Analysis            | Insights wall: live dashboards (Data Studio), standing table (Grid Craft)                                                                                           | The office                                                                                                                                                                                |
+| Software Development     | Dev team area: pairing desk (Code), sprint board (Tasks), test devices, build monitor                                                                               | The office                                                                                                                                                                                |
+| Healthcare               | Bay A: four beds and the medicines trolley; through its far wall, the ward wing: a corridor, Bay B (four beds) and two side rooms, one for isolation (Ward Systems) | Hospital vinyl and teal; a treatment room with the medicines (Ward Systems), the sluice door, a relatives' room, a patient status board, staff lockers, a wheelchair at the ward entrance |
+| Law                      | Moot courtroom: counsel's table and the court list (Matter Desk)                                                                                                    | Burgundy carpet; a library and file room and a client meeting room off reception (both Matter Desk); the partner's law reports                                                            |
+| Engineering              | Workshop: test bench, test beam, CAD station (Works Desk), locked-out pump, PPE board                                                                               | Grey lino and navy; a plot room and stores and a project room (both Works Desk); site reception with hard hats and a sign-in screen; mess room lockers                                    |
 
 Every one of these activities is done at its object: the character walks
 there, plays the activity (cleaning hands, unlocking the cupboard, taking the
@@ -98,11 +98,14 @@ showing through the wall reversed.
 
 ## Still not done
 
-- **One floor plan for every career.** The hospital, the law firm and the
-  engineering firm have their own rooms, colours and dressing, but the same
-  walls and areas as the office. A real ward's layout (a corridor with several
-  bays and side rooms) would need its own floor plan, colleague routes and
-  meeting places: a much larger change than dressing.
+- **The ward is the hospital's own floor; the law and engineering firms
+  share the office's walls.** The hospital now goes on through Bay A's outer
+  wall into a ward wing (a corridor, Bay B and two side rooms, one for
+  isolation), so it is laid out as a ward. The law firm and the engineering
+  firm have their own rooms, colours, desks and dressing (and the court is a
+  building of its own), but the office's outer walls and areas. Colleagues'
+  daily routes and the team's meeting places stay on the main floor; the
+  wing has its own nurse at work in Bay B.
 - **The courthouse is reached from work only.** Westmark County Court has
   its own interior and hearing (see [SCENARIOS.md](SCENARIOS.md#at-court)),
   and stands on the high street (columns, steps, its crest), marked on the

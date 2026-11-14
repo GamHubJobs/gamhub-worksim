@@ -114,3 +114,18 @@ the player reports the near miss changes the incident review and the ending.
   - the first task done in the app and marked 100%;
   - the bedside checks enforced;
   - an unsafe prescription queried.
+
+## The ward wing
+
+Ward 4 goes on beyond Bay A (`src/office/scene/wardWing.ts`, drawn in
+`wardWing.view.tsx`): through a doorway in the bay's outer wall is the ward
+corridor, with a handrail, hand gel, a linen trolley and a trolley of gloves
+and aprons. Off the corridor:
+
+- **Bay B:** four beds (one empty), with a nurse at work. _See your patients
+  in Bay B_ opens Ward Systems at the bedside.
+- **Side room 1 (isolation):** gloves and an apron go on at the trolley
+  outside the door first, then the bedside, where Ward Systems opens.
+- **Side room 2:** a single room with a patient.
+
+The panel names the room the player is in. Patients are fictional.

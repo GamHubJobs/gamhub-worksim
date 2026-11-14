@@ -195,3 +195,40 @@ test('Healthcare: the ward in 3D, walked to the bedside, opens Ward Systems', as
   await expect(tool).toBeVisible({ timeout: 120_000 })
   await expect(tool).toContainText('How to use Ward Systems')
 })
+
+test('Healthcare: the ward goes on past Bay A: the corridor, Bay B and the isolation room', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await startHealthcare(page)
+  await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
+    timeout: 120_000,
+  })
+  await page.evaluate('window.__worksim.setTime(1, 10 * 60 + 30)')
+  await page.waitForFunction('typeof window.__worksimWalk === "function"')
+  // To the isolation room: gloves and an apron at the trolley outside, then the bedside.
+  await page.evaluate("window.__worksimWalk('side-room')")
+  const room = page.getByTestId('room-here')
+  await expect(room).toContainText('Ward corridor', { timeout: 60_000 })
+  // Still on the ward floor (the nurses' station area), not in the manager's office.
+  await expect(
+    page.getByTestId('office-panel').getByRole('heading', { level: 1 }),
+  ).toContainText('Nurses', { timeout: 10_000 })
+  await expect(page.getByTestId('activity')).toContainText('gloves and an apron', {
+    timeout: 60_000,
+  })
+  await page.screenshot({ path: `${shots}/healthcare/ward-corridor-ppe.png` })
+  await expect(room).toContainText('Side room 1 (isolation)', { timeout: 60_000 })
+  await page.screenshot({ path: `${shots}/healthcare/side-room.png` })
+  const here = page.getByTestId('in-place-tool')
+  await expect(here).toContainText('Ward Systems', { timeout: 60_000 })
+  await here.getByRole('button', { name: 'Step back (Esc)' }).click()
+  await expect(here).toBeHidden()
+  // Bay B, across the corridor.
+  await page.evaluate("window.__worksimWalk('bay-b')")
+  await expect(room).toContainText('Bay B', { timeout: 60_000 })
+  await page.waitForTimeout(800)
+  await page.screenshot({ path: `${shots}/healthcare/bay-b.png` })
+  await expect(here).toContainText('At Bay B', { timeout: 60_000 })
+})

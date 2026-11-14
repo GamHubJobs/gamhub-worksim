@@ -190,6 +190,46 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · The ward wing: the hospital laid out as a ward
+
+**Built**
+
+- `office/scene/wardWing.ts` and `wardWing.view.tsx`: Ward 4 goes on through
+  a doorway in Bay A's outer wall. A ward corridor (handrail, hand gel, a
+  linen trolley, gloves and aprons outside the isolation room), and off it
+  Bay B (four beds, one empty, with a nurse at work), side room 1
+  (isolation) and side room 2. Only the hospital's floor opens the wall: a
+  bay can now bring its own right-hand wall (`opensWall`).
+- Two things to do there: _See your patients in Bay B_ (Ward Systems at the
+  bedside), and the isolation room, where the character puts on gloves and
+  an apron at the trolley first, then goes to the bed.
+- The panel names the corridor, Bay B and the side rooms. The wing counts as
+  the ward floor (the nurses' station area), not the manager's office.
+- The bed is shared (`wardBed.tsx`), and its sign now shows only from the
+  front (it had shown backwards through the wall from the wing).
+- A tool opened where the player ends up (the bed, after the gloves
+  trolley) is the one the camera closes in on.
+
+**Tested**
+
+- Unit tests (`wardWing.test.ts`): the doorway exists only on the ward,
+  rooms are named where they are, every wing bedside can be walked to from
+  the desk, gloves and an apron come before the isolation room, Bay A
+  unchanged. The floor, scenario and full suites pass.
+- In the browser: through the corridor (gloves and apron), into side room 1
+  where Ward Systems opens on the tablet, then Bay B. Screenshots checked;
+  the first ones showed the wrong area name in the corridor, the camera on
+  the trolley instead of the bed, and Bay A's signs through the wall, all
+  fixed.
+
+**Limitations**
+
+- Colleagues' daily routes and the team's meeting places stay on the main
+  floor; only the Bay B nurse is in the wing. The law and engineering firms
+  keep the office's outer walls.
+
+---
+
 ## 2026-11-15 · Tools used at the thing: over the shoulder, on its device
 
 **Built**

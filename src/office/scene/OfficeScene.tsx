@@ -37,7 +37,9 @@ import {
 import { WardBay } from './ward'
 import { activeBay, activeTheme, floorBoxes, roomAt, workplaceActivities } from './bays'
 import { DeskDressing } from './deskStyles'
+import { SPLIT_RIGHT_WALL } from './wardWing'
 import { overShoulder } from './overShoulder'
+import type { Activity } from '../../world/interaction/activity'
 import { deskStyleFor, deskTop } from './deskStyle'
 import { DevTeamArea, InsightsWall, PostRoom, RecordsRoom, Studio } from './corners'
 import { PALETTE } from './themeLayout'
@@ -632,14 +634,16 @@ function OfficeWalker({
   // player stands when it opens.
   const focusView = useMemo(() => {
     if (!focus) return null
+    // Where each such activity ends (its last stage's own spot, if it moves on,
+    // e.g. from the gloves trolley to the bed): the one the player is at.
+    const endOf = (a: Activity) =>
+      [...a.stages].reverse().find((s) => s.at)?.at ?? a.anchor
+    const away = (a: Activity) =>
+      Math.hypot(endOf(a).x - now.current.x, endOf(a).z - now.current.z)
     const near = activities
       .filter((a) => a.action === focus)
-      .sort(
-        (a, b) =>
-          Math.hypot(a.anchor.x - now.current.x, a.anchor.z - now.current.z) -
-          Math.hypot(b.anchor.x - now.current.x, b.anchor.z - now.current.z),
-      )[0]
-    return near ? overShoulder(near.anchor) : null
+      .sort((a, b) => away(a) - away(b))[0]
+    return near ? overShoulder(endOf(near)) : null
     // Only when a tool opens or closes, not as the player's place changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus])
@@ -857,11 +861,23 @@ function Building({ playerName }: { playerName: string }) {
         position={[-12, WALL_HEIGHT / 2, 0.5]}
         color={COLORS.wall}
       />
-      <Box
-        size={[0.2, WALL_HEIGHT, 17]}
-        position={[12, WALL_HEIGHT / 2, 0.5]}
-        color={COLORS.wall}
-      />
+      {activeBay()?.opensWall ? (
+        // The ward goes on through a doorway into its wing (wardWing.ts).
+        SPLIT_RIGHT_WALL.map((w) => (
+          <Box
+            key={w.z}
+            size={[0.2, WALL_HEIGHT, w.hz * 2]}
+            position={[12, WALL_HEIGHT / 2, w.z]}
+            color={COLORS.wall}
+          />
+        ))
+      ) : (
+        <Box
+          size={[0.2, WALL_HEIGHT, 17]}
+          position={[12, WALL_HEIGHT / 2, 0.5]}
+          color={COLORS.wall}
+        />
+      )}
       {/* Skirting */}
       <Box size={[24, 0.1, 0.22]} position={[0, 0.05, -7.88]} color="#cbd5e1" />
       <Clock position={[0.8, 2.45, -7.88]} />

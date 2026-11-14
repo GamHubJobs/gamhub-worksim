@@ -162,6 +162,8 @@ export function itActivities(
 
 /** The area of the office a point is in. */
 export function spotAt(x: number, z: number): SpotId {
+  // The hospital's ward wing, beyond Bay A: part of the ward floor, not the manager's office.
+  if (x > 12.15) return 'desk'
   if (x > 5 && z < -1) return 'manager'
   if (x < -3.6 && z < 0.4) return 'breakroom'
   if (x < -3.4 && z > 2.6) return 'reception'

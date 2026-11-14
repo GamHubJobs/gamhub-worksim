@@ -34,6 +34,7 @@ import {
   type Theme,
 } from './themeLayout'
 import { WARD_BOXES, wardActivities } from './wardLayout'
+import { WING_BOXES, wingActivities, wingRoomAt } from './wardWing'
 import { WORKSHOP_BOXES, workshopActivities } from './workshopLayout'
 
 export type Opens = DialogueAction['open']
@@ -53,6 +54,11 @@ export interface Bay {
   tone: { box: string; title: string; button: string }
   boxes: Solid[]
   activities: () => Activity[]
+  /**
+   * The floor goes on through the right-hand wall (the hospital's ward wing):
+   * its boxes include that wall, with the doorway, in place of the office's.
+   */
+  opensWall?: boolean
 }
 
 const tool = (id: string): Opens => ({ app: 'tool', tool: id })
@@ -66,8 +72,9 @@ const BAYS: Record<Bay['kind'], Bay> = {
     button: 'Go to the bedside (Ward Systems)',
     goTo: 'bedside',
     tone: { box: 'bg-teal-50', title: 'text-teal-900', button: 'text-teal-800' },
-    boxes: WARD_BOXES,
-    activities: wardActivities,
+    boxes: [...WARD_BOXES, ...WING_BOXES],
+    activities: () => [...wardActivities(), ...wingActivities()],
+    opensWall: true,
   },
   workshop: {
     kind: 'workshop',
@@ -184,6 +191,11 @@ export function roomAt(
   bay: Bay | null,
   theme: Theme,
 ): string | null {
+  // The hospital's ward wing, through Bay A's outer wall.
+  if (bay?.opensWall) {
+    const wing = wingRoomAt(x, z)
+    if (wing) return wing
+  }
   if (x > 5.3 && z > -0.8) return bay?.room ?? 'The IT corner'
   const rooms = ROOM_NAMES[theme]
   if (!rooms) return null
@@ -201,10 +213,15 @@ const WITHOUT_IT_CORNER = OFFICE_BOXES.filter(
     !(b.x === IT_BENCH.x && b.z === IT_BENCH.z),
 )
 
+/** Without the right-hand wall too (a bay that goes on through it brings its own). */
+const WITHOUT_RIGHT_WALL = WITHOUT_IT_CORNER.filter((b) => !(b.x === 12.1 && b.z === 0.5))
+
 /** What the player cannot walk through on a floor with this corner and theme. */
 export function floorWith(bay: Bay | null, theme: Theme = 'office'): Solid[] {
   return [
-    ...(bay ? [...WITHOUT_IT_CORNER, ...bay.boxes] : OFFICE_BOXES),
+    ...(bay
+      ? [...(bay.opensWall ? WITHOUT_RIGHT_WALL : WITHOUT_IT_CORNER), ...bay.boxes]
+      : OFFICE_BOXES),
     ...THEME_BOXES[theme],
   ]
 }
