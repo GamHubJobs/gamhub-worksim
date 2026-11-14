@@ -86,3 +86,12 @@ Northbank's floor has a small workshop where the office has its IT corner
 - **Browser tests:** `tests/e2e/engineering-services.spec.ts`:
   - the circuit task done in the app and marked 100%;
   - lockout-tagout enforced on a work order.
+
+## The fabrication shop
+
+Beyond the workshop, through a doorway in its outer wall
+(`src/office/scene/fabWing.ts`): a lathe and its fabricator, a welding bay
+behind screens (hot work only under a permit, with a fire watch), an
+inspection bench with a surface plate, steel stock, a forklift and the
+roller shutter to the yard. Works Desk opens at the permit board, the
+inspection bench and the lathe.

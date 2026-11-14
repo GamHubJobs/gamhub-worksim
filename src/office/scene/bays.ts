@@ -34,7 +34,10 @@ import {
   type Theme,
 } from './themeLayout'
 import { WARD_BOXES, wardActivities } from './wardLayout'
-import { WING_BOXES, wingActivities, wingRoomAt } from './wardWing'
+import { WARD_WING } from './wardWing'
+import { FAB_WING } from './fabWing'
+import { LAW_WING } from './lawWing'
+import type { WingPlan } from './wingShell'
 import { WORKSHOP_BOXES, workshopActivities } from './workshopLayout'
 
 export type Opens = DialogueAction['open']
@@ -55,10 +58,11 @@ export interface Bay {
   boxes: Solid[]
   activities: () => Activity[]
   /**
-   * The floor goes on through the right-hand wall (the hospital's ward wing):
-   * its boxes include that wall, with the doorway, in place of the office's.
+   * The workplace's own wing, through the floor's right-hand wall (the ward's
+   * corridor and side rooms, the fabrication shop, the records room): its
+   * boxes include that wall, with the doorway, in place of the office's.
    */
-  opensWall?: boolean
+  wing?: WingPlan
 }
 
 const tool = (id: string): Opens => ({ app: 'tool', tool: id })
@@ -72,9 +76,9 @@ const BAYS: Record<Bay['kind'], Bay> = {
     button: 'Go to the bedside (Ward Systems)',
     goTo: 'bedside',
     tone: { box: 'bg-teal-50', title: 'text-teal-900', button: 'text-teal-800' },
-    boxes: [...WARD_BOXES, ...WING_BOXES],
-    activities: () => [...wardActivities(), ...wingActivities()],
-    opensWall: true,
+    boxes: WARD_BOXES,
+    activities: wardActivities,
+    wing: WARD_WING,
   },
   workshop: {
     kind: 'workshop',
@@ -86,6 +90,7 @@ const BAYS: Record<Bay['kind'], Bay> = {
     tone: { box: 'bg-amber-50', title: 'text-amber-900', button: 'text-amber-800' },
     boxes: WORKSHOP_BOXES,
     activities: workshopActivities,
+    wing: FAB_WING,
   },
   courtroom: {
     kind: 'courtroom',
@@ -97,6 +102,7 @@ const BAYS: Record<Bay['kind'], Bay> = {
     tone: { box: 'bg-indigo-50', title: 'text-indigo-900', button: 'text-indigo-800' },
     boxes: COURTROOM_BOXES,
     activities: courtroomActivities,
+    wing: LAW_WING,
   },
   postroom: {
     kind: 'postroom',
@@ -192,8 +198,8 @@ export function roomAt(
   theme: Theme,
 ): string | null {
   // The hospital's ward wing, through Bay A's outer wall.
-  if (bay?.opensWall) {
-    const wing = wingRoomAt(x, z)
+  if (bay?.wing) {
+    const wing = bay.wing.roomAt(x, z)
     if (wing) return wing
   }
   if (x > 5.3 && z > -0.8) return bay?.room ?? 'The IT corner'
@@ -220,7 +226,11 @@ const WITHOUT_RIGHT_WALL = WITHOUT_IT_CORNER.filter((b) => !(b.x === 12.1 && b.z
 export function floorWith(bay: Bay | null, theme: Theme = 'office'): Solid[] {
   return [
     ...(bay
-      ? [...(bay.opensWall ? WITHOUT_RIGHT_WALL : WITHOUT_IT_CORNER), ...bay.boxes]
+      ? [
+          ...(bay.wing ? WITHOUT_RIGHT_WALL : WITHOUT_IT_CORNER),
+          ...bay.boxes,
+          ...(bay.wing?.boxes ?? []),
+        ]
       : OFFICE_BOXES),
     ...THEME_BOXES[theme],
   ]
@@ -231,5 +241,9 @@ export const floorBoxes = (): Solid[] => floorWith(activeBay(), activeTheme())
 
 /** Everything the player can do in the workplace's own corner and rooms. */
 export function workplaceActivities(bay: Bay | null, theme: Theme): Activity[] {
-  return [...(bay?.activities() ?? []), ...themeActivities(theme)]
+  return [
+    ...(bay?.activities() ?? []),
+    ...(bay?.wing?.activities() ?? []),
+    ...themeActivities(theme),
+  ]
 }

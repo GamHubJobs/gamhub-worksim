@@ -58,8 +58,9 @@ describe.each(BAY_KINDS)('the %s workplace', (kind) => {
     expect(boxes.length).toBe(
       floorWith(null).length -
         2 -
-        (bay.opensWall ? 1 : 0) +
+        (bay.wing ? 1 : 0) +
         bay.boxes.length +
+        (bay.wing?.boxes.length ?? 0) +
         THEME_BOXES[theme].length,
     )
   })

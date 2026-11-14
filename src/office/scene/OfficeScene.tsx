@@ -37,7 +37,10 @@ import {
 import { WardBay } from './ward'
 import { activeBay, activeTheme, floorBoxes, roomAt, workplaceActivities } from './bays'
 import { DeskDressing } from './deskStyles'
-import { SPLIT_RIGHT_WALL } from './wardWing'
+import { SPLIT_RIGHT_WALL } from './wingShell'
+import { WardWing } from './wardWing.view'
+import { FabWing } from './fabWing.view'
+import { LawWing } from './lawWing.view'
 import { overShoulder } from './overShoulder'
 import type { Activity } from '../../world/interaction/activity'
 import { deskStyleFor, deskTop } from './deskStyle'
@@ -398,6 +401,7 @@ function OfficeScene(props: OfficeSceneProps) {
         />
         <ManagerOffice />
         <CornerFor itJobs={props.itJobs} />
+        <WingFor />
         <ThemeDressing theme={activeTheme()} />
         <BreakRoom onInteract={props.onInteract} />
         {live && (
@@ -806,6 +810,15 @@ function Interactive({
 }
 
 // ---------------------------------------------------------------------------
+// The workplace's own wing, beyond the right-hand wall (wingShell.ts)
+function WingFor() {
+  const kind = activeBay()?.kind
+  if (kind === 'ward') return <WardWing />
+  if (kind === 'workshop') return <FabWing />
+  if (kind === 'courtroom') return <LawWing />
+  return null
+}
+
 // The building
 // ---------------------------------------------------------------------------
 
@@ -861,7 +874,7 @@ function Building({ playerName }: { playerName: string }) {
         position={[-12, WALL_HEIGHT / 2, 0.5]}
         color={COLORS.wall}
       />
-      {activeBay()?.opensWall ? (
+      {activeBay()?.wing ? (
         // The ward goes on through a doorway into its wing (wardWing.ts).
         SPLIT_RIGHT_WALL.map((w) => (
           <Box

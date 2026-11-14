@@ -92,6 +92,13 @@ is laid out like a courtroom of the fictional Westmark County Court.
   there. The panel beside the view has _Take your place at counsel's table_.
 - **The mock hearing** (Brightwater v Millstone) is held in this room.
 
+## The records room and conference suite
+
+Beyond the moot courtroom, through a doorway in its outer wall
+(`src/office/scene/lawWing.ts`): a corridor, the records room (rolling
+shelving, deed boxes, the scanning station and the records clerk) and the
+conference room. Matter Desk opens in both.
+
 ## Westmark County Court
 
 A real hearing is held at the court itself (`src/court/`): the player goes

@@ -190,6 +190,44 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Wings for engineering and law, on a shared wing shell
+
+**Built**
+
+- `office/scene/wingShell.ts`: what every workplace wing shares (where it
+  is, the doorway in the right-hand wall, the outer walls), and a
+  `WingPlan` (solids, things to do, rooms) that a corner can bring
+  (`Bay.wing`, replacing the ward-only `opensWall`). The ward wing uses it.
+- **Engineering: the fabrication shop** (`fabWing.ts`, `fabWing.view.tsx`),
+  beyond the workshop: sealed concrete with a yellow-lined walkway, a lathe
+  with its fabricator, steel stock on a rack, a welding bay behind amber
+  screens with its bench and gas bottle, the hot-work permit board, an
+  inspection bench with a surface plate, a parked forklift and the roller
+  shutter to the yard. Works Desk opens at the permit board, the inspection
+  bench and the lathe.
+- **Law: the records room and conference suite** (`lawWing.ts`,
+  `lawWing.view.tsx`), beyond the moot courtroom: a red-carpeted corridor
+  with framed prints, rolling shelving full of files and deed boxes, the
+  scanning station with the records clerk, and a conference room with a
+  long table, chairs, water and a screen. Matter Desk opens in each room.
+- `wingWorker.tsx`: the person at work in each wing (the Bay B nurse now
+  uses it too).
+- The wings are drawn by the office scene (`WingFor`), so the courthouse,
+  which shares the courtroom's furniture, does not get the law firm's wing.
+
+**Tested**
+
+- `wings.test.ts`: for every workplace, a wing (and a doorway) only where
+  there should be one; rooms named where they are and reachable; every
+  activity in the wing standable and reachable from the desk. Found and
+  fixed an inspection-bench spot 2 cm too close to the bench.
+- Browser tests through the workshop to the permit board, the inspection
+  bench and the lathe, and through the courtroom to the records and
+  conference rooms, each opening its tool on the device. Screenshots
+  checked. Full suite passes.
+
+---
+
 ## 2026-11-15 · The ward wing: the hospital laid out as a ward
 
 **Built**

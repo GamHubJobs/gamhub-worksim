@@ -98,14 +98,16 @@ showing through the wall reversed.
 
 ## Still not done
 
-- **The ward is the hospital's own floor; the law and engineering firms
-  share the office's walls.** The hospital now goes on through Bay A's outer
-  wall into a ward wing (a corridor, Bay B and two side rooms, one for
-  isolation), so it is laid out as a ward. The law firm and the engineering
-  firm have their own rooms, colours, desks and dressing (and the court is a
-  building of its own), but the office's outer walls and areas. Colleagues'
-  daily routes and the team's meeting places stay on the main floor; the
-  wing has its own nurse at work in Bay B.
+- **Each career-specific workplace has its own wing; the main floor's outer
+  walls are shared.** The hospital goes on into a ward wing (a corridor, Bay
+  B, two side rooms), the engineering firm into a fabrication shop (a lathe,
+  a welding bay behind screens, an inspection bench, steel stock, a forklift)
+  and the law firm into a records room and conference suite, each through a
+  doorway from its corner (`wingShell.ts`). The main floor itself (reception,
+  the desks, the manager's office, the break room) keeps the office's walls.
+  Colleagues' daily routes and the team's meeting places stay on the main
+  floor; each wing has its own person at work (the Bay B nurse, the
+  fabricator, the records clerk).
 - **The courthouse is reached from work only.** Westmark County Court has
   its own interior and hearing (see [SCENARIOS.md](SCENARIOS.md#at-court)),
   and stands on the high street (columns, steps, its crest), marked on the

@@ -8,13 +8,11 @@ import { Html } from '@react-three/drei'
 import { Box } from './parts'
 import { Bed } from './wardBed'
 import { MED_TROLLEY, WARD_BEDS } from './wardLayout'
-import { WardWing } from './wardWing.view'
 
 /** The bay, the medicines trolley, hand gel and the ward's signs. */
 export function WardBay() {
   return (
     <group>
-      <WardWing />
       {/* Hospital floor (pale vinyl) in the bay */}
       <Box size={[6.8, 0.01, 9]} position={[8.6, 0.012, 4.7]} color="#d9e7e4" />
       {WARD_BEDS.map((b) => (

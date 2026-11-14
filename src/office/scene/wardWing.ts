@@ -9,15 +9,23 @@
  */
 import type { Box as Solid } from '../../world/character/controller'
 import type { Activity } from '../../world/interaction/activity'
+import {
+  alongX,
+  alongZ,
+  inWing,
+  OUTER_WALLS,
+  SPLIT_RIGHT_WALL,
+  wall,
+  WING,
+  type WingPlan,
+} from './wingShell'
 
-/** The wing's extent, east of the office floor's right-hand wall (x 12.1). */
-export const WING = { x0: 12.2, x1: 22, z0: -8, z1: 9.2 }
+export { WING, WING_DOOR } from './wingShell'
+
 /** The wall between the corridor and the rooms. */
 export const CORRIDOR_WALL = 14.6
 /** Between the rooms: side room 1 | side room 2 | Bay B. */
 export const ROOM_SPLITS = { side1: -4.2, side2: -0.4 }
-/** The doorway from Bay A into the corridor, in the floor's right-hand wall. */
-export const WING_DOOR = { z0: -0.8, z1: 0.6 }
 /** Doors off the corridor. */
 export const DOORS = {
   side1: { z0: -6.8, z1: -5.6 },
@@ -48,32 +56,9 @@ export const LINEN_TROLLEY = { x: 13.3, z: 5.4 }
 /** The nurse looking after Bay B. */
 export const BAY_B_NURSE = { x: 18.4, z: 5.4 }
 
-const wall = (x: number, z: number, hx: number, hz: number, top = 2.9): Solid => ({
-  x,
-  z,
-  hx,
-  hz,
-  top,
-})
-/** A wall along z at x, from z0 to z1. */
-const alongZ = (x: number, z0: number, z1: number, top = 2.6) =>
-  wall(x, (z0 + z1) / 2, 0.08, (z1 - z0) / 2, top)
-/** A wall along x at z, from x0 to x1. */
-const alongX = (z: number, x0: number, x1: number, top = 2.6) =>
-  wall((x0 + x1) / 2, z, (x1 - x0) / 2, 0.08, top)
-
-/** The floor's right-hand wall, with the doorway into the wing. */
-export const SPLIT_RIGHT_WALL: Solid[] = [
-  wall(12.1, (-8 + WING_DOOR.z0) / 2, 0.15, (WING_DOOR.z0 + 8) / 2),
-  wall(12.1, (WING_DOOR.z1 + 9) / 2, 0.15, (9 - WING_DOOR.z1) / 2),
-]
-
 /** The wing's walls (drawn as they are). */
 export const WING_WALLS: Solid[] = [
-  // Outside: the far end, the far side and a low edge at the front (for the camera).
-  wall((WING.x0 + WING.x1) / 2, WING.z0 - 0.1, (WING.x1 - WING.x0) / 2 + 0.1, 0.15),
-  wall(WING.x1 + 0.1, (WING.z0 + WING.z1) / 2, 0.15, (WING.z1 - WING.z0) / 2),
-  wall((WING.x0 + WING.x1) / 2, WING.z1, (WING.x1 - WING.x0) / 2 + 0.1, 0.15, 0.3),
+  ...OUTER_WALLS,
   // The corridor wall, with the doors off it
   alongZ(CORRIDOR_WALL, WING.z0, DOORS.side1.z0),
   alongZ(CORRIDOR_WALL, DOORS.side1.z1, DOORS.side2.z0),
@@ -94,7 +79,7 @@ export const WING_BOXES: Solid[] = [
 
 /** Which room of the wing a point is in, or null when not in the wing. */
 export function wingRoomAt(x: number, z: number): string | null {
-  if (x <= 12.15) return null
+  if (!inWing(x)) return null
   if (x < CORRIDOR_WALL) return 'Ward corridor'
   if (z < ROOM_SPLITS.side1) return 'Side room 1 (isolation)'
   if (z < ROOM_SPLITS.side2) return 'Side room 2'
@@ -138,4 +123,11 @@ export function wingActivities(): Activity[] {
       ],
     },
   ]
+}
+
+/** The ward wing, as the ward's corner adds it (bays.ts). */
+export const WARD_WING: WingPlan = {
+  boxes: WING_BOXES,
+  activities: wingActivities,
+  roomAt: wingRoomAt,
 }

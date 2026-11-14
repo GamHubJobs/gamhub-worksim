@@ -120,3 +120,32 @@ test('Law: the moot courtroom in 3D, walked to counsel’s table, opens Matter D
   await expect(tool).toBeVisible({ timeout: 120_000 })
   await expect(tool).toContainText('How to use Matter Desk')
 })
+
+test('Law: through the moot courtroom to the records room and the conference room', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await startLegal(page)
+  await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
+    timeout: 120_000,
+  })
+  await page.evaluate('window.__worksim.setTime(1, 10 * 60 + 30)')
+  await page.waitForFunction('typeof window.__worksimWalk === "function"')
+  const room = page.getByTestId('room-here')
+  const here = page.getByTestId('in-place-tool')
+  await page.evaluate("window.__worksimWalk('records-room')")
+  await expect(room).toContainText('The records room', { timeout: 60_000 })
+  await page.waitForTimeout(1500)
+  await page.screenshot({ path: `${shots}/legal/law-records-room.png` })
+  await expect(here).toContainText('Matter Desk', { timeout: 60_000 })
+  await here.getByRole('button', { name: 'Step back (Esc)' }).click()
+  await expect(here).toBeHidden()
+  await page.evaluate("window.__worksimWalk('conference-room')")
+  await expect(room).toContainText('The conference room', { timeout: 60_000 })
+  await page.waitForTimeout(1500)
+  await page.screenshot({ path: `${shots}/legal/law-conference-room.png` })
+  await expect(here).toContainText('Matter Desk', { timeout: 60_000 })
+  await here.getByRole('button', { name: 'Step back (Esc)' }).click()
+  await expect(here).toBeHidden()
+})
