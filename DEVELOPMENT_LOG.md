@@ -190,6 +190,25 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Full browser regression after the scenario work
+
+- **The full suite** (284 tests, 3 at a time, one retry) took 2.1 hours on
+  this machine:
+  - 241 passed and 15 were flaky (passed on retry);
+  - 16 failed twice; 12 are skipped by design (opt-in screenshot tours).
+- **The 16 re-run with less load:** 14 passed.
+- **The remaining two:**
+  - **Portfolio** (passed work added back): it allowed 5 seconds for a
+    submission's score to appear. Since the code runner's time limit now starts
+    once the runner has loaded (the earlier fix), grading waits for that load
+    instead of failing fast. The test now waits up to 60 seconds; all 3
+    portfolio tests pass.
+  - **The full first week:** passes alone (58 s). It also failed under load in
+    the regression before this work.
+- **Conclusion:** no failures remain that are not caused by machine load.
+  Flakiness under load is mostly long tests at real speed and first loads of
+  the code runner; it is not fixed here.
+
 ## 2026-11-15 · Routes round furniture, and the desk area made each workplace's own
 
 - **Routes round furniture:** people in a scene plan a route on the same

@@ -27,7 +27,8 @@ async function submitCode(page: Page, code: string) {
   await page.getByRole('button', { name: /Submit (again )?to Samuel/ }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click()
   const score = page.getByTestId('submission-results').getByTestId('score')
-  await expect(score).toBeVisible()
+  // Grading runs in the code worker, which waits to load on a busy machine.
+  await expect(score).toBeVisible({ timeout: 60_000 })
   const text = await score.textContent()
   await page.getByRole('button', { name: 'Back to the code' }).click()
   return text
