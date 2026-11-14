@@ -9,6 +9,7 @@ import { useState } from 'react'
 import type { Line, Scenario } from '../content/scenarios/types'
 import { describeEffects } from '../game/scenes'
 import { bandFor, beatOf, percentOf, type Run } from '../game/scenarios'
+import { ScenarioAiFeedback } from './ScenarioAiFeedback'
 
 const BAND_NAME = { excellent: 'Excellent', good: 'Good', pass: 'Pass', poor: 'Not yet' }
 
@@ -82,10 +83,24 @@ export function ScenarioPanel({
   )
 
   let body: React.ReactNode
+  // Just said something in their own words: coaching from their own AI model, if on.
+  const last = live.run.answers.at(-1)
+  const lastBeat = last && scenario.beats.find((b) => b.id === last.beat)
+  const spoken =
+    replying && live.step === 0 && lastBeat?.kind === 'speak' && last
+      ? {
+          prompt: fill(lastBeat.prompt),
+          answer: last.answer,
+          mentions: lastBeat.mentions,
+          model: fill(lastBeat.model),
+          scenario: scenario.title,
+        }
+      : null
   if (replying) {
     body = (
       <>
         {said(live.reply[live.step])}
+        {spoken && <ScenarioAiFeedback key={last!.beat} spoken={spoken} />}
         {continueButton}
       </>
     )

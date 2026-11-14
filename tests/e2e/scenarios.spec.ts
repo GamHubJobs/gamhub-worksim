@@ -207,3 +207,85 @@ for (const [id, career, title, verdict, key] of CAREERS) {
     await expect(page.getByTestId('live-scenarios')).toContainText('Best so far: 100%')
   })
 }
+
+test('Law: coaching on the closing from the player’s own AI model, without changing the score', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  // The player has turned on a model of their own (through the bridge) and agreed.
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'gamhub-worksim:ai-settings',
+      JSON.stringify({ engine: 'bridge', consent: true, mode: 'learning' }),
+    )
+  })
+  let sent = ''
+  await page.route('http://127.0.0.1:8787/**', async (route) => {
+    const request = route.request()
+    const headers = {
+      'access-control-allow-origin': request.headers().origin ?? '*',
+      'access-control-allow-headers': 'content-type',
+      'access-control-allow-methods': 'GET, POST, OPTIONS',
+      'content-type': 'application/json',
+    }
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers })
+    if (request.url().endsWith('/v1/status'))
+      return route.fulfill({
+        headers,
+        body: JSON.stringify({
+          providers: { anthropic: { ready: true, model: 'test-model' } },
+          limit: 10,
+          used: 0,
+        }),
+      })
+    sent = JSON.stringify(request.postDataJSON())
+    return route.fulfill({
+      headers,
+      body: JSON.stringify({
+        text: 'Good use of the hidden-defect point. Name Harlow and the storage log next time.',
+        model: 'test-model',
+      }),
+    })
+  })
+  await start(page, /Law & Legal Services/)
+  await begin(page, 'Hearing: Brightwater v Millstone')
+  const panel = page.getByTestId('scenario')
+  // Play well up to the closing, then say something short of its own.
+  for (let guard = 0; guard < 150; guard++) {
+    if (await panel.getByRole('textbox').isVisible()) break
+    const cont = panel.getByRole('button', { name: 'Continue' })
+    if (await cont.isVisible()) {
+      await cont.click()
+      continue
+    }
+    const answer = (await page.evaluate('window.__worksimScenarioAnswer(true)')) as {
+      kind: string
+      label: string
+    } | null
+    if (!answer) continue
+    const label = answer.label.replaceAll('{name}', 'Alex')
+    if (answer.kind === 'choose')
+      await panel.getByRole('button', { name: label, exact: true }).click()
+    else if (answer.kind === 'exhibit')
+      await panel
+        .getByRole('button', { name: `Present ${label.split(':')[0]}`, exact: true })
+        .click()
+  }
+  await panel
+    .getByRole('textbox')
+    .fill('The mould was hidden inside the sacks, so we should win.')
+  await panel.getByRole('button', { name: 'Say it' }).click()
+  const coaching = page.getByTestId('scenario-ai')
+  await coaching.getByRole('button', { name: /coaching on what you said/ }).click()
+  await expect(coaching).toContainText('Name Harlow and the storage log next time')
+  await expect(coaching).toContainText('test-model')
+  expect(sent).toContain('The mould was hidden inside the sacks')
+  expect(sent).not.toContain('Alex')
+  await page.screenshot({
+    path: `${shots}/scenarios/law-hearing-ai-coaching.png`,
+  })
+  // The rubric, not the model, sets the score: one of four points covered.
+  await panel.getByRole('button', { name: 'Continue' }).click()
+  await panel.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByTestId('scenario-result')).toBeVisible()
+})
