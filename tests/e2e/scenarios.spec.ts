@@ -136,6 +136,20 @@ test('Law: a poor hearing loses the case, and the court says why', async ({ page
 
 const CAREERS: Array<[string, RegExp, string, string, string]> = [
   [
+    'engineering-review',
+    /Engineering & Technical Services/,
+    'Design review: Mill Lane footbridge',
+    'Design review closed: safe parapet, the right drawings on site, the change agreed properly',
+    'rev',
+  ],
+  [
+    'it-incident',
+    /IT Help Desk/,
+    'Major incident: email is down',
+    'Major incident handled: the board got its papers and the company was kept informed',
+    'untested',
+  ],
+  [
     'law-interview',
     /Law & Legal Services/,
     'First interview with a new client',

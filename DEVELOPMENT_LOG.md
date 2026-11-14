@@ -190,6 +190,31 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Scenarios: a design review (Engineering) and a major incident (IT Help Desk)
+
+- **Engineering, design review for the Mill Lane footbridge** in the project
+  room:
+  - the client wants the parapet below the standard: hold the standard and
+    offer glass;
+  - the contractor is building from a superseded revision: stop, issue rev C,
+    withdraw rev B;
+  - a wider deck becomes change request CR-04, with its cost and time;
+  - protected bats need the ecologist's advice;
+  - the minutes record each action and its owner.
+- **IT Help Desk, major incident: email is down:**
+  - declare it, with one owner and one master ticket;
+  - the provider's status page shows the cause;
+  - updates go out every 30 minutes on Teams and the intranet;
+  - turn down an untested fix demanded by the Finance Director, and offer a
+    workaround;
+  - confirm with users before closing, and write the review.
+- **Tests:**
+  - both pass every unit check (61 scenario checks) and were played to their
+    best outcome in the browser;
+  - screenshots inspected and used to reposition the cast and camera: the
+    contractor was blocking the drawings, and the IT team was at the frame
+    edges.
+
 ## 2026-11-15 · Scenarios: walking, coaching from the player's own AI, and two more scenarios
 
 ### What was built

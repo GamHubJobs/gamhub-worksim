@@ -60,7 +60,7 @@ the player answers, and what they do changes the outcome and the career.
 | Data Analysis            | Presenting findings to the sales director         | The insights wall                            | leads with the insight, picks the right chart, resists causation claims and dropping data, explains sample size, recommends a test                                              |
 | Digital Marketing        | Campaign review with a client                     | The content studio                           | reads cost per booking, not clicks, turns down a misleading claim, proposes an A/B test, sets the plan                                                                          |
 
-Two more:
+More scenarios:
 
 - **Law, a first interview with a new client** in the client meeting room: a
   conflict check before details, identity and an engagement letter, open
@@ -69,6 +69,13 @@ Two more:
 - **Healthcare, admitting a new patient** to bed 4A-4: consent, new
   confusion, falls prevention, a pressure area, a confidentiality phone call,
   escalating hip pain and the admission note.
+- **Engineering, a design review** in the project room: holding the parapet
+  standard, a contractor building from a superseded drawing, a formal change
+  request with its cost and time, protected bats, and the minutes.
+- **IT Help Desk, a major incident:** email down for everyone before a board
+  meeting. Declaring it, the supplier's status page, updates through channels
+  that still work, resisting an untested fix under pressure, confirming with
+  users, and the review.
 
 The first scenario of each career also includes that career's meeting-case decision.
 
@@ -89,7 +96,7 @@ The first scenario of each career also includes that career's meeting-case decis
 - **No free-form AI conversation:** the cast's responses are written for
   each answer. Answers in the player's own words are marked by a rubric, not
   by an AI model.
-- **Scenarios per career:** two in Law and Healthcare, one elsewhere. The
+- **Scenarios per career:** two in Law, Healthcare, Engineering and IT Help Desk, one elsewhere. The
   engine and stage take more without code changes.
 - **AI coaching:** a player with their own model turned on in WorkSim AI can
   ask it for coaching after an answer in their own words. It never changes the
