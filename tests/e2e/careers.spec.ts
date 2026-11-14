@@ -17,7 +17,7 @@ async function startCareer(page: Page, name: string, career: string) {
   await page.getByRole('radio', { name: new RegExp(career) }).check()
   await page.getByLabel('Your first name').fill(name)
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
 }
 
 test('an Accounting career: its own manager, tools and a first task done end to end', async ({

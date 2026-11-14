@@ -79,6 +79,7 @@ import { getCase } from '../content/cases'
 import { passTime } from '../game/workday'
 import { OfficeView } from '../office/OfficeView'
 import { InPlaceTool } from '../office/InPlaceTool'
+import type { Device } from '../office/device'
 import { HomeView } from '../home/HomeView'
 import { CityView } from '../city/CityView'
 import { enterPlace, goOutside } from '../game/city'
@@ -257,7 +258,11 @@ export function Desktop({
   const [view, setViewState] = useState<View>(() => readLastView() ?? DEFAULT_VIEW)
   // A tool used where it is in the workplace (at the bedside, at counsel's table),
   // open over the 3D room rather than on the work computer (office/InPlaceTool.tsx).
-  const [inPlace, setInPlace] = useState<{ view: View; where: string } | null>(null)
+  const [inPlace, setInPlace] = useState<{
+    view: View
+    where: string
+    device: Device
+  } | null>(null)
   // Only in the office: on the computer (or after the day) it is put away.
   useEffect(() => {
     if (view.app !== 'office') setInPlace(null)
@@ -939,7 +944,10 @@ export function Desktop({
               openEvent={view.event}
               onGo={(spot) => setView({ app: 'office', spot })}
               onUseComputer={(open) => setView(open ?? { app: 'mail' })}
-              onUseHere={(open, where) => setInPlace({ view: open as View, where })}
+              onUseHere={(open, where, device) =>
+                setInPlace({ view: open as View, where, device })
+              }
+              usingHere={!!inPlace}
               onAct={act}
               sync={officeSync}
             />
@@ -947,6 +955,7 @@ export function Desktop({
               <AiHubContext.Provider value={aiHub}>
                 <InPlaceTool
                   where={inPlace.where}
+                  device={inPlace.device}
                   title={viewTitle(inPlace.view)}
                   onClose={closeInPlace}
                   onComputer={() => {

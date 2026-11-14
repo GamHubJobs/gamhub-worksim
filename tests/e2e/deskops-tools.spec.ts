@@ -25,7 +25,7 @@ async function startTask(page: Page, id: string, title: RegExp) {
   await page.getByRole('radio', { name: /IT Help Desk/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   // Walking and the activities in 3D go faster in tests (development builds only).
   await page.evaluate(
     "window.__worksimSpeed = 12; sessionStorage.setItem('worksim.testSpeed', '12')",
@@ -318,7 +318,7 @@ test('The Tools work in every queue: the first task gets the company estate', as
   await page.getByRole('radio', { name: /IT Help Desk/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Tasks')
   await page
     .getByRole('button', { name: /Triage the morning queue/ })

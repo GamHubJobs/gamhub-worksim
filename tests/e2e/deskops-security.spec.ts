@@ -14,7 +14,7 @@ async function startSecurityTask(page: Page) {
   await page.getByRole('radio', { name: /IT Help Desk/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Tasks')
   await page.evaluate(`window.__worksim.skipTo('security-incident')`)
   await page

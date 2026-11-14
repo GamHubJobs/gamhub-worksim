@@ -190,6 +190,33 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Tools used at the thing: over the shoulder, on its device
+
+**Built**
+
+- While a tool is open where it is, the camera closes in over the player's
+  shoulder on the thing they are using (`office/scene/overShoulder.ts`):
+  from behind and above, with the bed, table or bench to the left of the
+  device.
+- The tool shows on the device used there (`office/device.ts`): a tablet
+  on the ward (and elsewhere), a laptop with its keyboard edge at the law
+  firm, a rugged tablet with yellow bumpers in the workshop. The header says
+  where and on what ("At Bay A · on the tablet").
+- Browser tests now allow 30 seconds for the game to open (it had taken
+  longer than 5 under load, failing tests before anything they test).
+
+**Tested**
+
+- Unit tests of the camera position. The hospital, law and engineering
+  "walked to the object" browser tests pass; screenshots checked: the
+  patient's bed, counsel's table and the test bench beside each device.
+
+**Limitations**
+
+- The device is drawn over the 3D view, not as a screen inside the scene.
+
+---
+
 ## 2026-11-15 · The cast responds to choices and exhibits too
 
 **Built**

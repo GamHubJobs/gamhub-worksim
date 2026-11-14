@@ -14,7 +14,7 @@ async function startWifiTask(page: Page) {
   await page.getByRole('radio', { name: /IT Help Desk/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Tasks')
   await page.evaluate(`window.__worksim.skipTo('wifi-outage')`)
   await page
@@ -90,7 +90,7 @@ test('Overview, guidance with progressive hints, and the Knowledge Base', async 
 
   // After a reload: the hints used and the bookmark are kept.
   await page.reload()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Help Desk')
   await page
     .getByRole('button', { name: /Service desk: floor 2 Wi-Fi/ })

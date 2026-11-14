@@ -35,9 +35,10 @@ import {
 import { troubleOf } from '../game/incidents'
 import { isInteraction, meetingOf } from './scene/officeLayout'
 import { fill, getPerson, placeText } from '../content/departments'
-import { activeBay, opensFor } from './scene/bays'
+import { activeBay, activeTheme, opensFor } from './scene/bays'
 import { ScenarioPanel, type LiveState } from './ScenarioPanel'
 import { CourtPanel, type CourtVisit } from '../court/CourtPanel'
+import { deviceFor, type Device } from './device'
 import { backFromCourt, canGoToCourt, COURT_TRAVEL, goToCourt } from '../game/court'
 import { getScenario, scenariosFor } from '../content/scenarios'
 import { workplaceKind } from '../content/departments'
@@ -132,7 +133,13 @@ interface OfficeViewProps {
    * A tool used where it is (the bedside, counsel's table): opened over the
    * room, not on the computer. Without it, on the computer.
    */
-  onUseHere?: (open: NonNullable<DialogueAction['open']>, where: string) => void
+  onUseHere?: (
+    open: NonNullable<DialogueAction['open']>,
+    where: string,
+    device: Device,
+  ) => void
+  /** A tool is open where it is (the camera stays close on the thing). */
+  usingHere?: boolean
   onAct: Act
   /** Keeps the office's IT jobs and held-up colleagues in step after hands-on work. */
   sync?: OnSiteSync
@@ -190,6 +197,7 @@ export function OfficeView({
   onGo,
   onUseComputer,
   onUseHere,
+  usingHere = false,
   onAct,
   sync,
 }: OfficeViewProps) {
@@ -289,6 +297,8 @@ export function OfficeView({
   const walkable = webgl && !sceneFailed && ready
   const bay = activeBay()
   const [request, setRequest] = useState<{ id: string; nonce: number } | null>(null)
+  // The thing a tool was last opened at (the camera stays close on it while open).
+  const [focusAction, setFocusAction] = useState<string | null>(null)
   const ask = (id: string) => setRequest((r) => ({ id, nonce: (r?.nonce ?? 0) + 1 }))
 
   /** Uses something: walks there and does it, or at once without 3D. */
@@ -326,8 +336,14 @@ export function OfficeView({
     const bayNow = activeBay()
     const opens = opensFor(action, bayNow)
     if (!opens) return
-    if (onUseHere) onUseHere(opens, room ?? bayNow?.room ?? fill(placeText(current).name))
-    else onUseComputer(opens)
+    if (onUseHere) {
+      setFocusAction(action)
+      onUseHere(
+        opens,
+        room ?? bayNow?.room ?? fill(placeText(current).name),
+        deviceFor(activeTheme()),
+      )
+    } else onUseComputer(opens)
   }
 
   /** Arrived at equipment and used it (E): close in on it. */
@@ -765,6 +781,7 @@ export function OfficeView({
                       talkingTo={dialogue?.speaker ?? null}
                       itJobs={itJobs}
                       scenarios={here.map((sc) => sc.id).join(',')}
+                      focus={usingHere ? focusAction : null}
                       liveScenario={live?.id ?? null}
                       liveBeat={live?.run.at}
                       liveSpeaker={liveSpeaker}

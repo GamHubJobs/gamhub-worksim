@@ -9,7 +9,7 @@ async function startAccounting(page: Page) {
   await page.getByRole('radio', { name: /Accounting/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Tasks')
 }
 

@@ -12,7 +12,7 @@ async function startUnlockTask(page: Page) {
   await page.getByRole('radio', { name: /IT Help Desk/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Tasks')
   await page.evaluate(`window.__worksim.skipTo('account-unlock')`)
   await page
@@ -152,7 +152,7 @@ test('verified, approved, then unlocked: the ticket resolves, and the record sur
 
   // Reload: the tickets, their history and the record are as they were.
   await page.reload()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Help Desk')
   await page
     .getByRole('button', { name: /account lockouts/ })

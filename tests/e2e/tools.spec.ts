@@ -7,7 +7,7 @@ async function startCareer(page: Page, career: string) {
   await page.getByRole('radio', { name: new RegExp(career) }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
 }
 
 const apps = (page: Page) => page.getByRole('navigation', { name: 'Apps' })

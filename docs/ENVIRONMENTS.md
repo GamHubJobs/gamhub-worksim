@@ -113,9 +113,11 @@ showing through the wall reversed.
   walnut desks at the law firm), but in the same two rows, so colleagues sit
   where they always did. A real nurses' station counter, at standing height,
   would mean new seats and routes.
-- **Tools open over the room, not inside it.** A tool used at an object
-  (the bedside, counsel's table, the test bench) now opens in a frame over
-  the 3D room, beside the player, instead of the view switching to the work
-  computer. It is still a flat window over the scene, not a screen or
-  clipboard drawn in 3D.
+- **Tools are held up, not drawn into the scene.** A tool used at an object
+  (the bedside, counsel's table, the test bench) opens on the device used
+  there (a tablet on the ward, a laptop at the law firm, a rugged tablet in
+  the workshop) beside the player, with the camera close over their
+  shoulder on the thing. The device is drawn over the 3D view, not as a
+  mesh in the room: a screen rendered inside the 3D scene would be hard to
+  read and to type into.
 - **The city and home** were not part of this audit.

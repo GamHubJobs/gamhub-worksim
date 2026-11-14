@@ -37,6 +37,7 @@ import {
 import { WardBay } from './ward'
 import { activeBay, activeTheme, floorBoxes, roomAt, workplaceActivities } from './bays'
 import { DeskDressing } from './deskStyles'
+import { overShoulder } from './overShoulder'
 import { deskStyleFor, deskTop } from './deskStyle'
 import { DevTeamArea, InsightsWall, PostRoom, RecordsRoom, Studio } from './corners'
 import { PALETTE } from './themeLayout'
@@ -254,6 +255,11 @@ export interface OfficeSceneProps {
   liveBeat?: string
   liveSpeaker?: string | null
   liveGesture?: Gesture
+  /**
+   * A tool open where it is (office/InPlaceTool.tsx): the action of the thing it
+   * was opened at. The camera closes in over the player's shoulder on it.
+   */
+  focus?: string | null
 }
 
 export interface ItJobMark {
@@ -375,6 +381,7 @@ function OfficeScene(props: OfficeSceneProps) {
           itJobs={props.itJobs}
           scenarios={props.scenarios}
           stage={live ? live.camera : null}
+          focus={props.focus ?? null}
         />
       ) : (
         <CameraRig spot={props.spot} />
@@ -591,6 +598,7 @@ function OfficeWalker({
   itJobs,
   scenarios,
   stage,
+  focus,
 }: {
   walk: OfficeWalk
   spot: SpotId
@@ -598,6 +606,7 @@ function OfficeWalker({
   itJobs?: string
   scenarios?: string
   stage: Scenario['camera'] | null
+  focus: string | null
 }) {
   const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
   const hands = useRef<Hands>({ left: null, right: null })
@@ -618,6 +627,22 @@ function OfficeWalker({
     })
     return [...base, ...own, ...live, ...(bay ? [] : itActivities(desks))]
   }, [base, itJobs, scenarios])
+  // A tool open at a thing: over the shoulder, the thing to the left of the
+  // frame (which takes the right of the view). Worked out once, where the
+  // player stands when it opens.
+  const focusView = useMemo(() => {
+    if (!focus) return null
+    const near = activities
+      .filter((a) => a.action === focus)
+      .sort(
+        (a, b) =>
+          Math.hypot(a.anchor.x - now.current.x, a.anchor.z - now.current.z) -
+          Math.hypot(b.anchor.x - now.current.x, b.anchor.z - now.current.z),
+      )[0]
+    return near ? overShoulder(near.anchor) : null
+    // Only when a tool opens or closes, not as the player's place changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus])
   const area = useRef<SpotId>(spot)
   const onArea = walk.onArea
   const room = useRef<string | null>(null)
@@ -663,7 +688,7 @@ function OfficeWalker({
       now={now}
       hands={hands}
       startOrbit={{ yaw: 0.5, pitch: 0.5, distance: 4.2 }}
-      stage={stage}
+      stage={stage ?? focusView}
     />
   )
 }

@@ -18,7 +18,7 @@ test('IT operations competencies, service record and completion in Readiness', a
   await page.getByRole('radio', { name: /IT Help Desk/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Tasks')
   // Every earlier task passed (development helper), up to the last one.
   await page.evaluate(`window.__worksim.skipTo('full-day')`)

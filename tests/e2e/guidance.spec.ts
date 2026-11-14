@@ -15,7 +15,7 @@ async function newPlayer(page: Page, path = '/') {
   await page.getByRole('radio', { name: /IT Help Desk/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
 }
 
 test('window controls: minimise to the taskbar, maximise and restore, close', async ({

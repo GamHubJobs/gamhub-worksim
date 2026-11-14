@@ -85,7 +85,7 @@ test('passing a task captures exactly what was handed in, once', async ({ page }
 
   // Everything survives a reload.
   await page.reload()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   expect(await readTable(page, 'portfolioItems')).toHaveLength(1)
 
   // The Portfolio app shows the item, how it was checked, and the code as handed in.
@@ -206,7 +206,7 @@ test('passed work missing from the portfolio is added back when WorkSim opens', 
   expect(await readTable(page, 'portfolioItems')).toEqual([])
 
   await page.reload()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await expect.poll(async () => (await readTable(page, 'portfolioItems')).length).toBe(1)
   expect(await readTable(page, 'portfolioFiles')).toHaveLength(1)
 

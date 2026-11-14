@@ -11,7 +11,7 @@ async function startWifiTask(page: Page) {
   await page.getByRole('radio', { name: /IT Help Desk/ }).check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Tasks')
   await page.evaluate(`window.__worksim.skipTo('wifi-outage')`)
   await page
@@ -150,7 +150,7 @@ test('Floor 2 Wi-Fi: the ticket resolves when the access point is fixed, and not
 
   // The queue, its history and the systems are kept: reload and look again.
   await page.reload()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await openApp(page, 'Help Desk')
   await page
     .getByRole('button', { name: /Floor 2 Wi-Fi|Service desk: floor 2 Wi-Fi/ })

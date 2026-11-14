@@ -18,7 +18,7 @@ async function startHealthcare(page: Page) {
   await option.check()
   await page.getByLabel('Your first name').fill('Alex')
   await page.getByRole('button', { name: 'Start my first day' }).click()
-  await expect(page.getByTestId('desktop')).toBeVisible()
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
 }
 
 async function startTask(page: Page, id: string, title: RegExp) {
