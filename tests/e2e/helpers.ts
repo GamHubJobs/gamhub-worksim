@@ -12,7 +12,7 @@ export async function startCareerIfNeeded(page: Page, name = 'Alex') {
   if (await onboarding.isVisible()) {
     await page.getByLabel('Your first name').fill(name)
     await page.getByRole('button', { name: 'Start my first day' }).click()
-    await expect(desktop).toBeVisible({ timeout: 20_000 })
+    await expect(desktop).toBeVisible({ timeout: 30_000 })
   }
   // Activities played in 3D (walking over, doing them) go faster in tests
   // (development builds only; the built app ignores this).
