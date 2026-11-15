@@ -71,10 +71,10 @@ test('conversations can be read aloud, each person in their own voice', async ({
   // The browser's speech, recorded (the test machine has no voices of its own).
   await page.addInitScript(() => {
     const said: Array<{ text: string; rate: number; pitch: number }> = []
-    ;(window as unknown as { __said: typeof said }).__said = said
-    Object.defineProperty(window, 'speechSynthesis', {
+    ;(globalThis as unknown as { __said: typeof said }).__said = said
+    Object.defineProperty(globalThis, 'speechSynthesis', {
       value: {
-        speak: (u: SpeechSynthesisUtterance) =>
+        speak: (u: { text: string; rate: number; pitch: number }) =>
           said.push({ text: u.text, rate: u.rate, pitch: u.pitch }),
         cancel: () => {},
         getVoices: () => [],
