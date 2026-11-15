@@ -192,6 +192,50 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-16 · Graphics and sound upgrade
+
+**Built**
+
+- One lighting system for every 3D view (`world/look/SceneLook.tsx`): soft
+  shadows, reflections from an environment drawn in the scene, and a look for
+  each kind of place; the street, places, home and courthouse had flat light.
+- Materials drawn in code (`world/look/surfaces.ts`): vinyl on the ward,
+  concrete in engineering, carpet, planks, tiles, paving, asphalt, brick.
+- The high street rebuilt: asphalt, paving and kerbs; brick and rendered fronts
+  with real windows (instanced), shop-front bands and cornices.
+- Work clothes by profession (`people.tsx`, `workwear.ts`): scrubs, clinical
+  coats, hi-vis, hoodies, hard hats, badges, stethoscopes; the office's cast
+  and the player are dressed for each workplace.
+- Sound: each workplace's own soundscape (ward, workshop, law firm, IT help
+  desk, software team) and the courthouse's; room acoustics; sounds placed in
+  the world (the doorbell); conversations read aloud with the browser's
+  voices (off by default).
+- Interface: line icons instead of emoji on the HUD, map and phone.
+
+**Found and fixed**
+
+- Footsteps doubled at home (made-up steps on top of the real walk).
+- The road markings floated; the paving was too large; the home's bulbs were
+  flat discs; the back of the reception wall blocked the break room's view;
+  the Friday cake was offered every day; the map's court label overlapped.
+- `scripts/measure-memory.mjs` and the sound test's footstep count were out
+  of date (the latter now judges steps per second actually walked).
+
+**Tested**
+
+- Full check (3,351 passed). Sound, office life, court, healthcare, legal,
+  city, delivery, repair, map, phone and game screen browser tests pass. A
+  visual tour of every career and place at High
+  (`visual.shots.spec.ts`); see [docs/VISUAL_QA.md](docs/VISUAL_QA.md).
+  Start-up and memory measured: unchanged or lower.
+
+**Known limitations**
+
+- Characters are simple shapes posed in code, not detailed models; voices are
+  whatever the browser has; few sounds are placed in the world. See
+  [docs/VISUAL_QA.md](docs/VISUAL_QA.md) and
+  [docs/GRAPHICS_AND_SOUND_ASSETS.md](docs/GRAPHICS_AND_SOUND_ASSETS.md).
+
 ## 2026-11-16 · Story 11: presentation and polish
 
 **Built**

@@ -400,6 +400,7 @@ function OfficeScene(props: OfficeSceneProps) {
           scenarios={props.scenarios}
           stage={live ? live.camera : null}
           focus={props.focus ?? null}
+          cake={cakeOn(props.day, props.minute)}
         />
       ) : (
         <CameraRig spot={props.spot} />
@@ -440,9 +441,7 @@ function OfficeScene(props: OfficeSceneProps) {
         />
       </PeopleDetail>
       {props.letter && <PromotionLetter />}
-      {CELEBRATION.days.includes((((props.day - 1) % 7) + 7) % 7) &&
-        props.minute >= CELEBRATION.start - 5 &&
-        props.minute < CELEBRATION.start + CELEBRATION.minutes && <FridayCake />}
+      {cakeOn(props.day, props.minute) && <FridayCake />}
       {SPOTS.map((s) => (
         <Marker
           key={s.id}
@@ -545,6 +544,7 @@ function OfficeWalker({
   scenarios,
   stage,
   focus,
+  cake,
 }: {
   walk: OfficeWalk
   spot: SpotId
@@ -553,6 +553,8 @@ function OfficeWalker({
   scenarios?: string
   stage: Scenario['camera'] | null
   focus: string | null
+  /** The team's Friday cake is on (its place in the break room is offered only then). */
+  cake: boolean
 }) {
   // The trainee dressed for the workplace (scrubs, hi-vis, a suit, office clothes).
   const playerLook = useMemo(() => playerWorkwear(workplaceKind(), PLAYER), [])
@@ -573,8 +575,13 @@ function OfficeWalker({
       const s = getScenario(id)
       return s ? [scenarioActivity(s)] : []
     })
-    return [...base, ...own, ...live, ...(bay ? [] : itActivities(desks))]
-  }, [base, itJobs, scenarios])
+    return [
+      ...base.filter((a) => a.action !== 'celebration' || cake),
+      ...own,
+      ...live,
+      ...(bay ? [] : itActivities(desks)),
+    ]
+  }, [base, itJobs, scenarios, cake])
   // A tool open at a thing: over the shoulder, the thing to the left of the
   // frame (which takes the right of the view). Worked out once, where the
   // player stands when it opens.
@@ -970,6 +977,15 @@ const BOOKSHELF_ANCHORS: AnchorSpec[] = [
 
 const RECEPTION_SIGN: [number, number, number] = [-6.6, 1.95, 2.4]
 
+/** Whether the team's Friday cake is on (or about to be: the cake is put out first). */
+function cakeOn(day: number, minute: number): boolean {
+  return (
+    CELEBRATION.days.includes((((day - 1) % 7) + 7) % 7) &&
+    minute >= CELEBRATION.start - 5 &&
+    minute < CELEBRATION.start + CELEBRATION.minutes
+  )
+}
+
 /** The Friday cake on the break room table, with plates round it (game/celebration.ts). */
 function FridayCake() {
   return (
@@ -1020,12 +1036,24 @@ function Reception() {
   useFrontOnly(sign, RECEPTION_SIGN, 0)
   return (
     <group>
-      {/* Feature wall with the company name */}
+      {/* Feature wall with the company name: painted in the accent on the entrance
+          side; the back (the break room's side) is plain wall, with two framed prints */}
+      <Box size={[5.2, 2.7, 0.16]} position={[-6.6, 1.35, 2.3]} color={COLORS.wall} />
       <Box
-        size={[5.2, 2.7, 0.18]}
-        position={[-6.6, 1.35, 2.3]}
+        size={[5.2, 2.7, 0.02]}
+        position={[-6.6, 1.35, 2.39]}
         color={PALETTE[activeTheme()].accent}
       />
+      {[-7.8, -5.4].map((x, i) => (
+        <group key={x} position={[x, 1.6, 2.205]}>
+          <Box size={[0.9, 0.65, 0.03]} position={[0, 0, 0]} color="#1f2937" />
+          <Box
+            size={[0.78, 0.53, 0.01]}
+            position={[0, 0, -0.02]}
+            color={i ? '#93c5fd' : '#fcd34d'}
+          />
+        </group>
+      ))}
       <Html
         transform
         position={RECEPTION_SIGN}
