@@ -7,12 +7,14 @@
  * drawn while the player is at court.
  */
 import { Canvas, useFrame, type RootState } from '@react-three/fiber'
+import { SceneLook } from '../world/look/SceneLook'
 import { memo, useMemo, useRef, useState, type RefObject } from 'react'
 import { getScenario } from '../content/scenarios'
 import type { Gesture } from '../content/scenarios/types'
 import { scenarioActivity } from '../game/scenarios'
 import { Ticker } from '../city/scene/interiors/common'
 import { PLAYER } from '../city/scene/interiors/kit'
+import { playerWorkwear } from '../office/scene/workwear'
 import { PeopleDetail } from '../office/scene/people'
 import { ScenarioStage } from '../office/scene/ScenarioStage'
 import { isLow, useGraphicsQuality } from '../ui/graphics'
@@ -117,13 +119,13 @@ function CourthouseScene(props: CourthouseSceneProps) {
         far: 80,
       }}
       gl={{ antialias: !low, powerPreference: 'default' }}
+      shadows={!low}
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
       data-testid="courthouse-canvas"
     >
       <Ticker fps={STILL ? 1 / 30 : low ? 2 : 24} />
       <color attach="background" args={['#e6edf3']} />
-      <hemisphereLight args={['#ffffff', '#a8a29e', 1.15]} />
-      <directionalLight position={[4, 9, -6]} intensity={0.75} color="#fff8ee" />
+      <SceneLook look="court" low={low} extent={13} center={[7, 0, 0]} />
       <World.Provider value={world}>
         <PeopleDetail low={low}>
           <Courthouse />
@@ -147,14 +149,7 @@ function CourthouseScene(props: CourthouseSceneProps) {
             onProgress={props.onProgress}
             onDone={(a, completed) => onDone(a.action, completed)}
             onReady={props.onReady}
-            look={{
-              ...PLAYER,
-              outfit: 'blazer',
-              top: '#1e293b',
-              trousers: '#1e293b',
-              under: '#f1f5f9',
-              tie: '#7f1d1d',
-            }}
+            look={playerWorkwear('courtroom', PLAYER)}
             surface="tile"
             low={low}
             now={now}

@@ -13,9 +13,9 @@ export function look(
   return { skin, hair, hairColor, outfit, top, trousers, sleeves: 'long', ...more }
 }
 
-/** Dark robes over a white shirt. */
+/** Dark robes (a long gown, open over a white shirt). */
 export const ROBE = (skin: number, hair: HairStyle, hairColor: number, more = {}) =>
-  look(skin, hair, hairColor, 'blazer', '#111827', '#111827', {
+  look(skin, hair, hairColor, 'coat', '#111827', '#111827', {
     under: '#f8fafc',
     shoes: '#0f172a',
     ...more,
@@ -40,10 +40,21 @@ export const SCRUBS = (
   hairColor: number,
   color: string,
   more = {},
-) => look(skin, hair, hairColor, 'polo', color, color, { sleeves: 'short', ...more })
+) =>
+  look(skin, hair, hairColor, 'scrubs', color, color, {
+    sleeves: 'short',
+    badge: '#0f766e',
+    ...more,
+  })
 
+/** A hi-vis vest over a navy work polo, with an ID badge. */
 export const HI_VIS = (skin: number, hair: HairStyle, hairColor: number, more = {}) =>
-  look(skin, hair, hairColor, 'polo', '#f97316', '#334155', { sleeves: 'short', ...more })
+  look(skin, hair, hairColor, 'hivis', '#1e3a8a', '#334155', {
+    sleeves: 'short',
+    badge: '#ea580c',
+    shoes: '#3f2d1f',
+    ...more,
+  })
 
 export const SMART = (
   skin: number,

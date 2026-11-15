@@ -67,8 +67,21 @@ const HAIR_COLORS = [
 export type HairStyle =
   'short' | 'crop' | 'side' | 'long' | 'bob' | 'bun' | 'ponytail' | 'curly' | 'bald'
 
-/** What they wear on top. Blazers and cardigans show the shirt underneath. */
-export type Outfit = 'shirt' | 'blouse' | 'polo' | 'sweater' | 'blazer' | 'cardigan'
+/**
+ * What they wear on top. Blazers, cardigans and clinical coats show the shirt
+ * underneath; scrubs are a V-necked tunic; a hi-vis vest is worn over the top.
+ */
+export type Outfit =
+  | 'shirt'
+  | 'blouse'
+  | 'polo'
+  | 'sweater'
+  | 'blazer'
+  | 'cardigan'
+  | 'scrubs'
+  | 'coat'
+  | 'hivis'
+  | 'hoodie'
 
 export interface PersonLook {
   skin: number
@@ -90,6 +103,12 @@ export interface PersonLook {
   height?: number
   /** A resting smile, or a neutral, focused face. */
   smile?: boolean
+  /** Safety headwear (a hard hat), in its colour. */
+  hardhat?: string
+  /** A lanyard with an ID badge, in the lanyard's colour. */
+  badge?: string
+  /** A stethoscope round the neck. */
+  stethoscope?: boolean
 }
 
 /**
@@ -207,6 +226,21 @@ const GEO = {
   tie: new BoxGeometry(0.036, 0.24, 0.01),
   knot: new BoxGeometry(0.03, 0.026, 0.016),
   lens: new TorusGeometry(0.021, 0.0028, 6, 18),
+  // Workwear (see Outfit): the V of scrubs, a pocket, a vest's reflective bands, a hood,
+  // a coat's tails, a lanyard and badge, a stethoscope, a hard hat.
+  vee: new BoxGeometry(0.05, 0.05, 0.006),
+  pocket: new BoxGeometry(0.055, 0.05, 0.006),
+  band: new CylinderGeometry(0.134, 0.134, 0.028, 24, 1, true),
+  hood: new TorusGeometry(0.07, 0.032, 8, 16, Math.PI),
+  tailFront: new BoxGeometry(0.15, 0.42, 0.018),
+  tailBack: new BoxGeometry(0.32, 0.44, 0.018),
+  lanyard: new TorusGeometry(0.066, 0.0035, 4, 18, Math.PI),
+  card: new BoxGeometry(0.038, 0.054, 0.004),
+  scope: new TorusGeometry(0.072, 0.0065, 6, 20, Math.PI * 1.25),
+  tube: new CylinderGeometry(0.005, 0.005, 0.12, 6),
+  bell: new CylinderGeometry(0.014, 0.014, 0.008, 12),
+  dome: new SphereGeometry(0.133, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+  brim: new CylinderGeometry(0.155, 0.155, 0.012, 22),
   bridge: new BoxGeometry(0.022, 0.003, 0.003),
   temple: new BoxGeometry(0.003, 0.003, 0.1),
   button: new SphereGeometry(0.006, 6, 4),
@@ -365,19 +399,42 @@ export function Person({
       iris: mat('#2a1d16', 0.3),
       tie: mat(look.tie ?? '#1e3a8a', 0.6),
       frame: mat('#1f2937', 0.4, 0.3),
+      topShade: mat(shade(look.top, '#000000', 0.12), 0.88),
+      vest: mat('#d4f00f', 0.6),
+      reflect: mat('#e5e7eb', 0.25, 0.6),
+      lanyard: mat(look.badge ?? '#1d4ed8', 0.7),
+      steel: mat('#94a3b8', 0.3, 0.7),
+      rubber: mat('#1f2937', 0.6),
+      hat: mat(look.hardhat ?? '#facc15', 0.4),
     }),
-    [skin, hairColor, look.top, look.under, look.trousers, look.shoes, look.tie],
+    [
+      skin,
+      hairColor,
+      look.top,
+      look.under,
+      look.trousers,
+      look.shoes,
+      look.tie,
+      look.badge,
+      look.hardhat,
+    ],
   )
 
   const base = typing ? TYPING : seated ? SEATED : STANDING
   // With a rig, the body is laid out standing and lowered or laid down as a whole.
   const hipY = seated && !rig ? HIP.seated : HIP.standing
-  const sleeves = look.sleeves ?? (look.outfit === 'polo' ? 'short' : 'long')
+  const sleeves =
+    look.sleeves ??
+    (look.outfit === 'polo' || look.outfit === 'scrubs' ? 'short' : 'long')
   const armMaterial = m.top
   const forearmMaterial = sleeves === 'long' ? m.top : m.skin
-  const open = look.outfit === 'blazer' || look.outfit === 'cardigan'
+  const open =
+    look.outfit === 'blazer' || look.outfit === 'cardigan' || look.outfit === 'coat'
   const collared =
-    look.outfit === 'shirt' || look.outfit === 'blazer' || look.outfit === 'polo'
+    look.outfit === 'shirt' ||
+    look.outfit === 'blazer' ||
+    look.outfit === 'polo' ||
+    look.outfit === 'coat'
 
   useFrame(({ clock }, delta) => {
     const t = clock.elapsedTime + phase
@@ -596,6 +653,27 @@ export function Person({
             ))}
 
             <group ref={body}>
+              {look.outfit === 'coat' && (
+                <group position={[0, hipY - 0.17, 0]}>
+                  {/* A clinical coat's tails, to mid-thigh, open at the front */}
+                  {[-1, 1].map((side) => (
+                    <mesh
+                      key={side}
+                      geometry={GEO.tailFront}
+                      material={m.top}
+                      position={[side * 0.09 * width, 0, -0.105]}
+                      rotation={[0.06, 0, side * -0.05]}
+                    />
+                  ))}
+                  <mesh
+                    geometry={GEO.tailBack}
+                    material={m.top}
+                    position={[0, -0.01, 0.105]}
+                    scale={[width, 1, 1]}
+                    rotation={[-0.06, 0, 0]}
+                  />
+                </group>
+              )}
               {/* Hips */}
               <mesh
                 geometry={GEO.pelvis}
@@ -615,6 +693,26 @@ export function Person({
                   position={[0, 0.27, 0]}
                   scale={[1.4 * width, 1, 0.82]}
                 />
+                {look.outfit === 'hivis' && (
+                  <>
+                    {/* A hi-vis vest over the top, with two reflective bands */}
+                    <mesh
+                      geometry={GEO.torso}
+                      material={m.vest}
+                      position={[0, 0.25, 0]}
+                      scale={[1.47 * width, 0.86, 0.9]}
+                    />
+                    {[0.17, 0.3].map((y) => (
+                      <mesh
+                        key={y}
+                        geometry={GEO.band}
+                        material={m.reflect}
+                        position={[0, y, 0]}
+                        scale={[1.5 * width, 1, 0.92]}
+                      />
+                    ))}
+                  </>
+                )}
                 <Detail>
                   {open && (
                     <>
@@ -654,6 +752,94 @@ export function Person({
                         rotation={[-0.45, side * 0.3, side * 0.55]}
                       />
                     ))}
+                  {look.outfit === 'scrubs' && (
+                    <>
+                      {/* The V of the neckline, and a chest pocket with a pen */}
+                      <mesh
+                        geometry={GEO.vee}
+                        material={m.skin}
+                        position={[0, 0.5, -0.104]}
+                        rotation={[0, 0, Math.PI / 4]}
+                      />
+                      <mesh
+                        geometry={GEO.pocket}
+                        material={m.topShade}
+                        position={[-0.075 * width, 0.37, -0.107]}
+                      />
+                      <mesh
+                        geometry={GEO.tube}
+                        material={m.rubber}
+                        position={[-0.09 * width, 0.405, -0.111]}
+                        scale={[1, 0.35, 1]}
+                      />
+                    </>
+                  )}
+                  {look.outfit === 'hoodie' && (
+                    <>
+                      {/* The hood, lying at the back of the neck, and the front pocket */}
+                      <mesh
+                        geometry={GEO.hood}
+                        material={m.top}
+                        position={[0, 0.53, 0.05]}
+                        rotation={[Math.PI / 2 + 0.3, 0, 0]}
+                      />
+                      <mesh
+                        geometry={GEO.pocket}
+                        material={m.topShade}
+                        position={[0, 0.15, -0.107]}
+                        scale={[2.6, 1.2, 1]}
+                      />
+                    </>
+                  )}
+                  {look.badge && (
+                    <>
+                      {/* A lanyard round the neck, and the ID badge on it */}
+                      <mesh
+                        geometry={GEO.lanyard}
+                        material={m.lanyard}
+                        position={[0, 0.45, -0.09]}
+                        rotation={[0.2, 0, Math.PI]}
+                        scale={[0.75, 1.3, 1]}
+                      />
+                      <mesh
+                        geometry={GEO.card}
+                        material={m.white}
+                        position={[0, 0.345, -0.114]}
+                      />
+                      <mesh
+                        geometry={GEO.card}
+                        material={m.lanyard}
+                        position={[0, 0.365, -0.1165]}
+                        scale={[1, 0.25, 0.5]}
+                      />
+                    </>
+                  )}
+                  {look.stethoscope && (
+                    <>
+                      {/* A stethoscope round the neck, its tubes and chest piece in front */}
+                      <mesh
+                        geometry={GEO.scope}
+                        material={m.rubber}
+                        position={[0, 0.535, -0.01]}
+                        rotation={[Math.PI / 2, 0, Math.PI * 0.375 + Math.PI]}
+                      />
+                      {[-1, 1].map((side) => (
+                        <mesh
+                          key={side}
+                          geometry={GEO.tube}
+                          material={m.rubber}
+                          position={[side * 0.055, 0.47, -0.095]}
+                          rotation={[0.15, 0, side * 0.12]}
+                        />
+                      ))}
+                      <mesh
+                        geometry={GEO.bell}
+                        material={m.steel}
+                        position={[0.06, 0.4, -0.107]}
+                        rotation={[Math.PI / 2, 0, 0]}
+                      />
+                    </>
+                  )}
                   {look.tie && (
                     <>
                       <mesh
@@ -762,7 +948,7 @@ function Head({
 }: {
   look: PersonLook
   m: Record<
-    'skin' | 'skinShade' | 'lips' | 'hair' | 'white' | 'iris' | 'frame',
+    'skin' | 'skinShade' | 'lips' | 'hair' | 'white' | 'iris' | 'frame' | 'hat',
     MeshStandardMaterial
   >
   eyes: RefObject<Group | null>
@@ -874,7 +1060,15 @@ function Head({
           ))}
         </group>
       )}
-      <Hair style={look.hair} material={m.hair} />
+      {look.hardhat ? (
+        <group position={[0, c + 0.035, 0]}>
+          {/* A hard hat over the hair, its brim a little longer at the front */}
+          <mesh geometry={GEO.dome} material={m.hat} />
+          <mesh geometry={GEO.brim} material={m.hat} position={[0, 0.004, -0.012]} />
+        </group>
+      ) : (
+        <Hair style={look.hair} material={m.hair} />
+      )}
     </group>
   )
 }

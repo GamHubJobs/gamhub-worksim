@@ -9,13 +9,7 @@
 import { Anchors } from '../../world/AnchorPoints'
 import type { AnchorSpec } from '../../world/anchors'
 import { lowDpr } from '../../world/lowDpr'
-import {
-  ContactShadows,
-  Environment,
-  Html,
-  Lightformer,
-  useCursor,
-} from '@react-three/drei'
+import { ContactShadows, Html, useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import {
   memo,
@@ -26,8 +20,11 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import { Vector3, type Group, type Material, type Mesh, type WebGLRenderer } from 'three'
+import { Vector3, type Group, type Mesh, type WebGLRenderer } from 'three'
 import { activeEmployer } from '../../content/departments'
+import { SceneLook } from '../../world/look/SceneLook'
+import { dressAll, playerWorkwear } from './workwear'
+import type { LookId } from '../../world/look/looks'
 import { CELEBRATION } from '../../content/workday'
 import {
   activeDepartment,
@@ -359,6 +356,8 @@ function OfficeScene(props: OfficeSceneProps) {
   const live = props.liveScenario ? (getScenario(props.liveScenario) ?? null) : null
   // Who everyone is (names follow the department).
   const who = useMemo(() => officeWho(), [])
+  // Dressed for the workplace: scrubs on the ward, hi-vis in the workshop, suits at a law firm.
+  const castLooks = useMemo(() => dressAll(workplaceKind(), CAST_LOOKS), [])
   const start = getSpot(props.spot).camera
   // What the computer can do, and the player's choice in Settings.
   const [software, setLowPower] = useState(false)
@@ -389,7 +388,7 @@ function OfficeScene(props: OfficeSceneProps) {
           changes (the camera moving, a conversation) is still drawn at once. */}
       <Ticker fps={STILL ? 1 / 30 : lowPower ? 1 : 30} />
       <color attach="background" args={['#e6edf3']} />
-      <Lighting lowPower={!full} />
+      <SceneLook look={officeLook()} low={!full} extent={18} center={[4, 0, 0]} />
       {full && !STILL && <SlowWatch onSlow={() => setLowPower(true)} />}
       {props.walk ? (
         <OfficeWalker
@@ -432,7 +431,7 @@ function OfficeScene(props: OfficeSceneProps) {
           door={DOOR}
           day={props.day}
           minute={props.minute}
-          looks={CAST_LOOKS}
+          looks={castLooks}
           talkingTo={props.talkingTo}
           callers={props.callers}
           low={lowPower}
@@ -467,88 +466,10 @@ function OfficeScene(props: OfficeSceneProps) {
   )
 }
 
-/**
- * Daylight from the windows and the ceiling: a soft sky light, a sun that
- * casts real shadows, and an environment (drawn in the scene, not downloaded)
- * that gives screens, steel and the floor their reflections. Computers that
- * draw 3D in software get the plain lights only.
- *
- * Shadows are redrawn once a second rather than every frame: the furniture
- * never moves and the people only a little, so this costs very little.
- */
-function Lighting({ lowPower }: { lowPower: boolean }) {
-  const get = useThree((state) => state.get)
-  useEffect(() => {
-    if (lowPower) return
-    const { gl, scene } = get()
-    gl.shadowMap.autoUpdate = false
-    const refresh = () => {
-      scene.traverse((object) => {
-        const mesh = object as Mesh
-        if (!mesh.isMesh) return
-        const material = mesh.material as Material | Material[]
-        const solid = !Array.isArray(material) && !material.transparent
-        mesh.receiveShadow = solid
-        mesh.castShadow = solid && !mesh.userData.floor
-      })
-      gl.shadowMap.needsUpdate = true
-    }
-    refresh()
-    const timer = window.setInterval(refresh, 1000)
-    return () => {
-      window.clearInterval(timer)
-      gl.shadowMap.autoUpdate = true
-    }
-  }, [get, lowPower])
-
-  return (
-    <>
-      <hemisphereLight args={['#ffffff', '#b8a990', lowPower ? 1.4 : 0.85]} />
-      <directionalLight
-        position={[6, 12, 8]}
-        intensity={lowPower ? 1.5 : 1.9}
-        color="#fff8ee"
-        castShadow={!lowPower}
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-14}
-        shadow-camera-right={14}
-        shadow-camera-top={12}
-        shadow-camera-bottom={-12}
-        shadow-camera-near={1}
-        shadow-camera-far={40}
-        shadow-bias={-0.0004}
-        shadow-normalBias={0.025}
-      />
-      <directionalLight position={[-8, 6, -4]} intensity={0.35} color="#cfe3ff" />
-      {!lowPower && (
-        <Environment resolution={128} frames={1} environmentIntensity={0.55}>
-          {/* The ceiling's light panels and the windows */}
-          <Lightformer
-            form="rect"
-            intensity={2.2}
-            color="#fff7ed"
-            position={[0, 6, 0]}
-            rotation-x={Math.PI / 2}
-            scale={[18, 12, 1]}
-          />
-          <Lightformer
-            form="rect"
-            intensity={1.6}
-            color="#dbeafe"
-            position={[0, 2, -12]}
-            scale={[24, 3, 1]}
-          />
-          <Lightformer
-            form="rect"
-            intensity={0.7}
-            position={[0, 2, 12]}
-            rotation-y={Math.PI}
-            scale={[24, 3, 1]}
-          />
-        </Environment>
-      )}
-    </>
-  )
+/** The light of the workplace: clinical on the ward, a workshop's, or an office's. */
+function officeLook(): LookId {
+  const kind = workplaceKind()
+  return kind === 'ward' ? 'clinical' : kind === 'workshop' ? 'workshop' : 'office'
 }
 
 /**
@@ -632,6 +553,8 @@ function OfficeWalker({
   stage: Scenario['camera'] | null
   focus: string | null
 }) {
+  // The trainee dressed for the workplace (scrubs, hi-vis, a suit, office clothes).
+  const playerLook = useMemo(() => playerWorkwear(workplaceKind(), PLAYER), [])
   const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
   const hands = useRef<Hands>({ left: null, right: null })
   const [start] = useState(() => standIn(spot))
@@ -708,7 +631,7 @@ function OfficeWalker({
       onProgress={walk.onProgress}
       onDone={(a, completed) => walk.onDone(a.action, completed)}
       onReady={walk.onReady}
-      look={{ ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }}
+      look={playerLook}
       surface="carpet"
       low={low}
       now={now}

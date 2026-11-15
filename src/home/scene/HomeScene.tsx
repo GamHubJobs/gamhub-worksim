@@ -37,6 +37,7 @@ import { FurnitureModel } from './models'
 import { Fittings } from './fittings'
 import { boilerAt, homeLayout } from './homeLayout'
 import { Courier } from './Courier'
+import { SceneLook } from '../../world/look/SceneLook'
 import { Engineer } from './Engineer'
 import { HomePartner } from './HomePartner'
 import { Npc } from '../../world/npc/Npc'
@@ -198,17 +199,15 @@ function HomeScene(props: HomeSceneProps) {
         far: 60,
       }}
       gl={{ antialias: true, powerPreference: 'default' }}
+      shadows={!lowPower}
       onCreated={({ gl }: RootState) => setLowPower(isSoftware(gl))}
     >
       <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 12} />
       <color attach="background" args={[evening ? '#1e293b' : '#e0f2fe']} />
-      <hemisphereLight
-        args={[evening ? '#ffe7c2' : '#ffffff', '#8a7a68', evening ? 0.9 : 1.4]}
-      />
-      <directionalLight
-        position={evening ? [-6, 8, 4] : [6, 10, 6]}
-        intensity={evening ? 0.6 : 1.4}
-        color={evening ? '#ffcf99' : '#fff8ee'}
+      <SceneLook
+        look={evening ? 'home-evening' : 'home-morning'}
+        low={lowPower}
+        extent={Math.max(w, d) * 0.75}
       />
       <World.Provider value={world}>
         <Interior.Provider value={state}>

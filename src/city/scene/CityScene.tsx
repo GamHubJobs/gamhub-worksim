@@ -22,6 +22,7 @@ import {
 } from 'react'
 import { CanvasTexture, SRGBColorSpace, type Group, type WebGLRenderer } from 'three'
 import { PLACES, type PlaceId } from '../../content/city'
+import { SceneLook } from '../../world/look/SceneLook'
 import { FRIEND_LOOKS } from '../../content/adultLooks'
 import { friendWho, NEIGHBOUR } from '../../game/social'
 import { BOUNDS, standAt, areaAt, surfaceAt, type Area } from '../streets'
@@ -221,6 +222,9 @@ function isSoftware(gl: WebGLRenderer): boolean {
 
 export default memo(CityScene)
 
+/** Where the street's shadows are drawn: round the player. */
+const followPlayer = () => playerAt
+
 function CityScene(props: CitySceneProps) {
   // What the computer can do, and the player's choice in Settings.
   const [software, setLowPower] = useState(false)
@@ -255,18 +259,23 @@ function CityScene(props: CitySceneProps) {
       frameloop="demand"
       camera={{ position: [-40, 6, 14], fov: 50, near: 0.1, far: 140 }}
       gl={{ antialias: !lowPower, powerPreference: 'default' }}
+      shadows={!lowPower}
       onCreated={({ gl }) => setLowPower(isSoftware(gl))}
     >
       <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 12} />
       <color attach="background" args={[sky]} />
       <fog attach="fog" args={[sky, 40, 120]} />
-      <hemisphereLight
-        args={[props.dark ? '#c7d2fe' : '#ffffff', '#6b705c', props.dark ? 0.55 : 1.3]}
-      />
-      <directionalLight
-        position={props.phase === 'morning' ? [30, 40, 20] : [-30, 25, 10]}
-        intensity={props.dark ? 0.25 : 1.3}
-        color={props.phase === 'morning' ? '#fff8ee' : '#ffd2a1'}
+      <SceneLook
+        look={
+          props.dark
+            ? 'street-night'
+            : props.phase === 'morning'
+              ? 'street-day'
+              : 'street-evening'
+        }
+        low={lowPower}
+        extent={26}
+        follow={followPlayer}
       />
       <Parking.Provider value={parking}>
         <PeopleDetail low={lowPower}>

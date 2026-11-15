@@ -82,7 +82,7 @@ export function FabWing() {
         />
       </group>
       <WingWorker
-        look={HI_VIS(6, 'short', 0, { glasses: true })}
+        look={HI_VIS(6, 'short', 0, { glasses: true, hardhat: '#facc15' })}
         x={FABRICATOR.x}
         z={FABRICATOR.z}
         heading={0}

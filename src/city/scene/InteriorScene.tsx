@@ -26,6 +26,7 @@ import {
 import { ActivityEffects } from '../../world/vfx/ActivityEffects'
 import { Rain } from '../../world/vfx/Rain'
 import { Ticker } from './interiors/common'
+import { SceneLook } from '../../world/look/SceneLook'
 import { GYM_ACTIVITIES, GYM_BOXES, GYM_SIZE, GYM_START } from './interiors/gymLayout'
 import { Interior, PLAYER, type Doing, type InteriorState } from './interiors/kit'
 import { CAFE, GARAGE, PARK, SHOP, type Layout } from './interiors/layouts'
@@ -180,22 +181,26 @@ function InteriorScene(props: InteriorSceneProps) {
         far: 120,
       }}
       gl={{ antialias: !low, powerPreference: 'default' }}
+      shadows={!low}
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
     >
       <Ticker fps={STILL ? 1 / 30 : low ? 4 : 12} />
       <color attach="background" args={[outdoors ? sky : '#1c1917']} />
       {outdoors && <fog attach="fog" args={[sky, 18, 60]} />}
-      <hemisphereLight
-        args={[
-          dark ? '#c7d2fe' : '#ffffff',
-          outdoors ? '#4d7c0f' : '#78716c',
-          outdoors ? (dark ? 0.5 : 1.3) : dark ? 0.9 : 1.15,
-        ]}
-      />
-      <directionalLight
-        position={morning ? [6, 10, 6] : [-6, 8, 5]}
-        intensity={outdoors ? (dark ? 0.2 : 1.2) : 0.6}
-        color={morning ? '#fff8ee' : '#ffe4c4'}
+      <SceneLook
+        look={
+          outdoors
+            ? dark
+              ? 'street-night'
+              : morning
+                ? 'street-day'
+                : 'street-evening'
+            : place === 'cafe'
+              ? 'cafe'
+              : 'bright'
+        }
+        low={low}
+        extent={outdoors ? 22 : Math.max(layout.size.width, layout.size.depth) * 0.7}
       />
       <World.Provider value={world}>
         <Interior.Provider value={state}>

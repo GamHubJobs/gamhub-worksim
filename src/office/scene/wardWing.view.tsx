@@ -32,10 +32,13 @@ function Nurse() {
         skin: 3,
         hair: 'bun',
         hairColor: 1,
-        outfit: 'polo',
-        top: '#1d4ed8',
-        trousers: '#1d4ed8',
+        outfit: 'scrubs',
+        top: '#3b82f6',
+        trousers: '#3b82f6',
         sleeves: 'short',
+        shoes: '#e5e7eb',
+        badge: '#0f766e',
+        stethoscope: true,
       }}
       x={BAY_B_NURSE.x}
       z={BAY_B_NURSE.z}
