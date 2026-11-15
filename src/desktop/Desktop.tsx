@@ -33,7 +33,7 @@ import { openPracticeFile } from '../persistence/toolPractice'
 import { careerTools } from '../tools/registry'
 import { MailApp } from '../apps/mail/MailApp'
 import { getAssignment } from '../content/assignments'
-import { activeEmployer } from '../content/departments'
+import { activeEmployer, workplaceKind } from '../content/departments'
 import {
   assignmentStatus,
   careerAssignments,
@@ -55,7 +55,7 @@ import { chooseDeskItem } from '../game/desk'
 import { HelpPanel } from '../ui/HelpPanel'
 import { AudioSettingsPanel, SoundCaptions } from '../audio/AudioSettingsPanel'
 import { audio } from '../audio/manager'
-import { timeOfDay, type Place } from '../audio/scenes'
+import { timeOfDay, workplaceSound, type Place } from '../audio/scenes'
 import { AudioScene, useGameSounds } from '../audio/useAudio'
 import { isRaining, useWeatherSetting } from '../world/weather'
 import { nextWorkday } from '../game/clock'
@@ -900,6 +900,7 @@ export function Desktop({
             scene={{
               place: OFFICE_PLACE[view.spot ?? 'reception'],
               time: timeOfDay(profile.work.minute),
+              workplace: workplaceSound(profile.careerId, workplaceKind()),
             }}
           />
         )}
@@ -1444,7 +1445,13 @@ export function Desktop({
       {guideLayer}
       {soundOpen && <AudioSettingsPanel onClose={() => setSoundOpen(false)} />}
       <SoundCaptions />
-      <AudioScene scene={{ place: 'computer', time: timeOfDay(profile.work.minute) }} />
+      <AudioScene
+        scene={{
+          place: 'computer',
+          time: timeOfDay(profile.work.minute),
+          workplace: workplaceSound(profile.careerId, workplaceKind()),
+        }}
+      />
       <AiHubContext.Provider value={aiHub}>
         <DesktopSurface
           icons={desktopIcons}

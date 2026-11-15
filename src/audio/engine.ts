@@ -670,6 +670,55 @@ export function createEngine(): AudioEngine | null {
         length = n * 0.15
         break
       }
+      case 'monitors':
+        // A patient monitor: a soft double beep, from a bed somewhere on the ward.
+        tone(to, 960, t, 0.09, { gain: 0.012, pan })
+        tone(to, 960, t + 0.18, 0.09, { gain: 0.012, pan })
+        length = 0.4
+        break
+      case 'callbell':
+        // The nurse-call chime: two notes, falling.
+        tone(to, 880, t, 0.5, { gain: 0.014, pan, filter: 2500 })
+        tone(to, 660, t + 0.45, 0.7, { gain: 0.014, pan, filter: 2500 })
+        length = 1.3
+        break
+      case 'alarm':
+        // A forklift reversing, across the workshop.
+        for (let i = 0; i < 4; i++)
+          tone(to, 1050, t + i * 0.9, 0.45, {
+            type: 'square',
+            gain: 0.006,
+            filter: 1600,
+            pan,
+          })
+        length = 3.6
+        break
+      case 'pings':
+        // A notification on someone's computer.
+        tone(to, 1320, t, 0.12, { gain: 0.01, pan })
+        tone(to, 1760, t + 0.1, 0.16, { gain: 0.009, pan })
+        length = 0.3
+        break
+      case 'paper':
+        // Pages turned, a file put down.
+        hiss(to, t, 0.18, { color: 'pink', freq: 2600, q: 0.8, gain: 0.05, pan })
+        hiss(to, t + 0.25, 0.12, { color: 'pink', freq: 3200, q: 0.8, gain: 0.035, pan })
+        length = 0.5
+        break
+      case 'gavel':
+        // The gavel, twice, from the bench.
+        for (const at of [t, t + 0.22]) {
+          hiss(to, at, 0.06, {
+            color: 'brown',
+            type: 'lowpass',
+            freq: 900,
+            gain: 0.35,
+            pan: 0,
+          })
+          tone(to, 190, at, 0.08, { gain: 0.03, pan: 0 })
+        }
+        length = 0.5
+        break
       case 'crickets':
         for (let i = 0; i < 6; i++)
           tone(to, 4600, t + i * 0.05, 0.02, { gain: 0.01, pan })
@@ -885,6 +934,17 @@ export function createEngine(): AudioEngine | null {
       hum(run, 70, 0.01)
       bed(run, 'brown', 'lowpass', 260, 0.12, 0.2)
     }
+    if (layers.machines) {
+      // Machinery running: a low drone, the mains hum, a little mechanical hiss.
+      bed(run, 'brown', 'lowpass', 180, 0.22 * layers.machines, 0.25)
+      hum(run, 50, 0.01)
+      bed(run, 'pink', 'bandpass', 1300, 0.025 * layers.machines, 0.5)
+    }
+    if (layers.servers) {
+      // A server cabinet's fans: a steady, airy whirr and a faint whine.
+      bed(run, 'pink', 'bandpass', 2400, 0.04 * layers.servers, 0.05)
+      hum(run, 120, 0.004)
+    }
     // Occasional events, each checked a few times a second.
     const events = (Object.entries(layers) as Array<[Layer, number]>).filter(
       ([layer, rate]) =>
@@ -898,6 +958,8 @@ export function createEngine(): AudioEngine | null {
           'water',
           'treadmills',
           'rain',
+          'machines',
+          'servers',
         ].includes(layer),
     )
     const tickMs = 250

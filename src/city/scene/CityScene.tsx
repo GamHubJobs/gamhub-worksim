@@ -23,6 +23,7 @@ import {
 import { CanvasTexture, SRGBColorSpace, type Group, type WebGLRenderer } from 'three'
 import { PLACES, type PlaceId } from '../../content/city'
 import { SceneLook } from '../../world/look/SceneLook'
+import { Fronts, StreetSurfaces } from './streetDressing'
 import { FRIEND_LOOKS } from '../../content/adultLooks'
 import { friendWho, NEIGHBOUR } from '../../game/social'
 import { BOUNDS, standAt, areaAt, surfaceAt, type Area } from '../streets'
@@ -688,17 +689,14 @@ function Label({ text, colour }: { text: string; colour: string }) {
 function Street({ dark }: { dark: boolean }) {
   return (
     <group>
-      {/* Ground, road and pavements */}
-      <Box size={[260, 0.02, 200]} position={[0, -0.02, 0]} color="#7c8a6a" />
-      <Box size={[150, 0.04, 10]} position={[0, 0, 0]} color="#3f4349" />
-      <Box size={[150, 0.12, 5]} position={[0, 0.04, -7.5]} color="#b8b2a7" />
-      <Box size={[150, 0.12, 5]} position={[0, 0.04, 7.5]} color="#b8b2a7" />
+      {/* Grass, asphalt, paving slabs and kerbs (streetDressing.tsx) */}
+      <StreetSurfaces />
       {/* Road markings and two crossings */}
       {Array.from({ length: 24 }, (_, i) => (
         <Box
           key={i}
-          size={[2.4, 0.05, 0.18]}
-          position={[-69 + i * 6, 0.03, 0]}
+          size={[2.4, 0.01, 0.15]}
+          position={[-69 + i * 6, 0.007, 0]}
           color="#e7e5e4"
         />
       ))}
@@ -706,15 +704,13 @@ function Street({ dark }: { dark: boolean }) {
         Array.from({ length: 5 }, (_, i) => (
           <Box
             key={`${x}-${i}`}
-            size={[3, 0.05, 0.9]}
-            position={[x, 0.035, -3.6 + i * 1.8]}
+            size={[3, 0.01, 0.9]}
+            position={[x, 0.007, -3.6 + i * 1.8]}
             color="#f5f5f4"
           />
         )),
       )}
-      {BUILDINGS.map((b, i) => (
-        <Building key={i} {...b} dark={dark} />
-      ))}
+      <Fronts buildings={BUILDINGS} dark={dark} />
       <Courthouse dark={dark} />
       {/* Shop fronts: an awning in the place's colour over each door */}
       {PLACES.filter((p) => p.id !== 'park' && p.id !== 'office').map((p) => {
@@ -761,50 +757,6 @@ function Street({ dark }: { dark: boolean }) {
       {[-48, -31, -12, 9, 24].map((x) => (
         <Plant key={x} position={[x, 0.1, 9.3]} scale={1.6} />
       ))}
-    </group>
-  )
-}
-
-function Building({
-  x,
-  side,
-  w,
-  h,
-  color,
-  dark,
-}: {
-  x: number
-  side: 1 | -1
-  w: number
-  h: number
-  color: string
-  dark: boolean
-}) {
-  const depth = 14
-  const front = side * 10
-  const floors = Math.floor((h - 4) / 3.2)
-  return (
-    <group>
-      <Box
-        size={[w, h, depth]}
-        position={[x, h / 2, front + side * (depth / 2)]}
-        color={color}
-      />
-      {/* A strip of windows on each floor above the shops */}
-      {Array.from({ length: floors }, (_, i) => (
-        <Box
-          key={i}
-          size={[w - 2, 1.3, 0.08]}
-          position={[x, 4.8 + i * 3.2, front - side * 0.02]}
-          color={dark ? (i % 2 ? '#fde68a' : '#475569') : '#8fb3c7'}
-          emissive={dark && i % 2 ? '#d97706' : undefined}
-        />
-      ))}
-      <Box
-        size={[w + 0.4, 0.4, depth + 0.4]}
-        position={[x, h + 0.2, front + side * (depth / 2)]}
-        color="#78716c"
-      />
     </group>
   )
 }

@@ -5,7 +5,15 @@ import { endDay, passTime } from '../game/workday'
 import { areaAt, surfaceAt } from '../city/streets'
 import { createEngine } from './engine'
 import { AudioManager, MIN_GAP, type AudioEngine } from './manager'
-import { layersFor, moodFor, sceneKey, timeOfDay } from './scenes'
+import {
+  layersFor,
+  moodFor,
+  sceneKey,
+  timeOfDay,
+  workplaceSound,
+  type Place,
+  type Workplace,
+} from './scenes'
 import {
   AUDIO_SETTINGS_KEY,
   defaultAudioSettings,
@@ -297,5 +305,46 @@ describe('the game’s news as sounds', () => {
         pay: before.pay + 1,
       }),
     ).toEqual(['promotion', 'achievement'])
+  })
+})
+
+describe('each workplace sounds like itself', () => {
+  const at = (workplace: Workplace, place: Place = 'office') =>
+    layersFor({ place, time: 'day', workplace })
+
+  it('which workplace a career has', () => {
+    expect(workplaceSound('it-support', 'office')).toBe('it')
+    expect(workplaceSound('healthcare', 'ward')).toBe('ward')
+    expect(workplaceSound('engineering-services', 'workshop')).toBe('workshop')
+    expect(workplaceSound('legal', 'courtroom')).toBe('legal')
+    expect(workplaceSound('software-development', 'devteam')).toBe('dev')
+    expect(workplaceSound('office-admin-finance', 'postroom')).toBe('office')
+  })
+
+  it('a ward has monitors and call bells; a workshop, machines and a reversing beeper', () => {
+    expect(at('ward').monitors).toBeGreaterThan(0)
+    expect(at('ward').callbell).toBeGreaterThan(0)
+    expect(at('ward').machines).toBeUndefined()
+    expect(at('workshop').machines).toBe(1)
+    expect(at('workshop').alarm).toBeGreaterThan(0)
+    expect(at('it').servers).toBe(1)
+    expect(at('legal').paper).toBeGreaterThan(0)
+    expect(at('office').monitors).toBeUndefined()
+    // Quieter at the computer, and the manager's office stays a quiet room.
+    expect(at('ward', 'computer').monitors!).toBeLessThan(at('ward').monitors!)
+    expect(at('ward', 'meeting').monitors).toBeUndefined()
+  })
+
+  it('the courthouse is hushed, with the gavel and no music; the ward and workshop have none', () => {
+    const court = layersFor({ place: 'courthouse', time: 'day' })
+    expect(court.gavel).toBeGreaterThan(0)
+    expect(court.typing).toBeUndefined()
+    expect(moodFor({ place: 'courthouse', time: 'day' })).toBeNull()
+    expect(moodFor({ place: 'office', time: 'day', workplace: 'ward' })).toBeNull()
+    expect(moodFor({ place: 'office', time: 'day', workplace: 'legal' })).toBe('focus')
+    // Changing workplace changes the scene (it is not the same sound).
+    expect(sceneKey({ place: 'office', time: 'day', workplace: 'ward' })).not.toBe(
+      sceneKey({ place: 'office', time: 'day' }),
+    )
   })
 })

@@ -18,7 +18,32 @@ export type Place =
   | 'gym'
   | 'garage'
   | 'home'
+  | 'courthouse' // Westmark County Court: the hall and the courtroom
   | 'quiet' // the end of the day summary, menus
+
+/**
+ * The kind of workplace, which changes how the office sounds: a hospital ward,
+ * an engineering workshop, a law firm, an IT help desk with its server
+ * cabinet, a software team; or an ordinary office.
+ */
+export type Workplace = 'ward' | 'workshop' | 'legal' | 'it' | 'dev' | 'office'
+
+/** How a career's workplace sounds, from its kind of workplace (and the IT help desk by career). */
+export function workplaceSound(careerId: string, kind: string): Workplace {
+  if (careerId === 'it-support') return 'it'
+  switch (kind) {
+    case 'ward':
+      return 'ward'
+    case 'workshop':
+      return 'workshop'
+    case 'courtroom':
+      return 'legal'
+    case 'devteam':
+      return 'dev'
+    default:
+      return 'office'
+  }
+}
 
 export type TimeOfDay = 'morning' | 'day' | 'evening' | 'night'
 
@@ -29,6 +54,8 @@ export interface Scene {
   moment?: 'interview'
   /** It is raining (heard outdoors, softly indoors at home). */
   rain?: boolean
+  /** At work: what kind of workplace it is (see Workplace). */
+  workplace?: Workplace
 }
 
 /** The time of day for a clock in minutes since midnight (past 24:00 at night). */
@@ -42,7 +69,9 @@ export function timeOfDay(minute: number): TimeOfDay {
 
 export const sceneKey = (scene: Scene | null) =>
   scene
-    ? `${scene.place}:${scene.time}:${scene.moment ?? ''}${scene.rain ? ':rain' : ''}`
+    ? `${scene.place}:${scene.time}:${scene.moment ?? ''}${scene.rain ? ':rain' : ''}${
+        scene.workplace ? `:${scene.workplace}` : ''
+      }`
     : 'none'
 
 /** Background layers, by scene: steady beds and occasional events. */
@@ -77,18 +106,67 @@ export type Layer =
   | 'engines'
   | 'rain' // a steady bed
   | 'thunder'
+  | 'monitors' // a ward: patient monitors' soft beeps
+  | 'callbell' // a ward: the nurse-call chime
+  | 'machines' // a workshop: machinery running (a steady bed)
+  | 'alarm' // a workshop: a forklift's reversing beeper
+  | 'servers' // a server cabinet's fans (a steady bed)
+  | 'pings' // computer notifications
+  | 'paper' // pages turned, files handled
+  | 'gavel' // a courtroom: the judge's gavel, now and then
 
 /**
  * What is heard, and how busy it is (events a minute; beds 1). The street is
  * busiest in the day, quiet at night; the office is busy in working hours.
  */
 export function layersFor(scene: Scene): Partial<Record<Layer, number>> {
-  const base = baseLayers(scene)
+  const base = atWork(scene, baseLayers(scene))
   if (!scene.rain) return base
   const outdoors = ['street', 'residential', 'district', 'park'].includes(scene.place)
   if (outdoors) return { ...base, rain: 1, thunder: 0.4, birds: 0, crickets: 0 }
   if (scene.place === 'home') return { ...base, rain: 0.35 }
   return base
+}
+
+/** The office's sound, changed for the kind of workplace (on the floor, not at the computer). */
+function atWork(
+  scene: Scene,
+  layers: Partial<Record<Layer, number>>,
+): Partial<Record<Layer, number>> {
+  const floor = ['office', 'reception', 'computer', 'breakroom'].includes(scene.place)
+  if (!floor || !scene.workplace || scene.workplace === 'office') return layers
+  const near = scene.place === 'computer' ? 0.4 : 1
+  switch (scene.workplace) {
+    case 'ward':
+      return {
+        ...layers,
+        typing: 2 * near,
+        printer: 0.2,
+        phones: 0.6,
+        chatter: 3,
+        monitors: 14 * near,
+        callbell: 1.2 * near,
+        trolleys: 2 * near,
+        footsteps: 5,
+      }
+    case 'workshop':
+      return {
+        ...layers,
+        typing: 2 * near,
+        machines: 1,
+        tools: 3 * near,
+        alarm: 0.5 * near,
+        chatter: 2,
+      }
+    case 'legal':
+      return { ...layers, typing: 5 * near, paper: 3 * near, phones: 1.2, chatter: 2.5 }
+    case 'it':
+      return { ...layers, typing: 9 * near, servers: 1, phones: 1.6, pings: 1.5 * near }
+    case 'dev':
+      return { ...layers, typing: 12 * near, pings: 2 * near, chatter: 3 }
+    default:
+      return layers
+  }
 }
 
 function baseLayers(scene: Scene): Partial<Record<Layer, number>> {
@@ -175,6 +253,17 @@ function baseLayers(scene: Scene): Partial<Record<Layer, number>> {
         birds: time === 'morning' ? 2 : 0,
         crickets: time === 'night' || time === 'evening' ? 0.6 : 0,
       }
+    case 'courthouse':
+      // A stone hall and a courtroom: hushed voices, footsteps, doors, and the gavel.
+      return {
+        aircon: 1,
+        chatter: 2.5,
+        footsteps: 5,
+        doors: 1.5,
+        paper: 2,
+        gavel: 0.4,
+        chairs: 1,
+      }
     case 'quiet':
       return {}
   }
@@ -185,6 +274,7 @@ export type Mood = 'city' | 'focus' | 'tech' | 'home' | 'cafe' | 'interview' | n
 
 export function moodFor(scene: Scene): Mood {
   if (scene.moment === 'interview') return 'interview'
+  if (scene.workplace === 'ward' || scene.workplace === 'workshop') return null
   switch (scene.place) {
     case 'street':
     case 'park':

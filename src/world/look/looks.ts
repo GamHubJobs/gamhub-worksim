@@ -153,10 +153,10 @@ export const LOOKS = {
   },
   /** The street in the early evening: a low, golden sun. */
   'street-evening': {
-    sky: '#ffe2c4',
-    ground: '#5f5a4c',
-    hemi: 0.8,
-    key: { position: [-30, 18, 10], intensity: 1.45, color: '#ffc58f' },
+    sky: '#ffe9d2',
+    ground: '#6f6a5c',
+    hemi: 1.0,
+    key: { position: [-30, 22, 14], intensity: 1.75, color: '#ffcf9e' },
     fill: { position: [20, 10, -10], intensity: 0.28, color: '#a5b4fc' },
     environment: 0.4,
     panels: [ceiling('#ffd7ae', 1.0)],

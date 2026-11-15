@@ -19,6 +19,8 @@ import {
   type ReactNode,
 } from 'react'
 import { audio } from '../audio/manager'
+import { AudioScene } from '../audio/useAudio'
+import { timeOfDay } from '../audio/scenes'
 import { WalkView } from '../world/WalkView'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
 import { StoryScenePanel } from '../world/npc/StoryScenePanel'
@@ -869,6 +871,10 @@ export function OfficeView({
       <HudLayout />
 
       {/* Where you are and what you can do here */}
+      {/* At court: the hall and courtroom's own sound (no music while a court sits). */}
+      {away && (
+        <AudioScene scene={{ place: 'courthouse', time: timeOfDay(work.minute) }} />
+      )}
       {away && (
         <HudSlot zone="top-left" hideWhen={live ? 'dialogue' : undefined}>
           <CourtPanel
