@@ -190,6 +190,30 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-16 · S4: a promotion told in person
+
+**Built**
+
+- Living scenarios S4 (docs/SCENARIOS_PLAN.md): once promoted, the manager asks to
+  see the player in the manager's office (a workplace event held there, not at the
+  desk); Go walks them in, a letter waits on the desk, and the manager talks
+  through the work, announces the new title and the new weekly pay.
+- Workplace events have a place (`at`: the desk, or the person's own office);
+  notices and the panel follow it.
+
+**Tested**
+
+- Unit tests (full check passes). `week.spec.ts` plays the first week to the
+  promotion and then the talk in the office; the events tests pass.
+
+**Known limitations**
+
+- The promotion itself still happens when the work is handed in (the record, the
+  pay and the "Promotion!" result); the talk is the moment it is told, not a
+  condition of it, so older saves and the career rules are unchanged.
+
+---
+
 ## 2026-11-16 · S3: colleagues come to the desk; garbled characters in the office fixed
 
 **Built / fixed**

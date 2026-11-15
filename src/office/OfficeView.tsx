@@ -725,7 +725,10 @@ export function OfficeView({
   }, [])
   // The conversation is over: whoever it was goes back to their day.
   // Whoever has something to ask comes over to the player's desk and waits there.
-  const caller = pendingEvents(profile)[0]?.person
+  const calling = pendingEvents(profile)[0]
+  const caller = calling?.at === 'desk' ? calling.person : undefined
+  // Asked to the manager's office for a promotion: the letter is on the desk there.
+  const letter = calling?.at === 'their-office'
   const callers = useMemo(
     () => (caller ? { [caller]: 'call:player' } : undefined),
     [caller],
@@ -810,6 +813,7 @@ export function OfficeView({
                       onInteract={sceneInteract}
                       talkingTo={dialogue?.speaker ?? null}
                       callers={callers}
+                      letter={letter}
                       itJobs={itJobs}
                       scenarios={here.map((sc) => sc.id).join(',')}
                       focus={usingHere ? focusAction : null}
@@ -933,16 +937,25 @@ export function OfficeView({
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">
                         {person.name.split(' ')[0]}{' '}
-                        {walkable ? 'has come over to your desk' : 'wants a word'}
+                        {event.at === 'their-office'
+                          ? 'would like to see you in the manager’s office'
+                          : walkable
+                            ? 'has come over to your desk'
+                            : 'wants a word'}
                       </p>
                       <p className="truncate text-xs">“{event.opener}”</p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setDialogue(eventScene(profile, event.id))}
+                      onClick={() =>
+                        // In 3D, the player goes to the manager's office for it.
+                        event.at === 'their-office' && walkable
+                          ? ask('manager')
+                          : setDialogue(eventScene(profile, event.id))
+                      }
                       className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-800"
                     >
-                      Talk
+                      {event.at === 'their-office' && walkable ? 'Go' : 'Talk'}
                     </button>
                   </div>
                 )

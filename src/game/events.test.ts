@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getAssignment } from '../content/assignments'
+import { getCareer } from '../content/careers'
 import { newProfileData, recordSubmission, type ProfileData } from './career'
 import { checkEvents, eventScene, pendingEvents } from './events'
 import type { GradeResult } from './grading'
@@ -181,5 +182,70 @@ describe('workplace events', () => {
       work: { ...stressed.work, minute: 12 * 60, dayOver: true },
     }
     expect(pendingIds(checkEvents(home))).toEqual([])
+  })
+})
+
+describe('a promotion told in person', () => {
+  const promoted = (): ProfileData => {
+    const base = at(newProfileData('Alex Morgan', 0), 10 * 60 + 30)
+    const { levels } = getCareer(base.careerId)
+    return {
+      ...base,
+      levelId: levels[1].id,
+      inbox: [
+        ...base.inbox,
+        {
+          id: 'promo',
+          from: 'manager',
+          kind: 'promotion',
+          receivedAt: 5,
+          readAt: null,
+          subject: `Congratulations, you are now ${levels[1].title}!`,
+          body: 'Well done.',
+        } as ProfileData['inbox'][number],
+      ],
+    }
+  }
+
+  it('the manager asks the player to the office, and announces it there', () => {
+    const profile = checkEvents(promoted())
+    const [waiting] = pendingEvents(profile)
+    expect(waiting).toMatchObject({ person: 'manager', at: 'their-office' })
+    const { levels } = getCareer(profile.careerId)
+    const scene = eventScene(profile, waiting.id)!
+    const said = scene.lines.join(' ')
+    expect(said).toContain(`from today you are ${levels[1].title}`)
+    expect(said).toContain(levels[0].title)
+    expect(said).toMatch(/a week/)
+    // Once heard, it is not told again.
+    const done = recordScene(profile, waiting.id, 'thanks')
+    expect(
+      checkEvents({
+        ...done,
+        work: { ...done.work, events: { ...done.work.events, pending: [] } },
+      }).work.events.pending.map((p) => p.id),
+    ).not.toContain(waiting.id)
+  })
+
+  it('is not held without a promotion, nor at the first level', () => {
+    const fresh = checkEvents(at(newProfileData('Alex Morgan', 0), 10 * 60 + 30))
+    expect(pendingEvents(fresh).some((e) => e.id.startsWith('promotion-talk:'))).toBe(
+      false,
+    )
+    const noLetter = { ...promoted(), inbox: [] }
+    expect(
+      pendingEvents(checkEvents(noLetter)).some((e) =>
+        e.id.startsWith('promotion-talk:'),
+      ),
+    ).toBe(false)
+  })
+
+  it('other events still come to the desk', () => {
+    const profile = checkEvents(
+      applyEffects(at(newProfileData('Alex', 0), 10 * 60 + 30), {
+        wellbeing: { stress: 60 },
+      }),
+    )
+    for (const e of pendingEvents(profile)) expect(e.at).toBe('desk')
   })
 })

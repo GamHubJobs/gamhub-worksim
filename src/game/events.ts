@@ -10,7 +10,9 @@
 import { getAssignment } from '../content/assignments'
 import { HOURS } from '../content/workday'
 import { fill, findPerson } from '../content/departments'
-import { bestScore, firstName, isPassed, type ProfileData } from './career'
+import { bestScore, careerLevel, firstName, isPassed, type ProfileData } from './career'
+import { weeklyPay } from './careerLife'
+import { formatMoney } from '../content/life'
 import { weekNumber } from './clock'
 import { now } from './deadlines'
 import { isMentor } from './conversations'
@@ -40,6 +42,11 @@ export interface WorkplaceEvent {
   expiresAfter?: number
   /** What happens if the player never responds. */
   ignored?: { effects: Effects; log: string }
+  /**
+   * Where it happens: at the player's desk (they come over), or in their own
+   * office, where the player is asked to come (a promotion).
+   */
+  at?: 'desk' | 'their-office'
 }
 
 const passed = (profile: ProfileData, assignmentId: string) => {
@@ -594,6 +601,58 @@ function wellbeingEvent(profile: ProfileData): WorkplaceEvent {
   }
 }
 
+/**
+ * Promoted: {manager} asks the player to the manager’s office, talks through the work
+ * that earned it, announces it and hands over the letter (the promotion and
+ * the new pay are already on the record; this is the moment it is told).
+ */
+function promotionEvent(profile: ProfileData): WorkplaceEvent | null {
+  const { career, current } = careerLevel(profile)
+  const index = career.levels.findIndex((l) => l.id === current.id)
+  if (index < 1) return null
+  const letter = profile.inbox.find(
+    (m) => m.kind === 'promotion' && m.subject.includes(current.title),
+  )
+  if (!letter) return null
+  const before = career.levels[index - 1]
+  const done = passedCount(profile)
+  return {
+    id: `promotion-talk:${current.id}`,
+    person: 'manager',
+    at: 'their-office',
+    opener: 'Have you got a moment? Come to my office.',
+    trigger: (p) => duringWork(p),
+    scene: (p) => ({
+      lines: [
+        'Close the door and sit down. Nothing to worry about, I promise.',
+        `I have been looking back over your work as ${before.title}: ${done} ${done === 1 ? 'task' : 'tasks'} done to the standard we need, and done properly, with the reasons understood.`,
+        `So I am very pleased to tell you: from today you are ${current.title}.`,
+        `*A letter comes across the desk to you: your new title, signed, and your pay from this week, ${formatMoney(weeklyPay(p))} a week.*`,
+      ],
+      choices: [
+        {
+          id: 'thanks',
+          label: 'Say thank you',
+          reply: ['You earned it. Enjoy it today; the new work starts tomorrow.'],
+          effects: { trust: { manager: 2 }, wellbeing: { engagement: 5 } },
+          lesson:
+            'A promotion is recognition of work already done well. Saying thank you, and meaning it, is part of being a professional.',
+        },
+        {
+          id: 'next',
+          label: 'Ask what is expected of you now',
+          reply: [
+            'Good question. More responsibility, less checking from me: take ownership of your work, and ask early when you are unsure.',
+          ],
+          effects: { trust: { manager: 3 }, wellbeing: { engagement: 4 } },
+          lesson:
+            'Asking what is expected at a new level sets you up to succeed in it, and shows you are thinking ahead.',
+        },
+      ],
+    }),
+  }
+}
+
 /** Reactions to the player's own results and conduct come before anything else. */
 const REACTIONS = new Set([
   'recognition',
@@ -605,7 +664,9 @@ const REACTIONS = new Set([
 /** All events, most urgent first. */
 function allEvents(profile: ProfileData): WorkplaceEvent[] {
   const mistake = mistakeEvent(profile)
+  const promotion = promotionEvent(profile)
   return [
+    ...(promotion ? [promotion] : []),
     ...(mistake ? [mistake] : []),
     ...ONE_OFF.filter((event) => REACTIONS.has(event.id)),
     ...ONE_OFF.filter((event) => !REACTIONS.has(event.id)),
@@ -678,13 +739,22 @@ export interface PendingEvent {
   id: string
   person: string
   opener: string
+  /** Where it happens (see WorkplaceEvent.at). */
+  at: 'desk' | 'their-office'
 }
 
 export function pendingEvents(profile: ProfileData): PendingEvent[] {
   return profile.work.events.pending.flatMap((pending) => {
     const event = findEvent(profile, pending.id)
     return event
-      ? [{ id: event.id, person: event.person, opener: fill(event.opener) }]
+      ? [
+          {
+            id: event.id,
+            person: event.person,
+            opener: fill(event.opener),
+            at: event.at ?? 'desk',
+          },
+        ]
       : []
   })
 }

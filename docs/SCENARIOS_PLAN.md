@@ -80,7 +80,7 @@ sounds and effects. No scenario gets a system of its own.
 3. **S3 · Workplace events in person**: **done**, see below. The colleague comes to the player's desk (Tom
    asking a favour, Priya with an urgent request), and the existing choices are made
    face to face.
-4. **S4 · A promotion from the manager**: asked to her office; she talks through the
+4. **S4 · A promotion from the manager**: **done**, see below. Asked to her office; she talks through the
    work, announces it, the letter on the desk; then the record and pay update.
 5. **S5 · Interviews at the company**: going to the company's reception, signing in,
    waiting, the interviewer coming out, the interview in a meeting room, the result.
@@ -153,3 +153,18 @@ counted twice, collisions respected, and no loss of speed.
 - The panel says "… has come over to your desk" in 3D, "… wants a word" without it.
 - Tested: a unit test for the schedule; `events.spec.ts` has the manager walk from
   her office to the desk in the 3D office, be talked to there, and go back.
+
+### S4 · A promotion from the manager
+
+- Promoted (the promotion and the new pay go on the record when the work that earns
+  it is handed in, as before), the manager asks to see the player in the manager's
+  office: the event `promotion-talk:<level>` (game/events.ts), `at: 'their-office'`,
+  so the manager stays there instead of coming to the desk.
+- The panel says "… would like to see you in the manager's office" with **Go**, which
+  walks the player in; the letter lies on the desk while it waits.
+- The manager talks through the work done at the old level, announces the new title,
+  and hands over the letter with the new weekly pay; the player thanks them or asks
+  what is expected now. Told once per level.
+- Written without pronouns for the manager (the six careers' managers differ).
+- Tested: unit tests (told in the office, once, only with a promotion);
+  `week.spec.ts` earns the promotion, then hears it in person (screenshot checked).

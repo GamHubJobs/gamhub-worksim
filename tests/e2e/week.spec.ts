@@ -26,7 +26,7 @@ async function submitAndExpectFullMarks(page: Page) {
 test('a full first week: three tasks, every key function, and a promotion', async ({
   page,
 }) => {
-  test.setTimeout(120_000)
+  test.setTimeout(300_000)
   await page.goto('/')
   await page.getByLabel('Your first name').fill('Jordan')
   await page.getByRole('button', { name: 'Start my first day' }).click()
@@ -92,4 +92,29 @@ test('a full first week: three tasks, every key function, and a promotion', asyn
   await results.getByRole('button', { name: 'Close' }).click()
   await expect(page.getByTestId('player-chip')).toContainText('Junior Finance Assistant')
   await expect(page.getByTestId('xp')).toHaveText('396 XP') // 110 + 132 + 154
+
+  // Priya asks to see the player in the manager’s office, and tells them in person.
+  await page.getByRole('button', { name: 'Leave desk' }).click()
+  // It is told during working hours (the week's tasks were done before nine).
+  await page.evaluate('window.__worksim.setTime(1, 10 * 60 + 30)')
+  const card = page.getByTestId('event-waiting')
+  await expect(card).toContainText('would like to see you in the manager’s office', {
+    timeout: 60_000,
+  })
+  await card.getByRole('button', { name: /^(Go|Talk)$/ }).click()
+  const dialogue = page.getByTestId('office-dialogue')
+  await expect(dialogue).toContainText('from today you are Junior Finance Assistant', {
+    timeout: 90_000,
+  })
+  await expect(dialogue).toContainText('a week')
+  const shots = process.env.WORKSIM_SHOTS
+  if (shots) await page.screenshot({ path: `${shots}/events/promotion-in-person.png` })
+  await dialogue.getByRole('button', { name: 'Say thank you' }).click()
+  await expect(dialogue).toContainText('You earned it')
+  while (await dialogue.isVisible()) {
+    await dialogue.getByRole('button').first().click()
+    await page.waitForTimeout(300)
+  }
+  // Told once; the next thing (praise for the excellent work) can come after.
+  await expect(card.filter({ hasText: 'manager’s office' })).toHaveCount(0)
 })

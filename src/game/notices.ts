@@ -75,14 +75,19 @@ export function computerNotices(profile: ProfileData): Notice[] {
   if (work.dayOver) return []
   const notices: Notice[] = []
 
-  // Someone came over to the player's desk.
+  // Someone came over to the player's desk (or asks them to their office).
   for (const event of pendingEvents(profile)) {
     const name = findPerson(event.person)?.name.split(' ')[0] ?? 'A colleague'
+    const office = event.at === 'their-office'
     notices.push({
       id: `event:${event.id}`,
-      text: `${name} has come over to your desk: “${event.opener}”`,
+      text: office
+        ? `${name} would like to see you in the manager’s office: “${event.opener}”`
+        : `${name} has come over to your desk: “${event.opener}”`,
       tone: 'warning',
-      action: { label: `Talk to ${name}`, spot: 'desk', event: event.id },
+      action: office
+        ? { label: `Go to ${name}’s office`, spot: 'manager', event: event.id }
+        : { label: `Talk to ${name}`, spot: 'desk', event: event.id },
     })
   }
 

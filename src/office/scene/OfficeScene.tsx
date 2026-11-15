@@ -245,6 +245,8 @@ export interface OfficeSceneProps {
   talkingTo?: string | null
   /** Colleagues who have come over to the player's desk, by where they wait. */
   callers?: Record<string, string>
+  /** A promotion letter waits on the manager's desk. */
+  letter?: boolean
   /** The office clock, for where everyone is (a day number and minutes since midnight). */
   day: number
   minute: number
@@ -428,6 +430,7 @@ function OfficeScene(props: OfficeSceneProps) {
           who={who}
         />
       </PeopleDetail>
+      {props.letter && <PromotionLetter />}
       {SPOTS.map((s) => (
         <Marker
           key={s.id}
@@ -1014,6 +1017,25 @@ const BOOKSHELF_ANCHORS: AnchorSpec[] = [
 ]
 
 const RECEPTION_SIGN: [number, number, number] = [-6.6, 1.95, 2.4]
+
+/** The promotion letter on the manager's desk, turned to the visitor's chairs. */
+function PromotionLetter() {
+  return (
+    <group position={[8.75, 0.79, -4.12]} rotation={[0, 0.25, 0]}>
+      <Box size={[0.22, 0.004, 0.3]} position={[0, 0.002, 0]} color="#f8fafc" />
+      {/* The letterhead and the signature */}
+      <Box size={[0.16, 0.002, 0.03]} position={[0, 0.005, -0.11]} color="#1d4ed8" />
+      <Box size={[0.08, 0.002, 0.012]} position={[0.03, 0.005, 0.1]} color="#334155" />
+      {/* The envelope it came in */}
+      <Box
+        size={[0.24, 0.006, 0.12]}
+        position={[-0.2, 0.003, 0.08]}
+        rotation={-0.3}
+        color="#e7d8b5"
+      />
+    </group>
+  )
+}
 
 function Reception() {
   // The name faces the entrance; from behind (the staff side) it is hidden.
