@@ -8,7 +8,7 @@
  * suddenly loud. A scene's surroundings and music live under their own gain
  * and fade out (and are disconnected) when the player moves on.
  */
-import type { AudioEngine, EffectId, Levels, Surface } from './manager'
+import type { AudioEngine, EffectId, Levels, StingKind, Surface } from './manager'
 import { layersFor, moodFor, sceneKey, type Layer, type Mood, type Scene } from './scenes'
 import type { CategoryId } from './settings'
 
@@ -1170,22 +1170,37 @@ export function createEngine(): AudioEngine | null {
     }
   }
 
-  function sting(kind: 'promotion' | 'achievement', level: number) {
+  function sting(kind: StingKind, level: number) {
     if (level <= 0) return
     const to = buses.music.gain
     const t = ctx.currentTime + 0.05
     const chords =
-      kind === 'promotion'
-        ? [
-            [60, 64, 67, 72],
-            [65, 69, 72, 77],
-            [67, 71, 74, 79],
-            [72, 76, 79, 84],
+      kind === 'chapter'
+        ? // A chapter opens: a rising, hopeful phrase.
+          [
+            [57, 64, 69],
+            [60, 67, 72],
+            [65, 69, 76],
+            [64, 67, 72, 79],
           ]
-        : [
-            [67, 71, 74, 79],
-            [72, 76, 79, 84],
-          ]
+        : kind === 'finale'
+          ? // A chapter closes: a slower, resolving cadence.
+            [
+              [65, 69, 72, 77],
+              [67, 71, 74, 79],
+              [60, 64, 67, 72, 76],
+            ]
+          : kind === 'promotion'
+            ? [
+                [60, 64, 67, 72],
+                [65, 69, 72, 77],
+                [67, 71, 74, 79],
+                [72, 76, 79, 84],
+              ]
+            : [
+                [67, 71, 74, 79],
+                [72, 76, 79, 84],
+              ]
     chords.forEach((chord, i) =>
       chord.forEach((n) =>
         tone(to, midi(n), t + i * 0.5, 0.6, {

@@ -118,6 +118,9 @@ export const CAPTIONS: Partial<Record<EffectId, string>> = {
   ring: 'Phone ringing',
 }
 
+/** Short musical cues: a promotion, an achievement, a story chapter opening or its finale. */
+export type StingKind = 'promotion' | 'achievement' | 'chapter' | 'finale'
+
 /** The engine's side (engine.ts), loaded on demand. */
 export interface AudioEngine {
   play(
@@ -126,7 +129,7 @@ export interface AudioEngine {
   ): void
   setScene(scene: Scene | null, levels: Levels, calm: boolean): void
   setLevels(levels: Levels, calm: boolean): void
-  sting(kind: 'promotion' | 'achievement', level: number): void
+  sting(kind: StingKind, level: number): void
   stop(): void
   /** How loud the output is right now, 0–1 (for tests and checks). */
   meter?(): number
@@ -222,6 +225,13 @@ export class AudioManager {
     if (id === 'promotion' || id === 'achievement')
       this.engine?.sting(id, levelOf(this.settings, 'music'))
     return true
+  }
+
+  /** A music cue for a key moment of a story (a chapter opening, or its finale). */
+  cue(kind: 'chapter' | 'finale'): void {
+    const level = levelOf(this.settings, 'music')
+    if (level <= 0) return
+    this.engine?.sting(kind, level)
   }
 
   private claims: Array<{ id: number; scene: Scene | null }> = []

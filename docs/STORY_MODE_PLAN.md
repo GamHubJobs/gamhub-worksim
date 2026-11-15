@@ -110,3 +110,24 @@ Marketing), "Signal and Noise" (Data Analysis), "Release Day" (Software Developm
 two chapters each, with the career's own cases, its own people, a decision that comes
 back, and endings that follow from it. Each is checked in unit tests (it holds together,
 and can be played to more than one ending).
+
+### Story 11 · Presentation and polish
+
+- **Cinematic framing for key scenes.** A chapter's opening scene and its finale
+  (`keyMoment` in game/story/engine.ts: the first scene of the chapter's first main
+  mission, the last scene of its last) open like a film (world/npc/Cinematic.tsx):
+  black bars close in at the top and bottom, the chapter's title appears over the
+  scene, the HUD and panels step aside, then the conversation begins. About three
+  seconds; skippable at once (the button, Esc, Enter or Space); still and shorter with
+  reduced motion. Every campaign has an opening for each chapter (unit test).
+- **Music cues.** A rising phrase for a chapter opening and a resolving cadence for a
+  finale (audio cues `chapter` and `finale`), on the music level; nothing when music
+  is off (unit test).
+- **Accessibility.** The title card is a labelled dialog with focus on Skip, and passes
+  the automated WCAG 2.1 AA checks; the accessibility browser suite passes (10 tests).
+- **Performance.** Production build, measured: the start screen loads 408 kB of
+  JavaScript in 3.8 s on a throttled (fast 3G-like) connection, and a returning player
+  reaches the office in 2.8 s; the JavaScript heap is 7 MB at the start screen, 21 MB
+  in the office, 22 MB after the editors are opened and 23 MB after five rounds of
+  opening and closing them (no growth to speak of). The memory script had fallen
+  behind the apps' names and the production build's markup; fixed.

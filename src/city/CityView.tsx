@@ -60,7 +60,13 @@ import { WeddingPanel } from '../world/npc/WeddingPanel'
 import { withLife } from '../game/lifeTime'
 import { StoryScenePanel } from '../world/npc/StoryScenePanel'
 import { campaignFor } from '../game/story/campaigns'
-import { missionById, playScene, sceneFor, sceneLines } from '../game/story/engine'
+import {
+  keyMoment,
+  missionById,
+  playScene,
+  sceneFor,
+  sceneLines,
+} from '../game/story/engine'
 import type { Scene } from '../game/story/types'
 import { metAs, onTalkRequest, release } from '../world/npc/people'
 import { holdEncounter, relationOf, type Situation, type Who } from '../game/encounters'
@@ -615,6 +621,7 @@ export function CityView({
               key={storyScene.scene.id}
               className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
               scene={storyScene.scene}
+              moment={keyMoment(campaignFor(profile.careerId)!, storyScene.scene.id)}
               name={storyScene.name}
               mission={storyScene.mission}
               lines={storyScene.lines}

@@ -221,6 +221,22 @@ describe('the sound manager', () => {
     expect(calls).toContain('sting:promotion')
   })
 
+  it('a story chapter opening and its finale each get a music cue, unless music is off', async () => {
+    const { engine, calls } = fakeEngine()
+    const manager = new AudioManager(defaultAudioSettings(), async () => engine)
+    await ready(manager)
+    manager.cue('chapter')
+    manager.cue('finale')
+    expect(calls).toEqual(expect.arrayContaining(['sting:chapter', 'sting:finale']))
+    const quiet = defaultAudioSettings()
+    quiet.categories.music.volume = 0
+    const off = fakeEngine()
+    const silent = new AudioManager(quiet, async () => off.engine)
+    await ready(silent)
+    silent.cue('chapter')
+    expect(off.calls).not.toContain('sting:chapter')
+  })
+
   it('scenes: the latest claim wins and releasing it restores the one before', async () => {
     const { engine, calls } = fakeEngine()
     const manager = new AudioManager(defaultAudioSettings(), async () => engine)

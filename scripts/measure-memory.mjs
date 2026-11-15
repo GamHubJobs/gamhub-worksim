@@ -74,27 +74,34 @@ try {
     .getByRole('button', { name: /Use your computer/ })
     .click()
   const round = async () => {
-    await app('Sheets')
+    await app('Grid Craft')
     await page
       .getByRole('button', { name: /Practice Workbook/ })
       .first()
       .click()
-    await page.getByRole('grid').waitFor()
-    await app('Docs')
+    // The workbook is open (its toolbar shows the version history).
+    await page.getByRole('button', { name: 'Version history' }).first().waitFor()
+    await app('Word Craft')
     await page
       .getByRole('button', { name: /Blank document/ })
       .first()
       .click()
-    await page.getByTestId('doc-body').waitFor()
-    await app('Slides')
+    await page.getByRole('button', { name: 'Version history' }).first().waitFor()
+    await app('Deck Craft')
     await page
       .getByRole('button', { name: /Monthly business review/ })
       .first()
       .click()
-    await page.getByTestId('slide-canvas').waitFor()
+    await page.getByRole('button', { name: 'Version history' }).first().waitFor()
     await app('Mail')
   }
-  await round()
+  try {
+    await round()
+  } catch (e) {
+    // Where it stopped, to see why (set FAIL_SHOT to a .png path).
+    if (process.env.FAIL_SHOT) await page.screenshot({ path: process.env.FAIL_SHOT })
+    throw e
+  }
   results.afterApps = await heap()
   for (let i = 0; i < 4; i++) await round()
   results.afterFiveRounds = await heap()

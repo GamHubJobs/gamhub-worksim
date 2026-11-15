@@ -13,6 +13,11 @@ page lists what is supported and how it is tested.
   - reading mail;
   - working on tasks, cases and assessments;
   - submitting work.
+- **Story moments framed like a film can be skipped.** A chapter opening or finale
+  shows its title between black bars for about three seconds (a second and a half,
+  without movement, when the system asks for less motion). Focus goes to **Skip**, and
+  Esc, Enter or Space skips it at once; it is announced as a dialog with the chapter's
+  name, and passes the automated checks (`story.spec.ts`).
 - **A visible focus ring.** A 3-pixel blue outline shows which control has keyboard
   focus. No control removes it.
 - **The 3D office has a full alternative.** The panel beside the 3D view lists the

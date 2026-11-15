@@ -287,3 +287,29 @@ export function skipTo(
   })
   return startMission(next, missionId, now)
 }
+
+/** A key moment of a story: a chapter opening, or its finale (framed like a film). */
+export interface KeyMoment {
+  kind: 'opening' | 'finale'
+  /** The chapter, numbered from 1. */
+  number: number
+  chapter: string
+  campaign: string
+}
+
+/**
+ * Whether a scene is a key moment: the first scene of a chapter's first main
+ * mission (the chapter opens), or the last scene of its last main mission
+ * (the finale). Shown with cinematic framing and a music cue.
+ */
+export function keyMoment(campaign: Campaign, sceneId: string): KeyMoment | null {
+  const talks = (m: Mission | undefined) =>
+    (m?.objectives ?? []).flatMap((o) => (o.kind === 'talk' ? [o.scene] : []))
+  for (const [i, chapter] of campaign.chapters.entries()) {
+    const main = chapter.missions.filter((m) => m.type === 'main')
+    const at = { number: i + 1, chapter: chapter.title, campaign: campaign.title }
+    if (talks(main[0])[0] === sceneId) return { kind: 'opening', ...at }
+    if (talks(main.at(-1)).at(-1) === sceneId) return { kind: 'finale', ...at }
+  }
+  return null
+}

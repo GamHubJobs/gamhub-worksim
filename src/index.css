@@ -163,6 +163,12 @@ body[data-onsite] .onsite-hide {
   display: none;
 }
 
+/* A key story moment framed like a film (world/npc/Cinematic.tsx): the HUD and panels step aside. */
+body[data-cinematic] .onsite-hide,
+body[data-cinematic] .away-hide {
+  visibility: hidden;
+}
+
 /* Away from the office (at court): the office guide's next step steps aside. */
 body[data-away] .away-hide {
   display: none;

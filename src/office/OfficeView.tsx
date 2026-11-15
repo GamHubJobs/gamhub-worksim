@@ -23,7 +23,13 @@ import { WalkView } from '../world/WalkView'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
 import { StoryScenePanel } from '../world/npc/StoryScenePanel'
 import { campaignFor } from '../game/story/campaigns'
-import { missionById, playScene, sceneFor, sceneLines } from '../game/story/engine'
+import {
+  keyMoment,
+  missionById,
+  playScene,
+  sceneFor,
+  sceneLines,
+} from '../game/story/engine'
 import type { Scene } from '../game/story/types'
 import { metAs, onTalkRequest, release } from '../world/npc/people'
 import {
@@ -1195,6 +1201,7 @@ export function OfficeView({
             className="max-h-full w-[28rem] max-w-full overflow-y-auto"
             key={storyScene.scene.id}
             scene={storyScene.scene}
+            moment={keyMoment(campaignFor(profile.careerId)!, storyScene.scene.id)}
             name={storyScene.name}
             mission={storyScene.mission}
             lines={storyScene.lines}

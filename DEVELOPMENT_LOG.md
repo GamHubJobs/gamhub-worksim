@@ -188,9 +188,30 @@ and S7 (social life in person, at work and in the neighbourhood).
       world, Finance & Administration chapter 1
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [x] Story 6–10 The other five careers
-- [ ] Story 11 Presentation and polish
+- [x] Story 11 Presentation and polish
 
 ---
+
+## 2026-11-16 · Story 11: presentation and polish
+
+**Built**
+
+- Key story moments (a chapter's opening and its finale) framed like a film: black bars,
+  the chapter's title over the scene, the HUD stepping aside, a music cue; skippable,
+  and calmer with reduced motion (`Cinematic.tsx`, `keyMoment`, audio cues `chapter`
+  and `finale`).
+
+**Checked**
+
+- Accessibility: the browser suite (10) passes; the title card passes the automated
+  checks in `story.spec.ts`.
+- Performance (production build): start screen 408 kB, 3.8 s on a throttled connection;
+  office 2.8 s for a returning player; heap 7 / 21 / 22 / 23 MB (start, office, editors,
+  five rounds). `scripts/measure-memory.mjs` fixed (renamed apps, production markup).
+
+**Tested**
+
+- Unit tests for the key moments and the cues; the story browser tests (5) pass.
 
 ## 2026-11-16 · S7: social life in person, at work and in the neighbourhood
 

@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { openApp, sitAtComputer } from './helpers.ts'
 
@@ -64,6 +65,17 @@ test('a story from the first screen: the first morning and the missing invoice, 
 
   // Nina at reception: her welcome, in person.
   await talkTo(page, 'reception')
+  // The chapter opens like a film: bars, its title, a music cue; skippable.
+  const film = page.getByTestId('cinematic')
+  await expect(film).toBeVisible({ timeout: 120_000 })
+  await expect(film).toHaveAttribute('data-kind', 'opening')
+  await expect(film).toContainText('Chapter 1')
+  if (process.env.WORKSIM_SHOTS)
+    await page.screenshot({
+      path: `${process.env.WORKSIM_SHOTS}/story/chapter-opening.png`,
+    })
+  await film.getByRole('button', { name: 'Skip (Esc)' }).click()
+  await expect(film).toHaveCount(0)
   await expect(scene(page)).toHaveAttribute('data-scene', 'nina-welcome', {
     timeout: 120_000,
   })
@@ -215,6 +227,20 @@ test('chapters 2 and 3: the supplier review with new people, and an ending that 
   // Dana, the coordinator, in the story for the first time.
   await play(page, 'coordinator', 'dana-brightline', /export the log/)
   await talkTo(page, 'manager')
+  // The supplier review is chapter 2's finale, framed like a film too: held on screen
+  // to check it passes the accessibility checks, then skipped with Esc.
+  await page.evaluate('window.__worksimHoldCinematic = true')
+  const film = page.getByTestId('cinematic')
+  await expect(film).toContainText('The end of chapter 2', { timeout: 120_000 })
+  await expect(film).toHaveAttribute('data-kind', 'finale')
+  const filmAudit = await new AxeBuilder({ page })
+    .include('[data-testid="cinematic"]')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+  expect(filmAudit.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([])
+  await page.keyboard.press('Escape')
+  await expect(film).toHaveCount(0)
+  await page.evaluate('window.__worksimHoldCinematic = false')
   await expect(scene(page)).toHaveAttribute('data-scene', 'priya-review', {
     timeout: 120_000,
   })

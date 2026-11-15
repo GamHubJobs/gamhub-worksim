@@ -4,7 +4,9 @@
  * At the side, like any conversation, so both people stay in view.
  */
 import { useEffect, useRef, useState } from 'react'
+import type { KeyMoment } from '../../game/story/engine'
 import type { Scene } from '../../game/story/types'
+import { Cinematic } from './Cinematic'
 
 export function StoryScenePanel({
   scene,
@@ -13,6 +15,7 @@ export function StoryScenePanel({
   lines,
   onChoose,
   onClose,
+  moment = null,
   className = 'absolute right-4 bottom-20 z-20 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]',
 }: {
   scene: Scene
@@ -24,9 +27,18 @@ export function StoryScenePanel({
   lines: string[]
   onChoose: (choiceId: string) => void
   onClose: () => void
+  /** A key moment (a chapter opening, its finale): framed like a film first. */
+  moment?: KeyMoment | null
   className?: string
 }) {
   const [chosen, setChosen] = useState<string | null>(null)
+  // The cinematic framing first, for a key moment (skippable).
+  const [framed, setFramed] = useState(!moment)
+  const framing = useRef(!framed)
+  useEffect(() => {
+    framing.current = !framed
+    if (framed) box.current?.focus()
+  }, [framed])
   const close = useRef(onClose)
   useEffect(() => {
     close.current = onClose
@@ -36,7 +48,7 @@ export function StoryScenePanel({
     const before = document.activeElement
     box.current?.focus()
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close.current()
+      if (e.key === 'Escape' && !framing.current) close.current()
     }
     window.addEventListener('keydown', onKey)
     return () => {
@@ -47,6 +59,8 @@ export function StoryScenePanel({
   const choice = scene.choices.find((c) => c.id === chosen)
   const first = name.split(' ')[0]
   const shown = choice ? choice.reply : lines
+  if (moment && !framed)
+    return <Cinematic moment={moment} onDone={() => setFramed(true)} />
   return (
     <section
       ref={box}
