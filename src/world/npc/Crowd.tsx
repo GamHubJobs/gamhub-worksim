@@ -17,7 +17,14 @@
  * someone is walking.
  */
 import { useFrame, useThree } from '@react-three/fiber'
-import { useContext, useEffect, useMemo, useRef, type RefObject } from 'react'
+import {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type RefObject,
+} from 'react'
 import type { Group } from 'three'
 import { Person, type Motion, type PersonLook } from '../../office/scene/people'
 import { prefersReducedMotion } from '../../ui/motion'
@@ -101,7 +108,9 @@ export function Crowd(props: CrowdProps) {
   const world = useContext(World)
   const root = useRef<Group>(null)
   const latest = useRef(props)
-  useEffect(() => {
+  // Updated before the frame loop sees this render (its callback is swapped in a
+  // layout effect too), so the people and their records below always match.
+  useLayoutEffect(() => {
     latest.current = props
   })
   // One record per person, kept across renders.
@@ -161,6 +170,8 @@ export function Crowd(props: CrowdProps) {
   useFrame((_, raw) => {
     const s = state.current
     const p = latest.current
+    // Someone came or went and their record is not made yet: wait a frame.
+    if (p.people.some((q) => !lives.has(q.id))) return
     const dt = Math.min(raw, 1)
     s.seconds += dt
     // What is solid (read once the place has appeared).
