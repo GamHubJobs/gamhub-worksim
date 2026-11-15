@@ -86,7 +86,7 @@ sounds and effects. No scenario gets a system of its own.
    waiting, the interviewer coming out, the interview in a meeting room, the result.
 6. **S6 · Home services and rides**: **done**, see below. a technician who comes to repair something; a taxi
    that arrives and drives the player.
-7. **S7 · Social life and the city**: friends met at the café or the park; a neighbour
+7. **S7 · Social life and the city**: **done**, see below. friends met at the café or the park; a neighbour
    in the street; a parcel; a new colleague's first day; a broken printer; a team
    celebration.
 
@@ -208,3 +208,35 @@ counted twice, collisions respected, and no loss of speed.
   visits); `transport.spec.ts` takes the taxi in 3D; `repair.spec.ts` plays the
   breakdown, a reload while the engineer is on the way, the visit and the repair
   (screenshots checked).
+
+### S7 · Social life and the city
+
+- **Friends met in person.** A drink is now at Kettle & Crumb and a run round Millpond
+  Park (content/friends.ts `venue`). Said yes to on the phone, "Go" at the front door
+  takes the player there, where the friend is waiting (from an hour and a half before
+  until half an hour after it starts): sitting at the window table for a drink, or
+  stretching by the running loop, then running the laps alongside the player. It
+  counts (friendship, needs, money, time) once played. The other plans (the cinema, the
+  quiz, dinner at their place, an online game) still happen off-stage.
+- **A neighbour in the street.** On Tuesday and Thursday evenings Aisha, the neighbour,
+  is on the pavement by the building with her shopping; when the player comes near she
+  waves and calls over ("Hi, neighbour! Have you got a minute?"), a conversation started
+  by someone else. Stopping to chat brings them closer (once an evening).
+- **A parcel.** On Thursday evenings at seven a courier rings with a parcel for next
+  door; answering, the player signs for it and takes it in, then takes it round; Aisha
+  sends a thank-you and the friendship grows. If no one answers in ten minutes, the
+  courier takes it elsewhere (game/parcel.ts; saved).
+- **A new colleague's first day.** Ellie joins on day 3: the manager brings her over to
+  the player's desk to introduce her (offer to show her round, or say hello); then she
+  settles in at the break room table and joins the stand-up.
+- **A broken printer.** On Tuesday afternoons the printer jams; the facilities colleague
+  waits at it for a hand (ease the sheet out with the power off, force it, or leave it).
+- **A team celebration.** Fridays at 16:15, Friday cake: everyone gathers round the
+  break room table, with a cake on it; the player can join once (time away, a lift in
+  mood, a little trust with each of the team; not counted as a meeting).
+- Tested: unit tests for every rule; browser tests in `office-life.spec.ts` (new
+  starter, printer, cake), `neighbourhood.spec.ts` (the neighbour, the run, the
+  parcel) and `life.spec.ts` (the drink at the café); screenshots checked.
+- Found on the way: while running between an activity's points (the park laps), the
+  player's position was not shared with anyone else (people keeping clear of them, a
+  friend alongside); it is now (`PlayerRig`).

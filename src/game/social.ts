@@ -15,6 +15,7 @@ import {
 import { formatMoney, type NeedId } from '../content/life'
 import type { Life } from '../persistence/schemas'
 import type { ProfileData } from './career'
+import type { Who } from './encounters'
 import { formatTime } from './clock'
 import { enables } from './home'
 import { clamp, decayed, note, spend, withLife, withWellbeing } from './lifeTime'
@@ -156,6 +157,86 @@ export function canGo(profile: ProfileData, messageId: string): string | null {
   if (found.plan.needsItem && !enables(life, found.plan.needsItem))
     return 'You need a games console.'
   return null
+}
+
+/**
+ * A friend waiting for the player at a place in the neighbourhood now (the
+ * café, the park), for a plan they said yes to: from a while before it starts
+ * until it is too late to go.
+ */
+export function friendWaiting(profile: ProfileData, place: string) {
+  const life = profile.work.life
+  return (
+    plansTonight(profile).find(
+      ({ message, plan }) =>
+        plan.venue === place &&
+        life.minute >= plan.at - 90 &&
+        !canGo(profile, message.id),
+    ) ?? null
+  )
+}
+
+/** Who a friend is, for talking to them in person (in the café, the park, the street). */
+export function friendWho(id: string): Who | undefined {
+  const f = getFriend(id)
+  return f
+    ? {
+        id: `friend:${id}`,
+        name: f.name,
+        role: f.relation,
+        kind: 'neighbour',
+        personality: 'warm',
+      }
+    : undefined
+}
+
+/** The neighbour, who is about outside the building on some evenings. */
+export const NEIGHBOUR = 'aisha'
+
+/**
+ * Whether the neighbour is outside the building now, to stop and chat (and
+ * call over to the player first): on Tuesday and Thursday evenings until half
+ * past eight, unless they have already been in touch today.
+ */
+export function neighbourOutside(profile: ProfileData): boolean {
+  const life = profile.work.life
+  const day = profile.work.day
+  const weekday = (((day - 1) % 7) + 7) % 7
+  return (
+    profile.work.dayOver &&
+    life.phase === 'evening' &&
+    (weekday === 1 || weekday === 3) &&
+    life.minute < 20 * 60 + 30 &&
+    friendOf(life, NEIGHBOUR).lastDay !== day
+  )
+}
+
+/** The neighbour's parcel, taken round: they are grateful, and say so. */
+export function thankedForParcel(life: Life, day: number): Life {
+  const next = touch(life, NEIGHBOUR, day, 5)
+  return addMessage(next, {
+    from: NEIGHBOUR,
+    day,
+    minute: life.minute,
+    text: 'Thank you so much for taking in my parcel! You’re a star. Coffee’s on me next time.',
+  })
+}
+
+/** Stopped to chat with the neighbour in the street: a few minutes, and closer. */
+export function chatWithNeighbour(profile: ProfileData): ProfileData {
+  if (!neighbourOutside(profile)) return profile
+  const friend = getFriend(NEIGHBOUR)!
+  let life = touch(profile.work.life, NEIGHBOUR, profile.work.day, 4)
+  return spendTime(profile, life, {
+    minutes: 10,
+    needs: { social: 10, fun: 3 },
+    text: `Stopped to chat with ${first(friend)}, your neighbour`,
+  })
+}
+
+/** Where an accepted plan is met in person (the café, the park), if anywhere. */
+export function planVenue(life: Life, messageId: string): 'cafe' | 'park' | undefined {
+  return inviteOf(life, messageId)?.plan.venue
 }
 
 /** The plans the player has said yes to this evening. */

@@ -38,6 +38,8 @@ export interface InteriorState {
    * to call the player in), or null with no interview booked.
    */
   interviewer?: 'room' | 'collect' | null
+  /** A friend the player arranged to meet here (their id), waiting for them. */
+  friend?: string | null
 }
 
 export const Interior = createContext<InteriorState>({

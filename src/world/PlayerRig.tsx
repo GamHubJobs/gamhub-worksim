@@ -802,6 +802,10 @@ export function PlayerRig(props: PlayerRigProps) {
             motion.current = { walking: false }
           }
           state.current = s
+          // Where the player is, for others (people who keep clear of them, a friend
+          // running alongside), while walking or running between an activity's spots.
+          setBody('player', s.x, s.z, 0.3)
+          now.current = { ...now.current, x: s.x, z: s.z }
           if (group.current) {
             group.current.position.set(s.x, 0, s.z)
             group.current.rotation.y = s.heading

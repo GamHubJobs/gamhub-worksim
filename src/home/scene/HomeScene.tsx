@@ -67,6 +67,7 @@ const CHILD_LOOKS: PersonLook[] = [
 ]
 import type { DeliveryStage } from '../../game/delivery'
 import type { RepairStage } from '../../game/repair'
+import type { ParcelStage } from '../../game/parcel'
 
 const STILL = prefersReducedMotion()
 
@@ -108,6 +109,8 @@ export interface HomeSceneProps {
   delivery?: DeliveryStage
   /** Something to repair (the boiler), and the engineer coming to fix it. */
   repair?: RepairStage
+  /** A parcel for next door: the courier at the door with it. */
+  parcel?: ParcelStage
   /** Someone at home with the player (visiting, or living here), by id. */
   partner?: string | null
   /** The player's children, by name (at home with them). */
@@ -155,7 +158,9 @@ function HomeScene(props: HomeSceneProps) {
           (a.action === null || byAction[a.action]) &&
           // Answering the door only when someone is there (not a standing "No one is at the door").
           !(
-            (a.action === 'takeaway-door' || a.action === 'repair-door') &&
+            (a.action === 'takeaway-door' ||
+              a.action === 'repair-door' ||
+              a.action === 'parcel-door') &&
             byAction[a.action]?.blocked
           ),
       ),
@@ -270,6 +275,13 @@ function HomeScene(props: HomeSceneProps) {
             />
             <ActivityEffects activities={activities} />
             <Courier stage={props.delivery ?? 'none'} door={[-w / 2, d / 2 - 0.9]} />
+            <Courier
+              stage={props.parcel === 'at-door' ? 'at-door' : 'none'}
+              door={[-w / 2, d / 2 - 0.9]}
+              activity="parcel-door"
+              carry="parcel"
+              devKey="__worksimParcel"
+            />
             <Engineer
               stage={props.repair ?? 'none'}
               door={[-w / 2, d / 2 - 0.9]}

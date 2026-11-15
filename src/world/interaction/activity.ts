@@ -29,6 +29,8 @@ export type PropKind =
   | 'product'
   /** A takeaway bag, with handles. */
   | 'bag'
+  /** A cardboard parcel, taped up. */
+  | 'parcel'
   /** Papers: a printout, a report. */
   | 'document'
   /** A clipboard with a page on it, to write on. */

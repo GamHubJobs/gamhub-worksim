@@ -132,7 +132,7 @@ test('friends: an invitation accepted and kept, and a call', async ({ page }) =>
   const phone = page.getByTestId('phone')
   const thread = phone.getByTestId('phone-thread')
   await expect(thread).toContainText('Leo Martins')
-  await expect(thread).toContainText('Quick drink at the Kettle & Crown')
+  await expect(thread).toContainText('Quick drink at Kettle & Crumb')
   await thread.getByTestId('invitation').getByRole('button', { name: 'Accept' }).click()
   await expect(thread).toContainText('I’d love to!')
   await expect(thread.getByTestId('invitation')).toContainText('You said yes')
@@ -153,14 +153,20 @@ test('friends: an invitation accepted and kept, and a call', async ({ page }) =>
   await phone.getByRole('button', { name: 'Put the phone away' }).click()
   await expect(phone).toHaveCount(0)
 
-  // Out for the drink, from the front door.
+  // Out for the drink, from the front door: to Kettle & Crumb, where Leo is waiting.
   await room(page, 'Front door')
   await home(page)
     .getByTestId('plans')
-    .getByRole('button', { name: /Go: a drink at the kettle & crown with Leo/ })
+    .getByRole('button', { name: /Go: a drink at kettle & crumb with Leo/ })
     .click()
-  await expect(home(page).getByTestId('home-log')).toContainText(
-    'A drink at the Kettle & Crown with Leo',
+  const city = page.getByTestId('city')
+  await expect(city.getByTestId('place')).toContainText('Kettle & Crumb', {
+    timeout: 30_000,
+  })
+  await city.getByTestId('meet-friend').click()
+  await expect(city.getByTestId('city-log')).toContainText(
+    'A drink at Kettle & Crumb with Leo',
+    { timeout: 60_000 },
   )
-  await expect(home(page).getByTestId('plans')).toHaveCount(0)
+  await expect(city.getByTestId('meet-friend')).toHaveCount(0)
 })

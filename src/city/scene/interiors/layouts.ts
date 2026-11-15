@@ -143,6 +143,24 @@ export const CAFE: Layout = {
       ],
     },
     {
+      // A drink with a friend the player arranged to meet (game/social.ts): sitting
+      // down across from them at the window table.
+      id: 'friend-cafe',
+      action: 'friend-cafe',
+      prompt: 'sit down with your friend',
+      spot: { x: -3, z: 1.75, reach: 1.4 },
+      anchor: SEAT,
+      stages: [
+        { clip: 'sit', seconds: 1.2, label: 'Sitting down with your friend' },
+        { clip: 'drink', seconds: 5, label: 'A drink together', hold: { right: 'cup' } },
+        { clip: 'sit-relax', seconds: 5, label: 'Catching up' },
+      ],
+      sounds: [
+        { at: 0.4, id: 'chair' },
+        { at: 2.4, id: 'sip', every: 2.2, until: 6 },
+      ],
+    },
+    {
       id: 'dinner',
       action: 'cafe-dinner',
       prompt: 'order dinner',
@@ -339,6 +357,27 @@ export const PARK: Layout = {
         })),
         { clip: 'stretch', seconds: 2.5, label: 'A good stretch' },
       ],
+    },
+    {
+      // A run with a friend the player arranged to meet (game/social.ts): hello by
+      // the loop, the laps together, and getting their breath back.
+      id: 'friend-park',
+      action: 'friend-park',
+      prompt: 'go for a run with your friend',
+      spot: { x: 5.7, z: 1.2, reach: 1.4 },
+      anchor: { x: 5.5, z: 1.2, heading: Math.PI / 2 },
+      stages: [
+        { clip: 'talk', seconds: 2, label: 'Saying hello' },
+        ...loop(12).map((at) => ({
+          clip: 'stand' as const,
+          seconds: 0.05,
+          label: 'Running the loop together',
+          at,
+          run: true,
+        })),
+        { clip: 'squat', seconds: 2.6, label: 'Getting your breath back together' },
+      ],
+      sounds: [{ at: 2.2, id: 'breath' }],
     },
     {
       id: 'run',

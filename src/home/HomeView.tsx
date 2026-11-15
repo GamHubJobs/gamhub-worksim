@@ -42,6 +42,7 @@ import { canDo, lifePhase, sleepHours } from '../game/life'
 import { canGoOut } from '../game/city'
 import { deliveryStage } from '../game/delivery'
 import { repairShown, repairStage } from '../game/repair'
+import { parcelShown, parcelStage } from '../game/parcel'
 import { finishDate, stayTheNight, whoOf } from '../game/dates'
 import { ageOf, homeNow } from '../game/children'
 import { childWho } from '../game/family'
@@ -105,26 +106,30 @@ export function HomeView({
   const [shop, setShop] = useState<'shop' | 'move' | 'phone' | 'career' | null>(null)
   const life = profile.work.life
   const phase = lifePhase(profile)
+  // A parcel for next door this evening (game/parcel.ts).
+  const parcel = parcelStage(life, profile.work.day, phase === 'evening')
   const [room, setRoom] = useState<RoomId>(phase === 'morning' ? 'bedroom' : 'living')
   const current = ROOMS.find((r) => r.id === room)!
   const actions = HOME_ACTIONS.filter(
     (a) =>
       a.room === room &&
       a.phases.includes(phase === 'work' ? 'evening' : phase) &&
-      repairShown(life, a.id),
+      repairShown(life, a.id) &&
+      parcelShown(parcel, a.id),
   )
   const day = phase === 'morning' ? nextWorkday(profile.work.day) : profile.work.day
   // Everything that can be done at home now, for the furniture in 3D (as the lists).
   const now = phase === 'work' ? 'evening' : phase
   const doings: Doing[] = [
-    ...HOME_ACTIONS.filter((a) => a.phases.includes(now) && repairShown(life, a.id)).map(
-      (a) => ({
-        id: a.id,
-        label: a.label,
-        detail: `${a.minutes} min${a.cost ? ` · ${formatMoney(a.cost)}` : ''}`,
-        blocked: canDo(profile, a),
-      }),
-    ),
+    ...HOME_ACTIONS.filter(
+      (a) =>
+        a.phases.includes(now) && repairShown(life, a.id) && parcelShown(parcel, a.id),
+    ).map((a) => ({
+      id: a.id,
+      label: a.label,
+      detail: `${a.minutes} min${a.cost ? ` · ${formatMoney(a.cost)}` : ''}`,
+      blocked: canDo(profile, a),
+    })),
     ...(phase === 'evening'
       ? [
           {
@@ -268,6 +273,7 @@ export function HomeView({
               dressed={phase === 'morning' && life.ready.dressed}
               delivery={deliveryStage(life)}
               repair={repairStage(life)}
+              parcel={parcel}
               partner={evening?.id ?? here?.id ?? null}
               kids={life.family.children.flatMap((c, i) =>
                 homeNow(c, day, life.minute)

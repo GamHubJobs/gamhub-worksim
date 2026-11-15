@@ -86,7 +86,13 @@ import { enterPlace, goOutside } from '../game/city'
 import { deal, setRiding } from '../game/transport'
 import { doHomeAction, goHome, goToBed, leaveForWork, lifePhase } from '../game/life'
 import { buyFurniture, moveHome, recolour, sellFurniture } from '../game/home'
-import { contactFriend, goOut, markRead as readMessages, respond } from '../game/social'
+import {
+  contactFriend,
+  goOut,
+  markRead as readMessages,
+  planVenue,
+  respond,
+} from '../game/social'
 import { Icon, type IconName } from '../ui/Icon'
 import { DayEnd } from '../workday/DayEnd'
 import { useWorkClock } from '../workday/useWorkClock'
@@ -932,7 +938,14 @@ export function Desktop({
             onSell={(slot) => void act((p) => sellFurniture(p, slot))}
             onRecolour={(slot, colour) => void act((p) => recolour(p, slot, colour))}
             onMove={(home) => void act((p) => moveHome(p, home))}
-            onGoOut={(id) => void act((p) => goOut(p, id))}
+            onGoOut={(id) =>
+              void act((p) => {
+                // Met in person (the café, the park): out of the door and there,
+                // where the friend is waiting; otherwise it happens off-stage.
+                const venue = planVenue(p.work.life, id)
+                return venue ? enterPlace(goOutside(p), venue) : goOut(p, id)
+              })
+            }
             onGoOutside={() => void act(goOutside)}
             onCareer={act}
           />

@@ -13,6 +13,7 @@ import { Box } from '../../../office/scene/parts'
 import { Walker, type PersonLook } from '../../../office/scene/people'
 import { Npc } from '../../../world/npc/Npc'
 import { DatePartner } from './DatePartner'
+import { FriendWaiting } from './FriendWaiting'
 import { Wedding } from './Wedding'
 import { local, TOWN_PEOPLE } from '../../../content/townPeople'
 import { prefersReducedMotion } from '../../../ui/motion'
@@ -263,6 +264,7 @@ export default function Park() {
         <ParkBench position={[0, 0, 0]} rotation={Math.PI} />
       </Hotspot>
       <DatePartner place="park" />
+      <FriendWaiting place="park" />
       <Wedding />
       <ParkBench position={[3.3, 0, -5.6]} rotation={0.3} />
       <Npc

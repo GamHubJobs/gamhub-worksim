@@ -28,10 +28,19 @@ const END = LEAVE + T.close
 export function Courier({
   stage,
   door,
+  activity = 'takeaway-door',
+  carry = 'bag',
+  devKey = '__worksimCourier',
 }: {
   stage: DeliveryStage
   /** Where the doorway is (x, z), on the left wall. */
   door: [number, number]
+  /** The player's activity that answers the door to them. */
+  activity?: string
+  /** What they bring: the takeaway, or a parcel for next door. */
+  carry?: 'bag' | 'parcel'
+  /** Where development builds report them (for browser tests). */
+  devKey?: string
 }) {
   const { now } = useWorld()
   const group = useRef<Group>(null)
@@ -48,7 +57,7 @@ export function Courier({
     const dt = Math.min(raw, 0.5)
     const g = group.current
     if (!g) return
-    const answering = now.current.id === 'takeaway-door'
+    const answering = now.current.id === activity
     const t = answering ? now.current.t : 0
     const here = stage === 'at-door' || (answering && stage !== 'doorstep' && t < END)
     g.visible = here
@@ -56,7 +65,7 @@ export function Courier({
       bag.current.visible = stage === 'doorstep' && !(answering && t > T.open + 0.6)
     if (!here) {
       if (import.meta.env.DEV)
-        (window as unknown as { __worksimCourier?: unknown }).__worksimCourier = {
+        (window as unknown as Record<string, unknown>)[devKey] = {
           shown: false,
         }
       walk.current = { x: door[0] - 1.7, arrived: false, rang: 0, left: 0 }
@@ -94,7 +103,7 @@ export function Courier({
     const has = !(answering && t >= HAND_OVER)
     if (has !== holding) setHolding(has)
     if (import.meta.env.DEV)
-      (window as unknown as { __worksimCourier?: unknown }).__worksimCourier = {
+      (window as unknown as Record<string, unknown>)[devKey] = {
         shown: true,
         x: w.x,
         holding: has,
@@ -110,7 +119,7 @@ export function Courier({
           motion={motion}
           rig={rig}
           talking={false}
-          hold={holding ? { right: <Prop kind="bag" /> } : undefined}
+          hold={holding ? { right: <Prop kind={carry} /> } : undefined}
           phase={0.8}
         />
       </group>

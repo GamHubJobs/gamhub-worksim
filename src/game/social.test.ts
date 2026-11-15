@@ -4,10 +4,16 @@ import { newProfileData, type ProfileData } from './career'
 import { goHome, goToBed } from './life'
 import {
   canContact,
+  chatWithNeighbour,
   canGo,
   contactFriend,
   friendOf,
+  friendWaiting,
+  friendWho,
+  NEIGHBOUR,
+  neighbourOutside,
   goOut,
+  planVenue,
   plansTonight,
   respond,
   unreadCount,
@@ -91,5 +97,57 @@ describe('friends and the phone', () => {
     expect(friendshipName(50)).toBe('Friend')
     expect(friendshipName(90)).toBe('Close friend')
     expect(friendshipName(10)).toBe('Drifting apart')
+  })
+})
+
+describe('friends met in person in the neighbourhood', () => {
+  it('a drink is at the café, and a run in the park; the rest happen elsewhere', () => {
+    expect(PLANS.drinks.venue).toBe('cafe')
+    expect(PLANS.run.venue).toBe('park')
+    expect(PLANS.film.venue).toBeUndefined()
+  })
+
+  it('the friend waits at the place for a plan the player said yes to', () => {
+    // Friday: Leo suggests a drink at the café.
+    let p = evening(5)
+    const message = invite(p)
+    const plan = PLANS[message.invite!.kind]
+    expect(plan.venue).toBe('cafe')
+    expect(friendWaiting(p, plan.venue ?? 'cafe')).toBeNull()
+    p = respond(p, message.id, true)
+    expect(planVenue(p.work.life, message.id)).toBe(plan.venue)
+    if (plan.venue) {
+      expect(friendWaiting(p, plan.venue)?.message.id).toBe(message.id)
+      expect(friendWaiting(p, plan.venue === 'cafe' ? 'park' : 'cafe')).toBeNull()
+      // Once it has happened, they are not waiting any more.
+      expect(friendWaiting(goOut(p, message.id), plan.venue)).toBeNull()
+      // Nor once it is too late to go.
+      const late = {
+        ...p,
+        work: { ...p.work, life: { ...p.work.life, minute: plan.at + 45 } },
+      }
+      expect(friendWaiting(late, plan.venue)).toBeNull()
+    }
+  })
+})
+
+describe('the neighbour in the street', () => {
+  it('is outside on Tuesday and Thursday evenings, and a chat brings you closer, once', () => {
+    expect(neighbourOutside(evening(1))).toBe(false)
+    expect(neighbourOutside(evening(3))).toBe(false)
+    const tuesday = evening(2)
+    expect(neighbourOutside(tuesday)).toBe(true)
+    expect(neighbourOutside(evening(4))).toBe(true)
+    const before = friendOf(tuesday.work.life, NEIGHBOUR).friendship
+    const after = chatWithNeighbour(tuesday)
+    expect(friendOf(after.work.life, NEIGHBOUR).friendship).toBe(before + 4)
+    expect(after.work.life.minute).toBe(tuesday.work.life.minute + 10)
+    expect(after.work.life.needs.social).toBeGreaterThan(tuesday.work.life.needs.social)
+    expect(neighbourOutside(after)).toBe(false)
+    expect(chatWithNeighbour(after)).toBe(after)
+    expect(friendWho(NEIGHBOUR)).toMatchObject({
+      id: 'friend:aisha',
+      name: 'Aisha Rahman',
+    })
   })
 })

@@ -22,6 +22,8 @@ import {
 } from 'react'
 import { CanvasTexture, SRGBColorSpace, type Group, type WebGLRenderer } from 'three'
 import { PLACES, type PlaceId } from '../../content/city'
+import { FRIEND_LOOKS } from '../../content/adultLooks'
+import { friendWho, NEIGHBOUR } from '../../game/social'
 import { BOUNDS, standAt, areaAt, surfaceAt, type Area } from '../streets'
 import { Bike, Bus, Car } from './vehicles'
 import type { Vector } from '../../content/office'
@@ -200,6 +202,10 @@ export interface CitySceneProps {
   taxi?: 'coming' | 'waiting' | 'leaving' | null
   /** The taxi pulled up, the player got in, or it has driven off. */
   onTaxi?: (event: 'arrived' | 'in' | 'gone') => void
+  /** The neighbour is outside the building, to stop and chat (see game/social.ts). */
+  neighbour?: boolean
+  /** The player came near: the neighbour calls over to them. */
+  onNeighbourCalls?: () => void
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -304,6 +310,9 @@ function CityScene(props: CitySceneProps) {
               </group>
             </group>
           )}
+          {props.neighbour && props.outside && (
+            <Neighbour onCalls={props.onNeighbourCalls} />
+          )}
           {props.taxi && props.outside && (
             <Taxi stage={props.taxi} onTaxi={props.onTaxi} onStop={setTaxiAt} />
           )}
@@ -380,6 +389,42 @@ function doorActivities(): Activity[] {
 }
 
 const DOORS = doorActivities()
+
+/** Where the neighbour stands: on the pavement just along from the building's door, turned to it. */
+const NEIGHBOUR_AT = { x: -38.6, z: 4.9 }
+
+/**
+ * The neighbour, outside the building on some evenings: standing on the
+ * pavement with their shopping, they wave and call over when the player comes
+ * near (once); the player can stop and chat.
+ */
+function Neighbour({ onCalls }: { onCalls?: () => void }) {
+  const called = useRef(false)
+  useFrame(() => {
+    if (called.current) return
+    if (Math.hypot(playerAt.x - NEIGHBOUR_AT.x, playerAt.z - NEIGHBOUR_AT.z) < 7) {
+      called.current = true
+      onCalls?.()
+    }
+  })
+  const who = friendWho(NEIGHBOUR)!
+  return (
+    <group>
+      <Npc
+        who={who}
+        position={[NEIGHBOUR_AT.x, 0, NEIGHBOUR_AT.z]}
+        rotation={1.6}
+        look={FRIEND_LOOKS[NEIGHBOUR]}
+        reach={1.8}
+        doing="on her way home with the shopping"
+        phase={0.4}
+      />
+      <group position={[NEIGHBOUR_AT.x + 0.35, 0.2, NEIGHBOUR_AT.z + 0.1]}>
+        <Prop kind="bag" />
+      </group>
+    </group>
+  )
+}
 
 /** Where the taxi pulls up: at the kerb on the player's side of the road. */
 const TAXI_KERB = 3.6

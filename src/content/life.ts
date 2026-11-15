@@ -135,6 +135,25 @@ export const HOME_ACTIONS: HomeAction[] = [
     done: 'Had a takeaway',
   },
   {
+    // A parcel for the neighbour (see game/parcel.ts): taken in at the door, then
+    // taken round next door.
+    id: 'parcel-door',
+    room: 'door',
+    label: 'Answer the door: a parcel for next door',
+    phases: ['evening'],
+    minutes: 3,
+    done: 'Took in a parcel for Aisha next door',
+  },
+  {
+    id: 'parcel-return',
+    room: 'door',
+    label: 'Take Aisha’s parcel round next door',
+    phases: ['evening'],
+    minutes: 10,
+    needs: { social: 6 },
+    done: 'Took Aisha’s parcel round next door',
+  },
+  {
     // The boiler has broken down (see game/repair.ts): a heating engineer, called
     // on the phone, comes round, is let in, fixes it and is paid at the door.
     id: 'repair-call',

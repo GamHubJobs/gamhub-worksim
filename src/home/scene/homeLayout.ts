@@ -323,6 +323,67 @@ export function homeLayout(
       ],
     },
   )
+  // A parcel for next door: taken in from the courier at the door (DELIVERY_TIMES,
+  // as the takeaway), then taken round to the neighbour.
+  add(
+    'parcel-door',
+    'answer the door',
+    door,
+    [
+      { clip: 'push-door', seconds: DELIVERY_TIMES.open, label: 'Opening the door' },
+      {
+        clip: 'talk',
+        seconds: DELIVERY_TIMES.greet,
+        label: 'Signing for next door’s parcel',
+      },
+      {
+        clip: 'reach',
+        seconds: DELIVERY_TIMES.take,
+        label: 'Taking the parcel',
+        hold: { right: 'parcel' },
+      },
+      {
+        clip: 'push-door',
+        seconds: DELIVERY_TIMES.close,
+        label: 'Saying thanks and closing the door',
+        hold: { right: 'parcel' },
+      },
+    ],
+    {
+      view: 'behind',
+      sounds: [
+        { at: 0.3, id: 'door' },
+        { at: 6.3, id: 'door' },
+      ],
+    },
+  )
+  add(
+    'parcel-return',
+    'take the parcel next door',
+    door,
+    [
+      {
+        clip: 'push-door',
+        seconds: 1.2,
+        label: 'Out to next door',
+        hold: { right: 'parcel' },
+      },
+      {
+        clip: 'talk',
+        seconds: 2.4,
+        label: 'Handing the parcel over',
+        hold: { right: 'parcel' },
+      },
+      { clip: 'push-door', seconds: 1.2, label: 'Back in' },
+    ],
+    {
+      view: 'behind',
+      sounds: [
+        { at: 0.3, id: 'door' },
+        { at: 4, id: 'door' },
+      ],
+    },
+  )
   // The boiler: the engineer is called and waited for like the takeaway, then let in
   // at the door, watched at work at the boiler, and paid (REPAIR_TIMES).
   const boiler = boilerAt(home)

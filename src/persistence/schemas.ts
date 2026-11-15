@@ -1106,6 +1106,17 @@ export const LifeSchema = z.object({
    * and the minute the heating engineer is due once called. Added later: older
    * saves have none.
    */
+  /**
+   * A parcel for the neighbour taken in at the door (see game/parcel.ts): held,
+   * or taken round. Added later: older saves have none.
+   */
+  parcel: z
+    .object({
+      day: z.number().int().min(1),
+      status: z.enum(['held', 'returned']),
+    })
+    .nullable()
+    .default(null),
   repair: z
     .object({
       day: z.number().int().min(1),

@@ -29,7 +29,7 @@ import { bonusFor, comfort, enablerOf, enables, homeOf, sleepBonus } from './hom
 import { formatTime, nextWorkday, weekdayIndex, weekNumber, weekdayName } from './clock'
 import { changeReputation } from './relationships'
 import { log, startNextDay } from './workday'
-import { afterNight, eveningMessages } from './social'
+import { afterNight, eveningMessages, thankedForParcel } from './social'
 import {
   deliveryBlock,
   eaten,
@@ -45,6 +45,7 @@ import {
   repaired,
   untilEngineer,
 } from './repair'
+import { parcelBlock, parcelReturned, parcelStage, parcelTaken } from './parcel'
 import { canCommute, chargeCarLease } from './transport'
 import { careerEvening, weeklyPay } from './careerLife'
 import { clamp, decayed, earn, note, spend, withLife, withWellbeing } from './lifeTime'
@@ -133,6 +134,12 @@ export function canDo(
   // A repair's too (called, arrived, fixed), and no shower without hot water.
   const repair = repairBlock(life, action.id)
   if (repair) return repair
+  // A parcel for next door: taken in when the courier is at the door, then taken round.
+  const parcel = parcelBlock(
+    parcelStage(life, profile.work.day, phase === 'evening'),
+    action.id,
+  )
+  if (parcel) return parcel
   // Where the player is: at home for home actions, inside the place for the rest.
   if (action.place) {
     const place = getPlace(action.place)!
@@ -197,6 +204,9 @@ export function doHomeAction(profile: ProfileData, id: string): ProfileData {
   if (id === 'takeaway') life = ordered(life, work.day)
   if (id === 'takeaway-door') life = received(life)
   if (id === 'takeaway-eat') life = eaten(life)
+  if (id === 'parcel-door') life = parcelTaken(life, work.day)
+  if (id === 'parcel-return')
+    life = thankedForParcel(parcelReturned(life, work.day), work.day)
   if (id === 'repair-call') life = engineerBooked(life)
   if (id === 'repair-door') life = repaired(life)
   let next = profile

@@ -169,8 +169,10 @@ working simulations of the professional software used in its field (see
 
 - [x] P1 Every person in every place can be talked to (E or a click)
 
-**Living scenarios**: [docs/SCENARIOS_PLAN.md](docs/SCENARIOS_PLAN.md). S1 (takeaway) and S2
-(meetings in person) done; S3 to S7 next.
+**Living scenarios**: [docs/SCENARIOS_PLAN.md](docs/SCENARIOS_PLAN.md). All seven done: S1
+(takeaway), S2 (meetings in person), S3 (colleagues come to the desk), S4 (a promotion
+told in person), S5 (interviews at Harbourside House), S6 (a taxi; a heating engineer)
+and S7 (social life in person, at work and in the neighbourhood).
 
 **Phone**: [docs/PHONE.md](docs/PHONE.md) (Phone 1 done).
 
@@ -189,6 +191,38 @@ working simulations of the professional software used in its field (see
 - [ ] Story 11 Presentation and polish
 
 ---
+
+## 2026-11-16 · S7: social life in person, at work and in the neighbourhood
+
+**Built**
+
+- At work: a new starter's first day (introduced at the desk), a jammed printer (the
+  facilities colleague waits at it), and Friday cake in the break room (everyone round
+  the table; the player joins once).
+- In the neighbourhood: friends met in person (a drink at the café, a run in the park
+  with the friend running alongside), the neighbour who calls over in the street, and a
+  parcel for next door taken in and taken round.
+- Workplace events can happen at the printer and bring someone with them; people can
+  have a first day; the office has twelve people (two colleagues' lunches moved so no
+  seat is shared).
+
+**Fixed on the way**
+
+- `PlayerRig`: while running between an activity's points, the player's position was
+  not published (to the people who keep clear of them, or a friend alongside).
+
+**Tested**
+
+- Unit tests (full check: 3,334 passed). Browser: office life (3), the neighbourhood
+  (3), the drink at the café, and the wider home, city, transport, repair and wedding
+  tests.
+
+**Known limitations**
+
+- The cinema, the quiz, dinner at a friend's and the online game still happen
+  off-stage; only the café and the park are places to meet.
+- The new starter is the same person (Ellie Grant, or the department's own name if it
+  has one) in every career.
 
 ## 2026-11-16 · S6: a taxi that comes for the player; a heating engineer at home
 

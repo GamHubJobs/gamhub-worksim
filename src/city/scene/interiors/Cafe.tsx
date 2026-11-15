@@ -16,6 +16,7 @@ import { Anchors } from '../../../world/AnchorPoints'
 import { useAnchors, type AnchorSpec } from '../../../world/anchors'
 import { Customers } from './Customers'
 import { DatePartner } from './DatePartner'
+import { FriendWaiting } from './FriendWaiting'
 import { TOWN_PEOPLE } from '../../../content/townPeople'
 import { Board, Chair, Hotspot, Lamp, Room, Window } from './common'
 import { menuPainting, signPainting, useInterior } from './kit'
@@ -290,6 +291,7 @@ export default function Cafe() {
       </Hotspot>
 
       <DatePartner place="cafe" />
+      <FriendWaiting place="cafe" />
       <Customers room="cafe" />
       {/* Tables */}
       <Hotspot action="cafe-dinner" position={[-3, 0, 1.6]} ring={1.25} tag={2}>

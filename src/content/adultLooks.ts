@@ -58,3 +58,43 @@ export const DATE_LOOKS: Record<string, PersonLook> = {
     smile: true,
   },
 }
+
+/** How each friend looks (original characters). */
+export const FRIEND_LOOKS: Record<string, PersonLook> = {
+  leo: {
+    skin: 3,
+    hair: 'short',
+    hairColor: 0,
+    outfit: 'sweater',
+    top: '#2563eb',
+    trousers: '#1f2937',
+    smile: true,
+  },
+  aisha: {
+    skin: 4,
+    hair: 'bun',
+    hairColor: 0,
+    outfit: 'sweater',
+    top: '#c2410c',
+    trousers: '#334155',
+    smile: true,
+  },
+  dan: {
+    skin: 1,
+    hair: 'crop',
+    hairColor: 2,
+    outfit: 'polo',
+    top: '#15803d',
+    trousers: '#111827',
+    smile: true,
+  },
+  mei: {
+    skin: 2,
+    hair: 'bob',
+    hairColor: 0,
+    outfit: 'sweater',
+    top: '#7c3aed',
+    trousers: '#1e293b',
+    smile: true,
+  },
+}

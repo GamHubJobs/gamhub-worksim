@@ -11,6 +11,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
   useMemo,
@@ -44,6 +45,14 @@ import { deliveryStage, received } from '../game/delivery'
 import { TOWN_PEOPLE } from '../content/townPeople'
 import { getJobAd } from '../content/careerLife'
 import { bookedInterview, canInterviewInPerson } from '../game/careerLife'
+import {
+  chatWithNeighbour,
+  friendWaiting,
+  goOut as meetFriend,
+  NEIGHBOUR,
+  neighbourOutside,
+} from '../game/social'
+import { getFriend } from '../content/friends'
 import { Interview } from '../home/CareerPanel'
 import { marry, weddingHere } from '../game/family'
 import { adultOf, ask, bondOf } from '../game/romance'
@@ -166,15 +175,22 @@ export function CityView({
   useEffect(() => {
     if (outside || here.id !== 'offices') setInterviewStep(null)
   }, [outside, here.id])
+  // The plan of the friend waiting here (kept up to date below, once known).
+  const meetingPlan = useRef<string | null>(null)
+  const onMeet = useCallback(() => {
+    const id = meetingPlan.current
+    if (id) onAct((p) => meetFriend(p, id))
+  }, [onAct])
   const commit = useCallback(
     (id: string) => {
-      if (id === 'interview-sign-in') setInterviewStep('signed')
+      if (id === 'friend-cafe' || id === 'friend-park') onMeet()
+      else if (id === 'interview-sign-in') setInterviewStep('signed')
       else if (id === 'interview-wait') setInterviewStep('waited')
       else if (id === 'interview-room') setInterviewStep('seated')
       else if (DEALS.has(id)) onDeal(id as TransportDeal)
       else onAction(id)
     },
-    [onAction, onDeal],
+    [onAction, onDeal, onMeet],
   )
   const doThing = useCallback(
     (id: string) => {
@@ -206,6 +222,16 @@ export function CityView({
   const [wedding, setWedding] = useState<string | null>(null)
   // A date, if someone is waiting here for the player (see game/dates.ts).
   const date = dateHere(profile)
+  // A friend waiting here, met in person (game/social.ts): not alongside a date.
+  const meeting =
+    (here.id === 'cafe' || here.id === 'park') && !date
+      ? friendWaiting(profile, here.id)
+      : null
+  const meetId = here.id === 'park' ? 'friend-park' : 'friend-cafe'
+  const meetingMessage = meeting?.message.id ?? null
+  useEffect(() => {
+    meetingPlan.current = meetingMessage
+  }, [meetingMessage])
   // The date as it was when the player walked up (it is over in the save when it ends).
   const [dating, setDating] = useState<{
     step: DateStep
@@ -245,6 +271,24 @@ export function CityView({
         setDating({ step: 'greet', date })
         return
       }
+      // The neighbour, who called over: a chat in the street.
+      if (id === `friend:${NEIGHBOUR}` && neighbourOutside(profile)) {
+        onAct(chatWithNeighbour)
+        setEncounter({
+          who: n.who,
+          situation: {
+            availability: 'free',
+            doing: 'on her way home with the shopping',
+            minute,
+          },
+        })
+        return
+      }
+      // A friend waiting to meet the player here: the plan starts.
+      if (meeting && id === `friend:${meeting.friend.id}`) {
+        doThing(meetId)
+        return
+      }
       // The interviewer, come out to call the player in: in they go.
       if (id === TOWN_PEOPLE.interviewer.id && interviewStep === 'waited') {
         doThing('interview-room')
@@ -256,7 +300,16 @@ export function CityView({
       })
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [minute, profile, weddingNow, courierWaiting, interviewStep, doThing],
+    [
+      minute,
+      profile,
+      weddingNow,
+      courierWaiting,
+      interviewStep,
+      doThing,
+      meeting,
+      meetId,
+    ],
   )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
@@ -315,6 +368,15 @@ export function CityView({
   const [area, setArea] = useState<Area>(() => areaAt(standAt(life.city.at)[0]))
   const onArea = useCallback((next: Area) => setArea(next), [])
   const onStreetReady = useCallback(() => setStreetReady(true), [])
+  // The neighbour outside the building, who calls over first (game/social.ts).
+  const neighbourHere = outside && neighbourOutside(profile)
+  const onNeighbourCalls = useCallback(
+    () =>
+      setNotice(
+        `${getFriend(NEIGHBOUR)!.name.split(' ')[0]} waves from outside your building: “Hi, neighbour! Have you got a minute?”`,
+      ),
+    [],
+  )
   const onTaxi = useCallback(
     (event: 'arrived' | 'in' | 'gone') => {
       if (event === 'arrived') {
@@ -362,6 +424,11 @@ export function CityView({
               ],
         ]
       : []
+  const meetLabel = meeting
+    ? here.id === 'park'
+      ? `Go for a run with ${meeting.friend.name.split(' ')[0]}`
+      : `Have a drink with ${meeting.friend.name.split(' ')[0]}`
+    : ''
   // The interview's steps, each only after the one before.
   const interviewDoings: Array<[string, string, string | null]> =
     booked && bookedAd
@@ -393,6 +460,9 @@ export function CityView({
       : []
   // What can be done here, for the hotspots in 3D (the same as the list).
   const doings: Doing[] = [
+    ...(meeting
+      ? [{ id: meetId, label: meetLabel, detail: meeting.plan.title, blocked: null }]
+      : []),
     ...interviewDoings.map(([id, label, blocked]) => ({
       id,
       label,
@@ -454,6 +524,7 @@ export function CityView({
                 wedding={wedding ?? weddingNow}
                 day={profile.work.day}
                 minute={life.minute}
+                friend={meeting?.friend.id ?? null}
                 interviewer={
                   booked ? (interviewStep === 'waited' ? 'collect' : 'room') : null
                 }
@@ -504,6 +575,8 @@ export function CityView({
                 onReady={onStreetReady}
                 taxi={taxi}
                 onTaxi={onTaxi}
+                neighbour={neighbourHere}
+                onNeighbourCalls={onNeighbourCalls}
               />
             </Suspense>
           </SceneBoundary>
@@ -861,6 +934,24 @@ export function CityView({
                     </li>
                   )
                 })}
+                {meeting && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => doThing(meetId)}
+                      data-testid="meet-friend"
+                      className="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-left text-sm hover:bg-amber-100"
+                    >
+                      <span className="block font-medium text-slate-900">
+                        {meetLabel}
+                      </span>
+                      <span className="block text-xs text-slate-600">
+                        {meeting.friend.name.split(' ')[0]} is waiting for you here ·{' '}
+                        {meeting.plan.title}
+                      </span>
+                    </button>
+                  </li>
+                )}
                 {interviewDoings.map(([id, label, blocked]) => (
                   <li key={id}>
                     <button

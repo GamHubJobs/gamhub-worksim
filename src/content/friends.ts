@@ -67,6 +67,11 @@ export interface Plan {
   stress?: number
   /** Needs a piece of furniture the player owns (e.g. a games console). */
   needsItem?: string
+  /**
+   * Met in person in the neighbourhood: the friend waits there (see
+   * game/social.ts friendWaiting), rather than it happening off-stage.
+   */
+  venue?: 'cafe' | 'park'
 }
 
 const HOUR = 60
@@ -94,14 +99,15 @@ export const PLANS: Record<PlanKind, Plan> = {
   },
   run: {
     kind: 'run',
-    title: 'A run by the river',
-    invite: 'Easy run by the river at 7? Just 5k, I promise.',
+    title: 'A run round Millpond Park',
+    invite: 'Easy run round Millpond Park at 7? Just a few laps, I promise.',
     at: 19 * HOUR,
     minutes: 60,
     cost: 0,
     needs: { social: 25, fun: 15, hygiene: -30 },
     energy: -8,
     stress: -15,
+    venue: 'park',
   },
   quiz: {
     kind: 'quiz',
@@ -115,13 +121,14 @@ export const PLANS: Record<PlanKind, Plan> = {
   },
   drinks: {
     kind: 'drinks',
-    title: 'A drink at the Kettle & Crown',
-    invite: 'Quick drink at the Kettle & Crown at 6:30? My treat next time.',
+    title: 'A drink at Kettle & Crumb',
+    invite: 'Quick drink at Kettle & Crumb at 6:30? My treat next time.',
     at: 18 * HOUR + 30,
     minutes: 90,
     cost: 1200,
     needs: { social: 35, fun: 20 },
     energy: -5,
+    venue: 'cafe',
   },
   game: {
     kind: 'game',

@@ -89,6 +89,8 @@ export interface InteriorSceneProps {
   minute?: number
   /** At Harbourside House: where the interviewer is (see kit.ts). */
   interviewer?: 'room' | 'collect' | null
+  /** A friend waiting here to meet the player (their id). */
+  friend?: string | null
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -145,6 +147,7 @@ function InteriorScene(props: InteriorSceneProps) {
       day: props.day,
       minute: props.minute,
       interviewer: props.interviewer ?? null,
+      friend: props.friend ?? null,
     }),
     [
       byAction,
@@ -156,6 +159,7 @@ function InteriorScene(props: InteriorSceneProps) {
       props.day,
       props.minute,
       props.interviewer,
+      props.friend,
     ],
   )
   const world = useMemo(() => ({ now, hands, low }), [low])
