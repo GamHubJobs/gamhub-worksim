@@ -38,6 +38,7 @@ import { fill, getPerson, placeText } from '../content/departments'
 import { activeBay, activeTheme, opensFor } from './scene/bays'
 import { ScenarioPanel, type LiveState } from './ScenarioPanel'
 import { CourtPanel, type CourtVisit } from '../court/CourtPanel'
+import { loadVisit, saveVisit } from '../court/visitStore'
 import { deviceFor, type Device } from './device'
 import { backFromCourt, canGoToCourt, COURT_TRAVEL, goToCourt } from '../game/court'
 import { getScenario, scenariosFor } from '../content/scenarios'
@@ -566,7 +567,23 @@ export function OfficeView({
   // Hearings at Westmark County Court (court/): the player goes there from the office.
   const here = offered.filter((sc) => !sc.venue)
   const atCourt = offered.filter((sc) => sc.venue === 'court')
-  const [away, setAway] = useState<CourtVisit | null>(null)
+  const courtDay = {
+    name: profile.name,
+    careerId: profile.careerId,
+    day: profile.work.day,
+    dayOver: profile.work.dayOver,
+  }
+  // At court when the page was reloaded: still there (the save has the journey).
+  const [away, setAway] = useState<CourtVisit | null>(() =>
+    atCourt.length > 0 ? loadVisit(courtDay) : null,
+  )
+  const { name: courtName, careerId: courtCareer, day: courtDayNo } = courtDay
+  useEffect(() => {
+    saveVisit(
+      { name: courtName, careerId: courtCareer, day: courtDayNo, dayOver: false },
+      away,
+    )
+  }, [away, courtName, courtCareer, courtDayNo])
   const [courtRoom, setCourtRoom] = useState<string | null>(null)
   const onCourtRoom = useCallback((r: string) => setCourtRoom(r), [])
   // The office guide's next step is about the office: it steps aside at court.

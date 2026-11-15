@@ -79,6 +79,12 @@ test('Law: to Westmark County Court for a hearing, in person, and back', async (
   await expect(court.getByRole('button', { name: '✓ Go through security' })).toBeVisible({
     timeout: 60_000,
   })
+  // Reloading the page here: still at court, through security already.
+  await page.reload()
+  await expect(court).toBeVisible({ timeout: 120_000 })
+  await expect(court.getByRole('button', { name: '✓ Go through security' })).toBeVisible()
+  await expect(page.getByTestId('office-panel')).toBeHidden()
+  await expect(page.getByTestId('courthouse-canvas')).toBeVisible({ timeout: 120_000 })
   await court.getByRole('button', { name: 'Sign in with the usher' }).click()
   await expect(court.getByTestId('court-note')).toContainText('Court 2', {
     timeout: 60_000,

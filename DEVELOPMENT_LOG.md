@@ -190,6 +190,35 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-16 · Still at court after a reload; a crowd crash fixed
+
+**Built / fixed**
+
+- `court/visitStore.ts`: the visit to court is remembered on this device for
+  that working day (who, which day, through security, signed in). Reloading
+  the page during it finds the player still at court, as far through as they
+  were; it is cleared on going back to the office, and ignored on another
+  day, for another person or career, or once the day is over. A hearing
+  under way starts again.
+- `world/npc/Crowd.tsx`: when someone came or went, the frame loop could run
+  once with the new list of records and the old list of people ("Cannot read
+  properties of undefined (reading 'agent')" in the dev log). The props are
+  now taken in a layout effect, like the frame loop's own callback, and a
+  frame with someone not yet recorded is skipped.
+
+**Tested**
+
+- Unit tests for the visit store; the court browser test now reloads after
+  security and carries on (passed first time). The café and hospital browser
+  tests (8) pass, with no crash in the log.
+
+**Known limitations**
+
+- The "synchronously unmount a root" warnings in the dev log come from the 3D
+  library's floating labels being removed mid-render; harmless, left as is.
+
+---
+
 ## 2026-11-16 · The home and the city, audited
 
 **Built / fixed**

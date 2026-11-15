@@ -180,6 +180,7 @@ When a scenario ends, the player can talk to anyone who was there
 - **Scenarios per career:** two in every career, and a third for Law at
   court (19 in all). The engine and stage take more without code changes.
 - **Places:** only Law has a building away from the office (the court). It
-  stands on the high street, but is only open from work; the trip is not
-  saved if the page is reloaded there (the player is back in the office; the
-  travel time is kept).
+  stands on the high street, but is only open from work. Reloading the page
+  during the visit finds the player still at court, as far through it as they
+  were (remembered on this device for that working day; a hearing under way
+  starts again).
