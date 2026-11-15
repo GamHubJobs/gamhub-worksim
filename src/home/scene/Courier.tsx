@@ -88,7 +88,7 @@ export function Courier({
       // Ringing, and again every so often while waiting.
       w.rang -= dt
       if (w.rang <= 0) {
-        audio.play('doorbell')
+        audio.play('doorbell', { at: { x: door[0], z: door[1] } })
         w.rang = 25
       }
     }

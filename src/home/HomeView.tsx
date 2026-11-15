@@ -439,7 +439,9 @@ export function HomeView({
                     type="button"
                     aria-current={r.id === room ? 'location' : undefined}
                     onClick={() => {
-                      if (r.id !== room)
+                      // Footsteps to the room, without 3D (in 3D the character really
+                      // walks there, and its own footsteps are heard in time with it).
+                      if (r.id !== room && !walkable)
                         for (let i = 0; i < 3; i++)
                           window.setTimeout(
                             () => audio.play('step', { surface: 'wood' }),

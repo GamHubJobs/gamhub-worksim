@@ -10,6 +10,7 @@
  * without sound.
  */
 import { prefersReducedMotion } from '../ui/motion'
+import { spatial } from './listener'
 import { sceneKey, type Scene } from './scenes'
 import {
   levelOf,
@@ -125,7 +126,14 @@ export type StingKind = 'promotion' | 'achievement' | 'chapter' | 'finale'
 export interface AudioEngine {
   play(
     id: EffectId,
-    options: { surface?: Surface; level: number; variant?: number },
+    options: {
+      surface?: Surface
+      level: number
+      variant?: number
+      /** From a place in the world: its side (-1 to 1) and level (0 to 1). */
+      pan?: number
+      gain?: number
+    },
   ): void
   setScene(scene: Scene | null, levels: Levels, calm: boolean): void
   setLevels(levels: Levels, calm: boolean): void
@@ -206,7 +214,15 @@ export class AudioManager {
 
   /** Plays a sound, unless the same one played too recently or its kind is off. */
   /** `variant` picks one of a sound's versions (the phone's ringtone). */
-  play(id: EffectId, options: { surface?: Surface; variant?: number } = {}): boolean {
+  play(
+    id: EffectId,
+    options: {
+      surface?: Surface
+      variant?: number
+      /** Where in the world it is (heard from that side, quieter further off). */
+      at?: { x: number; z: number }
+    } = {},
+  ): boolean {
     const t = this.now()
     const before = this.last.get(id)
     if (before !== undefined && t - before < MIN_GAP[id]) {
@@ -221,7 +237,8 @@ export class AudioManager {
     const level = levelOf(this.settings, EFFECTS[id])
     if (level <= 0) return false
     this.stats.played[id] = (this.stats.played[id] ?? 0) + 1
-    this.engine?.play(id, { ...options, level })
+    const { at, ...rest } = options
+    this.engine?.play(id, { ...rest, level, ...(at ? spatial(at.x, at.z) : {}) })
     if (id === 'promotion' || id === 'achievement')
       this.engine?.sting(id, levelOf(this.settings, 'music'))
     return true

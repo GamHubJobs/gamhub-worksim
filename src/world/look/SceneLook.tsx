@@ -16,6 +16,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import type { DirectionalLight, Material, Mesh } from 'three'
 import { LOOKS, type LookId } from './looks'
+import { hearFrom } from '../../audio/listener'
 
 export function SceneLook({
   look,
@@ -43,6 +44,12 @@ export function SceneLook({
     invalidate()
   }, [get, invalidate, l.exposure])
   useShadowRefresh(low)
+  // Where the player hears from (audio/listener.ts): this view's camera.
+  const camera = useThree((s) => s.camera)
+  useEffect(() => {
+    hearFrom(camera as unknown as Parameters<typeof hearFrom>[0])
+    return () => hearFrom(null)
+  }, [camera])
   // A long place: the shadows follow the player (moved a metre or more at a time).
   const key = useRef<DirectionalLight>(null)
   const at = useRef({ x: NaN, z: NaN })

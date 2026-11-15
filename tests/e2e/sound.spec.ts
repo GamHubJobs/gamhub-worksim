@@ -98,7 +98,10 @@ test('home, the street and the café each sound different, with footsteps', asyn
     .getByRole('navigation', { name: 'Rooms' })
     .getByRole('button', { name: 'Front door' })
     .click()
-  expect((await stats(page)).played.step ?? 0).toBeGreaterThan(0)
+  // Footsteps as the character walks to the room (in 3D, in time with the walk).
+  await expect
+    .poll(async () => (await stats(page)).played.step ?? 0, { timeout: 30_000 })
+    .toBeGreaterThan(0)
   await home.getByRole('button', { name: /Go out into the neighbourhood/ }).click()
   await expect(page.getByTestId('city')).toBeVisible()
   await expect.poll(async () => (await stats(page)).scene).toMatch(/^residential:/)
@@ -109,16 +112,21 @@ test('home, the street and the café each sound different, with footsteps', asyn
 
   // Walking in 3D: footsteps in time with the walk.
   const street = page.getByTestId('city-3d')
+  await expect(street.locator('canvas')).toBeVisible({ timeout: 30_000 })
+  // Counted from when the street is ready and the player is standing still.
+  await page.waitForTimeout(2000)
   await street.focus()
   const steps = (await stats(page)).played.step ?? 0
-  await expect(street.locator('canvas')).toBeVisible({ timeout: 30_000 })
+  const from = Date.now()
   await page.keyboard.down('ArrowUp')
   await page.waitForTimeout(3000)
   await page.keyboard.up('ArrowUp')
-  // About two steps a second (allowing for a busy computer starting slowly).
+  // In time with the walk: about two steps a second, three at most (a busy computer
+  // can start slowly, or let go of the key late, so it is per second walked).
+  const seconds = (Date.now() - from) / 1000
   const walked = ((await stats(page)).played.step ?? 0) - steps
   expect(walked).toBeGreaterThanOrEqual(2)
-  expect(walked).toBeLessThanOrEqual(9)
+  expect(walked).toBeLessThanOrEqual(Math.ceil(seconds * 3.2) + 1)
 
   // Into the café: its own sound.
   await page.getByTestId('place-cafe').click()

@@ -299,9 +299,14 @@ export function createEngine(): AudioEngine | null {
     }
   }
 
-  function effect(id: EffectId, surface: Surface = 'pavement', variant = 0) {
+  function effect(
+    id: EffectId,
+    surface: Surface = 'pavement',
+    variant = 0,
+    out?: AudioNode,
+  ) {
     const t = ctx.currentTime + 0.01
-    const to = buses[effectsBus(id)].gain
+    const to = out ?? buses[effectsBus(id)].gain
     // Each sound's own loudness; the bus applies the player's volume.
     const v = 1
     switch (id) {
@@ -1327,10 +1332,25 @@ export function createEngine(): AudioEngine | null {
   }
 
   return {
-    play(id, { surface, level, variant }) {
+    play(id, { surface, level, variant, pan, gain }) {
       if (ctx.state === 'suspended') void ctx.resume().catch(() => {})
       try {
-        if (level > 0) effect(id, surface, variant)
+        if (level <= 0) return
+        if (pan === undefined && gain === undefined) {
+          effect(id, surface, variant)
+          return
+        }
+        // From a place in the world: through its own level and side, then the bus.
+        const g = ctx.createGain()
+        g.gain.value = gain ?? 1
+        const p = ctx.createStereoPanner()
+        p.pan.value = pan ?? 0
+        g.connect(p).connect(buses[effectsBus(id)].gain)
+        effect(id, surface, variant, g)
+        window.setTimeout(() => {
+          g.disconnect()
+          p.disconnect()
+        }, 4000)
       } catch {
         // A sound that cannot play is skipped.
       }
