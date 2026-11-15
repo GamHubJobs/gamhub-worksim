@@ -9,7 +9,16 @@
  * and fade out (and are disconnected) when the player moves on.
  */
 import type { AudioEngine, EffectId, Levels, StingKind, Surface } from './manager'
-import { layersFor, moodFor, sceneKey, type Layer, type Mood, type Scene } from './scenes'
+import {
+  layersFor,
+  moodFor,
+  sceneKey,
+  type Layer,
+  type Mood,
+  type Scene,
+  acousticsFor,
+  type Acoustics,
+} from './scenes'
 import type { CategoryId } from './settings'
 
 /** Each bus's share of the volume: background sounds sit well under the rest. */
@@ -96,6 +105,47 @@ export function createEngine(): AudioEngine | null {
     gain.gain.value = 0
     gain.connect(limiter)
     buses[id] = { gain }
+  }
+
+  // The room (scenes.ts acousticsFor): one reverb, its size following the place,
+  // fed by the surroundings, voices and the player's own sounds (not the
+  // interface's), so a courthouse rings and a carpeted office does not.
+  const room = ctx.createConvolver()
+  const roomWet = ctx.createGain()
+  roomWet.gain.value = 0
+  room.connect(roomWet).connect(limiter)
+  for (const id of ['ambience', 'voices', 'character'] as const)
+    if (buses[id]) buses[id].gain.connect(room)
+  const impulses = new Map<number, AudioBuffer>()
+  /** A room's echo: stereo noise dying away over `seconds`, darker as it fades. */
+  function impulse(seconds: number): AudioBuffer {
+    const key = Math.round(seconds * 10)
+    const cached = impulses.get(key)
+    if (cached) return cached
+    const length = Math.floor(ctx.sampleRate * seconds)
+    const buffer = ctx.createBuffer(2, length, ctx.sampleRate)
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buffer.getChannelData(ch)
+      let last = 0
+      for (let i = 0; i < length; i++) {
+        const fade = Math.pow(1 - i / length, 3)
+        // A gentle low-pass that closes as the tail fades (hard rooms lose their highs).
+        const k = 0.35 + 0.6 * (i / length)
+        last = last * k + (Math.random() * 2 - 1) * (1 - k)
+        data[i] = last * fade
+      }
+    }
+    impulses.set(key, buffer)
+    return buffer
+  }
+  function setRoom(acoustics: Acoustics | null) {
+    const t = ctx.currentTime
+    if (!acoustics) {
+      roomWet.gain.setTargetAtTime(0, t, 0.3)
+      return
+    }
+    room.buffer = impulse(acoustics.decay)
+    roomWet.gain.setTargetAtTime(acoustics.wet, t, 0.3)
   }
 
   const noise: Partial<Record<Color, AudioBuffer>> = {}
@@ -1287,6 +1337,7 @@ export function createEngine(): AudioEngine | null {
     },
     setScene(scene, next, isCalm) {
       applyLevels(next, isCalm)
+      setRoom(scene ? acousticsFor(scene) : null)
       if (ctx.state === 'suspended') void ctx.resume().catch(() => {})
       const key = sceneKey(scene)
       if (current?.key === key) return

@@ -269,6 +269,47 @@ function baseLayers(scene: Scene): Partial<Record<Layer, number>> {
   }
 }
 
+/**
+ * How a place sounds as a room (a reverb): how long sound lingers and how much
+ * of it is heard. A stone courthouse rings; a carpeted office barely does; a
+ * workshop and a gym are hard and echoey; outdoors there is no room at all.
+ */
+export interface Acoustics {
+  /** Seconds for the echo to die away. */
+  decay: number
+  /** How much of the echo is heard (0 to 1). */
+  wet: number
+}
+
+export function acousticsFor(scene: Scene): Acoustics | null {
+  switch (scene.place) {
+    case 'courthouse':
+      return { decay: 2.4, wet: 0.32 }
+    case 'office':
+    case 'reception':
+    case 'breakroom':
+    case 'computer':
+      return scene.workplace === 'workshop'
+        ? { decay: 1.6, wet: 0.24 }
+        : scene.workplace === 'ward'
+          ? { decay: 1.0, wet: 0.18 }
+          : { decay: 0.7, wet: 0.1 }
+    case 'meeting':
+      return { decay: 0.5, wet: 0.08 }
+    case 'cafe':
+      return { decay: 0.8, wet: 0.14 }
+    case 'shop':
+      return { decay: 0.9, wet: 0.14 }
+    case 'gym':
+    case 'garage':
+      return { decay: 1.3, wet: 0.22 }
+    case 'home':
+      return { decay: 0.45, wet: 0.07 }
+    default:
+      return null
+  }
+}
+
 /** The music for a scene, if any. */
 export type Mood = 'city' | 'focus' | 'tech' | 'home' | 'cafe' | 'interview' | null
 

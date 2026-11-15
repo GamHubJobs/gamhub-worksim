@@ -214,6 +214,7 @@ export default function Cafe() {
   return (
     <group>
       <Room
+        floorKind="planks"
         width={12}
         depth={9}
         floor="#92653a"

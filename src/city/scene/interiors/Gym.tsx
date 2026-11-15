@@ -333,6 +333,7 @@ export default function Gym() {
   return (
     <group>
       <Room
+        floorKind="concrete"
         width={14}
         depth={10}
         floor="#3f3f46"

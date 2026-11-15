@@ -20,6 +20,7 @@ import {
 } from 'react'
 import { audio } from '../audio/manager'
 import { AudioScene } from '../audio/useAudio'
+import { useSpokenLines } from '../audio/useSpeech'
 import { timeOfDay } from '../audio/scenes'
 import { WalkView } from '../world/WalkView'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
@@ -1340,6 +1341,11 @@ function DialogueBox({
 }) {
   const person = dialogue.speaker ? getPerson(dialogue.speaker) : null
   const choices = dialogue.choices ?? []
+  // Read aloud, if chosen in the sound settings, in this person's own voice.
+  useSpokenLines(
+    dialogue.speaker ? dialogue.lines : null,
+    dialogue.speaker ? { id: dialogue.speaker } : null,
+  )
   const box = useRef<HTMLElement>(null)
   // Keyboard and screen-reader users are taken into the conversation, and back
   // to where they were when it closes.

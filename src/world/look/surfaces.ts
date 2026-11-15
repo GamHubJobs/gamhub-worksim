@@ -24,6 +24,7 @@ export type SurfaceId =
   | 'carpet'
   | 'plaster'
   | 'tiles'
+  | 'planks'
 
 /** A seeded random number, so the patterns are the same every time. */
 function random(seed: number) {
@@ -163,6 +164,29 @@ const DRAW: Record<SurfaceId, (c: CanvasRenderingContext2D, r: () => number) => 
     c.fillRect(0, 0, SIZE, SIZE)
     speckle(c, r, 1500, 0.05)
   },
+  planks: (c, r) => {
+    // Boards laid lengthways, staggered, each a slightly different shade, with grain.
+    c.fillStyle = '#9a9a9a'
+    c.fillRect(0, 0, SIZE, SIZE)
+    const rows = 8
+    const h = SIZE / rows
+    for (let y = 0; y < rows; y++) {
+      const off = r() * SIZE
+      for (let x = -SIZE; x < SIZE * 2; x += SIZE * 0.75) {
+        const v = 150 + Math.floor(r() * 50)
+        c.fillStyle = `rgb(${v},${v},${v})`
+        c.fillRect(x + off, y * h + 1, SIZE * 0.75 - 2, h - 2)
+      }
+      for (let i = 0; i < 6; i++) {
+        c.strokeStyle = `rgba(0,0,0,${0.05 + r() * 0.06})`
+        c.beginPath()
+        const gy = y * h + 3 + r() * (h - 6)
+        c.moveTo(0, gy)
+        for (let x = 0; x <= SIZE; x += 16) c.lineTo(x, gy + Math.sin(x / 30 + i) * 1.2)
+        c.stroke()
+      }
+    }
+  },
   tiles: (c, r) => {
     c.fillStyle = '#bcbcbc' // grout
     c.fillRect(0, 0, SIZE, SIZE)
@@ -188,6 +212,7 @@ const ROUGH: Record<SurfaceId, number> = {
   carpet: 1,
   plaster: 0.92,
   tiles: 0.3,
+  planks: 0.6,
 }
 
 const textures = new Map<SurfaceId, Texture>()

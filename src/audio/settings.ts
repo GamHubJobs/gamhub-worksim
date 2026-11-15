@@ -56,6 +56,11 @@ export const AudioSettingsSchema = z.object({
   calm: z.boolean().default(false),
   /** Short captions for important sounds. */
   captions: z.boolean().default(false),
+  /**
+   * What people say in conversations, read aloud with the browser's own voices
+   * (audio/speech.ts). Off unless chosen: the words are always on screen.
+   */
+  speech: z.boolean().default(false),
 })
 
 export type AudioSettings = z.infer<typeof AudioSettingsSchema>

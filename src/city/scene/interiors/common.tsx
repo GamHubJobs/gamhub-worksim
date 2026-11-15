@@ -5,6 +5,7 @@
  * Simple shapes like the office and the street, so they load instantly.
  */
 import { useAnchors, type AnchorSpec } from '../../../world/anchors'
+import { surface, tiling, type SurfaceId } from '../../../world/look/surfaces'
 import { useCursor } from '@react-three/drei'
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -187,6 +188,15 @@ function useHotspotPosition(
  * open towards the camera (at +z). The front edge has a low wall with the
  * shop window, so the room reads as inside a building.
  */
+/** How big one repeat of each floor's pattern is (metres). */
+const FLOOR_TILE: Partial<Record<SurfaceId, number>> = {
+  planks: 2.4,
+  tiles: 1.2,
+  concrete: 3,
+  carpet: 0.6,
+  vinyl: 4,
+}
+
 export function Room({
   width,
   depth,
@@ -196,11 +206,14 @@ export function Room({
   side = wall,
   ceiling = '#f5f5f4',
   skirting = '#57534e',
+  floorKind = 'tiles',
 }: {
   width: number
   depth: number
   height?: number
   floor: string
+  /** What the floor is made of (its colour is `floor`). */
+  floorKind?: SurfaceId
   wall: string
   side?: string
   ceiling?: string
@@ -208,19 +221,31 @@ export function Room({
 }) {
   return (
     <group>
-      <Box size={[width, 0.1, depth]} position={[0, -0.05, 0]} color={floor} />
-      <Box
-        size={[width, height, 0.2]}
+      <mesh
+        position={[0, -0.05, 0]}
+        material={surface(
+          floorKind,
+          floor,
+          tiling(width, depth, FLOOR_TILE[floorKind] ?? 2),
+        )}
+        userData={{ floor: true }}
+      >
+        <boxGeometry args={[width, 0.1, depth]} />
+      </mesh>
+      <mesh
         position={[0, height / 2, -depth / 2]}
-        color={wall}
-      />
+        material={surface('plaster', wall, tiling(width, height, 3))}
+      >
+        <boxGeometry args={[width, height, 0.2]} />
+      </mesh>
       {[-1, 1].map((s) => (
-        <Box
+        <mesh
           key={s}
-          size={[0.2, height, depth]}
           position={[(s * width) / 2, height / 2, 0]}
-          color={side}
-        />
+          material={surface('plaster', side, tiling(depth, height, 3))}
+        >
+          <boxGeometry args={[0.2, height, depth]} />
+        </mesh>
       ))}
       <Box
         size={[width, 0.1, depth]}

@@ -222,14 +222,37 @@ export function Fittings({ home, evening }: { home: Home; evening: boolean }) {
       {/* Ceiling lights, glowing in the evening */}
       {[living, kitchen, bedroom].map(([x, z], i) => (
         <group key={i} position={[x, WALL - 0.1, z]}>
-          <mesh>
-            <sphereGeometry args={[0.16, 12, 10]} />
+          {/* A pendant: the cord, a fabric shade, and the bulb glowing inside it */}
+          <mesh position={[0, -0.14, 0]}>
+            <cylinderGeometry args={[0.006, 0.006, 0.28, 6]} />
+            <meshStandardMaterial color="#1f2937" />
+          </mesh>
+          <mesh position={[0, -0.36, 0]}>
+            <coneGeometry args={[0.24, 0.2, 24, 1, true]} />
+            <meshStandardMaterial
+              color="#efe6d6"
+              roughness={0.9}
+              side={2}
+              emissive={evening ? '#ffd9a0' : '#000000'}
+              emissiveIntensity={evening ? 0.35 : 0}
+            />
+          </mesh>
+          <mesh position={[0, -0.42, 0]}>
+            <sphereGeometry args={[0.05, 12, 10]} />
             <meshBasicMaterial
-              color={evening ? '#fde68a' : '#f5f5f4'}
+              color={evening ? '#fff1c7' : '#f5f5f4'}
               toneMapped={false}
             />
           </mesh>
-          {evening && <pointLight color="#ffd9a0" intensity={4} distance={5} decay={2} />}
+          {evening && (
+            <pointLight
+              position={[0, -0.45, 0]}
+              color="#ffd9a0"
+              intensity={4}
+              distance={5}
+              decay={2}
+            />
+          )}
         </group>
       ))}
 

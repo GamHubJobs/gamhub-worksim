@@ -265,6 +265,7 @@ export default function Shop() {
   return (
     <group>
       <Room
+        floorKind="tiles"
         width={13}
         depth={10}
         floor="#e7e5e4"

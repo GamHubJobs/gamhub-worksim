@@ -62,6 +62,7 @@ export default function Offices() {
   return (
     <group>
       <Room
+        floorKind="carpet"
         width={width}
         depth={depth}
         height={height}

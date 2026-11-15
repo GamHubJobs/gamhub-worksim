@@ -36,6 +36,7 @@ export default function Garage() {
   return (
     <group>
       <Room
+        floorKind="concrete"
         width={14}
         depth={10}
         floor="#d4d4d8"

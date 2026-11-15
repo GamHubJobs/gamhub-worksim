@@ -6,6 +6,7 @@
  * The same box in every place.
  */
 import { useEffect, useRef, useState } from 'react'
+import { useSpokenLines } from '../../audio/useSpeech'
 import {
   meet,
   respond,
@@ -60,6 +61,11 @@ export function EncounterPanel({
     }
   }, [])
   const lines = said ? said.outcome.lines : start.opening
+  // Read aloud, if chosen, in their own voice (each person keeps theirs).
+  useSpokenLines(
+    lines.filter((l) => l.speaker === who.name).map((l) => l.text),
+    { id: who.id, personality: who.personality },
+  )
   // Busy, or the conversation is over (they turned away), or nothing more to say.
   const over =
     !!said &&

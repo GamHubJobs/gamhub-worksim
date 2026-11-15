@@ -23,6 +23,7 @@ import {
 import { Vector3, type Group, type Mesh, type WebGLRenderer } from 'three'
 import { activeEmployer } from '../../content/departments'
 import { SceneLook } from '../../world/look/SceneLook'
+import { surface, tiling } from '../../world/look/surfaces'
 import { dressAll, playerWorkwear } from './workwear'
 import type { LookId } from '../../world/look/looks'
 import { CELEBRATION } from '../../content/workday'
@@ -770,20 +771,36 @@ function Building({ playerName }: { playerName: string }) {
     <group>
       {/* Floors: wooden planks, with carpet tiles in the workspace */}
       {PALETTE[activeTheme()].floor ? (
-        <Box
-          size={[24, 0.01, 17]}
+        // Sheet vinyl on a ward, polished concrete in an engineering office.
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
           position={[0, -0.004, 0.5]}
-          color={PALETTE[activeTheme()].floor!}
-        />
+          material={surface(
+            activeTheme() === 'hospital' ? 'vinyl' : 'concrete',
+            PALETTE[activeTheme()].floor!,
+            tiling(24, 17, activeTheme() === 'hospital' ? 4 : 3),
+          )}
+          userData={{ floor: true }}
+        >
+          <planeGeometry args={[24, 17]} />
+        </mesh>
       ) : (
         <Floor kind="wood" position={[0, 0, 0.5]} size={[24, 17]} />
       )}
       {PALETTE[activeTheme()].workspace ? (
-        <Box
-          size={[8.6, 0.01, 6.4]}
+        // The workspace: a vinyl zone on the ward, carpet tiles elsewhere.
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
           position={[0.8, 0.002, 0.6]}
-          color={PALETTE[activeTheme()].workspace!}
-        />
+          material={surface(
+            activeTheme() === 'hospital' ? 'vinyl' : 'carpet',
+            PALETTE[activeTheme()].workspace!,
+            tiling(8.6, 6.4, activeTheme() === 'hospital' ? 4 : 0.6),
+          )}
+          userData={{ floor: true }}
+        >
+          <planeGeometry args={[8.6, 6.4]} />
+        </mesh>
       ) : (
         <Floor kind="carpet" position={[0.8, 0.005, 0.6]} size={[8.6, 6.4]} />
       )}

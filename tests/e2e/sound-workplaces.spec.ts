@@ -63,3 +63,47 @@ test('the courthouse has its own hushed sound', async ({ page }) => {
     .toMatch(/^courthouse:/)
   expect(await loudest(page, 4000)).toBeGreaterThan(0.0003)
 })
+
+test('conversations can be read aloud, each person in their own voice', async ({
+  page,
+}) => {
+  test.setTimeout(180_000)
+  // The browser's speech, recorded (the test machine has no voices of its own).
+  await page.addInitScript(() => {
+    const said: Array<{ text: string; rate: number; pitch: number }> = []
+    ;(window as unknown as { __said: typeof said }).__said = said
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: {
+        speak: (u: SpeechSynthesisUtterance) =>
+          said.push({ text: u.text, rate: u.rate, pitch: u.pitch }),
+        cancel: () => {},
+        getVoices: () => [],
+      },
+    })
+  })
+  await start(page, /Office Administration & Finance/)
+  // Off by default; turned on in the sound settings.
+  await page.getByRole('button', { name: 'Sound & graphics' }).click()
+  const panel = page.getByTestId('sound-panel')
+  await expect(panel.getByLabel('Read conversations aloud')).not.toBeChecked()
+  await panel.getByLabel('Read conversations aloud').check()
+  await panel.getByRole('button', { name: 'Close', exact: true }).click()
+  // Talking to the receptionist: what she says is spoken.
+  await page
+    .getByTestId('office-panel')
+    .getByRole('button', { name: /^Talk to / })
+    .first()
+    .click()
+  const dialogue = page.getByTestId('office-dialogue')
+  await expect(dialogue).toBeVisible({ timeout: 60_000 })
+  await expect
+    .poll(
+      async () =>
+        ((await page.evaluate('window.__said')) as Array<{ text: string }>).length,
+      { timeout: 30_000 },
+    )
+    .toBeGreaterThan(0)
+  const said = (await page.evaluate('window.__said')) as Array<{ text: string }>
+  const shown = (await dialogue.innerText()).replace(/[“”"]/g, '')
+  expect(shown).toContain(said[0].text.slice(0, 20))
+})

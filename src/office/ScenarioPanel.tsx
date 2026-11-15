@@ -6,6 +6,7 @@
  * so the people in the room stay in sight.
  */
 import { useState } from 'react'
+import { useSpokenLines } from '../audio/useSpeech'
 import type { Line, Scenario } from '../content/scenarios/types'
 import { describeEffects } from '../game/scenes'
 import { bandFor, beatOf, percentOf, type Run } from '../game/scenarios'
@@ -117,6 +118,19 @@ export function ScenarioPanel({
   const cast = (id: string | undefined) => scenario.cast.find((c) => c.id === id)
   const beat = beatOf(scenario, live.run)
   const replying = live.step < live.reply.length
+  // What is being said now, by whom (a reply, a line, or the question asked): read
+  // aloud, if chosen in the sound settings, each of the cast in their own voice.
+  const speaking: { who?: string; text: string } | null = replying
+    ? live.reply[live.step]
+    : beat.kind === 'say'
+      ? beat
+      : 'who' in beat && beat.who && 'prompt' in beat
+        ? { who: beat.who, text: beat.prompt }
+        : null
+  useSpokenLines(
+    speaking?.who ? [fill(speaking.text)] : null,
+    speaking?.who ? { id: `${scenario.id}:${speaking.who}` } : null,
+  )
 
   function said(line: Line) {
     const who = cast(line.who)

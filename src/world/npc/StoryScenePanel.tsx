@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { KeyMoment } from '../../game/story/engine'
 import type { Scene } from '../../game/story/types'
 import { Cinematic } from './Cinematic'
+import { useSpokenLines } from '../../audio/useSpeech'
 
 export function StoryScenePanel({
   scene,
@@ -59,6 +60,8 @@ export function StoryScenePanel({
   const choice = scene.choices.find((c) => c.id === chosen)
   const first = name.split(' ')[0]
   const shown = choice ? choice.reply : lines
+  // Read aloud, if chosen (after the title card, not over it).
+  useSpokenLines(framed ? shown : null, { id: scene.person })
   if (moment && !framed)
     return <Cinematic moment={moment} onDone={() => setFramed(true)} />
   return (

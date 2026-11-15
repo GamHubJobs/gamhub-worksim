@@ -178,6 +178,21 @@ export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
               </span>
             </span>
           </label>
+          <label className="flex items-start gap-2 text-sm text-slate-800">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={settings.speech}
+              onChange={(e) => change({ speech: e.target.checked })}
+            />
+            <span>
+              <span className="font-medium">Read conversations aloud</span>
+              <span className="block text-xs text-slate-500">
+                What people say is spoken with your browser's own voices, each person with
+                their own voice, at the People volume. The words stay on screen.
+              </span>
+            </span>
+          </label>
         </div>
 
         <fieldset className="mt-3 border-t border-slate-100 pt-3" data-testid="graphics">
