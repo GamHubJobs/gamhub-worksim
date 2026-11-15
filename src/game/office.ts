@@ -321,7 +321,7 @@ export const COFFEE_DIALOGUE: Dialogue = {
   speaker: null,
   title: 'Coffee machine',
   lines: [
-    'The machine hums, and a minute later you have a fresh coffee. ☕',
+    'The machine hums, and a minute later you have a fresh coffee.',
     'Short breaks help you stay focused. Most people do their best work in blocks of 25 to 50 minutes with a few minutes away from the screen in between.',
   ],
   actions: [],

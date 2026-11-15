@@ -7,6 +7,7 @@
  * behind it; closing it goes back to exactly where the player was.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Icon } from '../ui/Icon'
 import { HudSlot } from '../ui/hud/Hud'
 import type { Profile } from '../persistence/schemas'
 import { CareersSection } from '../apps/career/CareersSection'
@@ -145,10 +146,11 @@ export function GameHud({
       <NeedsHud profile={profile} />
       <div className="pointer-events-auto flex gap-1.5">
         <button type="button" className={button} onClick={() => openPhone(null)}>
-          📱 Phone <kbd className="font-sans">P</kbd>
+          <Icon name="phone" className="inline h-4 w-4 align-[-3px]" /> Phone{' '}
+          <kbd className="font-sans">P</kbd>
         </button>
         <button type="button" className={button} onClick={openMap}>
-          🗺️ Map
+          <Icon name="map" className="inline h-4 w-4 align-[-3px]" /> Map
         </button>
         <button type="button" className={button} onClick={onMenu}>
           ☰ Menu <kbd className="font-sans">Esc</kbd>
@@ -431,10 +433,21 @@ export function InventoryScreen({
   return (
     <Overlay title="Inventory" onClose={onClose} testId="inventory">
       <ul className="space-y-1">
-        <li>🍱 {life.food} meals in the fridge</li>
-        <li>🚲 {life.vehicles.bike ? 'Your bike' : 'No bike (Cog & Kerb sells them)'}</li>
-        <li>🚗 {life.vehicles.car ? 'A leased car' : 'No car'}</li>
-        <li>📱 Your phone</li>
+        <li className="flex items-center gap-1.5">
+          <Icon name="meals" className="h-4 w-4 text-slate-500" /> {life.food} meals in
+          the fridge
+        </li>
+        <li className="flex items-center gap-1.5">
+          <Icon name="bike" className="h-4 w-4 text-slate-500" />{' '}
+          {life.vehicles.bike ? 'Your bike' : 'No bike (Cog & Kerb sells them)'}
+        </li>
+        <li className="flex items-center gap-1.5">
+          <Icon name="car" className="h-4 w-4 text-slate-500" />{' '}
+          {life.vehicles.car ? 'A leased car' : 'No car'}
+        </li>
+        <li className="flex items-center gap-1.5">
+          <Icon name="phone" className="h-4 w-4 text-slate-500" /> Your phone
+        </li>
       </ul>
       <p className="mt-4 font-semibold text-slate-900">At home</p>
       <ul className="mt-1 grid grid-cols-2 gap-1">

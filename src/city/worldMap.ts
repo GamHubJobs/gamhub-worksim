@@ -6,6 +6,7 @@
  * Coordinates: x along the street (west to east), z across it (north is −z).
  */
 import { PLACES, type PlaceId } from '../content/city'
+import type { IconName } from '../ui/Icon'
 
 export const ROAD = { minX: -75, maxX: 75, halfWidth: 5 }
 /** The pavements either side of the road (centre z and width). */
@@ -65,15 +66,15 @@ export const BUILDING_FRONT = 10
 /** The park's lawns, behind its gate (north side, as drawn in 3D). */
 export const PARK = { minX: 25, maxX: 59, minZ: -44, maxZ: -10 }
 
-export const ICONS: Record<PlaceId, string> = {
-  home: '🏠',
-  office: '🏢',
-  cafe: '☕',
-  shop: '🛒',
-  gym: '🏋️',
-  park: '🌳',
-  garage: '🚲',
-  offices: '💼',
+export const ICONS: Record<PlaceId, IconName> = {
+  home: 'home',
+  office: 'building',
+  cafe: 'cup',
+  shop: 'basket',
+  gym: 'dumbbell',
+  park: 'tree',
+  garage: 'bike',
+  offices: 'briefcase',
 }
 
 /** What each kind of place is called on the map's key. */

@@ -6,6 +6,7 @@
  * can be panned, zoomed and turned by the map that holds it.
  */
 import { PLACES, type PlaceId } from '../../content/city'
+import { SvgIcon } from '../../ui/Icon'
 import {
   BUILDING_DEPTH,
   BUILDING_FRONT,
@@ -124,19 +125,17 @@ export function MapDrawing({
           stroke="#ffffff"
           strokeWidth={0.5}
         />
-        <text
+        <SvgIcon
+          name="scales"
           x={COURTHOUSE.door[0]}
-          y={COURTHOUSE.door[1] + 1.2}
+          y={COURTHOUSE.door[1]}
+          size={3.4}
           transform={upright(COURTHOUSE.door[0], COURTHOUSE.door[1])}
-          textAnchor="middle"
-          fontSize={3.2}
-        >
-          ⚖️
-        </text>
+        />
         {labels && (
           <text
             x={COURTHOUSE.door[0]}
-            y={COURTHOUSE.door[1] - 4.2}
+            y={COURTHOUSE.door[1] - 7.4}
             textAnchor="middle"
             fontSize={2.4}
             fontWeight={600}
@@ -193,9 +192,13 @@ export function MapDrawing({
               stroke={selected === p.id ? '#facc15' : '#ffffff'}
               strokeWidth={selected === p.id ? 0.9 : 0.5}
             />
-            <text x={x} y={z + 1.2} textAnchor="middle" fontSize={3.2}>
-              {known ? ICONS[p.id] : '?'}
-            </text>
+            {known ? (
+              <SvgIcon name={ICONS[p.id]} x={x} y={z} size={3.4} />
+            ) : (
+              <text x={x} y={z + 1.2} textAnchor="middle" fontSize={3.2} fill="#ffffff">
+                ?
+              </text>
+            )}
             {labels && (
               <text
                 x={x}

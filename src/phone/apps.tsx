@@ -4,6 +4,7 @@
  * knows); nothing here keeps a second copy of it.
  */
 import { useEffect, useState } from 'react'
+import { Icon } from '../ui/Icon'
 import { audio } from '../audio/manager'
 import { FRIENDS, PLANS, friendshipName, getFriend } from '../content/friends'
 import { formatMoney } from '../content/life'
@@ -418,7 +419,7 @@ export function MapsApp({ profile, act }: { profile: ProfileData; act: Act }) {
         }}
         className="w-full rounded-xl bg-teal-700 px-3 py-4 font-semibold text-white hover:bg-teal-800"
       >
-        🗺️ Open the map
+        <Icon name="map" className="inline h-4 w-4 align-[-3px]" /> Open the map
       </button>
       {nav.destination ? (
         <p className="rounded-lg bg-rose-50 p-2 text-rose-900">

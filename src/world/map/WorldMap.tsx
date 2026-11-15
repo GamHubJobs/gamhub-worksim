@@ -9,6 +9,7 @@
  * player: they walk there.
  */
 import { useEffect, useRef, useState } from 'react'
+import { Icon } from '../../ui/Icon'
 import { PLACE_ACTIONS, PLACES, type PlaceId } from '../../content/city'
 import { formatTime } from '../../game/clock'
 import type { ProfileData } from '../../game/career'
@@ -162,7 +163,9 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
             data-testid="map-details"
             aria-label={known ? place.name : 'A place not yet found'}
           >
-            <p className="text-2xl">{known ? ICONS[place.id] : '?'}</p>
+            <p className="text-2xl" aria-hidden>
+              {known ? <Icon name={ICONS[place.id]} className="h-7 w-7" /> : '?'}
+            </p>
             <h3 className="text-base font-semibold text-slate-900">
               {known ? place.name : 'Not yet found'}
             </h3>
@@ -216,12 +219,22 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
           <ul className="mt-1 grid grid-cols-2 gap-1 text-xs">
             {PLACES.map((p) => (
               <li key={p.id}>
-                {ICONS[p.id]} {KINDS[p.id]}
+                <Icon name={ICONS[p.id]} className="inline h-4 w-4 align-[-3px]" />{' '}
+                {KINDS[p.id]}
               </li>
             ))}
-            <li>⚖️ Court (from work)</li>
-            <li>🔵 You</li>
-            <li>⭕ Destination</li>
+            <li>
+              <Icon name="scales" className="inline h-4 w-4 align-[-3px]" /> Court (from
+              work)
+            </li>
+            <li>
+              <Icon name="you" className="inline h-4 w-4 align-[-3px] text-blue-600" />{' '}
+              You
+            </li>
+            <li>
+              <Icon name="target" className="inline h-4 w-4 align-[-3px] text-red-600" />{' '}
+              Destination
+            </li>
           </ul>
         </section>
       </aside>

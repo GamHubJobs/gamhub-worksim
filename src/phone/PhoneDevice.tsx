@@ -8,6 +8,7 @@
  * still (see PlayerRig). New news arrives as a banner, also when it is away.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Icon } from '../ui/Icon'
 import { audio } from '../audio/manager'
 import { weekdayName, formatTime } from '../game/clock'
 import { APPS, clockOf, DOCK, notices, WALLPAPERS, type PhoneApp } from '../game/phone'
@@ -106,10 +107,10 @@ function Banner({ profile, hidden }: { profile: ProfileData; hidden: boolean }) 
     >
       <span
         aria-hidden
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg text-white"
         style={{ background: app.colour }}
       >
-        {app.icon}
+        <Icon name={app.icon} className="h-5 w-5" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex justify-between text-xs text-slate-500">
@@ -297,7 +298,7 @@ function AppIcon({
         className="relative flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-md ring-1 ring-white/20 group-hover:brightness-110"
         style={{ background: app.colour }}
       >
-        {app.icon}
+        <Icon name={app.icon} className="h-6 w-6 text-white" />
         {!!badge && (
           <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold">
             {badge}

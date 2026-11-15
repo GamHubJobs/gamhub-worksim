@@ -5,6 +5,7 @@
  * and the restaurants that deliver. Pure, so it can be tested.
  */
 import { FRIENDS, PLANS } from '../content/friends'
+import type { IconName } from '../ui/Icon'
 import { moneyTalkDue } from './money'
 import { MEETINGS } from '../content/workday'
 import { TOWN_PEOPLE } from '../content/townPeople'
@@ -34,19 +35,20 @@ export type PhoneApp =
   | 'calendar'
   | 'settings'
 
-export const APPS: Array<{ id: PhoneApp; name: string; icon: string; colour: string }> = [
-  { id: 'messages', name: 'Messages', icon: '💬', colour: '#16a34a' },
-  { id: 'contacts', name: 'Contacts', icon: '👤', colour: '#64748b' },
-  { id: 'calendar', name: 'Calendar', icon: '📅', colour: '#dc2626' },
-  { id: 'maps', name: 'Maps', icon: '🗺️', colour: '#0d9488' },
-  { id: 'bank', name: 'Bank', icon: '💷', colour: '#1d4ed8' },
-  { id: 'jobs', name: 'Career', icon: '💼', colour: '#7c3aed' },
-  { id: 'food', name: 'Food', icon: '🍜', colour: '#ea580c' },
-  { id: 'social', name: 'Circle', icon: '🫧', colour: '#db2777' },
-  { id: 'browser', name: 'Browser', icon: '🌐', colour: '#0284c7' },
-  { id: 'camera', name: 'Camera', icon: '📷', colour: '#334155' },
-  { id: 'settings', name: 'Settings', icon: '⚙️', colour: '#475569' },
-]
+export const APPS: Array<{ id: PhoneApp; name: string; icon: IconName; colour: string }> =
+  [
+    { id: 'messages', name: 'Messages', icon: 'chat', colour: '#16a34a' },
+    { id: 'contacts', name: 'Contacts', icon: 'user', colour: '#64748b' },
+    { id: 'calendar', name: 'Calendar', icon: 'calendar', colour: '#dc2626' },
+    { id: 'maps', name: 'Maps', icon: 'map', colour: '#0d9488' },
+    { id: 'bank', name: 'Bank', icon: 'bank', colour: '#1d4ed8' },
+    { id: 'jobs', name: 'Career', icon: 'briefcase', colour: '#7c3aed' },
+    { id: 'food', name: 'Food', icon: 'meals', colour: '#ea580c' },
+    { id: 'social', name: 'Circle', icon: 'social', colour: '#db2777' },
+    { id: 'browser', name: 'Browser', icon: 'globe', colour: '#0284c7' },
+    { id: 'camera', name: 'Camera', icon: 'camera', colour: '#334155' },
+    { id: 'settings', name: 'Settings', icon: 'settings', colour: '#475569' },
+  ]
 
 /** The apps kept in the dock at the bottom of the home screen. */
 export const DOCK: PhoneApp[] = ['messages', 'contacts', 'maps', 'camera']

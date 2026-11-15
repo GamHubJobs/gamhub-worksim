@@ -1,5 +1,25 @@
 /** Simple line icons (drawn here, so no icon library is needed). */
 const PATHS = {
+  map: 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14',
+  meals: 'M3 11h18a9 9 0 0 1-18 0Zm5-4c0-1.5 1-2 1-3m3 3c0-1.5 1-2 1-3m3 3c0-1.5 1-2 1-3',
+  bike: 'M2.5 17.5a3 3 0 1 0 6 0 3 3 0 1 0-6 0m13 0a3 3 0 1 0 6 0 3 3 0 1 0-6 0M5.5 17.5 9 10h6l3.5 7.5M9 10l3 7.5M14 6.5h2.5l1 3.5',
+  car: 'M4 15v-3l2-5h12l2 5v3M3 15h18v3H3v-3Zm4 3v2m10-2v2M7.5 12.5h.01m9 0h.01',
+  scales:
+    'M12 4v16M7 20h10M5 7h14M5 7l-3 6a3 3 0 0 0 6 0L5 7Zm14 0-3 6a3 3 0 0 0 6 0l-3-6Z',
+  you: 'M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0M12 3v2m0 14v2M3 12h2m14 0h2',
+  target: 'M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0m5 0a3 3 0 1 0 6 0 3 3 0 1 0-6 0',
+  calendar: 'M4 6h16v14H4V6Zm0 4h16M8 3v4m8-4v4',
+  bank: 'M3 9l9-5 9 5M4 9h16M6 9v8m4-8v8m4-8v8m4-8v8M3 20h18',
+  camera: 'M4 8h4l2-2h4l2 2h4v11H4V8Zm8 9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z',
+  globe:
+    'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-9 9h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18',
+  home: 'M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-5h4v5',
+  building: 'M5 21V4h10v17m0-12h4v12M3 21h18M8 8h4m-4 4h4m-4 4h4',
+  cup: 'M5 8h11v6a5 5 0 0 1-10 0V8Zm11 2h2a2 2 0 0 1 0 4h-2M8 3v2m3-2v2',
+  basket: 'M4 9h16l-2 11H6L4 9Zm4 0 3-5m5 5-3-5m-4 9v3m6-3v3',
+  dumbbell: 'M3 10v4m3-6v8m12-8v8m3-6v4M6 12h12',
+  tree: 'M12 21v-6m0-12a5 5 0 0 0-5 5 4 4 0 0 0-2 7h14a4 4 0 0 0-2-7 5 5 0 0 0-5-5Z',
+  briefcase: 'M4 8h16v11H4V8Zm5 0V5h6v3M4 13h16',
   mail: 'M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11Zm1 .5 8 6 8-6',
   tasks: 'M9 6h11M9 12h11M9 18h11M4 5.5l1 1 2-2M4 11.5l1 1 2-2M4 17.5l1 1 2-2',
   sheets: 'M4 4h16v16H4V4Zm0 5h16M4 14.5h16M9.5 4v16',
@@ -73,6 +93,40 @@ const PATHS = {
 } as const
 
 export type IconName = keyof typeof PATHS
+
+/**
+ * An icon inside another SVG (the map): drawn at (x, y), `size` across, in a colour.
+ */
+export function SvgIcon({
+  name,
+  x,
+  y,
+  size,
+  color = '#ffffff',
+  transform,
+}: {
+  name: IconName
+  x: number
+  y: number
+  size: number
+  color?: string
+  transform?: string
+}) {
+  const s = size / 24
+  return (
+    <g transform={transform}>
+      <path
+        d={PATHS[name]}
+        transform={`translate(${x - size / 2} ${y - size / 2}) scale(${s})`}
+        fill="none"
+        stroke={color}
+        strokeWidth={2.2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  )
+}
 
 export function Icon({
   name,
