@@ -190,6 +190,32 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-15 · Colleagues go into the wings
+
+**Built**
+
+- A wing place (`wing:work` in `officeCast.ts`) that follows the workplace:
+  a patient's bedside in Bay B on the ward, the inspection bench in the
+  fabrication shop, the records room at the law firm.
+- The senior colleague and the analyst have an errand there now and then.
+  It only happens where there is a wing: in an office without one, its
+  chance is zero, so the office's days are unchanged.
+- The Bay B nurse uses the shared `WingWorker`.
+
+**Tested**
+
+- `wingErrands.test.ts`: on the ward, at the engineering firm and at the law
+  firm, the wing place is in the right room, standable and reachable from
+  the desk, and someone goes there during the week. Never in an office
+  without a wing.
+- Browser test: stepping through the day on the ward until someone's errand
+  is in Bay B, then checking from the game's own record of where people are
+  that they really are in the wing. (The screenshot from Bay B faces the
+  other end of the bay from the bed they visit, so it does not show them
+  clearly; the position check is the proof.)
+
+---
+
 ## 2026-11-15 · Wings for engineering and law, on a shared wing shell
 
 **Built**

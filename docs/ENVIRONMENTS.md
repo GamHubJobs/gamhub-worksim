@@ -105,9 +105,10 @@ showing through the wall reversed.
   and the law firm into a records room and conference suite, each through a
   doorway from its corner (`wingShell.ts`). The main floor itself (reception,
   the desks, the manager's office, the break room) keeps the office's walls.
-  Colleagues' daily routes and the team's meeting places stay on the main
-  floor; each wing has its own person at work (the Bay B nurse, the
-  fabricator, the records clerk).
+  Each wing has its own person at work (the Bay B nurse, the fabricator, the
+  records clerk), and two colleagues go into it on errands during the day (a
+  patient in Bay B, the inspection bench, the records room). The team's
+  meetings stay on the main floor.
 - **The courthouse is reached from work only.** Westmark County Court has
   its own interior and hearing (see [SCENARIOS.md](SCENARIOS.md#at-court)),
   and stands on the high street (columns, steps, its crest), marked on the

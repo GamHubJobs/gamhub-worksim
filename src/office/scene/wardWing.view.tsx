@@ -4,13 +4,10 @@
  * Bay B's four beds with a nurse at work, and the two side rooms, the first
  * marked for isolation. Patients are fictional.
  */
-import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import { clipFrame, type RigFrame } from '../../world/character/rig'
 import { Box } from './parts'
-import { Person, type Motion } from './people'
 import { Sign } from './signs'
 import { Bed } from './wardBed'
+import { WingWorker } from './wingWorker'
 import {
   BAY_B_BEDS,
   BAY_B_NURSE,
@@ -29,30 +26,21 @@ const WALL = '#eef2f1'
 
 /** The nurse in Bay B, checking a patient's observations. */
 function Nurse() {
-  const rig = useRef<RigFrame | null>(null)
-  const motion = useRef<Motion>({ walking: false })
-  const t = useRef(0)
-  useFrame((_, dt) => {
-    t.current += dt
-    rig.current = clipFrame('write', t.current, 'standing')
-  })
   return (
-    <group position={[BAY_B_NURSE.x, 0, BAY_B_NURSE.z]} rotation={[0, -Math.PI / 2, 0]}>
-      <Person
-        look={{
-          skin: 3,
-          hair: 'bun',
-          hairColor: 1,
-          outfit: 'polo',
-          top: '#1d4ed8',
-          trousers: '#1d4ed8',
-          sleeves: 'short',
-        }}
-        seated={false}
-        rig={rig}
-        motion={motion}
-      />
-    </group>
+    <WingWorker
+      look={{
+        skin: 3,
+        hair: 'bun',
+        hairColor: 1,
+        outfit: 'polo',
+        top: '#1d4ed8',
+        trousers: '#1d4ed8',
+        sleeves: 'short',
+      }}
+      x={BAY_B_NURSE.x}
+      z={BAY_B_NURSE.z}
+      heading={-Math.PI / 2}
+    />
   )
 }
 

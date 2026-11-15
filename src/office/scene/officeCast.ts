@@ -14,7 +14,7 @@
  *   waters the plants.
  * Each has their own hours and habits: some quiet, some sociable.
  */
-import { activeDepartment, getPerson } from '../../content/departments'
+import { activeDepartment, getPerson, workplaceKind } from '../../content/departments'
 import { MEETINGS } from '../../content/workday'
 import type { Who } from '../../game/encounters'
 import type { Gathering, Person, Place } from '../../world/npc/schedule'
@@ -69,7 +69,55 @@ const beside = (x: number, z: number, tx: number, tz: number): Place => ({
   label: 'talking to a colleague',
 })
 
+/**
+ * Where colleagues go in the workplace's own wing (wingShell.ts), if it has
+ * one: a patient in Bay B on the ward, the inspection bench in the
+ * fabrication shop, the records room at the law firm.
+ */
+const WING_PLACES: Partial<Record<string, Place>> = {
+  ward: {
+    x: 19.1,
+    z: 7.6,
+    heading: -Math.PI / 2,
+    clip: 'write',
+    also: ['talk'],
+    label: 'seeing a patient in Bay B',
+  },
+  workshop: {
+    x: 15.6,
+    z: 7.3,
+    heading: 0,
+    clip: 'write',
+    also: ['reach'],
+    label: 'checking a part at the inspection bench',
+  },
+  courtroom: {
+    x: 19.1,
+    z: -3.0,
+    heading: 0,
+    clip: 'reach',
+    also: ['read'],
+    label: 'fetching files from the records room',
+  },
+}
+
+/** Whether today's workplace has a wing to go to. */
+export const hasWing = (): boolean => !!WING_PLACES[workplaceKind()]
+
+/** An errand into the wing: only where there is one (never in the office). */
+const wingErrand = (minutes: number, chance: number) => ({
+  to: 'wing:work',
+  minutes,
+  get chance() {
+    return hasWing() ? chance : 0
+  },
+})
+
 export const OFFICE_PLACES: Record<string, Place> = {
+  /** In the workplace's wing (see WING_PLACES); the printer where there is none. */
+  get 'wing:work'(): Place {
+    return WING_PLACES[workplaceKind()] ?? OFFICE_PLACES.printer
+  },
   reception: {
     x: -6.2,
     z: 3.4,
@@ -280,6 +328,7 @@ export const OFFICE_PEOPLE: Person[] = [
     errands: [
       { to: 'printer', minutes: 6, chance: 0.35 },
       { to: 'visit:backM', minutes: 10, chance: 0.2 },
+      wingErrand(14, 0.3),
     ],
     talk: 'senior',
     speaker: 'senior',
@@ -328,6 +377,7 @@ export const OFFICE_PEOPLE: Person[] = [
       { to: 'stretch:backR', minutes: 3, chance: 0.35 },
       { to: 'printer', minutes: 6, chance: 0.3 },
       { to: 'visit:manager', minutes: 10, chance: 0.2 },
+      wingErrand(12, 0.25),
     ],
   },
   {

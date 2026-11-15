@@ -232,3 +232,35 @@ test('Healthcare: the ward goes on past Bay A: the corridor, Bay B and the isola
   await page.screenshot({ path: `${shots}/healthcare/bay-b.png` })
   await expect(here).toContainText('At Bay B', { timeout: 60_000 })
 })
+
+test('Healthcare: colleagues go into the ward wing during the day, not only the player', async ({
+  page,
+}) => {
+  test.setTimeout(300_000)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await startHealthcare(page)
+  await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
+    timeout: 120_000,
+  })
+  type Npc = { id: string; x: number; z: number; place: string | null }
+  const npcs = () => page.evaluate('window.__worksimNpcs ?? []') as Promise<Npc[]>
+  // Through the day until someone's errand takes them to a patient in Bay B.
+  let found: Npc | undefined
+  for (let minute = 10 * 60 + 30; minute < 16 * 60 && !found; minute += 5) {
+    await page.evaluate(`window.__worksim.setTime(1, ${minute})`)
+    await page.waitForTimeout(400)
+    found = (await npcs()).find((n) => n.place === 'wing:work')
+  }
+  expect(found, 'someone goes into the wing').toBeDefined()
+  // They are there, in the wing (a jump in time puts people where they should be).
+  await expect
+    .poll(async () => (await npcs()).find((n) => n.id === found!.id)?.x ?? 0, {
+      timeout: 15_000,
+    })
+    .toBeGreaterThan(12.15)
+  await page.waitForFunction('typeof window.__worksimWalk === "function"')
+  await page.evaluate("window.__worksimWalk('bay-b')")
+  await expect(page.getByTestId('room-here')).toContainText('Bay B', { timeout: 60_000 })
+  await page.waitForTimeout(1000)
+  await page.screenshot({ path: `${shots}/healthcare/bay-b-colleague.png` })
+})
