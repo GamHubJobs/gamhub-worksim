@@ -24,6 +24,7 @@ import {
   type JobAd,
 } from '../content/careerLife'
 import { activeEmployer } from '../content/departments'
+import { closedReason, getPlace } from '../content/city'
 import { REVIEW_RATINGS } from '../content/schemas'
 import { LATEST_BEDTIME, WEEKLY_PAY, formatMoney } from '../content/life'
 import type { Life } from '../persistence/schemas'
@@ -192,6 +193,30 @@ export function canInterview(profile: ProfileData, jobId: string): string | null
   return eveningAtHome(profile, INTERVIEW_MINUTES)
 }
 
+/**
+ * Why the player cannot have the interview in person now, or null: the
+ * employers interview in the evening at Harbourside House, the serviced
+ * offices on the high street, while it is open.
+ */
+export function canInterviewInPerson(profile: ProfileData, jobId: string): string | null {
+  const application = applicationFor(profile.work.life, jobId)
+  if (application?.stage !== 'interview') return 'No interview booked.'
+  const life = profile.work.life
+  if (!profile.work.dayOver || life.phase !== 'evening') return 'Only in the evening.'
+  if (life.city.at !== 'offices' || !life.city.inside)
+    return 'At Harbourside House, on the high street.'
+  const offices = getPlace('offices')!
+  return (
+    closedReason(offices, life.minute) ??
+    closedReason(offices, life.minute + INTERVIEW_MINUTES - 1)
+  )
+}
+
+/** The interview booked first, if any (the one to go to in person). */
+export function bookedInterview(life: Life): Application | undefined {
+  return life.career.applications.find((a) => a.stage === 'interview')
+}
+
 export interface InterviewResult {
   score: number
   offer: number | null
@@ -217,13 +242,17 @@ export function interviewResult(
   }
 }
 
-/** A video interview in the evening; an offer if it goes well. */
+/**
+ * An interview in the evening, on video at home or in person at Harbourside
+ * House; an offer if it goes well (the answers count the same either way).
+ */
 export function interview(
   profile: ProfileData,
   jobId: string,
   answers: number[],
+  inPerson = false,
 ): ProfileData {
-  if (canInterview(profile, jobId)) return profile
+  if ((inPerson ? canInterviewInPerson : canInterview)(profile, jobId)) return profile
   const ad = getJobAd(jobId)!
   const result = interviewResult(profile, ad, answers)
   const next = spendTime(profile, INTERVIEW_MINUTES, 4)
@@ -232,8 +261,8 @@ export function interview(
   life = note(
     life,
     result.offer
-      ? `Interview with ${ad.employer}: offered ${formatMoney(result.offer)} a week`
-      : `Interview with ${ad.employer}: not this time`,
+      ? `Interview with ${ad.employer}${inPerson ? ' at Harbourside House' : ''}: offered ${formatMoney(result.offer)} a week`
+      : `Interview with ${ad.employer}${inPerson ? ' at Harbourside House' : ''}: not this time`,
   )
   return withCareer(
     next,

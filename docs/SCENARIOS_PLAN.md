@@ -82,7 +82,7 @@ sounds and effects. No scenario gets a system of its own.
    face to face.
 4. **S4 · A promotion from the manager**: **done**, see below. Asked to her office; she talks through the
    work, announces it, the letter on the desk; then the record and pay update.
-5. **S5 · Interviews at the company**: going to the company's reception, signing in,
+5. **S5 · Interviews at the company**: **done**, see below. going to the company's reception, signing in,
    waiting, the interviewer coming out, the interview in a meeting room, the result.
 6. **S6 · Home services and rides**: a technician who comes to repair something; a taxi
    that arrives and drives the player.
@@ -168,3 +168,23 @@ counted twice, collisions respected, and no loss of speed.
 - Written without pronouns for the manager (the six careers' managers differ).
 - Tested: unit tests (told in the office, once, only with a promotion);
   `week.spec.ts` earns the promotion, then hears it in person (screenshot checked).
+
+### S5 · Interviews at the company
+
+- The employers hold their interviews in the evening at **Harbourside House**, the
+  serviced offices on the high street (a new place, `offices`, door at x 32 on the
+  south side). The video interview at home is still there; either counts the same.
+- In person: sign in at reception (the visitors' book, a badge); take a seat and wait;
+  the interviewer comes out of Meeting Room 2 to the waiting chairs to call the player
+  in (talking to them, or "Go into the interview"); both go in and sit across the
+  table; the three questions; a handshake; the result goes in the career notes and the
+  evening's log ("… at Harbourside House: offered …").
+- Each step only after the one before; only while the building is open (it closes at
+  21:00, and the interview takes an hour).
+- Rules: `canInterviewInPerson`, `bookedInterview` and `interview(…, inPerson)` in
+  game/careerLife.ts.
+- Tested: unit tests (in person only there, at home only on video, the same score and
+  offer, closing time); `interview.spec.ts` plays it in 3D, checking the interviewer
+  walks out to the chairs and back to the table (screenshots checked).
+- Not saved part way: leaving the building or reloading starts again at reception
+  (nothing is counted until the interview is finished).

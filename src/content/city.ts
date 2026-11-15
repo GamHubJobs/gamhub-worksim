@@ -7,7 +7,8 @@
 import { activeEmployer } from './departments'
 import type { LifeAction } from './life'
 
-export type PlaceId = 'home' | 'office' | 'cafe' | 'shop' | 'gym' | 'park' | 'garage'
+export type PlaceId =
+  'home' | 'office' | 'cafe' | 'shop' | 'gym' | 'park' | 'garage' | 'offices'
 
 export interface Place {
   id: PlaceId
@@ -81,6 +82,16 @@ export const PLACES: Place[] = [
     colour: '#7c3aed',
   },
   {
+    id: 'offices',
+    name: 'Harbourside House',
+    kind: 'Serviced offices',
+    description:
+      'Meeting rooms by the hour: where local employers hold their interviews in the evening.',
+    door: [32, 8],
+    open: [8 * HOUR, 21 * HOUR],
+    colour: '#0f766e',
+  },
+  {
     id: 'office',
     // Named for the player's own workplace: the hospital, the law firm, …
     get name() {
@@ -117,7 +128,7 @@ export const WALK_UNITS_A_MINUTE = 9
 
 /** Things to do inside the places in the neighbourhood. */
 export interface PlaceAction extends LifeAction {
-  place: Exclude<PlaceId, 'home' | 'office' | 'garage'>
+  place: Exclude<PlaceId, 'home' | 'office' | 'garage' | 'offices'>
 }
 
 export const PLACE_ACTIONS: PlaceAction[] = [

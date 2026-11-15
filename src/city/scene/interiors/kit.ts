@@ -33,6 +33,11 @@ export interface InteriorState {
   /** The game day and clock, for the customers' comings and goings. */
   day?: number
   minute?: number
+  /**
+   * At Harbourside House: where the interviewer is (at the table, or come out
+   * to call the player in), or null with no interview booked.
+   */
+  interviewer?: 'room' | 'collect' | null
 }
 
 export const Interior = createContext<InteriorState>({

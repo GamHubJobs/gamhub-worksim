@@ -73,6 +73,7 @@ export const ICONS: Record<PlaceId, string> = {
   gym: '🏋️',
   park: '🌳',
   garage: '🚲',
+  offices: '💼',
 }
 
 /** What each kind of place is called on the map's key. */
@@ -84,6 +85,7 @@ export const KINDS: Record<PlaceId, string> = {
   gym: 'Gym',
   park: 'Park',
   garage: 'Bikes and cars',
+  offices: 'Interviews',
 }
 
 /** A place's door on the street. */

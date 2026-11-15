@@ -143,3 +143,14 @@ tests/e2e/cityhome.shots.spec.ts`) and checked.
 Checked and fine: the street (shop fronts, signs, the courthouse, lamps,
 crossings), the park (paths, pond, signs, people on benches) and the
 interiors' furniture, signs and people.
+
+### Harbourside House
+
+Serviced offices on the high street (south side, between the gym and the road to
+work), open 08:00 to 21:00, where the local employers hold their interviews in
+the evening (living scenarios S5): a carpeted reception with the front desk, the
+visitors' book and Ruth the receptionist; waiting chairs along the right wall;
+and Meeting Room 2 behind a glass partition with a frosted band, a doorway and
+its sign, a table with the player's printed application, and two chairs. The
+interviewer waits at the table and walks out to the waiting chairs to call the
+player in (`city/scene/interiors/Offices.tsx`, `officesLayout.ts`).

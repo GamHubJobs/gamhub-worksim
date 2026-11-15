@@ -29,6 +29,7 @@ import { Ticker } from './interiors/common'
 import { GYM_ACTIVITIES, GYM_BOXES, GYM_SIZE, GYM_START } from './interiors/gymLayout'
 import { Interior, PLAYER, type Doing, type InteriorState } from './interiors/kit'
 import { CAFE, GARAGE, PARK, SHOP, type Layout } from './interiors/layouts'
+import { OFFICES } from './interiors/officesLayout'
 
 const STILL = prefersReducedMotion()
 
@@ -40,6 +41,7 @@ const ROOMS = {
   gym: lazy(() => import('./interiors/Gym')),
   park: lazy(() => import('./interiors/Park')),
   garage: lazy(() => import('./interiors/Garage')),
+  offices: lazy(() => import('./interiors/Offices')),
 } satisfies Record<InteriorId, unknown>
 
 const LAYOUTS: Record<InteriorId, Layout> = {
@@ -47,6 +49,7 @@ const LAYOUTS: Record<InteriorId, Layout> = {
   shop: SHOP,
   park: PARK,
   garage: GARAGE,
+  offices: OFFICES,
   gym: {
     size: GYM_SIZE,
     start: GYM_START,
@@ -84,6 +87,8 @@ export interface InteriorSceneProps {
   /** The game day and clock (customers come and go by it). */
   day?: number
   minute?: number
+  /** At Harbourside House: where the interviewer is (see kit.ts). */
+  interviewer?: 'room' | 'collect' | null
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -139,6 +144,7 @@ function InteriorScene(props: InteriorSceneProps) {
       wedding: props.wedding ?? null,
       day: props.day,
       minute: props.minute,
+      interviewer: props.interviewer ?? null,
     }),
     [
       byAction,
@@ -149,6 +155,7 @@ function InteriorScene(props: InteriorSceneProps) {
       props.wedding,
       props.day,
       props.minute,
+      props.interviewer,
     ],
   )
   const world = useMemo(() => ({ now, hands, low }), [low])

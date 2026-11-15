@@ -25,7 +25,7 @@ const at = (p: ProfileData, minute: number): ProfileData => ({
 })
 
 describe('the neighbourhood', () => {
-  it('has seven places with doors on the street', () => {
+  it('has eight places with doors on the street', () => {
     expect(PLACES.map((p) => p.id)).toEqual([
       'home',
       'cafe',
@@ -33,8 +33,11 @@ describe('the neighbourhood', () => {
       'gym',
       'park',
       'garage',
+      'offices',
       'office',
     ])
+    // No two doors in the same place.
+    expect(new Set(PLACES.map((p) => p.door.join(','))).size).toBe(PLACES.length)
     for (const action of PLACE_ACTIONS) expect(getPlace(action.place)).toBeDefined()
     expect(new Set(PLACE_ACTIONS.map((a) => a.id)).size).toBe(PLACE_ACTIONS.length)
   })

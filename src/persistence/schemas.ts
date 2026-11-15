@@ -1241,16 +1241,20 @@ export const LifeSchema = z.object({
   nav: z
     .object({
       destination: z
-        .enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage'])
+        .enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage', 'offices'])
         .nullable()
         .default(null),
       recent: z
-        .array(z.enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage']))
+        .array(
+          z.enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage', 'offices']),
+        )
         .max(5)
         .default([]),
       /** Places the player has been to or walked past (the rest show as "not yet found"). */
       found: z
-        .array(z.enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage']))
+        .array(
+          z.enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage', 'offices']),
+        )
         .default(['home', 'office']),
     })
     .prefault({}),
@@ -1311,7 +1315,7 @@ export const LifeSchema = z.object({
     .object({
       /** The place they are at, or last left. */
       at: z
-        .enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage'])
+        .enum(['home', 'office', 'cafe', 'shop', 'gym', 'park', 'garage', 'offices'])
         .default('home'),
       /** Inside it, or out in the street. */
       inside: z.boolean().default(true),

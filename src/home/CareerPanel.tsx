@@ -221,16 +221,19 @@ function Jobs({ profile, onAct }: { profile: ProfileData; onAct: Act }) {
   )
 }
 
-function Interview({
+/** The interview's questions: on video at home, or in person at Harbourside House. */
+export function Interview({
   profile,
   ad,
   onAct,
   onDone,
+  inPerson = false,
 }: {
   profile: ProfileData
   ad: JobAd
   onAct: Act
   onDone: () => void
+  inPerson?: boolean
 }) {
   const [answers, setAnswers] = useState<number[]>([])
   const complete = ad.questions.every((_, i) => answers[i] !== undefined)
@@ -239,19 +242,20 @@ function Interview({
       data-testid="interview"
       onSubmit={(e) => {
         e.preventDefault()
-        void onAct((p) => interview(p, ad.id, answers))
+        void onAct((p) => interview(p, ad.id, answers, inPerson))
         onDone()
       }}
     >
       <AudioScene
         scene={{
-          place: 'home',
+          place: inPerson ? 'reception' : 'home',
           time: timeOfDay(profile.work.life.minute),
           moment: 'interview',
         }}
       />
       <h3 className="font-medium text-slate-900">
-        Video interview: {roleFor(profile, ad)} at {ad.employer}
+        {inPerson ? 'In Meeting Room 2' : 'Video interview'}: {roleFor(profile, ad)} at{' '}
+        {ad.employer}
       </h3>
       <p className="text-xs text-slate-600">
         Strong answers give a real example: what happened, what you did and how it turned

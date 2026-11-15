@@ -42,6 +42,9 @@ import { endMoment, startMoment } from '../world/npc/moment'
 import { dateHere, finishDate, whoOf } from '../game/dates'
 import { deliveryStage, received } from '../game/delivery'
 import { TOWN_PEOPLE } from '../content/townPeople'
+import { getJobAd } from '../content/careerLife'
+import { bookedInterview, canInterviewInPerson } from '../game/careerLife'
+import { Interview } from '../home/CareerPanel'
 import { marry, weddingHere } from '../game/family'
 import { adultOf, ask, bondOf } from '../game/romance'
 import { WeddingPanel } from '../world/npc/WeddingPanel'
@@ -63,6 +66,7 @@ const INSIDE: Record<PlaceId, Place> = {
   gym: 'gym',
   park: 'park',
   garage: 'garage',
+  offices: 'reception',
 }
 import type { Profile } from '../persistence/schemas'
 
@@ -70,7 +74,7 @@ const CityScene = lazy(() => import('./scene/CityScene'))
 const InteriorScene = lazy(() => import('./scene/InteriorScene'))
 
 /** Places with a 3D interior (home has the flat; the office has its own view). */
-const INTERIORS = new Set<PlaceId>(['cafe', 'shop', 'gym', 'park', 'garage'])
+const INTERIORS = new Set<PlaceId>(['cafe', 'shop', 'gym', 'park', 'garage', 'offices'])
 const DEALS = new Set<string>(['buy-bike', 'sell-bike', 'lease-car', 'end-lease'])
 
 /** Shows nothing instead of the 3D street if it fails: the list still works. */
@@ -147,9 +151,23 @@ export function CityView({
     nonce: number
     place: PlaceId
   } | null>(null)
+  // An interview in person at Harbourside House (see game/careerLife.ts): signed in,
+  // waited and been called in, then sat at the table for it. Not saved: leaving the
+  // building (or reloading) starts again at reception.
+  const booked = here.id === 'offices' ? bookedInterview(life) : undefined
+  const bookedAd = booked ? getJobAd(booked.jobId) : undefined
+  const [interviewStep, setInterviewStep] = useState<
+    null | 'signed' | 'waited' | 'seated' | 'done'
+  >(null)
+  useEffect(() => {
+    if (outside || here.id !== 'offices') setInterviewStep(null)
+  }, [outside, here.id])
   const commit = useCallback(
     (id: string) => {
-      if (DEALS.has(id)) onDeal(id as TransportDeal)
+      if (id === 'interview-sign-in') setInterviewStep('signed')
+      else if (id === 'interview-wait') setInterviewStep('waited')
+      else if (id === 'interview-room') setInterviewStep('seated')
+      else if (DEALS.has(id)) onDeal(id as TransportDeal)
       else onAction(id)
     },
     [onAction, onDeal],
@@ -223,13 +241,18 @@ export function CityView({
         setDating({ step: 'greet', date })
         return
       }
+      // The interviewer, come out to call the player in: in they go.
+      if (id === TOWN_PEOPLE.interviewer.id && interviewStep === 'waited') {
+        doThing('interview-room')
+        return
+      }
       setEncounter({
         who: n.who,
         situation: { availability: n.availability, doing: n.doing, minute },
       })
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [minute, profile, weddingNow, courierWaiting],
+    [minute, profile, weddingNow, courierWaiting, interviewStep, doThing],
   )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
@@ -243,6 +266,8 @@ export function CityView({
         meetPerson(action.slice('person:'.length))
       else if (completed && action) {
         commit(action)
+        // Across the table from the interviewer: stay seated while it lasts.
+        if (action === 'interview-room') doThing('interview-sit')
         // Sat down together: the date goes on.
         if (dating?.step === 'greet' && action === sitAction) {
           setDating({ ...dating, step: 'talk' })
@@ -313,8 +338,43 @@ export function CityView({
               ],
         ]
       : []
+  // The interview's steps, each only after the one before.
+  const interviewDoings: Array<[string, string, string | null]> =
+    booked && bookedAd
+      ? [
+          [
+            'interview-sign-in',
+            `Sign in for your interview with ${bookedAd.employer}`,
+            interviewStep ? 'Signed in.' : canInterviewInPerson(profile, booked.jobId),
+          ],
+          [
+            'interview-wait',
+            'Take a seat and wait to be called',
+            interviewStep === 'signed'
+              ? null
+              : interviewStep
+                ? 'Called in already.'
+                : 'Sign in at reception first.',
+          ],
+          [
+            'interview-room',
+            'Go into the interview',
+            interviewStep === 'waited'
+              ? null
+              : interviewStep === 'seated' || interviewStep === 'done'
+                ? 'Interviewed.'
+                : 'Wait to be called first.',
+          ],
+        ]
+      : []
   // What can be done here, for the hotspots in 3D (the same as the list).
   const doings: Doing[] = [
+    ...interviewDoings.map(([id, label, blocked]) => ({
+      id,
+      label,
+      detail: 'Harbourside House',
+      blocked,
+    })),
     ...actions.map((a) => ({
       id: a.id,
       label: a.label,
@@ -370,6 +430,9 @@ export function CityView({
                 wedding={wedding ?? weddingNow}
                 day={profile.work.day}
                 minute={life.minute}
+                interviewer={
+                  booked ? (interviewStep === 'waited' ? 'collect' : 'room') : null
+                }
               />
             </Suspense>
           </SceneBoundary>
@@ -682,6 +745,37 @@ export function CityView({
               data-testid="place"
             >
               <h2 className="font-semibold text-slate-900">{here.name}</h2>
+              {interviewStep === 'seated' && booked && bookedAd && (
+                <div
+                  className="mt-3 rounded-lg border border-teal-200 bg-teal-50/40 p-3"
+                  data-testid="interview-in-person"
+                >
+                  <p className="mb-2 text-sm text-slate-700">
+                    {TOWN_PEOPLE.interviewer.name} shakes your hand across the table:
+                    “Thanks for coming in. I interview for {bookedAd.employer}. Shall we
+                    start?”
+                  </p>
+                  <Interview
+                    profile={profile}
+                    ad={bookedAd}
+                    inPerson
+                    onAct={(change) => Promise.resolve(onAct(change))}
+                    onDone={() => {
+                      setInterviewStep('done')
+                      doThing('interview-goodbye')
+                    }}
+                  />
+                </div>
+              )}
+              {interviewStep === 'done' && (
+                <p
+                  className="mt-3 rounded-lg bg-teal-50 p-3 text-sm text-teal-900"
+                  data-testid="interview-done"
+                >
+                  “Thank you, that was really helpful. We will let you know.” The result
+                  is in your career notes on your laptop.
+                </p>
+              )}
               <ul className="mt-3 space-y-2">
                 {actions.map((action) => {
                   const blocked = canDo(profile, action)
@@ -730,11 +824,35 @@ export function CityView({
                     </li>
                   )
                 })}
-                {actions.length === 0 && here.id !== 'garage' && (
-                  <li className="text-sm text-slate-500">
-                    Nothing to do here right now.
+                {interviewDoings.map(([id, label, blocked]) => (
+                  <li key={id}>
+                    <button
+                      type="button"
+                      disabled={!!blocked}
+                      onClick={() => doThing(id)}
+                      data-testid={id}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-teal-400 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-55"
+                    >
+                      <span className="block font-medium text-slate-900">{label}</span>
+                      {blocked && (
+                        <span className="block text-xs text-slate-600">{blocked}</span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+                {here.id === 'offices' && !booked && (
+                  <li className="text-sm text-slate-500" data-testid="no-interview">
+                    No interview booked. Employers invite you after you apply for a job
+                    (on your laptop at home, in the evening).
                   </li>
                 )}
+                {actions.length === 0 &&
+                  here.id !== 'garage' &&
+                  here.id !== 'offices' && (
+                    <li className="text-sm text-slate-500">
+                      Nothing to do here right now.
+                    </li>
+                  )}
               </ul>
               <button
                 type="button"

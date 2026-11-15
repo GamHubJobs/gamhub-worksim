@@ -7,6 +7,9 @@ import {
   apply,
   applicationFor,
   askForRaise,
+  bookedInterview,
+  canInterview,
+  canInterviewInPerson,
   basePay,
   businessLevel,
   canApply,
@@ -23,6 +26,7 @@ import {
   weeklyPay,
 } from './careerLife'
 import { goHome, goToBed, leaveForWork } from './life'
+import { enterPlace, goOutside } from './city'
 import { endDay, passTime } from './workday'
 
 function evening(day = 1, p = newProfileData('Sam', 1)): ProfileData {
@@ -102,6 +106,45 @@ describe('job hunting', () => {
     expect(application.stage).toBe('failed')
     expect(application.offer).toBeNull()
     expect(application.notes).toHaveLength(4)
+  })
+
+  it('the interview can be had in person at Harbourside House, counting the same', () => {
+    let p = evening(1, withRecord(newProfileData('Sam', 1), 5, 'strong'))
+    p = nextEvening(apply(p, 'harbour-lane'))
+    expect(bookedInterview(p.work.life)?.jobId).toBe('harbour-lane')
+    // At home: on video, not in person.
+    expect(canInterview(p, 'harbour-lane')).toBeNull()
+    expect(canInterviewInPerson(p, 'harbour-lane')).toBe(
+      'At Harbourside House, on the high street.',
+    )
+    expect(interview(p, 'harbour-lane', best('harbour-lane'), true)).toBe(p)
+    // There: in person, not on video.
+    p = enterPlace(goOutside(p), 'offices')
+    expect(p.work.life.city).toMatchObject({ at: 'offices', inside: true })
+    expect(canInterviewInPerson(p, 'harbour-lane')).toBeNull()
+    expect(canInterview(p, 'harbour-lane')).toBe('At home, on your laptop.')
+    const minute = p.work.life.minute
+    p = interview(p, 'harbour-lane', best('harbour-lane'), true)
+    expect(p.work.life.minute).toBe(minute + 60)
+    const application = applicationFor(p.work.life, 'harbour-lane')!
+    expect(application.stage).toBe('offer')
+    expect(application.notes[0]).toBe('Interview score 6 out of 6.')
+    expect(p.work.life.log.join(' ')).toContain('at Harbourside House: offered')
+    expect(bookedInterview(p.work.life)).toBeUndefined()
+  })
+
+  it('in person only while Harbourside House is open', () => {
+    let p = evening(1, withRecord(newProfileData('Sam', 1), 5, 'strong'))
+    p = nextEvening(apply(p, 'harbour-lane'))
+    p = enterPlace(goOutside(p), 'offices')
+    const late = {
+      ...p,
+      work: { ...p.work, life: { ...p.work.life, minute: 20 * 60 + 30 } },
+    }
+    expect(canInterviewInPerson(late, 'harbour-lane')).toBe(
+      'Harbourside House closed at 21:00.',
+    )
+    expect(canInterviewInPerson(p, 'larkspur')).toBe('No interview booked.')
   })
 
   it('offers lapse after a week', () => {

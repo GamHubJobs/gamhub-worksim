@@ -43,6 +43,21 @@ export const TOWN_PEOPLE = {
   mechanic: who('garage:mechanic', 'Sam Doyle', 'Mechanic', 'mechanic', 'dry'),
   // At the door at home
   courier: who('home:courier', 'Jordan Reece', 'Delivery courier', 'courier', 'warm'),
+  // Harbourside House
+  officesReception: who(
+    'offices:reception',
+    'Ruth Abara',
+    'Receptionist',
+    'reception',
+    'warm',
+  ),
+  interviewer: who(
+    'offices:interviewer',
+    'Elliot Marsh',
+    'Interviewer',
+    'manager',
+    'focused',
+  ),
 } satisfies Record<string, Who>
 
 const LOCALS: Array<[string, Who['personality']]> = [

@@ -190,6 +190,27 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-16 · S5: interviews in person at Harbourside House
+
+**Built**
+
+- A new place on the high street, Harbourside House (serviced offices), with its own
+  interior: reception and receptionist, waiting chairs, Meeting Room 2 behind glass.
+- Interviews can be had there in the evening: sign in, wait, the interviewer comes
+  out to call the player in, the questions across the table, the result in the
+  career notes. The video interview at home stays; the grading is the same.
+
+**Tested**
+
+- Unit tests for the rules (full check: 3,319 passed). `interview.spec.ts` plays the
+  interview in 3D; the city, map and career-life browser tests pass (8).
+
+**Known limitations**
+
+- The steps inside are not saved: a reload starts again at reception.
+- The interviewer is the same person for every employer (Elliot Marsh, who says
+  which employer the interview is for).
+
 ## 2026-11-16 · S4: a promotion told in person
 
 **Built**
