@@ -44,6 +44,19 @@ function at(
 /** When things happen as the courier hands over a takeaway (seconds into answering the door). */
 export const DELIVERY_TIMES = { open: 1.2, greet: 2.2, take: 1.4, close: 1.6 }
 
+/**
+ * When things happen as the heating engineer comes to fix the boiler (seconds
+ * into answering the door): let in, at the boiler (walking there and back
+ * included), paid at the door, seen out. The engineer in HomeScene keeps to it.
+ */
+export const REPAIR_TIMES = { open: 1.2, greet: 1.4, fix: 11, pay: 2.2, close: 1.4 }
+
+/** The boiler, on the kitchen's back wall above the worktop (x from the left wall). */
+export function boilerAt(home: Home): { x: number; z: number } {
+  const [w, d] = home.size
+  return { x: -w / 2 + 1.25, z: -d / 2 + 0.12 }
+}
+
 export interface HomeLayout {
   boxes: Box[]
   activities: Activity[]
@@ -307,6 +320,74 @@ export function homeLayout(
       sounds: [
         { at: 0.3, id: 'door' },
         { at: doorstep ? 3.2 : 6.3, id: 'door' },
+      ],
+    },
+  )
+  // The boiler: the engineer is called and waited for like the takeaway, then let in
+  // at the door, watched at work at the boiler, and paid (REPAIR_TIMES).
+  const boiler = boilerAt(home)
+  const watch: Spot = { x: boiler.x + 1.0, z: boiler.z + 1.35, heading: 0.55 }
+  add(
+    'repair-call',
+    'call a heating engineer',
+    seat ?? door,
+    [
+      ...(seat ? [{ clip: 'sit' as const, seconds: 1.2, label: 'Sitting down' }] : []),
+      {
+        clip: 'phone',
+        seconds: 4,
+        label: 'Calling a heating engineer',
+        hold: { right: 'phone' },
+      },
+    ],
+    { sounds: [{ at: 1.6, id: 'phone' }] },
+  )
+  add('repair-wait', 'wait for the heating engineer', seat ?? door, [
+    ...(seat ? [{ clip: 'sit' as const, seconds: 1.2, label: 'Sitting down' }] : []),
+    {
+      clip: 'phone',
+      seconds: 5,
+      label: 'Waiting for the heating engineer',
+      hold: { right: 'phone' },
+    },
+  ])
+  add(
+    'repair-door',
+    'answer the door',
+    door,
+    [
+      { clip: 'push-door', seconds: REPAIR_TIMES.open, label: 'Opening the door' },
+      {
+        clip: 'talk',
+        seconds: REPAIR_TIMES.greet,
+        label: 'Letting the heating engineer in',
+      },
+      {
+        clip: 'stand',
+        seconds: REPAIR_TIMES.fix,
+        label: 'The engineer finds the fault and fixes the boiler',
+        at: watch,
+      },
+      {
+        clip: 'pay',
+        seconds: REPAIR_TIMES.pay,
+        label: 'Paying the engineer',
+        hold: { right: 'card' },
+        at: door,
+      },
+      {
+        clip: 'push-door',
+        seconds: REPAIR_TIMES.close,
+        label: 'Saying thanks and closing the door',
+      },
+    ],
+    {
+      view: 'behind',
+      sounds: [
+        { at: 0.3, id: 'door' },
+        // The card reader as they are paid, and the door closing behind them.
+        { at: 14.6, id: 'beep' },
+        { at: 16.9, id: 'door' },
       ],
     },
   )

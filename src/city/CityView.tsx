@@ -119,6 +119,10 @@ export function CityView({
   const [notice, setNotice] = useState<string | null>(null)
   // Choosing how to get to work, at the end of the street.
   const [travel, setTravel] = useState(false)
+  // A taxi booked in the street: it comes up the road, waits at the kerb, and
+  // drives the player off to work (without 3D, straight to work as before).
+  const [taxi, setTaxi] = useState<'coming' | 'waiting' | 'leaving' | null>(null)
+  const [streetReady, setStreetReady] = useState(false)
   const life = profile.work.life
   const phase = lifePhase(profile) === 'morning' ? 'morning' : 'evening'
   const day = phase === 'morning' ? nextWorkday(profile.work.day) : profile.work.day
@@ -310,6 +314,26 @@ export function CityView({
   // Which part of the street the player is in, for the sounds around them.
   const [area, setArea] = useState<Area>(() => areaAt(standAt(life.city.at)[0]))
   const onArea = useCallback((next: Area) => setArea(next), [])
+  const onStreetReady = useCallback(() => setStreetReady(true), [])
+  const onTaxi = useCallback(
+    (event: 'arrived' | 'in' | 'gone') => {
+      if (event === 'arrived') {
+        setTaxi('waiting')
+        setNotice('Your taxi is here, at the kerb: get in at the back door.')
+      } else if (event === 'in') {
+        setTaxi('leaving')
+        setNotice('Off to work by taxi.')
+      } else {
+        setTaxi(null)
+        onLeave('taxi')
+      }
+    },
+    [onLeave],
+  )
+  // Gone in somewhere instead: the taxi is not kept waiting.
+  useEffect(() => {
+    if (!outside) setTaxi(null)
+  }, [outside])
 
   const actions = PLACE_ACTIONS.filter(
     (a) => a.place === here.id && a.phases.includes(phase),
@@ -477,6 +501,9 @@ export function CityView({
                 request={streetRequest}
                 onPerson={meetPerson}
                 courier={courierWaiting}
+                onReady={onStreetReady}
+                taxi={taxi}
+                onTaxi={onTaxi}
               />
             </Suspense>
           </SceneBoundary>
@@ -671,7 +698,17 @@ export function CityView({
               className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
               data-testid="commute"
             >
-              <CommuteChoices profile={profile} onLeave={onLeave} title="Go to work" />
+              <CommuteChoices
+                profile={profile}
+                onLeave={(commute) => {
+                  setTravel(false)
+                  if (commute === 'taxi' && webgl && streetReady) {
+                    setTaxi('coming')
+                    setNotice('Your taxi is on its way up the street.')
+                  } else onLeave(commute)
+                }}
+                title="Go to work"
+              />
               <button
                 type="button"
                 onClick={() => setTravel(false)}

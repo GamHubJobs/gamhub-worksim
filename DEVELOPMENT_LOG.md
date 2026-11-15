@@ -190,6 +190,29 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-16 · S6: a taxi that comes for the player; a heating engineer at home
+
+**Built**
+
+- The taxi to work, from the street: it drives up, pulls in at the kerb, waits, and
+  drives the player off (`CityScene` Taxi).
+- A home repair: the boiler breaks down on set days (no shower); a heating engineer is
+  called, rings, is let in, fixes the boiler in the kitchen, is paid at the door and
+  leaves (`game/repair.ts`, `home/scene/Engineer.tsx`, the boiler on the kitchen
+  wall). Saved (`life.repair`; older saves have none).
+
+**Tested**
+
+- Unit tests (full check: 3,324 passed). Browser: the taxi (twice in a row), the repair
+  with a reload part way, and the home, life, delivery, workday and city tests (one
+  retry, the Friday test reading the balance before the evening out had finished,
+  under load).
+
+**Known limitations**
+
+- The taxi only comes to the street; booked from home it is taken straight away.
+- The camera stays where it was as the taxi drives off.
+
 ## 2026-11-16 · S5: interviews in person at Harbourside House
 
 **Built**

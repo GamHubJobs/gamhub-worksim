@@ -193,6 +193,13 @@ export interface CitySceneProps {
    * building's door in the street (see game/delivery.ts), to hand it over there.
    */
   courier?: boolean
+  /**
+   * A taxi to work, booked from the street: on its way up the road, waiting at
+   * the kerb by the player, or driving off with them (see Taxi).
+   */
+  taxi?: 'coming' | 'waiting' | 'leaving' | null
+  /** The taxi pulled up, the player got in, or it has driven off. */
+  onTaxi?: (event: 'arrived' | 'in' | 'gone') => void
 }
 
 function isSoftware(gl: WebGLRenderer): boolean {
@@ -215,6 +222,15 @@ function CityScene(props: CitySceneProps) {
   const lowPower = isLow(quality, software)
   const [parked, setParked] = useState({ x: -46, z: 3.6, heading: Math.PI / 2 })
   const [driving, setDriving] = useState(false)
+  // Where a booked taxi waits along the kerb.
+  const [taxiAt, setTaxiAt] = useState(0)
+  // In the taxi: no prompts or progress left over from the street.
+  const { taxi, onPrompt, onProgress } = props
+  useEffect(() => {
+    if (taxi !== 'leaving') return
+    onPrompt(null)
+    onProgress(null)
+  }, [taxi, onPrompt, onProgress])
   const parking = useMemo(
     () => ({ parked, setParked, driving, setDriving }),
     [parked, driving],
@@ -288,7 +304,12 @@ function CityScene(props: CitySceneProps) {
               </group>
             </group>
           )}
-          <StreetPlayer {...props} low={lowPower} />
+          {props.taxi && props.outside && (
+            <Taxi stage={props.taxi} onTaxi={props.onTaxi} onStop={setTaxiAt} />
+          )}
+          {props.taxi !== 'leaving' && (
+            <StreetPlayer {...props} low={lowPower} taxiAt={taxiAt} />
+          )}
           {props.raining && props.outside && (
             <Rain low={lowPower} wet={{ size: [150, 10], at: [0, 0] }} />
           )}
@@ -360,12 +381,102 @@ function doorActivities(): Activity[] {
 
 const DOORS = doorActivities()
 
+/** Where the taxi pulls up: at the kerb on the player's side of the road. */
+const TAXI_KERB = 3.6
+
+/** The taxi's rear door on the pavement side, to get in at. */
+function taxiDoor(x: number): Activity {
+  return {
+    id: 'taxi-door',
+    action: 'taxi-in',
+    prompt: 'get in the taxi',
+    spot: { x: x - 0.5, z: TAXI_KERB + 1.6, reach: 2.2 },
+    anchor: { x: x - 0.5, z: TAXI_KERB + 1.05, heading: 0 },
+    stages: [
+      { clip: 'push-door', seconds: 0.9, label: 'Opening the taxi door' },
+      { clip: 'stand', seconds: 0.7, label: 'Getting in' },
+    ],
+    sounds: [{ at: 0.4, id: 'door' }],
+  }
+}
+
+/**
+ * A taxi to work: it drives up the road from the west end and pulls in at the
+ * kerb by the player, waits, and once the player is in, drives off east
+ * towards the business district (then the page takes them to work).
+ */
+function Taxi({
+  stage,
+  onTaxi,
+  onStop,
+}: {
+  stage: 'coming' | 'waiting' | 'leaving'
+  onTaxi?: (event: 'arrived' | 'in' | 'gone') => void
+  /** Where along the kerb it will wait (for its door). */
+  onStop: (x: number) => void
+}) {
+  const g = useRef<Group>(null)
+  const invalidate = useThree((s) => s.invalidate)
+  // Where it stops: by the player when it was booked (within the street).
+  const [stop] = useState(() => Math.max(-56, Math.min(58, playerAt.x - 1.4)))
+  const [from] = useState(() => (STILL ? stop : -ROAD_END))
+  const x = useRef(from)
+  const told = useRef<string | null>(null)
+  useEffect(() => onStop(stop), [stop, onStop])
+  useFrame((_, raw) => {
+    const dt = Math.min(raw, 0.25)
+    if (stage === 'coming') {
+      const left = stop - x.current
+      // Slowing down as it comes in to the kerb.
+      x.current = Math.min(stop, x.current + Math.max(2.5, Math.min(14, left * 1.2)) * dt)
+      if (x.current >= stop && told.current !== 'arrived') {
+        told.current = 'arrived'
+        onTaxi?.('arrived')
+      }
+    } else if (stage === 'leaving') {
+      x.current += (STILL ? 400 : 12) * dt
+      if (x.current > ROAD_END && told.current !== 'gone') {
+        told.current = 'gone'
+        onTaxi?.('gone')
+      }
+    }
+    if (g.current) {
+      // Pulling in from the lane to the kerb over the last few metres.
+      const pull =
+        stage === 'coming' ? Math.min(1, Math.max(0, 1 - (stop - x.current) / 10)) : 1
+      g.current.position.set(x.current, 0, 2.4 + (TAXI_KERB - 2.4) * pull)
+    }
+    if (stage !== 'waiting') invalidate()
+  })
+  return (
+    <group
+      ref={g}
+      position={[from, 0, 2.4]}
+      rotation={[0, -Math.PI / 2, 0]}
+      userData={{ passable: true }}
+    >
+      <Car position={[0, 0, 0]} rotation={0} colour="#facc15" />
+      {/* The roof sign, lit */}
+      <Box
+        size={[0.7, 0.22, 0.28]}
+        position={[0, 1.62, 0]}
+        color="#fef9c3"
+        emissive="#facc15"
+      />
+      {/* A chequered stripe along each side */}
+      {[-0.92, 0.92].map((s) => (
+        <Box key={s} size={[0.02, 0.12, 3.2]} position={[s, 0.72, 0]} color="#18181b" />
+      ))}
+    </group>
+  )
+}
+
 /**
  * The player in the street: the shared third-person character (walking,
  * the bike, a leased car), going in at doors; the traffic stops for them and
  * the sounds follow the part of the street they are in.
  */
-function StreetPlayer(props: CitySceneProps & { low: boolean }) {
+function StreetPlayer(props: CitySceneProps & { low: boolean; taxiAt: number }) {
   const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
   const hands = useRef<Hands>({ left: null, right: null })
   const area = useRef<Area | null>(null)
@@ -401,10 +512,10 @@ function StreetPlayer(props: CitySceneProps & { low: boolean }) {
     <PlayerRig
       start={{ x: start[0], z: start[1], heading: facingStreet(props.at) }}
       boxes={STREET_BOXES}
-      activities={DOORS}
+      activities={props.taxi === 'waiting' ? [...DOORS, taxiDoor(props.taxiAt)] : DOORS}
       blocked={(a) =>
         // The court's door can be tried (it is shut: see onDone).
-        a.action === 'court-door'
+        a.action === 'court-door' || a.action === 'taxi-in'
           ? null
           : a.action
             ? props.blocked(a.action.slice(6) as PlaceId)
@@ -415,7 +526,8 @@ function StreetPlayer(props: CitySceneProps & { low: boolean }) {
       onPrompt={props.onPrompt}
       onProgress={props.onProgress}
       onDone={(a, completed) => {
-        if (completed && a.action?.startsWith('person:'))
+        if (completed && a.action === 'taxi-in') props.onTaxi?.('in')
+        else if (completed && a.action?.startsWith('person:'))
           props.onPerson?.(a.action.slice('person:'.length))
         else if (completed && a.action === 'court-door') props.onCourt?.()
         else if (completed && a.action) props.onEnter(a.action.slice(6) as PlaceId)

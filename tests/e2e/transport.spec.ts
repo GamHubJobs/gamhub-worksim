@@ -75,3 +75,39 @@ test('a bike from Cog & Kerb: round the neighbourhood, then to work', async ({
   await city(page).locator('[data-commute="bike"]').click()
   await expect(page.getByTestId('office')).toBeVisible({ timeout: 30_000 })
 })
+
+test('a taxi to work: it comes up the street, waits at the kerb, and drives off', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.evaluate(`window.__worksim.setTime(1, 17 * 60 + 35)`)
+  await page.getByTestId('office-panel').getByRole('button', { name: 'Go home' }).click()
+  await page.getByTestId('day-end').getByRole('button', { name: 'Go home' }).click()
+  await expect(home(page)).toContainText('Evening at home', { timeout: 15_000 })
+  await rooms(page, 'Bedroom')
+  await home(page)
+    .getByRole('button', { name: /Go to bed/ })
+    .click()
+  await goOut(page)
+  await expect(city(page).getByTestId('city-3d').locator('canvas')).toBeVisible({
+    timeout: 60_000,
+  })
+  await page.waitForTimeout(2000)
+  await city(page).getByTestId('place-office').click()
+  await city(page).locator('[data-commute="taxi"]').click()
+
+  // Booked: it is on its way, then waiting at the kerb for the player.
+  const notice = city(page).getByTestId('city-notice')
+  // (From the home door it is only a few seconds away.)
+  await expect(notice).toContainText(/Your taxi is (on its way|here)/)
+  await expect(notice).toContainText('Your taxi is here', { timeout: 60_000 })
+  const shots = process.env.WORKSIM_SHOTS
+  if (shots) await page.screenshot({ path: `${shots}/transport/taxi-waiting.png` })
+  await expect(city(page)).toBeVisible()
+
+  // Getting in at its back door (walked to, as a click on it does): off it goes.
+  await page.evaluate("window.__worksimStreetWalk('taxi-door')")
+  await expect(notice).toContainText('Off to work by taxi', { timeout: 30_000 })
+  if (shots) await page.screenshot({ path: `${shots}/transport/taxi-leaving.png` })
+  await expect(page.getByTestId('office')).toBeVisible({ timeout: 60_000 })
+})

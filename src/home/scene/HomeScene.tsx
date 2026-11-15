@@ -35,8 +35,9 @@ import {
 import { ActivityEffects } from '../../world/vfx/ActivityEffects'
 import { FurnitureModel } from './models'
 import { Fittings } from './fittings'
-import { homeLayout } from './homeLayout'
+import { boilerAt, homeLayout } from './homeLayout'
 import { Courier } from './Courier'
+import { Engineer } from './Engineer'
 import { HomePartner } from './HomePartner'
 import { Npc } from '../../world/npc/Npc'
 import { scaleOf } from '../../game/children'
@@ -65,6 +66,7 @@ const CHILD_LOOKS: PersonLook[] = [
   },
 ]
 import type { DeliveryStage } from '../../game/delivery'
+import type { RepairStage } from '../../game/repair'
 
 const STILL = prefersReducedMotion()
 
@@ -104,6 +106,8 @@ export interface HomeSceneProps {
   onReady?: () => void
   /** Where a takeaway is (the courier at the door, the bag on the doorstep). */
   delivery?: DeliveryStage
+  /** Something to repair (the boiler), and the engineer coming to fix it. */
+  repair?: RepairStage
   /** Someone at home with the player (visiting, or living here), by id. */
   partner?: string | null
   /** The player's children, by name (at home with them). */
@@ -150,7 +154,10 @@ function HomeScene(props: HomeSceneProps) {
         (a) =>
           (a.action === null || byAction[a.action]) &&
           // Answering the door only when someone is there (not a standing "No one is at the door").
-          !(a.action === 'takeaway-door' && byAction[a.action]?.blocked),
+          !(
+            (a.action === 'takeaway-door' || a.action === 'repair-door') &&
+            byAction[a.action]?.blocked
+          ),
       ),
     [layout, byAction],
   )
@@ -263,6 +270,11 @@ function HomeScene(props: HomeSceneProps) {
             />
             <ActivityEffects activities={activities} />
             <Courier stage={props.delivery ?? 'none'} door={[-w / 2, d / 2 - 0.9]} />
+            <Engineer
+              stage={props.repair ?? 'none'}
+              door={[-w / 2, d / 2 - 0.9]}
+              boiler={boilerAt(home)}
+            />
             {props.partner && <HomePartner id={props.partner} layout={layout} />}
             {(props.kids ?? []).map(({ i, name, age }) => (
               <Npc

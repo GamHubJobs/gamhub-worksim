@@ -1101,6 +1101,18 @@ export const LifeSchema = z.object({
     })
     .nullable()
     .default(null),
+  /**
+   * Something at home to repair (see game/repair.ts): the boiler, broken since a day,
+   * and the minute the heating engineer is due once called. Added later: older
+   * saves have none.
+   */
+  repair: z
+    .object({
+      day: z.number().int().min(1),
+      due: z.number().int().nonnegative().nullable().default(null),
+    })
+    .nullable()
+    .default(null),
   /** Job hunting, pay talks and a side business (see content/careerLife.ts). */
   career: z
     .object({

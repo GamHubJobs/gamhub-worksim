@@ -135,6 +135,36 @@ export const HOME_ACTIONS: HomeAction[] = [
     done: 'Had a takeaway',
   },
   {
+    // The boiler has broken down (see game/repair.ts): a heating engineer, called
+    // on the phone, comes round, is let in, fixes it and is paid at the door.
+    id: 'repair-call',
+    room: 'living',
+    label: 'Call a heating engineer about the boiler',
+    phases: ['evening'],
+    minutes: 5,
+    until: 20 * HOUR + 30,
+    done: 'Called a heating engineer: on the way',
+  },
+  {
+    id: 'repair-wait',
+    room: 'living',
+    label: 'Wait for the heating engineer',
+    phases: ['evening'],
+    // Until they arrive (worked out when waiting).
+    minutes: 40,
+    done: 'Waited for the heating engineer',
+  },
+  {
+    id: 'repair-door',
+    room: 'door',
+    label: 'Answer the door: the heating engineer',
+    phases: ['evening'],
+    // Let in, the fault found and fixed at the boiler, and paid.
+    minutes: 45,
+    cost: 6500,
+    done: 'The heating engineer fixed the boiler: hot water again',
+  },
+  {
     id: 'groceries',
     room: 'kitchen',
     label: 'Order a week of groceries (7 meals)',

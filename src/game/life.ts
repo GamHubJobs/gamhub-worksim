@@ -38,6 +38,13 @@ import {
   received,
   untilArrival,
 } from './delivery'
+import {
+  checkBoiler,
+  engineerBooked,
+  repairBlock,
+  repaired,
+  untilEngineer,
+} from './repair'
 import { canCommute, chargeCarLease } from './transport'
 import { careerEvening, weeklyPay } from './careerLife'
 import { clamp, decayed, earn, note, spend, withLife, withWellbeing } from './lifeTime'
@@ -87,6 +94,8 @@ export function goHome(profile: ProfileData): ProfileData {
   life = note(life, `Home from work (${commute.name.toLowerCase()})`)
   // Friends get in touch in the evening.
   life = eveningMessages(life, work.day)
+  // Now and then something at home has broken (see repair.ts).
+  life = checkBoiler(life, work.day)
   // Employers and the manager answer (see careerLife.ts).
   const next = careerEvening(withLife(profile, life))
   life = next.work.life
@@ -121,6 +130,9 @@ export function canDo(
   // The takeaway's steps go in order: ordered, arrived, eaten.
   const takeaway = deliveryBlock(life, action.id)
   if (takeaway) return takeaway
+  // A repair's too (called, arrived, fixed), and no shower without hot water.
+  const repair = repairBlock(life, action.id)
+  if (repair) return repair
   // Where the player is: at home for home actions, inside the place for the rest.
   if (action.place) {
     const place = getPlace(action.place)!
@@ -156,11 +168,13 @@ export function doHomeAction(profile: ProfileData, id: string): ProfileData {
   if (!found || canDo(profile, found)) return profile
   const work = profile.work
   let life = work.life
-  // Waiting for the takeaway lasts until it arrives.
+  // Waiting for the takeaway (or the engineer) lasts until it arrives.
   const action =
     id === 'takeaway-wait'
       ? { ...found, minutes: Math.max(1, untilArrival(life)) }
-      : found
+      : id === 'repair-wait'
+        ? { ...found, minutes: Math.max(1, untilEngineer(life)) }
+        : found
   const needs = decayed(life.needs, action.minutes)
   // A homely place: fun falls more slowly in the evening.
   if (life.phase === 'evening' && !('place' in action))
@@ -183,6 +197,8 @@ export function doHomeAction(profile: ProfileData, id: string): ProfileData {
   if (id === 'takeaway') life = ordered(life, work.day)
   if (id === 'takeaway-door') life = received(life)
   if (id === 'takeaway-eat') life = eaten(life)
+  if (id === 'repair-call') life = engineerBooked(life)
+  if (id === 'repair-door') life = repaired(life)
   let next = profile
   if (action.skillXp) {
     // Study goes to the career skill the player has least of.

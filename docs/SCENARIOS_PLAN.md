@@ -84,7 +84,7 @@ sounds and effects. No scenario gets a system of its own.
    work, announces it, the letter on the desk; then the record and pay update.
 5. **S5 · Interviews at the company**: **done**, see below. going to the company's reception, signing in,
    waiting, the interviewer coming out, the interview in a meeting room, the result.
-6. **S6 · Home services and rides**: a technician who comes to repair something; a taxi
+6. **S6 · Home services and rides**: **done**, see below. a technician who comes to repair something; a taxi
    that arrives and drives the player.
 7. **S7 · Social life and the city**: friends met at the café or the park; a neighbour
    in the street; a parcel; a new colleague's first day; a broken printer; a team
@@ -188,3 +188,23 @@ counted twice, collisions respected, and no loss of speed.
   walks out to the chairs and back to the table (screenshots checked).
 - Not saved part way: leaving the building or reloading starts again at reception
   (nothing is counted until the interview is finished).
+
+### S6 · Home services and rides
+
+- **A taxi to work.** Chosen in the street ("Go to work", Taxi), it comes up the road
+  from the west end, pulls in at the kerb beside the player and waits ("Your taxi is
+  here"); getting in at its back door (E, a click, or walking up), the player is driven
+  off east, and the commute (fare and time, as before) takes them to work. From home,
+  or without 3D, the taxi is taken straight away as before.
+- **A heating engineer at home** (game/repair.ts). The boiler breaks down on set days
+  (day 4, then every 15 days; never at random): no shower until it is fixed. In the
+  living room, "Call a heating engineer"; they arrive about 40 minutes later, walk along
+  the landing and ring; let in, they go to the boiler on the kitchen wall (its light
+  red), work on it with the player watching, come back to the door to be paid (£65,
+  once), and leave; the light turns green and the shower works again. If no one
+  answers within 12 minutes they go, and the player calls again. The repair's steps are
+  only listed while there is something to repair. In the save, so a reload carries on.
+- Tested: unit tests (the days, the shower, the steps in order, paid once, missed
+  visits); `transport.spec.ts` takes the taxi in 3D; `repair.spec.ts` plays the
+  breakdown, a reload while the engineer is on the way, the visit and the repair
+  (screenshots checked).
