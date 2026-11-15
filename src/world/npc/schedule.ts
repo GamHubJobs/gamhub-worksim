@@ -101,7 +101,7 @@ export type Intent =
       /** The place's id. */
       place: string
       /** Why they are there. */
-      reason: 'own' | 'meeting' | 'lunch' | 'errand' | 'visit' | 'attending'
+      reason: 'own' | 'meeting' | 'lunch' | 'errand' | 'visit' | 'attending' | 'calling'
       /** For a visit: whom. */
       with?: string
     }
@@ -203,6 +203,11 @@ export function everyone(
     errandMinute?: number
     /** People the player has come to talk to: they are at their own place. */
     attending?: ReadonlySet<string>
+    /**
+     * People who have come to find the player (a request, a word about the
+     * work), by the place they wait at: there unless in a meeting or not in.
+     */
+    callers?: ReadonlyMap<string, string>
   } = {},
 ): Map<string, Intent> {
   const out = new Map<string, Intent>()
@@ -210,6 +215,9 @@ export function everyone(
     let intent = wanted(p, day, minute, gatherings, options.errandMinute ?? minute)
     if (options.attending?.has(p.id) && intent.kind === 'at')
       intent = { kind: 'at', place: p.own, reason: 'attending' }
+    const calling = options.callers?.get(p.id)
+    if (calling && intent.kind === 'at' && intent.reason !== 'meeting')
+      intent = { kind: 'at', place: calling, reason: 'calling' }
     out.set(p.id, intent)
   }
   // A visit needs the other person at their own place (not a meeting, lunch or errand).
@@ -268,6 +276,8 @@ export function doingNow(
   if (walking) return { availability: 'walking' }
   if (intent.reason === 'lunch') return { availability: 'eating', doing: 'their lunch' }
   if (intent.reason === 'visit') return { availability: 'chatting', with: intent.with }
+  if (intent.reason === 'calling')
+    return { availability: 'free', doing: 'waiting to talk to you' }
   // Someone has come over to their place for a word.
   for (const [id, other] of intents)
     if (other.kind === 'at' && other.reason === 'visit' && other.with === p.id)

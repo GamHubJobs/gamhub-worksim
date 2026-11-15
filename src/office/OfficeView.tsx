@@ -13,6 +13,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -393,6 +394,12 @@ export function OfficeView({
   /** A conversation with one of the four colleagues the player works with most. */
   function talkWith(person: ColleagueId) {
     if (storySceneWith(person, getPerson(person).name)) return
+    // Come over with something to ask: that, face to face.
+    const waiting = pendingEvents(profile).find((e) => e.person === person)
+    if (waiting) {
+      setDialogue(eventScene(profile, waiting.id))
+      return
+    }
     if (person === 'facilities') setTipIndex((n) => n + 1)
     const conversation = conversationWith(profile, person, tipIndex)
     void onAct((p) => holdConversation(p, person, conversation))
@@ -451,11 +458,11 @@ export function OfficeView({
         title: 'Lunch break',
         lines: company
           ? [
-              `You grab your lunch and join ${company} at the big table. ðŸ¥ª`,
+              `You grab your lunch and join ${company} at the big table. 🥪`,
               'Tom tells the story of the great printer flood of last spring. Nina tells you which meeting room never has working Wi-Fi. You laugh more than you have all week.',
             ]
           : [
-              'You grab your lunch from the fridge and sit by the window for a proper break. ðŸ¥ª',
+              'You grab your lunch from the fridge and sit by the window for a proper break. 🥪',
               'Away from the screen, your head clears. You feel ready for the afternoon.',
             ],
         actions: [],
@@ -618,12 +625,12 @@ export function OfficeView({
       setAway({
         ...away,
         signedIn: true,
-        note: 'The usher ticks you off the list: â€œCourt 2, through the double doors. The judge will be in shortly: take your place at the claimantâ€™s table.â€',
+        note: 'The usher ticks you off the list: “Court 2, through the double doors. The judge will be in shortly: take your place at the claimant’s table.”',
       })
     else if (action === 'court:list')
       setAway({
         ...away,
-        note: 'Court 2 Â· District Judge Hartley Â· 10:30 Â· Shah v Corner Lettings Ltd (small claim, about an hour).',
+        note: 'Court 2 · District Judge Hartley · 10:30 · Shah v Corner Lettings Ltd (small claim, about an hour).',
       })
     else if (action === 'court:leave' && !live) {
       setReady(false)
@@ -717,6 +724,12 @@ export function OfficeView({
     }
   }, [])
   // The conversation is over: whoever it was goes back to their day.
+  // Whoever has something to ask comes over to the player's desk and waits there.
+  const caller = pendingEvents(profile)[0]?.person
+  const callers = useMemo(
+    () => (caller ? { [caller]: 'call:player' } : undefined),
+    [caller],
+  )
   const conversing = !!dialogue || !!encounter || !!storyScene || !!live
   // In a conversation, non-essential HUD steps aside (ui/hud/Hud.tsx).
   const hudMode = useHud()?.setMode
@@ -748,8 +761,8 @@ export function OfficeView({
                   fallback={
                     <div className="flex h-full items-center justify-center bg-slate-100 text-slate-500">
                       {away
-                        ? 'Arriving at Westmark County Courtâ€¦'
-                        : 'Arriving at the officeâ€¦'}
+                        ? 'Arriving at Westmark County Court…'
+                        : 'Arriving at the office…'}
                     </div>
                   }
                 >
@@ -796,6 +809,7 @@ export function OfficeView({
                       onGo={sceneGo}
                       onInteract={sceneInteract}
                       talkingTo={dialogue?.speaker ?? null}
+                      callers={callers}
                       itJobs={itJobs}
                       scenarios={here.map((sc) => sc.id).join(',')}
                       focus={usingHere ? focusAction : null}
@@ -860,7 +874,7 @@ export function OfficeView({
                 aria-label={panelOpen ? 'Collapse this panel' : 'Expand this panel'}
                 className="-mt-1 -mr-1 rounded px-1.5 text-xs text-slate-500 hover:bg-slate-100"
               >
-                {panelOpen ? 'â–´' : 'â–¾'}
+                {panelOpen ? '▴' : '▾'}
               </button>
             </div>
             <h1 className="text-lg font-semibold text-slate-900">
@@ -918,9 +932,10 @@ export function OfficeView({
                     <Avatar personId={event.person} />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">
-                        {person.name.split(' ')[0]} wants a word
+                        {person.name.split(' ')[0]}{' '}
+                        {walkable ? 'has come over to your desk' : 'wants a word'}
                       </p>
-                      <p className="truncate text-xs">â€œ{event.opener}â€</p>
+                      <p className="truncate text-xs">“{event.opener}”</p>
                     </div>
                     <button
                       type="button"
@@ -1354,15 +1369,15 @@ function DialogueBox({
 }
 
 /**
- * A line in a conversation: the speaker's words are quoted; "Name: â€œâ€¦â€"
- * lines are someone else speaking; "*â€¦*" lines describe what happens.
+ * A line in a conversation: the speaker's words are quoted; "Name: “…”"
+ * lines are someone else speaking; "*…*" lines describe what happens.
  */
 function SpokenLine({ line }: { line: string }) {
   if (line.startsWith('*') && line.endsWith('*')) {
     return <p className="text-slate-500 italic">{line.slice(1, -1)}</p>
   }
-  if (/^[A-Z][a-z]+: â€œ/.test(line)) return <p>{line}</p>
-  return <p>â€œ{line}â€</p>
+  if (/^[A-Z][a-z]+: “/.test(line)) return <p>{line}</p>
+  return <p>“{line}”</p>
 }
 
 /** A simple floor plan for computers without 3D graphics. */

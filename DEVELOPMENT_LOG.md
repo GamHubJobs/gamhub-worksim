@@ -190,6 +190,26 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-16 · S3: colleagues come to the desk; garbled characters in the office fixed
+
+**Built / fixed**
+
+- Living scenarios S3 (docs/SCENARIOS_PLAN.md): a workplace event's person walks
+  to the player's desk and waits there; talking to them opens the event face to
+  face. The notice "has come over to your desk" is now true in 3D.
+- `office/OfficeView.tsx` had been saved with the wrong encoding (in the commit
+  "Office: tools used where they are"), so its quotation marks, separators,
+  ellipses, arrows and emoji showed as "â€œ" and the like in the game. Decoded
+  back exactly: every such line matches the version before that commit.
+
+**Tested**
+
+- Unit tests (full check: 3,314 passed). Browser: events, people, colleagues and
+  office tests (9) pass; screenshots checked (the manager beside the desk, the
+  quotation marks right).
+
+---
+
 ## 2026-11-16 · Still at court after a reload; a crowd crash fixed
 
 **Built / fixed**

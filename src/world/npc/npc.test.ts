@@ -73,6 +73,32 @@ describe('the office day', () => {
     expect(place(standup.get('reception'))).toBe('reception')
   })
 
+  it('someone with something to ask comes to the player’s desk, but not out of a meeting', () => {
+    const callers = new Map([['senior', 'call:player']])
+    const work = everyone(OFFICE_PEOPLE, MONDAY, at(10, 5), OFFICE_GATHERINGS, {
+      callers,
+    })
+    expect(work.get('senior')).toEqual({
+      kind: 'at',
+      place: 'call:player',
+      reason: 'calling',
+    })
+    expect(OFFICE_PLACES['call:player']).toBeDefined()
+    const senior = OFFICE_PEOPLE.find((p) => p.id === 'senior')!
+    expect(doingNow(senior, work.get('senior'), false, work, at(10, 5))).toEqual({
+      availability: 'free',
+      doing: 'waiting to talk to you',
+    })
+    const standup = everyone(OFFICE_PEOPLE, MONDAY, at(9, 20), OFFICE_GATHERINGS, {
+      callers,
+    })
+    expect(place(standup.get('senior'))).toMatch(/^standup:/)
+    const night = everyone(OFFICE_PEOPLE, MONDAY, at(18, 30), OFFICE_GATHERINGS, {
+      callers,
+    })
+    expect(night.get('senior')).toEqual({ kind: 'away' })
+  })
+
   it('weekly planning is in the manager’s office on Wednesdays only', () => {
     const wed = everyone(OFFICE_PEOPLE, WEDNESDAY, at(11, 10), OFFICE_GATHERINGS)
     expect(place(wed.get('senior'))).toBe('planning:0')

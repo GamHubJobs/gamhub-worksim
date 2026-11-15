@@ -77,7 +77,7 @@ sounds and effects. No scenario gets a system of its own.
    player walks to the meeting to join it; the host opens it; people speak in turn
    (who is speaking faces the room and gestures); the existing meeting content and
    grading are unchanged; it counts only if the player was there; everyone goes back.
-3. **S3 · Workplace events in person**: the colleague comes to the player's desk (Tom
+3. **S3 · Workplace events in person**: **done**, see below. The colleague comes to the player's desk (Tom
    asking a favour, Priya with an urgent request), and the existing choices are made
    face to face.
 4. **S4 · A promotion from the manager**: asked to her office; she talks through the
@@ -141,3 +141,15 @@ counted twice, collisions respected, and no loss of speed.
   board); browser tests for attending in person (in the circle, listening, the update,
   then the meeting) and for walking away part way (not attended).
 - **Screenshots**: `docs/screenshots/meetings/`.
+
+### S3 · Workplace events in person
+
+- A workplace event waiting for the player (game/events.ts) sends the person it is
+  about to the player's desk: `everyone()` takes `callers` (person → place), and
+  they go to `call:player` beside the desk unless they are in a meeting or not in.
+  There they are free to talk, "waiting to talk to you".
+- Walking up to them (E, a click, or Talk in the panel) opens what they came about,
+  with its choices, face to face. Once answered (or lapsed), they go back to their day.
+- The panel says "… has come over to your desk" in 3D, "… wants a word" without it.
+- Tested: a unit test for the schedule; `events.spec.ts` has the manager walk from
+  her office to the desk in the 3D office, be talked to there, and go back.

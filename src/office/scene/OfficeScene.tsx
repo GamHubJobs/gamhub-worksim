@@ -243,6 +243,8 @@ export interface OfficeSceneProps {
   onInteract: (interaction: InteractionId) => void
   /** Who the player is talking to (a colleague ID), so they face the player and talk. */
   talkingTo?: string | null
+  /** Colleagues who have come over to the player's desk, by where they wait. */
+  callers?: Record<string, string>
   /** The office clock, for where everyone is (a day number and minutes since midnight). */
   day: number
   minute: number
@@ -421,6 +423,7 @@ function OfficeScene(props: OfficeSceneProps) {
           minute={props.minute}
           looks={CAST_LOOKS}
           talkingTo={props.talkingTo}
+          callers={props.callers}
           low={lowPower}
           who={who}
         />

@@ -287,6 +287,8 @@ export const OFFICE_PLACES: Record<string, Place> = {
   'visit:backM': beside(0.0, -1.65, 0.6, -1.0),
   'visit:backR': beside(1.8, -1.65, 2.4, -1.0),
   'visit:manager': beside(8.4, -3.55, 8.4, -5.1),
+  /** Come over to the player's desk for a word (a workplace event). */
+  'call:player': { ...beside(1.55, 2.75, 0.68, 1.9), label: 'waiting to talk to you' },
 }
 
 export const OFFICE_PEOPLE: Person[] = [

@@ -75,6 +75,8 @@ export interface CrowdProps {
   who: Record<string, Who>
   /** Who the player is talking to (by the person's talk id), if anyone. */
   talkingTo?: string | null
+  /** People who have come to find the player, by the place they wait at. */
+  callers?: Record<string, string>
   low?: boolean
 }
 
@@ -220,6 +222,7 @@ export function Crowd(props: CrowdProps) {
       s.intents = everyone(p.people, p.day, p.minute, p.gatherings, {
         errandMinute,
         attending,
+        callers: new Map(Object.entries(p.callers ?? {})),
       })
     }
     let walking = false
