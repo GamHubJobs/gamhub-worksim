@@ -45,7 +45,8 @@ const order = (what: string): Activity['stages'] => [
 
 export const CAFE: Layout = {
   size: { width: 12, depth: 9, height: 3.4 },
-  start: { x: 1.2, z: 3.4, heading: 0 },
+  // Far enough in from the door for the camera to stand behind (startView.test.ts).
+  start: { x: 1.4, z: 1.8, heading: 0 },
   surface: 'wood',
   boxes: [
     ...walls(12, 9),
@@ -180,7 +181,7 @@ const TILL = { x: 2.9, z: 1.2, heading: -Math.PI / 2 }
 
 export const SHOP: Layout = {
   size: { width: 13, depth: 10, height: 3.4 },
-  start: { x: 0.6, z: 3.6, heading: 0 },
+  start: { x: 0.6, z: 2.3, heading: 0 },
   surface: 'tile',
   boxes: [
     ...walls(13, 10),
@@ -424,7 +425,7 @@ const COUNTER = { x: 3.4, z: 4.15, heading: 0 }
 
 export const GARAGE: Layout = {
   size: { width: 14, depth: 10, height: 3.4 },
-  start: { x: 1.2, z: 3.4, heading: 0 },
+  start: { x: 1.2, z: 2.3, heading: 0 },
   surface: 'tile',
   boxes: [
     ...walls(14, 10),

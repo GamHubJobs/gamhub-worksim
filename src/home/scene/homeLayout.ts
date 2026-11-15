@@ -484,6 +484,17 @@ export function homeLayout(
     object: 'door',
   })
 
+  // Walking to a room, from the room tabs beside the view (never offered nearby).
+  for (const [id, [x, z]] of Object.entries(home.rooms))
+    activities.push({
+      id: `room:${id}`,
+      action: null,
+      prompt: `go to the ${id === 'living' ? 'living room' : id === 'door' ? 'front door' : id}`,
+      spot: { x: 0, z: 0, reach: -1 },
+      anchor: { x, z, heading: 0 },
+      stages: [{ clip: 'stand', seconds: 0.2 }],
+    })
+
   const startRoom = morning ? home.rooms.bedroom : home.rooms.living
   // Someone visiting, or living here: on the sofa beside the player, and goodnight at the door.
   const partnerSeat: Spot | null = sofa

@@ -145,7 +145,13 @@ function HomeScene(props: HomeSceneProps) {
     [props.doings],
   )
   const activities = useMemo(
-    () => layout.activities.filter((a) => a.action === null || byAction[a.action]),
+    () =>
+      layout.activities.filter(
+        (a) =>
+          (a.action === null || byAction[a.action]) &&
+          // Answering the door only when someone is there (not a standing "No one is at the door").
+          !(a.action === 'takeaway-door' && byAction[a.action]?.blocked),
+      ),
     [layout, byAction],
   )
   const state: InteriorState = useMemo(

@@ -19,7 +19,8 @@ const box = (x: number, z: number, hx: number, hz: number, top = 1.2): Box => ({
 export const GYM_SIZE = { width: 2 * W, depth: 2 * D, height: 3.4 }
 
 /** Where the player comes in (the door, front left), facing in. */
-export const GYM_START = { x: 0.6, z: 3.6, heading: 0 }
+/** Far enough in from the door for the camera to stand behind (startView.test.ts). */
+export const GYM_START = { x: 0.6, z: 2.3, heading: 0 }
 
 export const GYM_BOXES: Box[] = [
   // Walls (front, back, sides).

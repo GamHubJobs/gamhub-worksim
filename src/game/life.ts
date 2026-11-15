@@ -145,7 +145,7 @@ export function canDo(
   if (action.needsItem && !enables(life, action.id)) {
     const item = enablerOf(action.id)
     return item
-      ? `You need a ${item.name.toLowerCase()} (in the shop).`
+      ? `You need ${/^[aeiou]/i.test(item.name) ? 'an' : 'a'} ${item.name.toLowerCase()} (in the shop).`
       : 'Not possible here.'
   }
   return null

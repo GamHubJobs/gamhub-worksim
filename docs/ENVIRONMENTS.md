@@ -126,4 +126,20 @@ showing through the wall reversed.
   shoulder on the thing. The device is drawn over the 3D view, not as a
   mesh in the room: a screen rendered inside the 3D scene would be hard to
   read and to type into.
-- **The city and home** were not part of this audit.
+
+## The home and the city
+
+Audited later, the same way: every room of the flat, the street, and inside
+each place, photographed (`SHOTS_DIR=… npx playwright test
+tests/e2e/cityhome.shots.spec.ts`) and checked.
+
+| Found                                                                                                                             | Fixed                                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| The flat's room tabs only changed the list: the character stayed in the kitchen whichever room was chosen                         | In 3D, choosing a room walks the character there, as the office's Places bar does                                                           |
+| "Answer the door: No one is at the door" sat at the bottom of the view whenever the character was near the door                   | The door is only offered when a delivery is there; the list beside the view still shows it, greyed out with the reason                      |
+| Inside the café, the shop, the gym and Cog & Kerb, the camera started against the entrance wall, so the character filled the view | Each place's arrival spot moved further in (1.1 to 1.8 m), with room behind for the camera; a test checks every place (`startView.test.ts`) |
+| "You need a exercise mat"                                                                                                         | "an exercise mat" (and any other item starting with a vowel)                                                                                |
+
+Checked and fine: the street (shop fronts, signs, the courthouse, lamps,
+crossings), the park (paths, pond, signs, people on benches) and the
+interiors' furniture, signs and people.

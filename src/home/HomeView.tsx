@@ -12,6 +12,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -145,6 +146,9 @@ export function HomeView({
   const [ready, setReady] = useState(false)
   const walkable = webgl && !sceneFailed && ready
   const [request, setRequest] = useState<{ id: string; nonce: number } | null>(null)
+  // Something asked for and not yet finished (walking there, or doing it): the room
+  // tabs do not walk the character away from it.
+  const busy = useRef(false)
   // Someone at home with the player (visiting, staying over, living here).
   const here = atHome(life, profile.work.day)
   const [evening, setEvening] = useState<{
@@ -182,8 +186,10 @@ export function HomeView({
     (id: string) => {
       const action = HOME_ACTIONS.find((a) => a.id === id)
       if (action) setRoom(action.room)
-      if (walkable) setRequest((r) => ({ id, nonce: (r?.nonce ?? 0) + 1 }))
-      else commit(id)
+      if (walkable) {
+        busy.current = true
+        setRequest((r) => ({ id, nonce: (r?.nonce ?? 0) + 1 }))
+      } else commit(id)
     },
     [walkable, commit],
   )
@@ -208,6 +214,8 @@ export function HomeView({
   )
   const onActivityDone = useCallback(
     (action: string | null, completed: boolean) => {
+      // (A walk to a room, which has no action, being cut short is not the thing asked for.)
+      if (action !== null) busy.current = false
       if (action?.startsWith('date-')) {
         // Only the goodnight ends the evening.
         if (action === 'date-goodnight-home') {
@@ -425,6 +433,12 @@ export function HomeView({
                             i * 450,
                           )
                       setRoom(r.id)
+                      // In 3D, the character walks there, as the office's Places bar does.
+                      if (walkable && r.id !== room && !busy.current)
+                        setRequest((q) => ({
+                          id: `room:${r.id}`,
+                          nonce: (q?.nonce ?? 0) + 1,
+                        }))
                     }}
                     className={`rounded-full px-3.5 py-1.5 text-sm ${
                       r.id === room

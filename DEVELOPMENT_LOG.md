@@ -190,6 +190,35 @@ working simulations of the professional software used in its field (see
 
 ---
 
+## 2026-11-16 · The home and the city, audited
+
+**Built / fixed**
+
+- `tests/e2e/cityhome.shots.spec.ts`: an opt-in photo tour of every room of
+  the flat, the street and inside each place, for review.
+- The flat's room tabs now walk the character to the room in 3D (they had
+  only changed the list, with the character left in the kitchen).
+  While something asked for is under way (going to bed, cooking), the tabs
+  do not walk the character away from it: the transport browser test showed
+  a tab click cancelling the walk to bed.
+- The door is only offered in 3D when a delivery is there (the prompt "No
+  one is at the door" had sat at the bottom of the view).
+- The arrival spots in the café, the shop, the gym and Cog & Kerb are
+  further in, so the camera has room behind the character (it had started
+  against the entrance wall, with the character filling the view).
+  `startView.test.ts` checks every place.
+- "You need an exercise mat" (was "a exercise mat").
+
+**Tested**
+
+- Unit tests for the arrival spots; the full suite passes. The photo tour
+  retaken and checked after the fixes. The browser tests that visit the
+  city or the home were run: the café customers and wedding tests failed
+  only under load (both pass alone); the transport test found the tab
+  cancelling the walk to bed, fixed, and passes twice in a row.
+
+---
+
 ## 2026-11-15 · Colleagues go into the wings
 
 **Built**
