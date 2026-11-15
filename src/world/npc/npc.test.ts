@@ -99,6 +99,25 @@ describe('the office day', () => {
     expect(night.get('senior')).toEqual({ kind: 'away' })
   })
 
+  it('the new starter is in from their first day, and everyone has Friday cake', () => {
+    const monday = everyone(OFFICE_PEOPLE, MONDAY, at(10, 5), OFFICE_GATHERINGS)
+    expect(monday.get('starter')).toEqual({ kind: 'away' })
+    const wednesday = everyone(OFFICE_PEOPLE, WEDNESDAY, at(10, 5), OFFICE_GATHERINGS)
+    expect(place(wednesday.get('starter'))).toBe('table:west')
+    const friday = everyone(OFFICE_PEOPLE, 5, at(16, 20), OFFICE_GATHERINGS)
+    for (const id of ['manager', 'senior', 'backM', 'backR', 'front2', 'starter'])
+      expect(place(friday.get(id)), id).toMatch(/^party:/)
+    expect(place(friday.get('manager'))).toBe('party:host')
+    for (const n of [
+      'party:host',
+      'party:0',
+      'call:printer',
+      'call:player2',
+      'standup:6',
+    ])
+      expect(OFFICE_PLACES[n], n).toBeDefined()
+  })
+
   it('weekly planning is in the manager’s office on Wednesdays only', () => {
     const wed = everyone(OFFICE_PEOPLE, WEDNESDAY, at(11, 10), OFFICE_GATHERINGS)
     expect(place(wed.get('senior'))).toBe('planning:0')

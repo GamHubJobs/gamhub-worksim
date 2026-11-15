@@ -307,6 +307,22 @@ export const officeActivities = (): Activity[] => [
     anchor: { x: -11.1, z: -4.2, heading: Math.PI / 2 },
     stages: [{ clip: 'stand', seconds: 1.6, label: 'Reading the notices' }],
   },
+  // The team's Friday celebration (game/celebration.ts): cake round the break
+  // room table with everyone.
+  {
+    id: 'celebration',
+    action: 'celebration',
+    prompt: 'join the team for cake',
+    spot: { x: -6.3, z: -2.75, reach: 1.3 },
+    anchor: { x: -6.55, z: -2.6, heading: 0.95 },
+    view: 'behind',
+    stages: [
+      { clip: 'talk', seconds: 2, label: 'Joining the team round the table' },
+      { clip: 'eat', seconds: 4, label: 'A slice of cake', hold: { right: 'fork' } },
+      { clip: 'talk', seconds: 3.5, label: 'Chatting about the week' },
+    ],
+    sounds: [{ at: 2.6, id: 'bite', every: 1.6, until: 5.6 }],
+  },
   // Meetings, attended in person (see MEETINGS in content/workday.ts): the player
   // takes their place, listens while the others speak in turn, gives their own
   // update, and only then has been there. Walking away part way is not attending.

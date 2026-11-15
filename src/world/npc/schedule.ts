@@ -55,6 +55,8 @@ export interface Person {
   errands: Errand[]
   /** Talked to by the player (the activity's id): comes back to their own place when the player comes to talk. */
   talk?: string
+  /** A new starter: not there before this day (their first day at work). */
+  firstDay?: number
   /** Who they are in a conversation (the speaker's id), so they face the player and talk. */
   speaker?: string
   /**
@@ -144,6 +146,7 @@ export function wanted(
   errandMinute = minute,
 ): Intent {
   if (minute < p.arrives || minute >= p.leaves) return { kind: 'away' }
+  if (p.firstDay !== undefined && day < p.firstDay) return { kind: 'away' }
   if (p.visits) {
     // A customer: in for a while, through the door, and out again (by the
     // errand clock, so they come and go while the player is about).

@@ -83,6 +83,12 @@ import {
   type DialogueAction,
 } from '../game/office'
 import { eventScene, pendingEvents } from '../game/events'
+import {
+  canJoinCelebration,
+  celebrationOn,
+  joinCelebration,
+  joinedCelebration,
+} from '../game/celebration'
 import { applyEffects, describeEffects, recordScene, type Choice } from '../game/scenes'
 import {
   attendMeeting,
@@ -519,13 +525,20 @@ export function OfficeView({
   /** A meeting can be attended while it is on (see workday.ts), and not otherwise. */
   function blocked(action: string | null): string | null {
     if (away) return courtBlocked(action)
+    if (action === 'celebration') return canJoinCelebration(profile)
     const id = meetingOf(action)
     if (!id || openMeeting(work)?.id === id) return null
     const m = getMeeting(id)
     return m ? fill(`The ${m.title.toLowerCase()} is not on now`) : 'Not now'
   }
 
+  /** Had cake with the team (in person, or from the panel without 3D). */
+  function celebrate() {
+    void onAct(joinCelebration)
+  }
+
   const handlers = useRef({
+    celebrate,
     go,
     doInteract,
     interact,
@@ -540,6 +553,7 @@ export function OfficeView({
   })
   useEffect(() => {
     handlers.current = {
+      celebrate,
       startLive,
       go,
       doInteract,
@@ -677,7 +691,8 @@ export function OfficeView({
     const meeting = meetingOf(action)
     if (meeting) {
       if (completed) handlers.current.joinMeeting(meeting)
-    } else if (completed && action?.startsWith('court:')) handlers.current.court(action)
+    } else if (completed && action === 'celebration') handlers.current.celebrate()
+    else if (completed && action?.startsWith('court:')) handlers.current.court(action)
     else if (completed && action?.startsWith('scenario:'))
       handlers.current.startLive(action.slice('scenario:'.length))
     else if (completed && opensFor(action, activeBay())) handlers.current.bedside(action)
@@ -726,13 +741,23 @@ export function OfficeView({
   // The conversation is over: whoever it was goes back to their day.
   // Whoever has something to ask comes over to the player's desk and waits there.
   const calling = pendingEvents(profile)[0]
-  const caller = calling?.at === 'desk' ? calling.person : undefined
   // Asked to the manager's office for a promotion: the letter is on the desk there.
   const letter = calling?.at === 'their-office'
-  const callers = useMemo(
-    () => (caller ? { [caller]: 'call:player' } : undefined),
-    [caller],
-  )
+  // Where they wait: at the player's desk (with anyone they bring), or at the printer.
+  const callerKey =
+    calling && calling.at !== 'their-office'
+      ? `${calling.person}|${calling.at}|${calling.with ?? ''}`
+      : ''
+  const callers = useMemo(() => {
+    if (!callerKey) return undefined
+    const [person, at, brought] = callerKey.split('|')
+    return {
+      [person]: at === 'printer' ? 'call:printer' : 'call:player',
+      ...(brought ? { [brought]: 'call:player2' } : {}),
+    }
+  }, [callerKey])
+  // The team's Friday cake in the break room, while it is on and not yet had.
+  const cakeNow = celebrationOn(work) && !joinedCelebration(work)
   const conversing = !!dialogue || !!encounter || !!storyScene || !!live
   // In a conversation, non-essential HUD steps aside (ui/hud/Hud.tsx).
   const hudMode = useHud()?.setMode
@@ -939,27 +964,50 @@ export function OfficeView({
                         {person.name.split(' ')[0]}{' '}
                         {event.at === 'their-office'
                           ? 'would like to see you in the manager’s office'
-                          : walkable
-                            ? 'has come over to your desk'
-                            : 'wants a word'}
+                          : event.at === 'printer'
+                            ? 'is at the printer'
+                            : walkable
+                              ? 'has come over to your desk'
+                              : 'wants a word'}
                       </p>
                       <p className="truncate text-xs">“{event.opener}”</p>
                     </div>
                     <button
                       type="button"
                       onClick={() =>
-                        // In 3D, the player goes to the manager's office for it.
-                        event.at === 'their-office' && walkable
+                        // In 3D, the player goes to the manager's office (or the
+                        // printer) for it.
+                        walkable && event.at === 'their-office'
                           ? ask('manager')
-                          : setDialogue(eventScene(profile, event.id))
+                          : walkable && event.at === 'printer'
+                            ? ask(`person:${event.person}`)
+                            : setDialogue(eventScene(profile, event.id))
                       }
                       className="rounded-md bg-blue-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-800"
                     >
-                      {event.at === 'their-office' && walkable ? 'Go' : 'Talk'}
+                      {walkable && event.at !== 'desk' ? 'Go' : 'Talk'}
                     </button>
                   </div>
                 )
               })}
+              {cakeNow && (
+                <div
+                  className="mt-3 rounded-md bg-pink-50 p-2 text-sm text-pink-900"
+                  data-testid="celebration"
+                >
+                  <p className="font-medium">Friday cake in the break room</p>
+                  <p className="text-xs">The team is celebrating the week’s work.</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      walkable ? ask('celebration') : void onAct(joinCelebration)
+                    }
+                    className="mt-1.5 w-full rounded-md bg-pink-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-pink-700"
+                  >
+                    Join the team for cake
+                  </button>
+                </div>
+              )}
               {!meetingNow && upcoming && (
                 <p className="mt-2 text-xs text-slate-500">
                   Next: {fill(upcoming.title)} at {formatTime(upcoming.start)} (

@@ -28,6 +28,7 @@ import {
 } from 'react'
 import { Vector3, type Group, type Material, type Mesh, type WebGLRenderer } from 'three'
 import { activeEmployer } from '../../content/departments'
+import { CELEBRATION } from '../../content/workday'
 import {
   activeDepartment,
   fill,
@@ -230,6 +231,14 @@ const CAST_LOOKS: Record<string, PersonLook> = {
   coordinator: LOOKS.walker,
   admin: LOOKS.filing,
   analyst: LOOKS.lunch,
+  starter: {
+    ...LOOKS.lunch,
+    skin: 2,
+    hair: 'ponytail',
+    hairColor: 3,
+    top: '#0891b2',
+    glasses: false,
+  },
 }
 
 export interface OfficeSceneProps {
@@ -431,6 +440,9 @@ function OfficeScene(props: OfficeSceneProps) {
         />
       </PeopleDetail>
       {props.letter && <PromotionLetter />}
+      {CELEBRATION.days.includes((((props.day - 1) % 7) + 7) % 7) &&
+        props.minute >= CELEBRATION.start - 5 &&
+        props.minute < CELEBRATION.start + CELEBRATION.minutes && <FridayCake />}
       {SPOTS.map((s) => (
         <Marker
           key={s.id}
@@ -1017,6 +1029,31 @@ const BOOKSHELF_ANCHORS: AnchorSpec[] = [
 ]
 
 const RECEPTION_SIGN: [number, number, number] = [-6.6, 1.95, 2.4]
+
+/** The Friday cake on the break room table, with plates round it (game/celebration.ts). */
+function FridayCake() {
+  return (
+    <group position={[-7.4, 0.75, -3.6]}>
+      <mesh position={[0, 0.07, 0]}>
+        <cylinderGeometry args={[0.17, 0.17, 0.12, 24]} />
+        <meshStandardMaterial color="#fbcfe8" />
+      </mesh>
+      <mesh position={[0, 0.135, 0]}>
+        <cylinderGeometry args={[0.175, 0.175, 0.012, 24]} />
+        <meshStandardMaterial color="#ffffff" />
+      </mesh>
+      {[0, 1, 2, 3, 4].map((i) => {
+        const a = (i / 5) * Math.PI * 2
+        return (
+          <mesh key={i} position={[Math.sin(a) * 0.45, 0.01, Math.cos(a) * 0.45]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.01, 16]} />
+            <meshStandardMaterial color="#f8fafc" />
+          </mesh>
+        )
+      })}
+    </group>
+  )
+}
 
 /** The promotion letter on the manager's desk, turned to the visitor's chairs. */
 function PromotionLetter() {

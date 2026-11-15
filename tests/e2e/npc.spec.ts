@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByTestId('office-3d').locator('canvas')).toBeVisible({
     timeout: 90_000,
   })
-  await expect.poll(async () => (await npcs(page)).length, { timeout: 20_000 }).toBe(11)
+  await expect.poll(async () => (await npcs(page)).length, { timeout: 20_000 }).toBe(12)
 })
 
 test('people walk to the stand-up, stop there, and go back to their desks after', async ({

@@ -19,6 +19,7 @@ import { isMentor } from './conversations'
 import type { Dialogue } from './office'
 import { currentTask, fillDialogue } from './office'
 import { trustOf } from './relationships'
+import { officeWho, STARTER_DAY } from '../office/scene/officeCast'
 import {
   applyEffects,
   choiceMade,
@@ -46,7 +47,9 @@ export interface WorkplaceEvent {
    * Where it happens: at the player's desk (they come over), or in their own
    * office, where the player is asked to come (a promotion).
    */
-  at?: 'desk' | 'their-office'
+  at?: 'desk' | 'their-office' | 'printer'
+  /** Someone they bring with them (a new starter, to introduce). */
+  with?: string
 }
 
 const passed = (profile: ProfileData, assignmentId: string) => {
@@ -653,6 +656,119 @@ function promotionEvent(profile: ProfileData): WorkplaceEvent | null {
   }
 }
 
+/**
+ * The new starter's first day: {manager} brings them over to the player's desk
+ * to introduce them (see STARTER_DAY in office/scene/officeCast.ts).
+ */
+const NEW_STARTER: WorkplaceEvent = {
+  id: 'new-starter',
+  person: 'manager',
+  with: 'starter',
+  opener: 'Have you got a minute? There is someone I want you to meet.',
+  trigger: (p) => p.work.day === STARTER_DAY && duringWork(p, HOURS.start + 40),
+  scene: (p) => {
+    const starter = officeWho().starter.name.split(' ')[0]
+    return {
+      lines: [
+        `This is ${starter}, who joins the team today. ${starter}, this is ${firstName(p.name)}: still quite new here themselves, so they remember what the first week is like.`,
+        `*${starter} smiles and shakes your hand: "Hi! Everyone keeps saying the coffee machine has a trick to it."*`,
+      ],
+      choices: [
+        {
+          id: 'show',
+          label: `Offer to show ${starter} how things work here`,
+          reply: [
+            `"That would be brilliant, thank you." {manager} looks pleased: "That is exactly the help a new starter needs."`,
+          ],
+          effects: {
+            trust: { manager: 2, starter: 8 },
+            wellbeing: { engagement: 3 },
+            minutes: 10,
+            log: { text: `Showed ${starter}, the new starter, around`, tone: 'good' },
+          },
+          lesson:
+            'Helping a new starter settle in is one of the quickest ways to build trust in a team, and it shows you know your way around.',
+        },
+        {
+          id: 'hello',
+          label: 'Say hello, and get back to your work',
+          reply: [
+            `"Nice to meet you!" ${starter} heads off with {manager} to meet the others.`,
+          ],
+          effects: { trust: { starter: 3 } },
+          lesson:
+            'A friendly hello matters on someone’s first day, even when you are busy.',
+        },
+      ],
+    }
+  },
+}
+
+/**
+ * The printer jams on Tuesday afternoons; {facilities} is at it, with a queue
+ * building up, and could do with a hand (once a week).
+ */
+function printerEvent(profile: ProfileData): WorkplaceEvent {
+  const week = weekNumber(profile.work.day)
+  return {
+    id: `printer-jam:${week}`,
+    person: 'facilities',
+    at: 'printer',
+    opener: 'The printer has jammed again. Could you give me a hand?',
+    trigger: (p) =>
+      (((p.work.day - 1) % 7) + 7) % 7 === 1 && duringWork(p, 14 * 60, 16 * 60),
+    expiresAfter: 60,
+    ignored: {
+      effects: { trust: { facilities: -1 } },
+      log: '{facilities} cleared the printer jam on their own',
+    },
+    scene: () => ({
+      lines: [
+        'It says "Paper jam in tray 2", and half the office is waiting for their printing.',
+        '*The side panel is open; a crumpled sheet is caught deep inside the rollers.*',
+      ],
+      choices: [
+        {
+          id: 'help',
+          label: 'Help: ease the sheet out gently, with the power off',
+          reply: [
+            'It comes out in one piece. The queue starts printing again. "You have done that before!"',
+          ],
+          effects: {
+            trust: { facilities: 3 },
+            minutes: 8,
+            log: { text: 'Helped {facilities} clear a printer jam', tone: 'good' },
+          },
+          lesson:
+            'Switching off and easing a jam out (never yanking it) is how you avoid tearing the paper and leaving bits in the rollers.',
+        },
+        {
+          id: 'force',
+          label: 'Pull it out hard and quickly: people are waiting',
+          reply: [
+            'It tears. A strip stays stuck in the rollers, and now it needs an engineer. "Ah. I will call the supplier."',
+          ],
+          effects: {
+            trust: { facilities: -1 },
+            minutes: 4,
+            log: { text: 'Tore the paper clearing the printer jam', tone: 'bad' },
+          },
+          lesson:
+            'Rushing a fix can turn a two-minute job into a call-out. Follow the steps on the machine.',
+        },
+        {
+          id: 'leave',
+          label: 'Say you are busy and leave it',
+          reply: ['"No worries, I will manage." They go back to the panel on their own.'],
+          effects: { trust: { facilities: -1 } },
+          lesson:
+            'Shared equipment is everyone’s problem; a minute’s help is usually returned.',
+        },
+      ],
+    }),
+  }
+}
+
 /** Reactions to the player's own results and conduct come before anything else. */
 const REACTIONS = new Set([
   'recognition',
@@ -670,6 +786,8 @@ function allEvents(profile: ProfileData): WorkplaceEvent[] {
     ...(mistake ? [mistake] : []),
     ...ONE_OFF.filter((event) => REACTIONS.has(event.id)),
     ...ONE_OFF.filter((event) => !REACTIONS.has(event.id)),
+    NEW_STARTER,
+    printerEvent(profile),
     wellbeingEvent(profile),
   ]
 }
@@ -740,7 +858,9 @@ export interface PendingEvent {
   person: string
   opener: string
   /** Where it happens (see WorkplaceEvent.at). */
-  at: 'desk' | 'their-office'
+  at: 'desk' | 'their-office' | 'printer'
+  /** Someone they bring with them. */
+  with?: string
 }
 
 export function pendingEvents(profile: ProfileData): PendingEvent[] {
@@ -753,6 +873,7 @@ export function pendingEvents(profile: ProfileData): PendingEvent[] {
             person: event.person,
             opener: fill(event.opener),
             at: event.at ?? 'desk',
+            ...(event.with ? { with: event.with } : {}),
           },
         ]
       : []

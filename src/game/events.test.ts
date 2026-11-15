@@ -249,3 +249,28 @@ describe('a promotion told in person', () => {
     for (const e of pendingEvents(profile)) expect(e.at).toBe('desk')
   })
 })
+
+describe('the office in person: a new starter, and the printer', () => {
+  it('on the new starter’s first day, the manager brings them over to the desk', () => {
+    const before = checkEvents(at(newProfileData('Alex', 0), 10 * 60, 2))
+    expect(pendingEvents(before).some((e) => e.id === 'new-starter')).toBe(false)
+    const profile = checkEvents(at(newProfileData('Alex', 0), 10 * 60, 3))
+    const waiting = pendingEvents(profile).find((e) => e.id === 'new-starter')!
+    expect(waiting).toMatchObject({ person: 'manager', with: 'starter', at: 'desk' })
+    const scene = eventScene(profile, 'new-starter')!
+    expect(scene.lines.join(' ')).toContain('joins the team today')
+    expect(scene.choices?.map((c) => c.id)).toEqual(['show', 'hello'])
+  })
+
+  it('the printer jams on Tuesday afternoons, and the person waits at it', () => {
+    const tuesday = checkEvents(at(newProfileData('Alex', 0), 14 * 60 + 30, 2))
+    const jam = pendingEvents(tuesday).find((e) => e.id.startsWith('printer-jam:'))
+    expect(jam).toMatchObject({ person: 'facilities', at: 'printer' })
+    const morning = checkEvents(at(newProfileData('Alex', 0), 10 * 60, 2))
+    expect(pendingEvents(morning).some((e) => e.id.startsWith('printer-jam:'))).toBe(
+      false,
+    )
+    const monday = checkEvents(at(newProfileData('Alex', 0), 14 * 60 + 30, 1))
+    expect(pendingEvents(monday).some((e) => e.id.startsWith('printer-jam:'))).toBe(false)
+  })
+})

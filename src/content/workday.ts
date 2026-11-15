@@ -64,6 +64,15 @@ export interface Meeting {
 /** Joining up to this many minutes after the start still counts (as late). */
 export const MEETING_GRACE = 10
 
+/** The team's Friday cake in the break room (see game/celebration.ts). */
+export const CELEBRATION = {
+  id: 'celebration',
+  /** Fridays (0 = Monday). */
+  days: [4],
+  start: 16 * 60 + 15,
+  minutes: 20,
+}
+
 /** Meetings open a few minutes before they start. */
 export const MEETING_OPENS_BEFORE = 10
 

@@ -83,7 +83,9 @@ export function computerNotices(profile: ProfileData): Notice[] {
       id: `event:${event.id}`,
       text: office
         ? `${name} would like to see you in the manager’s office: “${event.opener}”`
-        : `${name} has come over to your desk: “${event.opener}”`,
+        : event.at === 'printer'
+          ? `${name} is at the printer: “${event.opener}”`
+          : `${name} has come over to your desk: “${event.opener}”`,
       tone: 'warning',
       action: office
         ? { label: `Go to ${name}’s office`, spot: 'manager', event: event.id }

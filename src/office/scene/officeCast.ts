@@ -15,7 +15,7 @@
  * Each has their own hours and habits: some quiet, some sociable.
  */
 import { activeDepartment, getPerson, workplaceKind } from '../../content/departments'
-import { MEETINGS } from '../../content/workday'
+import { CELEBRATION, MEETINGS } from '../../content/workday'
 import type { Who } from '../../game/encounters'
 import type { Gathering, Person, Place } from '../../world/npc/schedule'
 
@@ -245,6 +245,7 @@ export const OFFICE_PLACES: Record<string, Place> = {
   'standup:3': round(0.6, 2.1),
   'standup:4': round(1.0, 1.95),
   'standup:5': round(1.35, 1.75),
+  'standup:6': round(-1.1, 2.0),
   // Weekly planning, in the manager's office (the west chair is the player's).
   'planning:0': {
     x: 9.0,
@@ -289,7 +290,70 @@ export const OFFICE_PLACES: Record<string, Place> = {
   'visit:manager': beside(8.4, -3.55, 8.4, -5.1),
   /** Come over to the player's desk for a word (a workplace event). */
   'call:player': { ...beside(1.55, 2.75, 0.68, 1.9), label: 'waiting to talk to you' },
+  /** Beside them, someone they have brought over (a new starter). */
+  'call:player2': { ...beside(2.15, 2.55, 0.68, 1.9), label: 'being introduced to you' },
+  /** At the printer, waiting for help with it (a workplace event). */
+  'call:printer': {
+    x: PRINTER.x + 0.75,
+    z: PRINTER.z + 0.55,
+    heading: face(PRINTER.x + 0.75, PRINTER.z + 0.55, PRINTER.x, PRINTER.z),
+    clip: 'reach',
+    also: ['talk'],
+    label: 'trying to clear a paper jam',
+  },
+  /** Round the break room table, for the team's Friday celebration. */
+  'party:0': {
+    x: -6.5,
+    z: -3.6,
+    heading: Math.PI / 2,
+    clip: 'talk',
+    also: ['drink', 'eat'],
+    label: 'at the team celebration',
+  },
+  'party:1': {
+    x: -7.4,
+    z: -1.9,
+    heading: Math.PI,
+    clip: 'eat',
+    also: ['talk'],
+    label: 'at the team celebration',
+  },
+  'party:2': {
+    x: -8.2,
+    z: -2.2,
+    heading: Math.PI * 0.8,
+    clip: 'drink',
+    also: ['talk'],
+    label: 'at the team celebration',
+  },
+  'party:3': {
+    x: -7.4,
+    z: -5.3,
+    heading: 0,
+    clip: 'talk',
+    also: ['eat'],
+    label: 'at the team celebration',
+  },
+  'party:4': {
+    x: -6.4,
+    z: -4.9,
+    heading: 0.6,
+    clip: 'drink',
+    also: ['talk'],
+    label: 'at the team celebration',
+  },
+  'party:host': {
+    x: -8.9,
+    z: -3.6,
+    heading: -Math.PI / 2,
+    clip: 'present',
+    also: ['talk'],
+    label: 'thanking the team',
+  },
 }
+
+/** The day the new starter joins the team. */
+export const STARTER_DAY = 3
 
 export const OFFICE_PEOPLE: Person[] = [
   {
@@ -311,7 +375,12 @@ export const OFFICE_PEOPLE: Person[] = [
     arrives: at(8, 20),
     leaves: at(18, 15),
     lunch: { at: at(13, 0), minutes: 30, place: 'own' },
-    meetings: { standup: 'standup:host', planning: 'manager', 'one-to-one': 'manager' },
+    meetings: {
+      standup: 'standup:host',
+      planning: 'manager',
+      'one-to-one': 'manager',
+      celebration: 'party:host',
+    },
     errands: [
       { to: 'visit:senior', minutes: 10, chance: 0.3 },
       { to: 'visit:backR', minutes: 8, chance: 0.2 },
@@ -326,7 +395,7 @@ export const OFFICE_PEOPLE: Person[] = [
     arrives: at(8, 40),
     leaves: at(17, 45),
     lunch: { at: at(12, 30), minutes: 40, place: 'table:south' },
-    meetings: { standup: 'standup:0', planning: 'planning:0' },
+    meetings: { standup: 'standup:0', planning: 'planning:0', celebration: 'party:0' },
     errands: [
       { to: 'printer', minutes: 6, chance: 0.35 },
       { to: 'visit:backM', minutes: 10, chance: 0.2 },
@@ -341,7 +410,8 @@ export const OFFICE_PEOPLE: Person[] = [
     own: 'coffee',
     arrives: at(8, 10),
     leaves: at(16, 30),
-    lunch: { at: at(13, 15), minutes: 35, place: 'table:west' },
+    // Lunch in the kitchen, their own corner (the break room's west seat is the new starter's).
+    lunch: { at: at(13, 15), minutes: 35, place: 'own' },
     meetings: {},
     errands: [
       { to: 'printer', minutes: 10, chance: 0.35 },
@@ -358,8 +428,8 @@ export const OFFICE_PEOPLE: Person[] = [
     own: 'desk:backM',
     arrives: at(8, 50),
     leaves: at(17, 30),
-    lunch: { at: at(12, 15), minutes: 45, place: 'table:west' },
-    meetings: { standup: 'standup:3', planning: 'planning:1' },
+    lunch: { at: at(12, 15), minutes: 45, place: 'own' },
+    meetings: { standup: 'standup:3', planning: 'planning:1', celebration: 'party:1' },
     errands: [
       { to: 'visit:backL', minutes: 8, chance: 0.4 },
       { to: 'visit:front2', minutes: 8, chance: 0.3 },
@@ -374,7 +444,7 @@ export const OFFICE_PEOPLE: Person[] = [
     arrives: at(8, 57),
     leaves: at(17, 50),
     lunch: { at: at(13, 0), minutes: 30, place: 'counter' },
-    meetings: { standup: 'standup:4', planning: 'planning:2' },
+    meetings: { standup: 'standup:4', planning: 'planning:2', celebration: 'party:2' },
     errands: [
       { to: 'stretch:backR', minutes: 3, chance: 0.35 },
       { to: 'printer', minutes: 6, chance: 0.3 },
@@ -401,7 +471,7 @@ export const OFFICE_PEOPLE: Person[] = [
     arrives: at(8, 55),
     leaves: at(17, 15),
     lunch: { at: at(12, 0), minutes: 50, place: 'out' },
-    meetings: { standup: 'standup:1' },
+    meetings: { standup: 'standup:1', celebration: 'party:3' },
     errands: [
       { to: 'printer', minutes: 6, chance: 0.5 },
       { to: 'water', minutes: 5, chance: 0.2 },
@@ -437,6 +507,19 @@ export const OFFICE_PEOPLE: Person[] = [
     ],
   },
   {
+    // The new starter: from day 3, settling in on a laptop at the break room
+    // table; the manager brings them over to meet the player on their first day.
+    id: 'starter',
+    role: 'New starter',
+    own: 'table:west',
+    firstDay: STARTER_DAY,
+    arrives: at(8, 50),
+    leaves: at(17, 0),
+    lunch: { at: at(12, 45), minutes: 30, place: 'own' },
+    meetings: { standup: 'standup:6', celebration: 'party:4' },
+    errands: [{ to: 'printer', minutes: 5, chance: 0.15 }],
+  },
+  {
     // Hot-desks at the break room table on a laptop.
     id: 'analyst',
     role: 'Data analyst',
@@ -453,12 +536,16 @@ export const OFFICE_PEOPLE: Person[] = [
 ]
 
 /** The meetings everyone keeps to (from the working day). */
-export const OFFICE_GATHERINGS: Gathering[] = MEETINGS.map((m) => ({
-  id: m.id,
-  days: m.days,
-  start: m.start,
-  minutes: m.minutes,
-}))
+export const OFFICE_GATHERINGS: Gathering[] = [
+  ...MEETINGS.map((m) => ({
+    id: m.id,
+    days: m.days,
+    start: m.start,
+    minutes: m.minutes,
+  })),
+  // The team's Friday cake in the break room (game/celebration.ts).
+  CELEBRATION,
+]
 
 /**
  * Who the people of the office are, for talking to them: the four the player
@@ -490,5 +577,6 @@ export function officeWho(): Record<string, Who> {
     coordinator: team('coordinator', 'Dana Kowalski', 'focused'),
     admin: team('admin', 'Ben Carter', 'dry'),
     analyst: team('analyst', 'Arjun Mehta', 'warm'),
+    starter: team('starter', 'Ellie Grant', 'warm'),
   }
 }
