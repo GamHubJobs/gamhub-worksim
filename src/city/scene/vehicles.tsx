@@ -62,16 +62,20 @@ const CAR_BODY = (() => {
   return geometry
 })()
 
-/** The glass of the cabin: a slightly smaller copy of the upper body. */
+/**
+ * The glass of the cabin: the windscreen, side windows and rear screen, just
+ * proud of the body (outside its rounded edges, so they show), under a roof
+ * panel in the body's colour.
+ */
 const CAR_GLASS = (() => {
   const s = new Shape()
-  s.moveTo(-0.7, 0.82)
-  s.lineTo(-0.16, 1.24)
-  s.lineTo(0.93, 1.26)
-  s.lineTo(1.52, 0.88)
-  s.lineTo(-0.7, 0.82)
-  const geometry = new ExtrudeGeometry(s, { depth: 1.66, bevelEnabled: false })
-  geometry.translate(0, 0, -0.83)
+  s.moveTo(-0.8, 0.84)
+  s.lineTo(-0.18, 1.37)
+  s.lineTo(0.96, 1.39)
+  s.lineTo(1.66, 0.9)
+  s.lineTo(-0.8, 0.84)
+  const geometry = new ExtrudeGeometry(s, { depth: 1.8, bevelEnabled: false })
+  geometry.translate(0, 0, -0.9)
   return geometry
 })()
 
@@ -112,6 +116,11 @@ export function Car({
         </mesh>
         <mesh geometry={CAR_GLASS} position={[0, 0.06, 0]}>
           <meshStandardMaterial color="#1e293b" metalness={0.6} roughness={0.1} />
+        </mesh>
+        {/* The roof panel over the glass, in the body's colour */}
+        <mesh position={[0.4, 1.47, 0]}>
+          <boxGeometry args={[1.05, 0.05, 1.66]} />
+          <meshStandardMaterial color={colour} metalness={0.45} roughness={0.35} />
         </mesh>
       </group>
       {/* Pillars between the windows, and the door lines */}

@@ -89,6 +89,8 @@ function windowsOf(b: FrontSpec): Array<{ x: number; y: number; z: number }> {
 const PANE = new BoxGeometry(1.25, 1.55, 0.06)
 const FRAME = new BoxGeometry(1.45, 1.75, 0.04)
 const SILL = new BoxGeometry(1.6, 0.1, 0.22)
+const HEAD = new BoxGeometry(1.62, 0.16, 0.12)
+const BAR = new BoxGeometry(0.05, 1.55, 0.08)
 
 /**
  * The fronts of the street's buildings: a brick or rendered face, a shop-front
@@ -99,6 +101,8 @@ export function Fronts({ buildings, dark }: { buildings: FrontSpec[]; dark: bool
   const panes = useRef<InstancedMesh>(null)
   const frames = useRef<InstancedMesh>(null)
   const sills = useRef<InstancedMesh>(null)
+  const heads = useRef<InstancedMesh>(null)
+  const bars = useRef<InstancedMesh>(null)
   const glass = useMemo(
     () =>
       new MeshStandardMaterial({
@@ -126,8 +130,18 @@ export function Fronts({ buildings, dark }: { buildings: FrontSpec[]; dark: bool
       frames.current?.setMatrixAt(i, m)
       m.makeTranslation(w.x, w.y - 0.88, w.z - Math.sign(w.z) * 0.08)
       sills.current?.setMatrixAt(i, m)
+      m.makeTranslation(w.x, w.y + 0.96, w.z - Math.sign(w.z) * 0.04)
+      heads.current?.setMatrixAt(i, m)
+      m.makeTranslation(w.x, w.y, w.z + Math.sign(w.z) * 0.04)
+      bars.current?.setMatrixAt(i, m)
     })
-    for (const mesh of [panes.current, frames.current, sills.current]) {
+    for (const mesh of [
+      panes.current,
+      frames.current,
+      sills.current,
+      heads.current,
+      bars.current,
+    ]) {
       if (!mesh) continue
       mesh.instanceMatrix.needsUpdate = true
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
@@ -161,12 +175,33 @@ export function Fronts({ buildings, dark }: { buildings: FrontSpec[]; dark: bool
             <mesh position={[b.x, b.h + 0.2, z]} material={ROOF}>
               <boxGeometry args={[b.w + 0.4, 0.4, DEPTH + 0.4]} />
             </mesh>
+            {/* Chimney stacks on the brick buildings, vents and a plant box on the others */}
+            {isBrick(i) ? (
+              [-0.3, 0.3].map((f) => (
+                <group key={f} position={[b.x + f * b.w, b.h + 0.4, z]}>
+                  <mesh position={[0, 0.8, 0]} material={face}>
+                    <boxGeometry args={[0.9, 1.6, 0.6]} />
+                  </mesh>
+                  {[-0.2, 0.2].map((p) => (
+                    <mesh key={p} position={[p, 1.75, 0]} material={ROOF}>
+                      <cylinderGeometry args={[0.1, 0.12, 0.35, 8]} />
+                    </mesh>
+                  ))}
+                </group>
+              ))
+            ) : (
+              <mesh position={[b.x + b.w * 0.2, b.h + 0.85, z]} material={ROOF}>
+                <boxGeometry args={[1.6, 0.9, 1.2]} />
+              </mesh>
+            )}
           </group>
         )
       })}
       <instancedMesh ref={frames} args={[FRAME, frameMat, windows.length]} />
       <instancedMesh ref={panes} args={[PANE, glass, windows.length]} />
       <instancedMesh ref={sills} args={[SILL, frameMat, windows.length]} />
+      <instancedMesh ref={heads} args={[HEAD, frameMat, windows.length]} />
+      <instancedMesh ref={bars} args={[BAR, frameMat, windows.length]} />
     </group>
   )
 }

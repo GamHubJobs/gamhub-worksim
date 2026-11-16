@@ -23,9 +23,12 @@ export const GALLERY = [
 ]
 /** Today's court list, on the glass wall at the entrance. */
 export const COURT_LIST = { x: 7.0, z: -0.88 }
+/** The clerk's desk, beside the bench against the wall behind it. */
+export const CLERK = { x: 11.35, z: 2.0 }
 
 export const COURTROOM_BOXES: Solid[] = [
   { x: BENCH.x, z: BENCH.z, hx: 0.6, hz: 1.7, top: 1.3 },
+  { x: CLERK.x, z: CLERK.z, hx: 0.4, hz: 0.6, top: 0.8 },
   { x: WITNESS_BOX.x, z: WITNESS_BOX.z, hx: 0.45, hz: 0.45, top: 1.1 },
   ...COUNSEL_TABLES.map((t) => ({ x: t.x, z: t.z, hx: 0.4, hz: 0.9, top: 0.78 })),
   ...GALLERY.map((g) => ({ x: g.x, z: g.z, hx: 0.25, hz: 1.1, top: 0.5 })),

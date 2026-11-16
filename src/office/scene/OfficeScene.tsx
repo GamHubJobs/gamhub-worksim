@@ -7,6 +7,7 @@
  * floor marker or an object moves there.
  */
 import { Anchors } from '../../world/AnchorPoints'
+import { BenchKit, CommsRack } from './itKit'
 import type { AnchorSpec } from '../../world/anchors'
 import { lowDpr } from '../../world/lowDpr'
 import { ContactShadows, Html, useCursor } from '@react-three/drei'
@@ -1410,36 +1411,9 @@ function ItCorner({ itJobs }: { itJobs?: string }) {
     .filter((m): m is { t: string; at: { x: number; z: number } } => !!m.at)
   return (
     <group>
-      {/* The comms cabinet, its glass door facing the room. */}
+      {/* The comms cabinet, its glass door facing the room (itKit.tsx). */}
       <Place position={[IT_CABINET.x, 0, IT_CABINET.z]}>
-        <Box
-          size={[0.7, 2.0, 0.68]}
-          position={[0, 1.0, 0]}
-          color="#1f2937"
-          radius={0.02}
-        />
-        <Box
-          size={[0.02, 1.8, 0.56]}
-          position={[-0.36, 1.0, 0]}
-          color="#0f172a"
-          opacity={0.55}
-        />
-        {[0, 1, 2].map((i) => (
-          <group key={i}>
-            <Box
-              size={[0.03, 0.12, 0.5]}
-              position={[-0.33, 1.55 - i * 0.22, 0]}
-              color="#334155"
-            />
-            <Box
-              size={[0.035, 0.03, 0.03]}
-              position={[-0.36, 1.55 - i * 0.22, 0.2]}
-              color={cabinetTrouble && i === 1 ? '#f59e0b' : '#22c55e'}
-              emissive={cabinetTrouble && i === 1 ? '#f59e0b' : '#22c55e'}
-            />
-          </group>
-        ))}
-        <Box size={[0.03, 0.3, 0.5]} position={[-0.33, 0.3, 0]} color="#111827" />
+        <CommsRack trouble={cabinetTrouble} />
       </Place>
       {/* The IT workbench: anti-static mat, a bench monitor, a laptop, a toolbox. */}
       <Place position={[IT_BENCH.x, 0, IT_BENCH.z]}>
@@ -1471,6 +1445,7 @@ function ItCorner({ itJobs }: { itJobs?: string }) {
           emissive="#0369a1"
         />
         <Box size={[0.3, 0.02, 0.4]} position={[-0.05, 0.97, 0.35]} color="#94a3b8" />
+        <BenchKit />
         <Box
           size={[0.25, 0.14, 0.4]}
           position={[0.2, 1.02, 0.75]}

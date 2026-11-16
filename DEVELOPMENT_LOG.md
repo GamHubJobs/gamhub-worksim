@@ -192,6 +192,63 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-16 · 3D upgrade, round 2: workplace buildings, the courtroom, IT equipment
+
+- **The end of the street** (\`city/scene/architecture.tsx\`): the three plain boxes
+  became the workplaces they stand for.
+  - Two office towers: glass curtain walls in bays, floor bands, corner mullions, a
+    recessed double-height lobby with a canopy, and plant on the roof. Windows are
+    lit floor by floor in the evening.
+  - Riverside Community Hospital: a white block with a teal band, rows of framed
+    windows, the main entrance canopy on columns, the red cross, and the emergency
+    bay with its ambulance.
+  - Northbank Engineering's works: a clad shed with a saw-tooth roof of north
+    lights, roller doors with bollards, a personnel door, the sign and a steel yard.
+- **The courthouse front:** bases and capitals on its columns, a real pediment, a
+  string course and framed windows.
+- **The street's fronts:** a head over every window and a glazing bar down it, all
+  instanced. Chimney stacks on the brick buildings, plant boxes on the others.
+- **The courtroom** (the law firm's moot court and Court 2 at Westmark County
+  Court, on the same layout):
+  - oak panelling with framed panels and a dado rail behind the bench, and the
+    court's crest, a quartered shield under a crown;
+  - a panelled bench with the judge's laptop, notebook, microphone and reading
+    lamp, and a buttoned high-backed leather chair with arms;
+  - the clerk's desk beside the bench, with a screen, the recording unit and its red
+    light, and the court file (it has its own collision box);
+  - the witness box up a step, with its rail, microphone and water;
+  - an exhibit screen;
+  - counsel's tables with lecterns, lever-arch bundles, laptops, microphones and
+    water;
+  - public benches with ends, and a clock.
+- **The IT corner** (\`office/scene/itKit.tsx\`):
+  - a real 19-inch rack behind a glazed, vented door: a patch panel with its
+    ports and leads, a switch whose port lights flicker with traffic, a router whose
+    light shows a device in trouble, two servers with drive bays and activity
+    lights, cable management and a UPS;
+  - on the bench, a PC opened up (motherboard, RAM, cooler, drive cage), a
+    multimeter, screwdrivers and a spare drive.
+- **The excavator:** track rollers, sprockets and idlers, glass on three sides of
+  the cab, an engine grille and exhaust, hydraulic rams with polished rods on the
+  boom and arm, and teeth on the bucket.
+- **Cars:** the windows now show, standing just proud of the body under a
+  body-coloured roof.
+- **Found in play and fixed** (checked on screenshots taken walking to the office
+  door at the end of the street, and at the comms cabinet):
+  - the towers' glass did not show: their instanced panes were rebuilt on every
+    render (a new size array each time) and the rebuilt meshes had none of their
+    instances placed. The geometry is now keyed by the numbers. The pane colours
+    were also tinted twice (material and instance colour); the material is white
+    where the panes carry their own colour;
+  - the hospital was hidden behind the last building on the south side; the
+    district is laid out again so it can be seen across the end of the road (the
+    hospital on the south side, the tall tower straight ahead, the other on the
+    north side, the works behind the hospital), clear of the traffic lanes;
+  - the comms cabinet was a solid box, so nothing inside it showed: it is now a
+    steel shell, open at the front behind the tinted glass door.
+
+---
+
 ## 2026-11-16 · 3D upgrade, round 1: people, equipment, vehicles, sound from its source
 
 - **People** (every character, shared shapes, every existing animation kept):

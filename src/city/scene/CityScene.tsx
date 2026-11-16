@@ -7,6 +7,7 @@
  * nothing moves, so it runs on ordinary laptops.
  */
 import { lowDpr } from '../../world/lowDpr'
+import { EngineeringWorks, HospitalBlock, OfficeTower } from './architecture'
 import { BUILDINGS, COURTHOUSE } from '../worldMap'
 import { useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
@@ -282,7 +283,7 @@ function CityScene(props: CitySceneProps) {
         <PeopleDetail low={lowPower}>
           <Street dark={props.dark} />
           <Park />
-          <BusinessDistrict />
+          <BusinessDistrict dark={props.dark} />
           <Traffic />
           {props.car && !driving && (
             <Car
@@ -784,10 +785,36 @@ function Courthouse({ dark }: { dark: boolean }) {
       <Box size={[7, 0.8, 1.5]} position={[x, 8.85, front + 0.6]} color={stone} />
       {/* Four columns on a plinth, and three steps up */}
       {[-3.6, -1.2, 1.2, 3.6].map((dx) => (
-        <mesh key={dx} position={[x + dx, 4.0, front + 0.9]}>
-          <cylinderGeometry args={[0.38, 0.42, 6.6, 16]} />
-          <meshStandardMaterial color="#f5f5f4" roughness={0.7} />
-        </mesh>
+        <group key={dx} position={[x + dx, 0, front + 0.9]}>
+          <mesh position={[0, 4.0, 0]}>
+            <cylinderGeometry args={[0.36, 0.42, 6.2, 20]} />
+            <meshStandardMaterial color="#f5f5f4" roughness={0.7} />
+          </mesh>
+          {/* The base and the capital of each column */}
+          <Box size={[1.0, 0.3, 1.0]} position={[0, 0.9, 0]} color={stone} />
+          <Box size={[0.95, 0.22, 0.95]} position={[0, 7.2, 0]} color={stone} />
+          <Box size={[1.05, 0.12, 1.05]} position={[0, 7.36, 0]} color={stone} />
+        </group>
+      ))}
+      {/* The pediment: a low triangle of stone over the columns (a three-sided
+          prism, apex up, flattened to a shallow pitch) */}
+      <mesh
+        position={[x, 10.06, front + 0.6]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={[1, 1, 0.3]}
+      >
+        <cylinderGeometry args={[5.4, 5.4, 1.4, 3, 1, false, Math.PI, Math.PI * 2]} />
+        <meshStandardMaterial color={stone} roughness={0.8} />
+      </mesh>
+      {/* A string course along the front, and frames round the windows */}
+      <Box size={[w, 0.25, 0.3]} position={[x, 1.0, front + 0.12]} color={stone} />
+      {[-4.6, 4.6].map((dx) => (
+        <Box
+          key={dx}
+          size={[1.75, 2.75, 0.06]}
+          position={[x + dx, 3.2, front + 0.01]}
+          color={stone}
+        />
       ))}
       {[0, 1, 2].map((i) => (
         <Box
@@ -864,22 +891,17 @@ function Park() {
   )
 }
 
-/** Tall office towers at the end of the street: the way to work. */
-function BusinessDistrict() {
+/**
+ * The end of the street, the way to work: an office tower, Riverside
+ * Community Hospital and Northbank Engineering's works (architecture.tsx).
+ */
+function BusinessDistrict({ dark }: { dark: boolean }) {
   return (
     <group>
-      {[
-        [82, 18, 40, '#64748b'],
-        [96, 4, 55, '#475569'],
-        [84, -16, 34, '#94a3b8'],
-      ].map(([x, z, h, color], i) => (
-        <Box
-          key={i}
-          size={[12, h as number, 12]}
-          position={[x as number, (h as number) / 2, z as number]}
-          color={color as string}
-        />
-      ))}
+      <OfficeTower x={86} z={22} w={14} d={14} h={46} tint="#8fb4cc" dark={dark} />
+      <OfficeTower x={104} z={6} w={12} d={12} h={58} tint="#7fa6bf" dark={dark} />
+      <HospitalBlock x={86} z={-15} dark={dark} />
+      <EngineeringWorks x={110} z={-36} dark={dark} />
       {/* A bus shelter at the end of the street */}
       <Box size={[3, 0.1, 1.4]} position={[58, 2.4, 9.6]} color="#334155" />
       <Box

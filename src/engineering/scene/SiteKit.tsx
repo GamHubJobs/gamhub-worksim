@@ -86,12 +86,35 @@ export function Excavator({
   })
   return (
     <group position={[x, 0, z]} rotation={[0, heading, 0]}>
-      {/* Tracks */}
+      {/* Tracks: the track frame, its rollers and the sprocket and idler at each end */}
       {[-0.85, 0.85].map((s) => (
-        <B key={s} size={[3, 0.6, 0.5]} at={[0, 0.3, s]} color="#262626" rough={1} />
+        <group key={s}>
+          <B size={[3, 0.6, 0.5]} at={[0, 0.3, s]} color="#262626" rough={1} />
+          {[-1.1, -0.55, 0, 0.55, 1.1].map((rx) => (
+            <mesh
+              key={rx}
+              position={[rx, 0.16, s + Math.sign(s) * 0.26]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <cylinderGeometry args={[0.1, 0.1, 0.04, 10]} />
+              <meshStandardMaterial color="#525252" metalness={0.5} />
+            </mesh>
+          ))}
+          {[-1.35, 1.35].map((rx) => (
+            <mesh
+              key={rx}
+              position={[rx, 0.32, s + Math.sign(s) * 0.26]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <cylinderGeometry args={[0.24, 0.24, 0.05, 14]} />
+              <meshStandardMaterial color="#404040" metalness={0.5} />
+            </mesh>
+          ))}
+        </group>
       ))}
       <group ref={slew} position={[0, 0.7, 0]}>
         <B size={[2.4, 1.0, 2.0]} at={[-0.2, 0.5, 0]} color={YELLOW} />
+        {/* The cab: its frame, glass on three sides, and the roof */}
         <B size={[1.0, 1.1, 0.9]} at={[0.6, 1.4, 0.45]} color={YELLOW} />
         <B
           size={[0.9, 0.8, 0.02]}
@@ -100,12 +123,61 @@ export function Excavator({
           metal={0.2}
           rough={0.1}
         />
+        <B
+          size={[0.02, 0.7, 0.75]}
+          at={[1.11, 1.5, 0.45]}
+          color="#93c5fd"
+          metal={0.2}
+          rough={0.1}
+        />
+        <B size={[1.05, 0.06, 0.95]} at={[0.6, 1.98, 0.45]} color="#3f3f46" />
+        {/* The counterweight, the engine cover's grille, and the exhaust */}
         <B size={[0.7, 0.9, 1.9]} at={[-1.2, 0.55, 0]} color="#a16207" />
+        {Array.from({ length: 5 }, (_, i) => (
+          <B
+            key={i}
+            size={[0.5, 0.03, 0.02]}
+            at={[-0.6, 0.75 - i * 0.1, -1.01]}
+            color="#3f3f46"
+          />
+        ))}
+        <mesh position={[-0.5, 1.25, -0.6]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.5, 8]} />
+          <meshStandardMaterial color="#1f2937" metalness={0.6} />
+        </mesh>
         <group ref={boom} position={[0.9, 0.9, -0.3]}>
           <B size={[2.6, 0.32, 0.3]} at={[1.3, 0, 0]} color={YELLOW} />
+          {/* The boom's hydraulic ram: a barrel and a polished rod */}
+          <mesh position={[0.65, -0.28, 0]} rotation={[0, 0, Math.PI / 2 - 0.25]}>
+            <cylinderGeometry args={[0.07, 0.07, 0.9, 10]} />
+            <meshStandardMaterial color="#3f3f46" metalness={0.4} />
+          </mesh>
+          <mesh position={[1.25, -0.12, 0]} rotation={[0, 0, Math.PI / 2 - 0.25]}>
+            <cylinderGeometry args={[0.035, 0.035, 0.6, 8]} />
+            <meshStandardMaterial color="#e5e7eb" metalness={0.9} roughness={0.15} />
+          </mesh>
           <group ref={arm} position={[2.6, 0, 0]}>
             <B size={[1.9, 0.26, 0.26]} at={[0.95, 0, 0]} color={YELLOW} />
+            {/* The arm's ram, on top */}
+            <mesh position={[0.5, 0.22, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.055, 0.055, 0.8, 10]} />
+              <meshStandardMaterial color="#3f3f46" metalness={0.4} />
+            </mesh>
+            <mesh position={[1.05, 0.22, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.03, 0.03, 0.5, 8]} />
+              <meshStandardMaterial color="#e5e7eb" metalness={0.9} roughness={0.15} />
+            </mesh>
+            {/* The bucket, with its teeth */}
             <B size={[0.55, 0.45, 0.6]} at={[1.95, -0.15, 0]} color="#3f3f46" />
+            {[-0.2, 0, 0.2].map((tz) => (
+              <B
+                key={tz}
+                size={[0.12, 0.08, 0.08]}
+                at={[2.25, -0.38, tz]}
+                color="#d4d4d8"
+                metal={0.6}
+              />
+            ))}
           </group>
         </group>
       </group>
