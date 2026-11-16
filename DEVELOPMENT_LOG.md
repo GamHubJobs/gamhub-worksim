@@ -236,6 +236,15 @@ and S7 (social life in person, at work and in the neighbourhood).
 - **Shared:** `world/playerNow.ts` (what the player is doing, for scenes without a
   World provider); `__worksimDoors` (development builds) logs what each door did,
   for `tests/e2e/doors.spec.ts`.
+- **Checked at High, close up and in play:**
+  - car windows were a thin dark strip, so the glass is now lighter (sky
+    reflected) and stands further proud of the body;
+  - Northbank's works was hidden behind the hospital and the tall tower. It is
+    moved to the north side of the end of the road, where it can be seen from the
+    pavement;
+  - the street door's stand point is at the pavement's edge, at the door.
+  - Seen working in play: cooking at the hob, reading (the book picked up, then
+    sitting), going to bed (lying down), watching TV (sitting, the set on).
 - **FreeCAD:** evaluated in [docs/FREECAD_EVALUATION.md](docs/FREECAD_EVALUATION.md),
   including the unofficial WebAssembly port reported in July 2026.
 

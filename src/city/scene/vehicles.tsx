@@ -69,13 +69,13 @@ const CAR_BODY = (() => {
  */
 const CAR_GLASS = (() => {
   const s = new Shape()
-  s.moveTo(-0.8, 0.84)
-  s.lineTo(-0.18, 1.37)
-  s.lineTo(0.96, 1.39)
-  s.lineTo(1.66, 0.9)
-  s.lineTo(-0.8, 0.84)
-  const geometry = new ExtrudeGeometry(s, { depth: 1.8, bevelEnabled: false })
-  geometry.translate(0, 0, -0.9)
+  s.moveTo(-0.82, 0.86)
+  s.lineTo(-0.19, 1.41)
+  s.lineTo(0.97, 1.43)
+  s.lineTo(1.69, 0.92)
+  s.lineTo(-0.82, 0.86)
+  const geometry = new ExtrudeGeometry(s, { depth: 1.86, bevelEnabled: false })
+  geometry.translate(0, 0, -0.93)
   return geometry
 })()
 
@@ -115,11 +115,11 @@ export function Car({
           <meshStandardMaterial color={colour} metalness={0.45} roughness={0.35} />
         </mesh>
         <mesh geometry={CAR_GLASS} position={[0, 0.06, 0]}>
-          <meshStandardMaterial color="#1e293b" metalness={0.6} roughness={0.1} />
+          <meshStandardMaterial color="#5f7f9b" metalness={0.25} roughness={0.08} />
         </mesh>
         {/* The roof panel over the glass, in the body's colour */}
-        <mesh position={[0.4, 1.47, 0]}>
-          <boxGeometry args={[1.05, 0.05, 1.66]} />
+        <mesh position={[0.4, 1.5, 0]}>
+          <boxGeometry args={[1.05, 0.05, 1.7]} />
           <meshStandardMaterial color={colour} metalness={0.45} roughness={0.35} />
         </mesh>
       </group>
@@ -128,7 +128,7 @@ export function Car({
         <group key={side}>
           <Box
             size={[0.02, 0.4, 0.06]}
-            position={[side * 0.9, 1.1, 0.35]}
+            position={[side * 0.94, 1.12, 0.35]}
             color={colour}
           />
           <Box

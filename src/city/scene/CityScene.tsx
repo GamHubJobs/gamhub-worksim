@@ -373,7 +373,7 @@ function doorActivities(): Activity[] {
     action: 'court-door',
     prompt: `go into ${COURTHOUSE.name}`,
     spot: { x: cx, z: cz + 1.8, reach: 2.4 },
-    anchor: { x: cx, z: cz - 0.75, heading: 0 },
+    anchor: { x: cx, z: BOUNDS.minZ + 0.35, heading: 0 },
     stages: [{ clip: 'push-door', seconds: 0.8, label: 'Trying the door' }],
   }
   return [
@@ -392,7 +392,8 @@ function doorActivities(): Activity[] {
               : `go into ${place.name}`,
         // From the door out to about 4 m into the street.
         spot: { x, z: z - side * 1.8, reach: 2.4 },
-        anchor: { x, z: z + side * 1.35, heading: side > 0 ? Math.PI : 0 },
+        // Up to the door, at the pavement's edge (the door opens as they get there).
+        anchor: { x, z: side * (BOUNDS.maxZ - 0.35), heading: side > 0 ? Math.PI : 0 },
         stages: [{ clip: 'push-door', seconds: 0.8, label: `Going in: ${place.name}` }],
         sounds: [{ at: 0.3, id: 'door' }],
       }
@@ -949,7 +950,7 @@ function BusinessDistrict({ dark }: { dark: boolean }) {
       <OfficeTower x={86} z={22} w={14} d={14} h={46} tint="#8fb4cc" dark={dark} />
       <OfficeTower x={104} z={6} w={12} d={12} h={58} tint="#7fa6bf" dark={dark} />
       <HospitalBlock x={86} z={-15} dark={dark} />
-      <EngineeringWorks x={110} z={-36} dark={dark} />
+      <EngineeringWorks x={69} z={41} dark={dark} />
       {/* A bus shelter at the end of the street */}
       <Box size={[3, 0.1, 1.4]} position={[58, 2.4, 9.6]} color="#334155" />
       <Box

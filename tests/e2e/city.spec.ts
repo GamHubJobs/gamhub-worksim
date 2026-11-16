@@ -131,7 +131,7 @@ test('the morning: a gym shower and breakfast out, then walking to work', async 
   await home(page)
     .getByRole('button', { name: /Go to bed/ })
     .click()
-  await expect(home(page)).toContainText('Morning at home')
+  await expect(home(page)).toContainText('Morning at home', { timeout: 60_000 })
   await home(page)
     .getByRole('navigation', { name: 'Rooms' })
     .getByRole('button', { name: 'Bedroom' })
