@@ -67,6 +67,8 @@ test('a bike from Cog & Kerb: round the neighbourhood, then to work', async ({
   await home(page)
     .getByRole('button', { name: /Go to bed/ })
     .click()
+  // The character walks to the bed and lies down first: wait for the morning.
+  await expect(home(page)).toContainText('Morning at home', { timeout: 60_000 })
   await rooms(page, 'Front door')
   await expect(home(page).locator('[data-commute="car"]')).toContainText('You need a car')
   await goOut(page)
@@ -88,6 +90,7 @@ test('a taxi to work: it comes up the street, waits at the kerb, and drives off'
   await home(page)
     .getByRole('button', { name: /Go to bed/ })
     .click()
+  await expect(home(page)).toContainText('Morning at home', { timeout: 60_000 })
   await goOut(page)
   await expect(city(page).getByTestId('city-3d').locator('canvas')).toBeVisible({
     timeout: 60_000,

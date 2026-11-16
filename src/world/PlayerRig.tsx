@@ -49,6 +49,7 @@ import {
 import { buildGrid, findPath, nearestFree, type Grid, type Point } from './physics/nav'
 import { scanSolids, tall } from './physics/solids'
 import { othersThan, removeBody, setBody } from './npc/bodies'
+import { playerNow } from './playerNow'
 import {
   approachPoint,
   engage,
@@ -868,6 +869,7 @@ export function PlayerRig(props: PlayerRigProps) {
     state.current = s
     setBody('player', s.x, s.z, 0.3)
     if (mode.current.kind !== 'acting') now.current = { ...now.current, x: s.x, z: s.z }
+    playerNow.current = now.current
     if (import.meta.env.DEV) {
       const w = window as unknown as {
         __worksimPlayer?: { insideFrames?: number }

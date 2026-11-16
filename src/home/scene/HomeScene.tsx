@@ -8,9 +8,9 @@
  * when the player is at home.
  */
 import { lowDpr } from '../../world/lowDpr'
-import { Canvas, useFrame, type RootState } from '@react-three/fiber'
+import { Canvas, type RootState } from '@react-three/fiber'
 import { memo, useMemo, useRef, useState, type RefObject } from 'react'
-import type { Mesh, MeshBasicMaterial, WebGLRenderer } from 'three'
+import type { WebGLRenderer } from 'three'
 import { getFurniture, getHome, type HomeId, type SlotId } from '../../content/home'
 import { Floor } from '../../office/scene/furniture'
 import { Box } from '../../office/scene/parts'
@@ -24,7 +24,7 @@ import {
   type Doing,
   type InteriorState,
 } from '../../city/scene/interiors/kit'
-import { World, useWorld } from '../../world/context'
+import { World } from '../../world/context'
 import {
   PlayerRig,
   type ActivityNow,
@@ -186,7 +186,6 @@ function HomeScene(props: HomeSceneProps) {
   const hands = useRef<Hands>({ left: null, right: null })
   const world = useMemo(() => ({ now, hands, low: lowPower }), [lowPower])
   const onDone = props.onDone
-  const tv = home.places.find((p) => p.slot === 'tv')
 
   return (
     <Canvas
@@ -247,7 +246,6 @@ function HomeScene(props: HomeSceneProps) {
                 </group>
               )
             })}
-            {tv && furniture.tv && <TvGlow at={tv.at} />}
             <PlayerRig
               start={layout.start}
               boxes={layout.boxes}
@@ -303,35 +301,5 @@ function HomeScene(props: HomeSceneProps) {
         </Interior.Provider>
       </World.Provider>
     </Canvas>
-  )
-}
-
-/** The TV's screen lights up and flickers while a series or a game is on. */
-function TvGlow({ at }: { at: [number, number, number] }) {
-  const { now } = useWorld()
-  const screen = useRef<Mesh>(null)
-  useFrame(({ clock }) => {
-    const m = screen.current
-    if (!m) return
-    const on = now.current.id === 'series' || now.current.id === 'games'
-    m.visible = on
-    if (on) {
-      const material = m.material as MeshBasicMaterial
-      const t = clock.elapsedTime
-      material.color.setRGB(
-        0.35 + Math.sin(t * 1.3) * 0.15,
-        0.45 + Math.sin(t * 2.1 + 1) * 0.15,
-        0.75 + Math.sin(t * 0.7 + 2) * 0.15,
-      )
-    }
-  })
-  const [x, z, turn] = at
-  return (
-    <group position={[x, 0, z]} rotation={[0, turn, 0]}>
-      <mesh ref={screen} position={[0, 0.82, 0.045]} visible={false}>
-        <planeGeometry args={[1.02, 0.56]} />
-        <meshBasicMaterial color="#6b8cff" toneMapped={false} />
-      </mesh>
-    </group>
   )
 }

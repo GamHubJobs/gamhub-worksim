@@ -518,21 +518,35 @@ export function homeLayout(
       },
     )
   }
+  // Without a wardrobe, the work clothes are on the chair by the bed.
   const wardrobe = owned('wardrobe')
-  if (wardrobe)
-    add(
-      'dress',
-      'get dressed for work',
-      at(wardrobe, 0.7),
-      [{ clip: 'dress', seconds: 5, label: 'Getting dressed' }],
-      { sounds: [{ at: 0.5, id: 'rustle', every: 1.2 }] },
-    )
+  const dressAt = wardrobe ? at(wardrobe, 0.7) : bed ? at(bed, 0, 1.2) : door
+  add(
+    'dress',
+    'get dressed for work',
+    dressAt,
+    [
+      ...(wardrobe
+        ? []
+        : [
+            { clip: 'reach' as const, seconds: 1, label: 'Picking up your work clothes' },
+          ]),
+      { clip: 'dress', seconds: 5, label: 'Getting dressed' },
+    ],
+    { sounds: [{ at: 0.5, id: 'rustle', every: 1.2 }] },
+  )
+  // A book from the shelf, or (without one) the book by the bed.
   const shelf = owned('shelf')
-  if (shelf)
-    add('read', 'read a book', at(shelf, 0.6), [
-      { clip: 'reach', seconds: 1.2, label: 'Choosing a book', hold: { right: 'book' } },
-      ...sitThen(seat, 'read', 12, 'Reading', { right: 'book' }),
-    ])
+  add('read', 'read a book', shelf ? at(shelf, 0.6) : (seat ?? door), [
+    {
+      clip: 'reach',
+      seconds: 1.2,
+      label: shelf ? 'Choosing a book' : 'Picking up your book',
+      hold: { right: 'book' },
+    },
+    ...sitThen(seat, 'read', 12, 'Reading', { right: 'book' }),
+  ])
+  // On the television (it comes on: tvScreen.tsx), or without one on the phone.
   if (owned('tv'))
     add(
       'series',
@@ -542,6 +556,14 @@ export function homeLayout(
       {
         object: 'tv',
       },
+    )
+  else
+    add(
+      'series',
+      'watch a series on your phone',
+      seat ?? door,
+      sitThen(seat, 'read', 12, 'Watching a series on your phone', { right: 'phone' }),
+      { sounds: [{ at: 1.5, id: 'tv', every: 2.6, until: 13 }] },
     )
   add(
     'call',

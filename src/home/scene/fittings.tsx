@@ -8,10 +8,8 @@
 import type { Home } from '../../content/home'
 import { Box } from '../../office/scene/parts'
 import { Hotspot } from '../../city/scene/interiors/common'
-import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
-import type { Group } from 'three'
-import { useWorld } from '../../world/context'
+import { Door } from '../../world/doors/Door'
+import type { ActivityNow } from '../../world/PlayerRig'
 import { DELIVERY_TIMES } from './homeLayout'
 
 const WALL = 2.5
@@ -22,29 +20,31 @@ const OPEN = {
   to: DELIVERY_TIMES.open + DELIVERY_TIMES.greet + DELIVERY_TIMES.take + 0.6,
 }
 
-/** The front door: shut, except while the player answers it, when it swings open into the hall. */
+/** What opens the front door: going out, and answering it to a delivery (while it stands open). */
+const GOING_OUT = ['go-out', 'run', 'out']
+function frontDoorOpen(n: ActivityNow): boolean {
+  if (n.id === 'takeaway-door') return n.t > OPEN.from && n.t < OPEN.to
+  return !!n.id && GOING_OUT.includes(n.id) && n.t > 0.3
+}
+
+/**
+ * The front door (world/doors/Door.tsx): hinged at the back of the doorway,
+ * swinging into the hall when the player goes out or answers it.
+ */
 function FrontDoor() {
-  const { now } = useWorld()
-  const hinge = useRef<Group>(null)
-  useFrame((_, dt) => {
-    const h = hinge.current
-    if (!h) return
-    const n = now.current
-    const doorstep = n.id === 'takeaway-door'
-    const open = doorstep && n.t > OPEN.from && n.t < OPEN.to ? 1 : 0
-    const target = 1.35 * open
-    h.rotation.y += (target - h.rotation.y) * Math.min(1, dt * 5)
-  })
-  // Hinged at the back edge of the doorway; the leaf spans the opening.
   return (
-    <group position={[-0.47, 0, -0.475]}>
-      <group ref={hinge}>
-        <group position={[0, 0, 0.475]} rotation={[0, Math.PI / 2, 0]}>
-          <Box size={[0.95, 2.05, 0.08]} position={[0, 1.02, 0]} color="#7c2d12" />
-          <Box size={[0.06, 0.06, 0.1]} position={[0.35, 1.0, 0.06]} color="#d4d4d8" />
-        </group>
-      </group>
-    </group>
+    <Door
+      position={[-0.47, 0, 0]}
+      rotation={Math.PI / 2}
+      width={0.95}
+      height={2.05}
+      hand="right"
+      swing={-1}
+      colour="#7c2d12"
+      frame="#f5f5f4"
+      sense={0}
+      openWhen={frontDoorOpen}
+    />
   )
 }
 

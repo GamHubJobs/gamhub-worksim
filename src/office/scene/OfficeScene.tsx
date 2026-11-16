@@ -8,6 +8,7 @@
  */
 import { Anchors } from '../../world/AnchorPoints'
 import { BenchKit, CommsRack } from './itKit'
+import { Door } from '../../world/doors/Door'
 import type { AnchorSpec } from '../../world/anchors'
 import { lowDpr } from '../../world/lowDpr'
 import { ContactShadows, Html, useCursor } from '@react-three/drei'
@@ -1107,12 +1108,18 @@ function Reception() {
       </mesh>
       <Plant position={[-11.2, 0, 4.0]} scale={1.3} />
       <Plant position={[-3.7, 0, 3.0]} scale={1.1} />
-      {/* Entrance doors */}
-      <Box
-        size={[0.08, 2.3, 2.2]}
-        position={[-11.88, 1.15, 7.4]}
-        color={COLORS.glass}
-        opacity={0.55}
+      {/* The entrance: automatic glass doors, parting for anyone who comes up to
+          them, and for the player arriving in the morning (world/doors) */}
+      <Door
+        position={[-11.86, 0, 7.4]}
+        rotation={Math.PI / 2}
+        kind="automatic"
+        width={2.2}
+        height={2.3}
+        leaf="glass"
+        frame="#64748b"
+        sense={2.2}
+        openAtStart={2}
       />
     </group>
   )
@@ -1520,6 +1527,16 @@ function ManagerOffice() {
         opacity={0.3}
       />
       <Box size={[0.1, 0.08, 7]} position={[5, 2.6, -4.5]} color={COLORS.metal} />
+      {/* The door into the office: glass, swinging in for whoever goes through */}
+      <Door
+        position={[5, 0, -2.8]}
+        rotation={-Math.PI / 2}
+        width={1.5}
+        height={2.3}
+        leaf="glass"
+        frame="#94a3b8"
+        sense={1.5}
+      />
       <Box size={[7, 0.08, 0.1]} position={[8.5, 2.6, -1]} color={COLORS.metal} />
       {/* Desk, chairs and the manager */}
       <Box

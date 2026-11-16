@@ -58,6 +58,13 @@ export const EFFECTS = {
   call: 'effects',
   engine: 'character',
   greet: 'voices',
+  /** A television's programme: voices and a little music, from the set. */
+  tv: 'voices',
+  /** Doors: a hinged one swinging open, shutting on its latch, a sliding one, a locked one tried. */
+  hinge: 'character',
+  latch: 'character',
+  slide: 'character',
+  rattle: 'character',
 } as const satisfies Record<string, CategoryId>
 
 export type EffectId = keyof typeof EFFECTS
@@ -101,6 +108,11 @@ export const MIN_GAP: Record<EffectId, number> = {
   call: 500,
   engine: 700,
   greet: 2500,
+  tv: 1500,
+  hinge: 250,
+  latch: 250,
+  slide: 400,
+  rattle: 600,
 }
 
 /** What a caption says for the sounds that carry news (for players without sound). */

@@ -4,6 +4,7 @@
  * Bay B's four beds with a nurse at work, and the two side rooms, the first
  * marked for isolation. Patients are fictional.
  */
+import { Door } from '../../world/doors/Door'
 import { Box } from './parts'
 import { Sign } from './signs'
 import { Bed } from './wardBed'
@@ -87,6 +88,33 @@ export function WardWing() {
       >
         Ward corridor · Bay B · Side rooms →
       </Sign>
+
+      {/* The doors: double doors into the wing, and one into each room off the corridor */}
+      <Door
+        position={[12, 0, (WING_DOOR.z0 + WING_DOOR.z1) / 2]}
+        rotation={-Math.PI / 2}
+        kind="double"
+        width={WING_DOOR.z1 - WING_DOOR.z0}
+        height={2.2}
+        leaf="metal"
+        colour="#e2e8f0"
+        frame="#0f766e"
+        sense={1.7}
+      />
+      {Object.values(DOORS).map((d) => (
+        <Door
+          key={d.z0}
+          position={[CORRIDOR_WALL, 0, (d.z0 + d.z1) / 2]}
+          rotation={-Math.PI / 2}
+          kind={d.z1 - d.z0 > 1.6 ? 'double' : 'hinged'}
+          width={d.z1 - d.z0}
+          height={2.15}
+          leaf="metal"
+          colour="#f1f5f9"
+          frame="#0f766e"
+          sense={1.5}
+        />
+      ))}
 
       {/* Bay B */}
       {BAY_B_BEDS.map((b) => (

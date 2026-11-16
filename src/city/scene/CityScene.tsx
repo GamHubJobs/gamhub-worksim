@@ -8,6 +8,7 @@
  */
 import { lowDpr } from '../../world/lowDpr'
 import { EngineeringWorks, HospitalBlock, OfficeTower } from './architecture'
+import { Door as BuildingDoor, type DoorProps } from '../../world/doors/Door'
 import { BUILDINGS, COURTHOUSE } from '../worldMap'
 import { useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
@@ -281,7 +282,7 @@ function CityScene(props: CitySceneProps) {
       />
       <Parking.Provider value={parking}>
         <PeopleDetail low={lowPower}>
-          <Street dark={props.dark} />
+          <Street dark={props.dark} cameOutOf={props.outside ? props.at : undefined} />
           <Park />
           <BusinessDistrict dark={props.dark} />
           <Traffic />
@@ -372,7 +373,7 @@ function doorActivities(): Activity[] {
     action: 'court-door',
     prompt: `go into ${COURTHOUSE.name}`,
     spot: { x: cx, z: cz + 1.8, reach: 2.4 },
-    anchor: { x: cx, z: cz + 1.1, heading: 0 },
+    anchor: { x: cx, z: cz - 0.75, heading: 0 },
     stages: [{ clip: 'push-door', seconds: 0.8, label: 'Trying the door' }],
   }
   return [
@@ -391,7 +392,7 @@ function doorActivities(): Activity[] {
               : `go into ${place.name}`,
         // From the door out to about 4 m into the street.
         spot: { x, z: z - side * 1.8, reach: 2.4 },
-        anchor: { x, z: z - side * 1.1, heading: side > 0 ? Math.PI : 0 },
+        anchor: { x, z: z + side * 1.35, heading: side > 0 ? Math.PI : 0 },
         stages: [{ clip: 'push-door', seconds: 0.8, label: `Going in: ${place.name}` }],
         sounds: [{ at: 0.3, id: 'door' }],
       }
@@ -687,7 +688,23 @@ function Label({ text, colour }: { text: string; colour: string }) {
 }
 
 /** The road, pavements, buildings, shop fronts and street lamps. */
-function Street({ dark }: { dark: boolean }) {
+/** Each place's door: glass for the shops and the café, double for the gym, steel for the garage. */
+const DOOR_STYLE: Partial<Record<PlaceId, Partial<DoorProps>>> = {
+  home: { width: 1.2, height: 2.3, colour: '#1e3a8a', frame: '#e7e5e4' },
+  cafe: { width: 1.2, height: 2.3, leaf: 'glass', frame: '#7f1d1d' },
+  shop: { kind: 'automatic', width: 1.6, height: 2.4, leaf: 'glass', frame: '#3f3f46' },
+  gym: { kind: 'double', width: 1.6, height: 2.4, leaf: 'glass', frame: '#1e3a8a' },
+  garage: { width: 1.3, height: 2.4, leaf: 'metal', colour: '#475569', frame: '#334155' },
+  offices: {
+    kind: 'automatic',
+    width: 1.6,
+    height: 2.4,
+    leaf: 'glass',
+    frame: '#0f766e',
+  },
+}
+
+function Street({ dark, cameOutOf }: { dark: boolean; cameOutOf?: PlaceId }) {
   return (
     <group>
       {/* Grass, asphalt, paving slabs and kerbs (streetDressing.tsx) */}
@@ -723,11 +740,31 @@ function Street({ dark }: { dark: boolean }) {
               position={[p.door[0], 3, p.door[1] + side * 1.3]}
               color={p.colour}
             />
+            {/* The way in: a real door (world/doors), open as the player goes in at it,
+                as they come out, and for anyone who walks up to it */}
+            <BuildingDoor
+              position={[p.door[0], 0, p.door[1] + side * 1.98]}
+              rotation={side > 0 ? Math.PI : 0}
+              {...DOOR_STYLE[p.id]}
+              openOn={[`door-${p.id}`]}
+              openAtStart={cameOutOf === p.id ? 1.6 : 0}
+              sense={1.7}
+            />
+            {/* Inside, seen through the doorway (and the glass): the hall, lit in
+                the evening. Between the wall and the door's leaf. */}
             <Box
-              size={[1.6, 2.5, 0.1]}
-              position={[p.door[0], 1.25, p.door[1] + side * 1.98]}
-              color={dark ? '#fde68a' : '#3f3f46'}
-              emissive={dark ? '#f59e0b' : undefined}
+              size={[
+                (DOOR_STYLE[p.id]?.width ?? 0.95) + 0.02,
+                (DOOR_STYLE[p.id]?.height ?? 2.1) + 0.02,
+                0.008,
+              ]}
+              position={[
+                p.door[0],
+                ((DOOR_STYLE[p.id]?.height ?? 2.1) + 0.02) / 2,
+                p.door[1] + side * 1.994,
+              ]}
+              color={dark ? '#fde68a' : '#292524'}
+              emissive={dark ? '#b45309' : undefined}
             />
             {p.id !== 'home' && (
               <Box
@@ -824,8 +861,19 @@ function Courthouse({ dark }: { dark: boolean }) {
           color="#a8a29e"
         />
       ))}
-      {/* Tall doors, shut, with lit windows either side in the evening */}
-      <Box size={[2.2, 3.4, 0.12]} position={[x, 2.45, front + 0.02]} color="#3f2a1d" />
+      {/* Tall double doors, locked when the court is closed (they rattle when
+          tried), with lit windows either side in the evening */}
+      <BuildingDoor
+        position={[x, 0.75, front + 0.04]}
+        kind="double"
+        width={2.2}
+        height={3.4}
+        colour="#3f2a1d"
+        frame={stone}
+        locked
+        sense={0}
+        openOn={['door-court']}
+      />
       {[-4.6, 4.6].map((dx) => (
         <Box
           key={dx}

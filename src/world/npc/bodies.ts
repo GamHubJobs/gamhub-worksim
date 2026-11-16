@@ -33,3 +33,9 @@ export function othersThan(id: string): Box[] {
 export function bodyOf(id: string): { x: number; z: number } | undefined {
   return bodies.get(id)
 }
+
+/** Whether anyone (the player or anyone else) is within `r` of (x, z): for doors. */
+export function anyoneWithin(x: number, z: number, r: number): boolean {
+  for (const b of bodies.values()) if (Math.hypot(b.x - x, b.z - z) < r) return true
+  return false
+}

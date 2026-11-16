@@ -8,6 +8,7 @@ import { useAnchors, type AnchorSpec } from '../../world/anchors'
 import type { SlotId } from '../../content/home'
 import { Desk } from '../../office/scene/furniture'
 import { Box, Plant, Sofa } from '../../office/scene/parts'
+import { TvScreen } from './tvScreen'
 
 function Cylinder({
   r,
@@ -120,11 +121,15 @@ export function FurnitureModel({
             color={colour}
             radius={0.01}
           />
+          {/* The screen: off until someone watches (tvScreen.tsx) */}
+          <TvScreen w={1.04} h={0.58} y={0.82} z={0.031} />
+          {/* The stand's neck and the standby light */}
+          <Box size={[0.12, 0.16, 0.06]} position={[0, 0.52, -0.02]} color="#1f2937" />
           <Box
-            size={[1.04, 0.58, 0.01]}
-            position={[0, 0.82, 0.03]}
-            color="#1e3a8a"
-            emissive="#3b82f6"
+            size={[0.02, 0.01, 0.01]}
+            position={[0.46, 0.53, 0.03]}
+            color="#ef4444"
+            emissive="#ef4444"
           />
         </group>
       )

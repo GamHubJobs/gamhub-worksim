@@ -5,6 +5,7 @@
  * conference room's long table, chairs, water and screen.
  */
 import { SMART } from '../../content/scenarios/looks'
+import { Door } from '../../world/doors/Door'
 import { Box } from './parts'
 import { Sign } from './signs'
 import {
@@ -86,6 +87,29 @@ export function LawWing() {
       >
         CONFERENCE ROOM
       </Sign>
+
+      {/* The doors: into the suite, and into each room (oak, panelled) */}
+      <Door
+        position={[12, 0, (WING_DOOR.z0 + WING_DOOR.z1) / 2]}
+        rotation={-Math.PI / 2}
+        width={WING_DOOR.z1 - WING_DOOR.z0}
+        height={2.2}
+        colour={WOOD}
+        frame="#3f2a1d"
+        sense={1.6}
+      />
+      {Object.values(LAW_DOORS).map((d) => (
+        <Door
+          key={d.z0}
+          position={[LAW_CORRIDOR_WALL, 0, (d.z0 + d.z1) / 2]}
+          rotation={-Math.PI / 2}
+          width={d.z1 - d.z0}
+          height={2.15}
+          colour={WOOD}
+          frame="#3f2a1d"
+          sense={1.5}
+        />
+      ))}
 
       {/* Rolling shelves, full of files and deed boxes */}
       {SHELVES.map((s) => (

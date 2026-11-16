@@ -192,6 +192,55 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-16 · 3D upgrade, round 3: doors, watching TV, home activities played out
+
+- **Found in play:** with the starter furniture (no TV, sofa, bookshelf or
+  wardrobe), "Watch a series", "Read a book" and "Get dressed" had no 3D version.
+  They happened at once while the character stood still. Each now has one:
+  - the series on the phone, sitting on the bed;
+  - the book picked up from beside the bed, then read sitting down;
+  - work clothes picked up by the bed, then put on.
+
+  Every home action the player can choose now has a 3D version, for every home and
+  every set of furniture (checked by listing them).
+
+- **Watching TV** (`home/scene/tvScreen.tsx`):
+  - the set is dark until someone watches it;
+  - once they are sitting, it comes on with a programme that moves (scenes that
+    cut, two people talking, subtitles, the channel's mark), or a racing game for
+    the console;
+  - it lights the room, its sound (voices and a few notes of music) comes from the
+    set, and it clicks off when they get up.
+
+  The old flat glow plane is gone.
+
+- **Doors** (`world/doors/`):
+  - **Kinds:** hinged, double, sliding and automatic.
+  - **States:** closed, opening, open, closing and locked (`doorMotion.ts`, with
+    tests). A door opens for anyone within reach of it (the player and everyone
+    else, from `bodies`), and for the player going in at it. It waits, closes and
+    latches. A locked one stays shut, is solid, and rattles when tried.
+  - **Sound** comes from the door: handle and hinge, latch, sliding track, rattle.
+  - **Where they are:**
+    - every place's street door (glass for the café, automatic for the shop and
+      Harbourside House, double for the gym, steel for the garage). The player
+      now walks up to the door itself, and the door of the place they come out
+      of opens behind them;
+    - the court's tall double doors (locked);
+    - the flat's front door (going out, a run, meeting friends, answering a
+      delivery);
+    - the office's automatic entrance and the manager's glass door;
+    - the hospital wing's double doors and the doors off its corridor;
+    - the law suite's oak doors.
+  - **Behind each street door:** a dark hall (lit in the evening) instead of the wall.
+- **Shared:** `world/playerNow.ts` (what the player is doing, for scenes without a
+  World provider); `__worksimDoors` (development builds) logs what each door did,
+  for `tests/e2e/doors.spec.ts`.
+- **FreeCAD:** evaluated in [docs/FREECAD_EVALUATION.md](docs/FREECAD_EVALUATION.md),
+  including the unofficial WebAssembly port reported in July 2026.
+
+---
+
 ## 2026-11-16 · 3D upgrade, round 2: workplace buildings, the courtroom, IT equipment
 
 - **The end of the street** (\`city/scene/architecture.tsx\`): the three plain boxes

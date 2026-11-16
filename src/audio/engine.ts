@@ -556,11 +556,71 @@ export function createEngine(): AudioEngine | null {
         // A short, friendly "mm-hm": a voice-like hum, not words.
         murmur(to, t, 0.35, 0.12 * v, 1)
         break
+      case 'hinge':
+        // The handle, then the leaf swinging on its hinges (a short creak).
+        tone(to, 1400, t, 0.03, { gain: 0.06 * v, type: 'square', filter: 3000 })
+        tone(to, 210, t + 0.06, 0.45, {
+          gain: 0.035 * v,
+          type: 'sawtooth',
+          glideTo: 300,
+          filter: 900,
+        })
+        hiss(to, t + 0.05, 0.5, {
+          color: 'pink',
+          type: 'lowpass',
+          freq: 500,
+          gain: 0.12 * v,
+        })
+        break
+      case 'latch':
+        // The leaf meeting the frame, and the latch clicking home.
+        hiss(to, t, 0.12, { color: 'brown', type: 'lowpass', freq: 260, gain: 0.45 * v })
+        tone(to, 85, t, 0.1, { gain: 0.14 * v, type: 'sine' })
+        tone(to, 2200, t + 0.05, 0.02, { gain: 0.07 * v, type: 'square', filter: 4000 })
+        break
+      case 'slide':
+        // An automatic door: the motor's hum and the glass running on its track.
+        tone(to, 120, t, 0.8, {
+          gain: 0.04 * v,
+          type: 'sawtooth',
+          glideTo: 150,
+          filter: 400,
+        })
+        hiss(to, t, 0.75, { color: 'pink', freq: 1600, q: 0.7, gain: 0.1 * v })
+        break
+      case 'rattle':
+        // A locked door tried: the handle goes down, the door shakes in its frame.
+        for (let k = 0; k < 3; k++) {
+          hiss(to, t + k * 0.09, 0.05, {
+            color: 'brown',
+            type: 'lowpass',
+            freq: 400,
+            gain: 0.35 * v,
+          })
+          tone(to, 1600, t + k * 0.09, 0.02, {
+            gain: 0.05 * v,
+            type: 'square',
+            filter: 3500,
+          })
+        }
+        break
+      case 'tv':
+        // The programme: someone speaking (a voice-like murmur, not words), and
+        // now and then a few notes of its music, a little boxy, as from a set.
+        murmur(to, t, 1.4, 0.07 * v, 5)
+        if (Math.random() < 0.35)
+          for (let k = 0; k < 3; k++)
+            tone(to, [392, 494, 587][k], t + 0.2 + k * 0.22, 0.2, {
+              gain: 0.03 * v,
+              type: 'triangle',
+              filter: 1800,
+            })
+        break
     }
   }
 
   function effectsBus(id: EffectId): CategoryId {
-    if (id === 'greet') return 'voices'
+    if (id === 'greet' || id === 'tv') return 'voices'
     if (
       [
         'door',
@@ -576,6 +636,10 @@ export function createEngine(): AudioEngine | null {
         'bite',
         'rustle',
         'chair',
+        'hinge',
+        'latch',
+        'slide',
+        'rattle',
       ].includes(id)
     )
       return 'character'
