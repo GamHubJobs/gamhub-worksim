@@ -50,6 +50,7 @@ import { gradeToolTask } from '../tools/grading'
 import { buildStartingContent } from '../game/workbooks'
 import { checkEvents } from '../game/events'
 import { checkAchievements } from '../game/achievements'
+import { checkEngineering } from '../engineering/engine'
 import {
   attemptDef,
   checkAssessments,
@@ -600,7 +601,8 @@ export function useCareer() {
       const profile = await updateProfile(profileId, (latest) => {
         // After the action: promotions and new tasks, Friday's review if it
         // was missed, then any workplace event the new situation causes.
-        const changed = advanceCareer(change(latest), now).profile
+        // The engineering projects' reviews and sites move on with the clock.
+        const changed = checkEngineering(advanceCareer(change(latest), now).profile)
         return {
           ...latest,
           // The story moves on with whatever has just come true.

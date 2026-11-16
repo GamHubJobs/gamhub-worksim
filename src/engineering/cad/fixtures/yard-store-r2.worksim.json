@@ -1,0 +1,100 @@
+{
+  "format": "worksim-freecad",
+  "version": 1,
+  "project": "yard-store",
+  "basedOn": 2,
+  "design": {
+    "format": "worksim-design",
+    "version": 1,
+    "kind": "building",
+    "outline": [
+      [0, 0],
+      [12000, 0],
+      [12000, 8000],
+      [0, 8000]
+    ],
+    "wall": {
+      "thickness": 215,
+      "height": 3600,
+      "material": "blockwork"
+    },
+    "storeys": 1,
+    "openings": [
+      {
+        "id": "D1",
+        "kind": "door",
+        "wall": 0,
+        "storey": 0,
+        "offset": 4000,
+        "width": 3000,
+        "height": 3000,
+        "sill": 0
+      },
+      {
+        "id": "W1",
+        "kind": "window",
+        "wall": 2,
+        "storey": 0,
+        "offset": 6000,
+        "width": 1500,
+        "height": 1050,
+        "sill": 1200
+      },
+      {
+        "id": "W2",
+        "kind": "window",
+        "wall": 2,
+        "storey": 0,
+        "offset": 9500,
+        "width": 1200,
+        "height": 1050,
+        "sill": 1200
+      },
+      {
+        "id": "W3",
+        "kind": "window",
+        "wall": 1,
+        "storey": 0,
+        "offset": 4000,
+        "width": 1200,
+        "height": 1050,
+        "sill": 1200
+      }
+    ],
+    "columns": [],
+    "beam": {
+      "section": "NB-300"
+    },
+    "foundation": {
+      "type": "strip",
+      "width": 600,
+      "depth": 750
+    },
+    "slab": {
+      "thickness": 150
+    },
+    "roof": {
+      "type": "flat",
+      "pitch": 0.0
+    },
+    "services": {
+      "circuits": 2,
+      "sanitary": 0,
+      "hvac": 0
+    }
+  },
+  "model": {
+    "bounds": {
+      "x0": -307.5,
+      "y0": -307.5,
+      "z0": -750.0,
+      "x1": 12307.5,
+      "y1": 8307.5,
+      "z1": 3850.0
+    },
+    "objects": ["Footing1", "Footing2", "Footing3", "Footing4", "Walls", "Slab", "Roof"],
+    "volume": 89446064999.99998,
+    "invalid": []
+  },
+  "freecad": "1.1.4"
+}

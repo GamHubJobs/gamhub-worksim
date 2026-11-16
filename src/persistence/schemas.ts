@@ -14,6 +14,7 @@ import { CommsStateSchema } from '../tools/comms/schema'
 import { SocStateSchema } from '../tools/soc/schema'
 import { ItopsStateSchema } from '../tools/itops/schema'
 import { NetworkStateSchema } from '../tools/network/schema'
+import { EngineeringWorkSchema } from '../engineering/state'
 import { isId } from '../lib/ids'
 
 // ---------------------------------------------------------------------------
@@ -1476,6 +1477,12 @@ export const WorkStateSchema = z.object({
     )
     .max(50)
     .default([]),
+  /**
+   * The Engineer career's projects: designs, revisions, the construction
+   * site, issues and inspections (see src/engineering). Optional: other
+   * careers and older saves have none.
+   */
+  engineering: EngineeringWorkSchema.optional(),
   /** Knowledge Base articles the player bookmarked (article IDs). */
   kbBookmarks: z.array(z.string().max(60)).max(100).default([]),
   /**

@@ -10,7 +10,7 @@
  * there is always a way to do the work.
  */
 
-export type CraftId = 'gridcraft' | 'wordcraft' | 'deckcraft'
+export type CraftId = 'gridcraft' | 'wordcraft' | 'deckcraft' | 'cadcraft'
 
 export interface CraftInfo {
   id: CraftId
@@ -40,6 +40,12 @@ export const CRAFTS: Record<CraftId, CraftInfo> = {
     title: 'Deck Craft',
     kind: 'presentations',
     basedOn: 'DeckCraft by the ArtCraft team',
+  },
+  cadcraft: {
+    id: 'cadcraft',
+    title: 'CAD Craft',
+    kind: 'drafting (CAD)',
+    basedOn: 'CADCraft by the ArtCraft team',
   },
 }
 
