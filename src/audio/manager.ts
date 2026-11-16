@@ -10,7 +10,7 @@
  * without sound.
  */
 import { prefersReducedMotion } from '../ui/motion'
-import { spatial } from './listener'
+import { listenerNow, spatial } from './listener'
 import { sceneKey, type Scene } from './scenes'
 import {
   levelOf,
@@ -386,5 +386,9 @@ export function installAudio(target: Window = window): void {
     else audio.resume()
   })
   if (import.meta.env.DEV)
-    (window as unknown as { __worksimAudio: AudioManager }).__worksimAudio = audio
+    Object.assign(window, {
+      __worksimAudio: audio,
+      // Where sounds are heard from (the camera), for browser tests of the output.
+      __worksimListener: listenerNow,
+    })
 }

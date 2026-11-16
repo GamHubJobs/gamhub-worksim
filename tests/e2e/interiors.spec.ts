@@ -106,8 +106,9 @@ test('every place has its own interior, and the sound to go with it', async ({
     await expect
       .poll(() => scene(page), { timeout: 15_000 })
       .toMatch(new RegExp(`^${place}:`))
+    // (Walked out through the front door: a few seconds.)
     await city(page).getByRole('button', { name: 'Back out to the street' }).click()
-    await expect(view).not.toHaveAttribute('data-interior', place)
+    await expect(view).not.toHaveAttribute('data-interior', place, { timeout: 30_000 })
   }
 })
 

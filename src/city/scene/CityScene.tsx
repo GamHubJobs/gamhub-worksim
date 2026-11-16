@@ -261,7 +261,11 @@ function CityScene(props: CitySceneProps) {
       dpr={lowPower ? lowDpr() : [1, 1.5]}
       frameloop="demand"
       camera={{ position: [-40, 6, 14], fov: 50, near: 0.1, far: 140 }}
-      gl={{ antialias: !lowPower, powerPreference: 'default' }}
+      gl={{
+        antialias: !lowPower,
+        powerPreference: 'default',
+        preserveDrawingBuffer: true,
+      }}
       shadows={!lowPower}
       onCreated={({ gl }) => setLowPower(isSoftware(gl))}
     >
@@ -394,11 +398,37 @@ function doorActivities(): Activity[] {
         spot: { x, z: z - side * 1.8, reach: 2.4 },
         // Up to the door, at the pavement's edge (the door opens as they get there).
         anchor: { x, z: side * (BOUNDS.maxZ - 0.35), heading: side > 0 ? Math.PI : 0 },
-        stages: [{ clip: 'push-door', seconds: 0.8, label: `Going in: ${place.name}` }],
+        stages: [
+          { clip: 'push-door', seconds: 0.8, label: `Going in: ${place.name}` },
+          // Through the open door, into the building (no jump: see InteriorScene's arrive).
+          ...(WALK_IN.has(place.id)
+            ? [
+                {
+                  clip: 'stand' as const,
+                  seconds: 0.1,
+                  label: `Going in: ${place.name}`,
+                  at: { x, z: side * INSIDE_DOOR, heading: side > 0 ? Math.PI : 0 },
+                  through: true,
+                },
+              ]
+            : []),
+        ],
         sounds: [{ at: 0.3, id: 'door' }],
       }
     }),
   ]
+}
+
+/** The places whose street door is walked through (they have a door: DOOR_STYLE). */
+const WALK_IN = new Set<PlaceId>(['home', 'cafe', 'shop', 'gym', 'garage', 'offices'])
+/** How far from the road's middle the player is once through the door (the face is at 10). */
+const INSIDE_DOOR = 10.7
+
+/** Coming out of a place with a street door: in its doorway, facing the street. */
+function outOfDoor(at: PlaceId): { x: number; z: number; heading: number } | undefined {
+  if (!WALK_IN.has(at)) return undefined
+  const [x, z] = PLACES.find((p) => p.id === at)!.door
+  return { x, z: Math.sign(z) * INSIDE_DOOR, heading: facingStreet(at) }
 }
 
 const DOORS = doorActivities()
@@ -569,6 +599,7 @@ function StreetPlayer(props: CitySceneProps & { low: boolean; taxiAt: number }) 
   return (
     <PlayerRig
       start={{ x: start[0], z: start[1], heading: facingStreet(props.at) }}
+      arrive={outOfDoor(props.at)}
       boxes={STREET_BOXES}
       activities={props.taxi === 'waiting' ? [...DOORS, taxiDoor(props.taxiAt)] : DOORS}
       blocked={(a) =>
@@ -752,21 +783,28 @@ function Street({ dark, cameOutOf }: { dark: boolean; cameOutOf?: PlaceId }) {
               sense={1.7}
             />
             {/* Inside, seen through the doorway (and the glass): the hall, lit in
-                the evening. Between the wall and the door's leaf. */}
-            <Box
-              size={[
-                (DOOR_STYLE[p.id]?.width ?? 0.95) + 0.02,
-                (DOOR_STYLE[p.id]?.height ?? 2.1) + 0.02,
-                0.008,
-              ]}
+                the evening. One-sided, facing the street: from inside (the camera
+                behind someone coming out) it is not there, and the street shows. */}
+            <mesh
               position={[
                 p.door[0],
                 ((DOOR_STYLE[p.id]?.height ?? 2.1) + 0.02) / 2,
                 p.door[1] + side * 1.994,
               ]}
-              color={dark ? '#fde68a' : '#292524'}
-              emissive={dark ? '#b45309' : undefined}
-            />
+              rotation={[0, side > 0 ? Math.PI : 0, 0]}
+            >
+              <planeGeometry
+                args={[
+                  (DOOR_STYLE[p.id]?.width ?? 0.95) + 0.02,
+                  (DOOR_STYLE[p.id]?.height ?? 2.1) + 0.02,
+                ]}
+              />
+              <meshStandardMaterial
+                color={dark ? '#fde68a' : '#292524'}
+                emissive={dark ? '#b45309' : '#000000'}
+                emissiveIntensity={dark ? 0.9 : 0}
+              />
+            </mesh>
             {p.id !== 'home' && (
               <Box
                 size={[3.4, 1.6, 0.08]}

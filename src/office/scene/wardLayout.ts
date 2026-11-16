@@ -20,11 +20,16 @@ export const WARD_BEDS: Array<{
 ]
 export const BED_X = 10.55
 export const MED_TROLLEY = { x: 6.4, z: 5.2 }
+/** At the far end of the bay: the resuscitation trolley and the vital signs monitor. */
+export const RESUS = { x: 5.9, z: 8.75 }
+export const VITALS = { x: 6.85, z: 8.8 }
 
 /** What the player cannot walk through on the ward (the beds and the trolley). */
 export const WARD_BOXES: Solid[] = [
   ...WARD_BEDS.map((b) => ({ x: BED_X, z: b.z, hx: 1.05, hz: 0.5, top: 0.75 })),
   { x: MED_TROLLEY.x, z: MED_TROLLEY.z, hx: 0.4, hz: 0.28, top: 1.0 },
+  { x: RESUS.x, z: RESUS.z, hx: 0.42, hz: 0.28, top: 1.3 },
+  { x: VITALS.x, z: VITALS.z, hx: 0.18, hz: 0.18, top: 1.45 },
 ]
 
 /** At the bedside: opens Ward Systems (the patient record) there. */

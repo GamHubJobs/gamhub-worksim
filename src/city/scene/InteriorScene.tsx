@@ -31,6 +31,7 @@ import { GYM_ACTIVITIES, GYM_BOXES, GYM_SIZE, GYM_START } from './interiors/gymL
 import { Interior, PLAYER, type Doing, type InteriorState } from './interiors/kit'
 import { CAFE, GARAGE, PARK, SHOP, type Layout } from './interiors/layouts'
 import { OFFICES } from './interiors/officesLayout'
+import { arriveAt, leaveActivity } from './interiors/entrance'
 
 const STILL = prefersReducedMotion()
 
@@ -133,8 +134,12 @@ function InteriorScene(props: InteriorSceneProps) {
   )
   // Only what can be done here now (at this time of day, with what the player owns).
   const activities = useMemo(
-    () => layout.activities.filter((a) => a.action === null || byAction[a.action]),
-    [layout, byAction],
+    () => [
+      ...layout.activities.filter((a) => a.action === null || byAction[a.action]),
+      // Out through the front door (not the park: it has no front door).
+      ...(outdoors ? [] : [leaveActivity(layout.size.depth)]),
+    ],
+    [layout, byAction, outdoors],
   )
   const state: InteriorState = useMemo(
     () => ({
@@ -180,7 +185,7 @@ function InteriorScene(props: InteriorSceneProps) {
         near: 0.05,
         far: 120,
       }}
-      gl={{ antialias: !low, powerPreference: 'default' }}
+      gl={{ antialias: !low, powerPreference: 'default', preserveDrawingBuffer: true }}
       shadows={!low}
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
     >
@@ -210,6 +215,7 @@ function InteriorScene(props: InteriorSceneProps) {
             </Suspense>
             <PlayerRig
               start={layout.start}
+              arrive={outdoors ? undefined : arriveAt(layout.size.depth)}
               boxes={layout.boxes}
               ceiling={outdoors ? undefined : layout.size.height}
               activities={activities}

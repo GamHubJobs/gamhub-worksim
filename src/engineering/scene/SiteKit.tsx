@@ -8,7 +8,7 @@
  */
 import { useFrame } from '@react-three/fiber'
 import { useRef, type ReactNode } from 'react'
-import type { Group } from 'three'
+import type { Group, Mesh } from 'three'
 import { Sign } from '../../office/scene/signs'
 import { prefersReducedMotion } from '../../ui/motion'
 
@@ -71,6 +71,9 @@ export function Excavator({
   const slew = useRef<Group>(null)
   const boom = useRef<Group>(null)
   const arm = useRef<Group>(null)
+  const bucket = useRef<Group>(null)
+  const rod = useRef<Mesh>(null)
+  const soil = useRef<Mesh>(null)
   const t = useRef(0)
   useFrame((_, dt) => {
     if (!working || STILL) return
@@ -83,6 +86,20 @@ export function Excavator({
         cycle > 0.4 && cycle < 0.9 ? Math.sin(((cycle - 0.4) / 0.5) * Math.PI) * 1.4 : 0
     if (boom.current) boom.current.rotation.z = -0.35 + dig * 0.3
     if (arm.current) arm.current.rotation.z = 0.9 + Math.cos(cycle * Math.PI * 2) * 0.5
+    // The bucket: open to dig, curled shut to carry the soil to the heap, open
+    // again to dump it. Its ram's rod runs out and back with it.
+    const curl =
+      cycle < 0.25
+        ? cycle / 0.25
+        : cycle < 0.7
+          ? 1
+          : cycle < 0.8
+            ? 1 - (cycle - 0.7) / 0.1
+            : 0
+    if (bucket.current) bucket.current.rotation.z = 0.4 - curl * 1.3
+    if (rod.current) rod.current.position.x = 1.0 + curl * 0.18
+    // Full of soil from the dig until it is dumped.
+    if (soil.current) soil.current.visible = cycle > 0.12 && cycle < 0.75
   })
   return (
     <group position={[x, 0, z]} rotation={[0, heading, 0]}>
@@ -163,21 +180,28 @@ export function Excavator({
               <cylinderGeometry args={[0.055, 0.055, 0.8, 10]} />
               <meshStandardMaterial color="#3f3f46" metalness={0.4} />
             </mesh>
-            <mesh position={[1.05, 0.22, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh ref={rod} position={[1.05, 0.22, 0]} rotation={[0, 0, Math.PI / 2]}>
               <cylinderGeometry args={[0.03, 0.03, 0.5, 8]} />
               <meshStandardMaterial color="#e5e7eb" metalness={0.9} roughness={0.15} />
             </mesh>
-            {/* The bucket, with its teeth */}
-            <B size={[0.55, 0.45, 0.6]} at={[1.95, -0.15, 0]} color="#3f3f46" />
-            {[-0.2, 0, 0.2].map((tz) => (
-              <B
-                key={tz}
-                size={[0.12, 0.08, 0.08]}
-                at={[2.25, -0.38, tz]}
-                color="#d4d4d8"
-                metal={0.6}
-              />
-            ))}
+            {/* The bucket on its pin at the end of the arm, with its teeth and,
+                while it carries some, the soil */}
+            <group ref={bucket} position={[1.85, 0, 0]}>
+              <B size={[0.55, 0.45, 0.6]} at={[0.1, -0.15, 0]} color="#3f3f46" />
+              {[-0.2, 0, 0.2].map((tz) => (
+                <B
+                  key={tz}
+                  size={[0.12, 0.08, 0.08]}
+                  at={[0.4, -0.38, tz]}
+                  color="#d4d4d8"
+                  metal={0.6}
+                />
+              ))}
+              <mesh ref={soil} position={[0.12, 0.08, 0]} visible={false}>
+                <sphereGeometry args={[0.28, 10, 8]} />
+                <meshStandardMaterial color="#6b4f2a" roughness={1} />
+              </mesh>
+            </group>
           </group>
         </group>
       </group>

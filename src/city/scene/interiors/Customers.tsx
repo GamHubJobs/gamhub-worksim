@@ -15,7 +15,9 @@ import type { PersonLook } from '../../../office/scene/people'
 import { Crowd } from '../../../world/npc/Crowd'
 import type { Person } from '../../../world/npc/schedule'
 import { CAFE_PLACES, SHOP_PLACES } from './customerPlaces'
+import { ENTRANCE } from './entrance'
 import { useInterior } from './kit'
+import { CAFE, SHOP } from './layouts'
 
 type Room = 'cafe' | 'shop'
 
@@ -117,10 +119,14 @@ const CAST: Record<Room, { people: Person[]; who: Who[]; looks: PersonLook[] }> 
   },
 }
 
-/** Where the customers come in and leave, just inside the front door. */
+/**
+ * Where the customers come in from and go out to: on the pavement just outside
+ * the front door (see entrance.ts), so they walk through the doorway (the door
+ * opens for them) rather than appearing inside it.
+ */
 const DOORS: Record<Room, { x: number; z: number }> = {
-  cafe: { x: 1.2, z: 4.05 },
-  shop: { x: 0.6, z: 4.55 },
+  cafe: { x: ENTRANCE.x, z: CAFE.size.depth / 2 + 0.6 },
+  shop: { x: ENTRANCE.x, z: SHOP.size.depth / 2 + 0.6 },
 }
 
 export function Customers({ room }: { room: Room }) {

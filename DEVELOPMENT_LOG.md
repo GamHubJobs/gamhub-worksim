@@ -192,6 +192,70 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-16 · 3D upgrade, round 3 completion: walking in and out, doors in use, sound measured
+
+- **Going in and out is walked, not a jump** (the café, shop, gym, garage,
+  Harbourside House, the flat's building, and arriving at the office):
+  - in the street, the player walks up to the door, it opens, and they walk on
+    through it into the doorway (a `through` stage, `world/interaction/activity.ts`);
+  - inside, they appear in the same doorway and walk on in, the way they were
+    going, the camera behind (`arrive` on PlayerRig; `city/scene/interiors/entrance.ts`);
+  - every room's front door is now a real door (glass, open as they come in),
+    with the building's front and the pavement outside it;
+  - going out is the same in reverse ("Back out to the street" walks them out),
+    and the street starts in the doorway they came out of, so they step out onto
+    the pavement;
+  - while the next place loads, the last picture of the doorway stays on screen
+    (`world/transition`) instead of a blank "loading" moment;
+  - at work, the player comes in through the office's automatic doors.
+
+  Each place is still its own scene, loaded behind the doorway. A single
+  continuous world for every interior was not feasible in this architecture.
+  The movement is continuous: positions are sampled in `tests/e2e/walk-through.spec.ts`.
+
+- **Fixed while doing it:**
+  - a long first frame (a scene just loaded) made an activity whose next stage
+    has its own spot end at once, so it was never walked;
+  - "walk to" requests were asked again of each newly mounted view, so going out
+    went straight back in;
+  - development builds mount effects twice, which ended the walk in. It now
+    starts from an effect;
+  - the position hook for tests was not updated while walking between an
+    activity's spots.
+- **Doors used by others:** café and shop customers now come in from the
+  pavement and leave to it, through the door, which opens for them and shuts
+  behind them (`tests/e2e/doors-people.spec.ts`, with the player across the room).
+- **Sound, measured at the speakers** (`tests/e2e/audio-output.spec.ts`: the
+  output is tapped and its left and right levels sampled):
+  - a sound 5 m to the right of the camera measured R 0.0085 against L 0.0023,
+    and to its left L 0.0085 against R 0.0023;
+  - 2 m ahead 0.0124, and 25 m ahead 0.0019;
+  - a door's hinge and latch near the player are heard (0.004, 0.003);
+  - the café's door, opened in play, is played from the door's own position.
+
+  On this computer the output drops to silence while the 3D street is drawn
+  during a walk (software rendering starves the audio thread), so levels are
+  measured with the player standing. No one listened: the signal was measured.
+
+- **The ward:**
+  - at each bed's head, the services panel (oxygen and flowmeter, suction and
+    canister, nurse call, light);
+  - curtain tracks with their curtains between the beds;
+  - a resuscitation trolley with its defibrillator, and a vital signs monitor
+    on its stand, at the end of the bay (both solid);
+  - the sharps bin and glove dispenser by the entrance (`office/scene/clinicalKit.tsx`).
+
+  Seen at High.
+
+- **The excavator:** its bucket now curls on its pin (open to dig, shut to carry,
+  open to dump), carries soil from the dig to the heap, and its ram's rod runs
+  out and back with it. Only while the crew is working the excavation. Seen at
+  High from the site overview.
+- **Characters:** the free Quaternius models were evaluated and not adopted:
+  [docs/CHARACTER_ASSETS_EVALUATION.md](docs/CHARACTER_ASSETS_EVALUATION.md).
+
+---
+
 ## 2026-11-16 · 3D upgrade, round 3: doors, watching TV, home activities played out
 
 - **Found in play:** with the starter furniture (no TV, sofa, bookshelf or

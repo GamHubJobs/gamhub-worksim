@@ -632,6 +632,8 @@ function OfficeWalker({
   return (
     <PlayerRig
       start={start}
+      // Arriving at reception: in through the automatic doors (they part for them).
+      arrive={spot === 'reception' ? ENTRANCE_IN : undefined}
       boxes={floorBoxes()}
       activities={activities}
       blocked={(a) => walk.blocked?.(a.action) ?? null}
@@ -1503,6 +1505,9 @@ function JobMarker({ position }: { position: Vector }) {
     </group>
   )
 }
+
+/** Just inside the office's entrance doors, facing in (+x), as the player arrives. */
+const ENTRANCE_IN = { x: -11.4, z: 7.4, heading: -Math.PI / 2 }
 
 function ManagerOffice() {
   return (

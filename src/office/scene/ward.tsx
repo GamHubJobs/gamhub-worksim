@@ -7,7 +7,14 @@
 import { Html } from '@react-three/drei'
 import { Box } from './parts'
 import { Bed } from './wardBed'
-import { MED_TROLLEY, WARD_BEDS } from './wardLayout'
+import { MED_TROLLEY, RESUS, VITALS, WARD_BEDS } from './wardLayout'
+import {
+  BedHeadServices,
+  CurtainTrack,
+  ResusTrolley,
+  SharpsAndGloves,
+  VitalsStand,
+} from './clinicalKit'
 
 /** The bay, the medicines trolley, hand gel and the ward's signs. */
 export function WardBay() {
@@ -18,6 +25,17 @@ export function WardBay() {
       {WARD_BEDS.map((b) => (
         <Bed key={b.id} {...b} />
       ))}
+      {/* At each bed's head: oxygen, suction, the nurse call and the light; and
+          the curtain tracks between the beds (clinicalKit.tsx) */}
+      {WARD_BEDS.map((b) => (
+        <BedHeadServices key={b.id} x={11.88} z={b.z} />
+      ))}
+      {WARD_BEDS.slice(1).map((b, i) => (
+        <CurtainTrack key={b.id} x0={9.3} x1={11.9} z={(b.z + WARD_BEDS[i].z) / 2} />
+      ))}
+      <ResusTrolley x={RESUS.x} z={RESUS.z} />
+      <VitalsStand x={VITALS.x} z={VITALS.z} />
+      <SharpsAndGloves x={8.2} z={-0.86} />
       {/* Medicines trolley: locked drawers on wheels */}
       <group position={[MED_TROLLEY.x, 0, MED_TROLLEY.z]}>
         <Box

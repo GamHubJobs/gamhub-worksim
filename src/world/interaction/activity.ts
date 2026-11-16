@@ -69,6 +69,11 @@ export interface Stage {
   at?: { x: number; z: number; heading: number; y?: number }
   /** Run there rather than walk (a lap of the park). */
   run?: boolean
+  /**
+   * Walk there through what is in the way: through an open doorway, into or out
+   * of a building (the door is open; the wall around it is not walked into).
+   */
+  through?: boolean
 }
 
 export interface Activity {

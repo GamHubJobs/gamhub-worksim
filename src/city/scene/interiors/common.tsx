@@ -12,6 +12,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Vector3, type Group } from 'three'
 import type { Vector } from '../../../content/office'
 import { Box } from '../../../office/scene/parts'
+import { Door } from '../../../world/doors/Door'
+import { ENTRANCE } from './entrance'
 import { useInterior, usePainted, type Painting } from './kit'
 
 // ---------------------------------------------------------------------------
@@ -264,6 +266,9 @@ export function Room({
   )
 }
 
+/** Where the front door is, along the street side of every room (see entrance.ts). */
+const ENTRANCE_X = ENTRANCE.x
+
 /** The street side of a room: a doorway near the middle, a window either side. */
 function FrontWall({
   width,
@@ -276,6 +281,7 @@ function FrontWall({
   height: number
   colour: string
 }) {
+  const { dark } = useInterior()
   const z = depth / 2
   const door = 1.3
   // Wall either side of the doorway, and above it.
@@ -295,7 +301,7 @@ function FrontWall({
       />
       <Box
         size={[door, height - 2.3, 0.2]}
-        position={[1.25, 2.3 + (height - 2.3) / 2, z]}
+        position={[ENTRANCE_X, 2.3 + (height - 2.3) / 2, z]}
         color={colour}
       />
       <Window
@@ -308,10 +314,63 @@ function FrontWall({
         position={[width / 2 - 1.4, 1.6, z - 0.12]}
         rotation={Math.PI}
       />
-      {/* The door, open onto the street */}
-      <mesh position={[1.25, 1.15, z + 0.05]}>
-        <planeGeometry args={[door, 2.3]} />
-        <meshBasicMaterial color="#94a3b8" toneMapped={false} />
+      {/* The front door (world/doors): open as the player comes in, and again as they
+          go out (or anyone else does); the street beyond it, seen through the doorway */}
+      <Door
+        position={[ENTRANCE_X, 0, z]}
+        width={door}
+        height={2.3}
+        leaf="glass"
+        frame="#57534e"
+        sense={1.4}
+        openOn={['leave']}
+        openAtStart={2.4}
+      />
+      {/* Outside: the building's front and the pavement, seen as the player comes
+          in from the street (the camera is still behind them, out there) */}
+      <Outside width={width} height={height} z={z} dark={dark} />
+      {/* (Facing in: seen through the doorway from inside, not from out there) */}
+      <mesh position={[ENTRANCE_X, 1.4, z + 0.9]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[door + 1.2, 2.8]} />
+        <meshBasicMaterial color={dark ? '#1e293b' : '#cbd5e1'} toneMapped={false} />
+      </mesh>
+    </group>
+  )
+}
+
+/** The street side of the front wall, from outside: its face either side of the door, and the pavement. */
+function Outside({
+  width,
+  height,
+  z,
+  dark,
+}: {
+  width: number
+  height: number
+  z: number
+  dark: boolean
+}) {
+  const face = dark ? '#57534e' : '#c8b8a2'
+  const half = 0.65
+  const left = ENTRANCE_X - half + width / 2
+  const right = width / 2 - (ENTRANCE_X + half)
+  return (
+    <group>
+      <mesh position={[-width / 2 + left / 2, height / 2, z + 0.11]}>
+        <planeGeometry args={[left, height]} />
+        <meshBasicMaterial color={face} />
+      </mesh>
+      <mesh position={[width / 2 - right / 2, height / 2, z + 0.11]}>
+        <planeGeometry args={[right, height]} />
+        <meshBasicMaterial color={face} />
+      </mesh>
+      <mesh position={[ENTRANCE_X, 2.3 + (height - 2.3) / 2, z + 0.11]}>
+        <planeGeometry args={[half * 2, height - 2.3]} />
+        <meshBasicMaterial color={face} />
+      </mesh>
+      <mesh position={[0, 0.004, z + 2.2]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[width + 4, 4.2]} />
+        <meshBasicMaterial color={dark ? '#44403c' : '#b5aea4'} />
       </mesh>
     </group>
   )

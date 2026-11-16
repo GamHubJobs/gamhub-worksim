@@ -22,6 +22,8 @@ import { supportsWebGL } from '../office/webgl'
 import { HomeShop } from './HomeShop'
 import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { CommuteChoices } from './CommuteChoices'
+import { captureStill } from '../world/transition/capture'
+import { Still } from '../world/transition/Still'
 import { openPhone } from '../phone/store'
 import { CareerPanel } from './CareerPanel'
 import { WalkView } from '../world/WalkView'
@@ -188,7 +190,11 @@ export function HomeView({
         return
       }
       if (id === 'bed') return onBed()
-      if (id === 'go-out') return onGoOutside()
+      if (id === 'go-out') {
+        // Out of the front door: its doorway stays on screen until the street is drawn.
+        captureStill()
+        return onGoOutside()
+      }
       onAction(id)
     },
     [onAction, onBed, onGoOutside, here],
@@ -258,39 +264,42 @@ export function HomeView({
       label="Your home in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to. Everything here is also in the lists below."
     >
       {(api) => (
-        <SceneBoundary onFail={() => setSceneFailed(true)}>
-          <Suspense
-            fallback={
-              <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                Opening the door…
-              </div>
-            }
-          >
-            <HomeScene
-              homeId={life.home.id}
-              furniture={JSON.stringify(life.home.furniture)}
-              phase={phase === 'morning' ? 'morning' : 'evening'}
-              dressed={phase === 'morning' && life.ready.dressed}
-              delivery={deliveryStage(life)}
-              repair={repairStage(life)}
-              parcel={parcel}
-              partner={evening?.id ?? here?.id ?? null}
-              kids={life.family.children.flatMap((c, i) =>
-                homeNow(c, day, life.minute)
-                  ? [{ i, name: c.name, age: ageOf(c, day) }]
-                  : [],
-              )}
-              doings={stableDoings}
-              controls={api.controls}
-              request={request}
-              onRequest={doThing}
-              onPrompt={api.onPrompt}
-              onProgress={api.onProgress}
-              onDone={onActivityDone}
-              onReady={() => setReady(true)}
-            />
-          </Suspense>
-        </SceneBoundary>
+        <>
+          <Still ready={ready} />
+          <SceneBoundary onFail={() => setSceneFailed(true)}>
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                  Opening the door…
+                </div>
+              }
+            >
+              <HomeScene
+                homeId={life.home.id}
+                furniture={JSON.stringify(life.home.furniture)}
+                phase={phase === 'morning' ? 'morning' : 'evening'}
+                dressed={phase === 'morning' && life.ready.dressed}
+                delivery={deliveryStage(life)}
+                repair={repairStage(life)}
+                parcel={parcel}
+                partner={evening?.id ?? here?.id ?? null}
+                kids={life.family.children.flatMap((c, i) =>
+                  homeNow(c, day, life.minute)
+                    ? [{ i, name: c.name, age: ageOf(c, day) }]
+                    : [],
+                )}
+                doings={stableDoings}
+                controls={api.controls}
+                request={request}
+                onRequest={doThing}
+                onPrompt={api.onPrompt}
+                onProgress={api.onProgress}
+                onDone={onActivityDone}
+                onReady={() => setReady(true)}
+              />
+            </Suspense>
+          </SceneBoundary>
+        </>
       )}
     </WalkView>
   )

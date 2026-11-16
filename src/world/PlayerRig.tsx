@@ -137,6 +137,12 @@ export interface PlayerRigProps {
   /** Where the camera looks from, when the player first comes in. */
   startOrbit?: Partial<Orbit>
   /**
+   * Coming in through a doorway: the player appears at `from` (in the doorway,
+   * where they were in the place they came from) and walks on to `start`, so
+   * there is no jump. The camera follows from behind, facing the way they walk.
+   */
+  arrive?: { x: number; z: number; heading: number }
+  /**
    * A fixed camera for a scene played in this place (a hearing, a ward round):
    * where it is and what it looks at, instead of following the player.
    */
@@ -194,6 +200,26 @@ function speedUp(): number {
   const kept = Number(window.sessionStorage?.getItem('worksim.testSpeed'))
   const v = typeof set === 'number' ? set : kept
   return v > 0 ? v : 1
+}
+
+/** Walking in from a doorway to where the player starts (`arrive`). */
+function arrival(
+  from: { x: number; z: number; heading: number },
+  to: { x: number; z: number; heading: number },
+): Activity {
+  return {
+    id: 'arrive',
+    action: null,
+    prompt: 'walk in',
+    spot: { x: from.x, z: from.z, reach: -1 },
+    anchor: from,
+    view: 'behind',
+    // (A stage's own spot is walked to from the second stage on.)
+    stages: [
+      { clip: 'stand', seconds: 0.01, label: 'Through the door' },
+      { clip: 'stand', seconds: 0.05, label: 'Through the door', at: to, through: true },
+    ],
+  }
 }
 
 /** When a stage starts, in seconds from the start of the activity. */
@@ -288,7 +314,8 @@ export function PlayerRig(props: PlayerRigProps) {
   const group = useRef<Group>(null)
   const motion = useRef<Motion>({ walking: false })
   const rig = useRef<RigFrame | null>(null)
-  const state = useRef<Body>(makeBody(props.start.x, props.start.z, props.start.heading))
+  const first = props.arrive ?? props.start
+  const state = useRef<Body>(makeBody(first.x, first.z, first.heading))
   const orbit = useRef<Orbit>(
     clampOrbit({
       yaw: props.start.heading,
@@ -297,7 +324,18 @@ export function PlayerRig(props: PlayerRigProps) {
       ...props.startOrbit,
     }),
   )
-  const mode = useRef<Mode>({ kind: 'free' })
+  const fresh = useRef(0)
+  const mode = useRef<Mode>(
+    props.arrive
+      ? {
+          kind: 'acting',
+          activity: arrival(props.arrive, props.start),
+          t: 0,
+          placed: 0,
+          at: props.arrive,
+        }
+      : { kind: 'free' },
+  )
   const ride = useRef<Ride>(props.vehicles?.riding ?? null)
   const car = useRef<CarState>({ x: 0, z: 0, heading: 0, speed: 0 })
   const pedal = useRef(0)
@@ -414,7 +452,8 @@ export function PlayerRig(props: PlayerRigProps) {
       exit.current = nearestFree(grid(), s)
     // Walked off before saying hello: they go back to their day.
     if (!completed && m.activity.id.startsWith('person:')) release()
-    latest.current.onDone(m.activity, completed)
+    // Walking in from the doorway is not something the game hears about.
+    if (m.activity.id !== 'arrive') latest.current.onDone(m.activity, completed)
   }
 
   // A request from the list: walk there and do it.
@@ -517,11 +556,26 @@ export function PlayerRig(props: PlayerRigProps) {
       if (mode.current.kind !== 'free') {
         const m = mode.current
         mode.current = { kind: 'free' }
-        latest.current.onDone(m.activity, false)
+        if (m.activity.id !== 'arrive') latest.current.onDone(m.activity, false)
       }
     },
     [],
   )
+  // Coming in through a doorway: walking on in (started here, so that it also
+  // survives development builds mounting everything twice).
+  useEffect(() => {
+    const from = latest.current.arrive
+    // (Not over something already asked for: walking straight off somewhere.)
+    if (!from || mode.current.kind !== 'free') return
+    mode.current = {
+      kind: 'acting',
+      activity: arrival(from, latest.current.start),
+      t: 0,
+      placed: 0,
+      at: from,
+    }
+    invalidate()
+  }, [invalidate])
 
   useFrame((_, raw) => {
     // Real time (up to a second, if the computer draws slowly), moved in
@@ -530,7 +584,10 @@ export function PlayerRig(props: PlayerRigProps) {
       const w = window as unknown as { __worksimFrames?: number }
       w.__worksimFrames = (w.__worksimFrames ?? 0) + 1
     }
-    const dt = Math.min(raw, 1)
+    // The first frames after the place appears include its loading time: not
+    // walked through all at once (someone coming in through a doorway would jump).
+    fresh.current++
+    const dt = Math.min(raw, fresh.current <= 4 ? 0.05 : 1)
     // What is solid: read soon after the place appears, then every few seconds
     // (furniture bought, the car parked somewhere else).
     scanAt.current -= raw
@@ -779,7 +836,10 @@ export function PlayerRig(props: PlayerRigProps) {
         if (next && m.placed < current.index) {
           // Walk (carrying what is held) to where this stage happens; the clock waits.
           rig.current = null
-          const { to, ghost } = waypoint(next.x, next.z, s, dt)
+          // Through a doorway: straight there (the door is open, the way is clear).
+          const { to, ghost } = current.stage.through
+            ? { to: { x: next.x, z: next.z }, ghost: true }
+            : waypoint(next.x, next.z, s, dt)
           let r = { body: s, arrived: false }
           for (let k = 0; k < steps && !r.arrived; k++)
             r = walkTo(
@@ -789,7 +849,7 @@ export function PlayerRig(props: PlayerRigProps) {
               sub,
               boxes,
               (current.stage.run ? 3.6 : 1.9) * speedUp(),
-              ghost,
+              ghost || !!current.stage.through,
             )
           s = r.body
           footsteps(s, dt)
@@ -807,6 +867,12 @@ export function PlayerRig(props: PlayerRigProps) {
           // running alongside), while walking or running between an activity's spots.
           setBody('player', s.x, s.z, 0.3)
           now.current = { ...now.current, x: s.x, z: s.z }
+          // (Development builds: where the player is, for tests, while walking
+          // between an activity's spots too: through a doorway, say.)
+          if (import.meta.env.DEV) {
+            const w = window as unknown as { __worksimPlayer?: Record<string, unknown> }
+            w.__worksimPlayer = { ...w.__worksimPlayer, x: s.x, z: s.z, mode: m.kind }
+          }
           if (group.current) {
             group.current.position.set(s.x, 0, s.z)
             group.current.rotation.y = s.heading
@@ -818,9 +884,13 @@ export function PlayerRig(props: PlayerRigProps) {
         const before = m.t
         // A stage with its own spot starts there: run on to the next stage's walk.
         m.t += dt * speedUp()
-        const now0 = stageAt(a, m.t)
-        if (now0.stage.at && now0.index > m.placed)
+        let now0 = stageAt(a, m.t)
+        // (Held at the start of a stage with its own spot until walked there, even
+        // when a long frame would have run past the end of the activity.)
+        if (now0.stage.at && now0.index > m.placed) {
           m.t = Math.min(m.t, startOf(a, now0.index))
+          now0 = stageAt(a, m.t)
+        }
         // On the real seat, hands on the real keyboard (see world/npc/activities.ts).
         rig.current = fitToWorld(
           clipFrame(now0.stage.clip, now0.local, now0.stage.posture),

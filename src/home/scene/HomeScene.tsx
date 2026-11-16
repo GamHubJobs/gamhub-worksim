@@ -197,7 +197,7 @@ function HomeScene(props: HomeSceneProps) {
         near: 0.05,
         far: 60,
       }}
-      gl={{ antialias: true, powerPreference: 'default' }}
+      gl={{ antialias: true, powerPreference: 'default', preserveDrawingBuffer: true }}
       shadows={!lowPower}
       onCreated={({ gl }: RootState) => setLowPower(isSoftware(gl))}
     >

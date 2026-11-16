@@ -24,6 +24,8 @@ import { COURTHOUSE } from './worldMap'
 import { canDo, lifePhase } from '../game/life'
 import { unreadCount } from '../game/social'
 import { CommuteChoices } from '../home/CommuteChoices'
+import { captureStill } from '../world/transition/capture'
+import { Still } from '../world/transition/Still'
 import { MoneyPanel, NeedsPanel } from '../home/LifePanels'
 import { BIKE, CAR } from '../content/transport'
 import { canDeal, type TransportDeal } from '../game/transport'
@@ -153,7 +155,14 @@ export function CityView({
       setNotice(blocked)
       if (blocked) return
       if (id === 'office') setTravel(true)
-      else onEnter(id)
+      else {
+        // Walked in at the door: its doorway stays on screen until inside is drawn.
+        captureStill()
+        setStreetReady(false)
+        // What was asked of the street (going in here) is done: not asked again inside.
+        setStreetRequest(null)
+        onEnter(id)
+      }
     },
     [profile, onEnter],
   )
@@ -327,7 +336,13 @@ export function CityView({
         }
       } else if (completed && action?.startsWith('person:'))
         meetPerson(action.slice('person:'.length))
-      else if (completed && action) {
+      // Walked out through the front door: out in the street, at that door.
+      else if (completed && action === 'leave') {
+        captureStill()
+        setReadyIn(null)
+        setRequest(null)
+        onOutside()
+      } else if (completed && action) {
         commit(action)
         // Across the table from the interviewer: stay seated while it lasts.
         if (action === 'interview-room') doThing('interview-sit')
@@ -339,7 +354,7 @@ export function CityView({
         }
       }
     },
-    [commit, meetPerson, dating, sitAction, doThing],
+    [commit, meetPerson, dating, sitAction, doThing, onOutside],
   )
   // Someone clicked on: walk over to them (inside a place, or in the street).
   const [streetRequest, setStreetRequest] = useState<{
@@ -504,39 +519,42 @@ export function CityView({
         label={`Inside ${here.name} in 3D. W, A, S and D walk, Shift runs, drag the mouse or press Q and R to look around, and E uses what you are next to. Everything here is also in the list below.`}
       >
         {(api) => (
-          <SceneBoundary onFail={() => setInteriorFailed(true)}>
-            <Suspense
-              fallback={
-                <div className="flex h-full items-center justify-center text-sm text-stone-300">
-                  Going in…
-                </div>
-              }
-            >
-              <InteriorScene
-                place={here.id as InteriorId}
-                dark={dark}
-                morning={phase === 'morning'}
-                doings={stableDoings}
-                controls={api.controls}
-                request={request?.place === here.id ? request : null}
-                onRequest={doThing}
-                onPrompt={api.onPrompt}
-                onProgress={api.onProgress}
-                onDone={onActivityDone}
-                onReady={() => setReadyIn(here.id)}
-                dressed={phase === 'morning' && life.ready.dressed}
-                raining={raining}
-                date={dating?.date.id ?? date?.id ?? null}
-                wedding={wedding ?? weddingNow}
-                day={profile.work.day}
-                minute={life.minute}
-                friend={meeting?.friend.id ?? null}
-                interviewer={
-                  booked ? (interviewStep === 'waited' ? 'collect' : 'room') : null
+          <>
+            <Still ready={readyIn === here.id} />
+            <SceneBoundary onFail={() => setInteriorFailed(true)}>
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center text-sm text-stone-300">
+                    Going in…
+                  </div>
                 }
-              />
-            </Suspense>
-          </SceneBoundary>
+              >
+                <InteriorScene
+                  place={here.id as InteriorId}
+                  dark={dark}
+                  morning={phase === 'morning'}
+                  doings={stableDoings}
+                  controls={api.controls}
+                  request={request?.place === here.id ? request : null}
+                  onRequest={doThing}
+                  onPrompt={api.onPrompt}
+                  onProgress={api.onProgress}
+                  onDone={onActivityDone}
+                  onReady={() => setReadyIn(here.id)}
+                  dressed={phase === 'morning' && life.ready.dressed}
+                  raining={raining}
+                  date={dating?.date.id ?? date?.id ?? null}
+                  wedding={wedding ?? weddingNow}
+                  day={profile.work.day}
+                  minute={life.minute}
+                  friend={meeting?.friend.id ?? null}
+                  interviewer={
+                    booked ? (interviewStep === 'waited' ? 'collect' : 'room') : null
+                  }
+                />
+              </Suspense>
+            </SceneBoundary>
+          </>
         )}
       </WalkView>
     ) : webgl ? (
@@ -548,44 +566,47 @@ export function CityView({
         label="The street in 3D. W, A, S and D (or the arrow keys) walk, Shift runs, drag the mouse or press Q and R to look around, E goes in at a door, and F gets on or off your bike or in and out of your car."
       >
         {(api) => (
-          <SceneBoundary>
-            <Suspense
-              fallback={
-                <div className="flex h-full items-center justify-center text-sm text-slate-600">
-                  Stepping outside…
-                </div>
-              }
-            >
-              <CityScene
-                at={life.city.at}
-                outside={outside}
-                phase={phase}
-                dark={dark}
-                dressed={phase === 'morning' && life.ready.dressed}
-                controls={api.controls}
-                onPrompt={api.onPrompt}
-                onProgress={api.onProgress}
-                onArea={onArea}
-                onDoor={go}
-                onCourt={() => setNotice(COURTHOUSE.closed)}
-                onEnter={go}
-                blocked={(id) => canEnter(profile, id)}
-                riding={life.city.riding}
-                car={life.vehicles.car}
-                bike={life.vehicles.bike}
-                onRide={onRide}
-                raining={raining}
-                request={streetRequest}
-                onPerson={meetPerson}
-                courier={courierWaiting}
-                onReady={onStreetReady}
-                taxi={taxi}
-                onTaxi={onTaxi}
-                neighbour={neighbourHere}
-                onNeighbourCalls={onNeighbourCalls}
-              />
-            </Suspense>
-          </SceneBoundary>
+          <>
+            <Still ready={streetReady} />
+            <SceneBoundary>
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center text-sm text-slate-600">
+                    Stepping outside…
+                  </div>
+                }
+              >
+                <CityScene
+                  at={life.city.at}
+                  outside={outside}
+                  phase={phase}
+                  dark={dark}
+                  dressed={phase === 'morning' && life.ready.dressed}
+                  controls={api.controls}
+                  onPrompt={api.onPrompt}
+                  onProgress={api.onProgress}
+                  onArea={onArea}
+                  onDoor={go}
+                  onCourt={() => setNotice(COURTHOUSE.closed)}
+                  onEnter={go}
+                  blocked={(id) => canEnter(profile, id)}
+                  riding={life.city.riding}
+                  car={life.vehicles.car}
+                  bike={life.vehicles.bike}
+                  onRide={onRide}
+                  raining={raining}
+                  request={streetRequest}
+                  onPerson={meetPerson}
+                  courier={courierWaiting}
+                  onReady={onStreetReady}
+                  taxi={taxi}
+                  onTaxi={onTaxi}
+                  neighbour={neighbourHere}
+                  onNeighbourCalls={onNeighbourCalls}
+                />
+              </Suspense>
+            </SceneBoundary>
+          </>
         )}
       </WalkView>
     ) : null
@@ -991,7 +1012,10 @@ export function CityView({
               </ul>
               <button
                 type="button"
-                onClick={onOutside}
+                // In 3D: walked out through the front door (not the park's gate).
+                onClick={() =>
+                  walkable && here.id !== 'park' ? doThing('leave') : onOutside()
+                }
                 className="mt-3 rounded-lg bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800"
               >
                 Back out to the street
