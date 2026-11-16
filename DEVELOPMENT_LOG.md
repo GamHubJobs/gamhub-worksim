@@ -245,6 +245,14 @@ and S7 (social life in person, at work and in the neighbourhood).
   - the street door's stand point is at the pavement's edge, at the door.
   - Seen working in play: cooking at the hob, reading (the book picked up, then
     sitting), going to bed (lying down), watching TV (sitting, the set on).
+- **Measured** (production build, this machine):
+  - startup: 433 kB to the start screen in 3.9 s on a throttled 1.6 Mbit/s
+    connection; a returning player reaches the office in 2.9 s;
+  - JavaScript memory: 8 MB at the start screen, 23 MB in the office, 21–22 MB
+    after opening and closing the apps five times (no growth);
+  - frame rate: this machine has no GPU (SwiftShader, software rendering), so the
+    figures are a floor. Low draws 4 fps in the street (its software-rendering cap);
+    High draws 0.6–0.7 fps. Not representative of a computer with a graphics card.
 - **FreeCAD:** evaluated in [docs/FREECAD_EVALUATION.md](docs/FREECAD_EVALUATION.md),
   including the unofficial WebAssembly port reported in July 2026.
 
