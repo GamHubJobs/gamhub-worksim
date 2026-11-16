@@ -5,11 +5,12 @@ unmodified web build of an open-source project by the ArtCraft team, run in a wi
 of the desktop. The player's files are kept in their WorkSim save, like every other
 file.
 
-| App        | Built from                                                 | Status      |
-| ---------- | ---------------------------------------------------------- | ----------- |
-| Grid Craft | [GridCraft](https://github.com/storytold/gridcraft) 0.18.0 | In the game |
-| Word Craft | [WordCraft](https://github.com/storytold/wordcraft) 0.18.0 | In the game |
-| Deck Craft | [DeckCraft](https://github.com/storytold/deckcraft) 0.18.1 | In the game |
+| App        | Built from                                                 | Status                           |
+| ---------- | ---------------------------------------------------------- | -------------------------------- |
+| Grid Craft | [GridCraft](https://github.com/storytold/gridcraft) 0.18.0 | In the game                      |
+| Word Craft | [WordCraft](https://github.com/storytold/wordcraft) 0.18.0 | In the game                      |
+| Deck Craft | [DeckCraft](https://github.com/storytold/deckcraft) 0.18.1 | In the game                      |
+| CAD Craft  | [CADCraft](https://github.com/storytold/cadcraft) 0.20.1   | In the game (Engineer: Projects) |
 
 ## Where the apps come from
 
@@ -419,3 +420,20 @@ normal browser about 30 ms.
     colour and bullets of text boxes; placeholders take the theme's styles.
   - Presenter view in the browser is Deck Craft's own (drawn in the page). It was
     not tested with a second screen.
+
+## CAD Craft: the Engineer's drafting workstation
+
+CAD Craft (CADCraft 0.20.1, the official web build, pinned by checksum like the
+others) runs in the Projects app's **CAD Craft** tab, with the project's drawing open.
+
+- **Opening.** The drawing is a DXF made from the design (`src/engineering/cad/dxf.ts`).
+  It is handed to CAD Craft with the host message `cadcraft:open`.
+- **Reading back.** A few seconds after each change, and on Save, the game asks for
+  the drawing (`document.bytes`) and reads it as the design's draft revision.
+- **Keeping.** The DXF is kept as a CAD document with the fingerprint of the design
+  it shows. When the design is changed elsewhere (the plan editor, FreeCAD), the
+  drawing is made again from the design.
+- **When it cannot run,** the plan editor makes the same design, and the drawing
+  can be downloaded for any CAD program.
+
+See [ENGINEERING_PROJECTS.md](ENGINEERING_PROJECTS.md) for the layer contract.

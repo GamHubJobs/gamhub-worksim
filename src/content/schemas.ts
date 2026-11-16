@@ -468,7 +468,14 @@ export const CareerLevelSchema = z.object({
 })
 
 /** Work apps a career can use (Mail, Tasks and Career are always there). */
-export const WORK_APPS = ['sheets', 'docs', 'slides', 'helpdesk', 'code'] as const
+export const WORK_APPS = [
+  'sheets',
+  'docs',
+  'slides',
+  'helpdesk',
+  'code',
+  'projects',
+] as const
 
 export const CareerSchema = z.object({
   id: z.string(),

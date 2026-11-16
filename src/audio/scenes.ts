@@ -19,6 +19,7 @@ export type Place =
   | 'garage'
   | 'home'
   | 'courthouse' // Westmark County Court: the hall and the courtroom
+  | 'site' // a construction site: plant, tools, reversing beepers, outdoors
   | 'quiet' // the end of the day summary, menus
 
 /**
@@ -263,6 +264,20 @@ function baseLayers(scene: Scene): Partial<Record<Layer, number>> {
         paper: 2,
         gavel: 0.4,
         chairs: 1,
+      }
+    case 'site':
+      // Outdoors on a construction site: plant running, the crew's tools and
+      // voices, reversing beepers, the wind; no music.
+      return {
+        machines: 1,
+        construction: 5,
+        tools: 4,
+        alarm: 1.2,
+        engines: 1,
+        chatter: 1.5,
+        wind: 1,
+        traffic: 0.3,
+        birds: time === 'day' || time === 'morning' ? 1.5 : 0,
       }
     case 'quiet':
       return {}

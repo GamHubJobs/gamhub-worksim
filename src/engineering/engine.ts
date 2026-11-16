@@ -92,6 +92,11 @@ export function revision(project: ProjectState, n: number): Revision | undefined
   return project.revisions.find((r) => r.n === n)
 }
 
+/** The revision being checked by the design office, if any. */
+export function submitted(project: ProjectState): Revision | undefined {
+  return project.revisions.find((r) => r.status === 'submitted')
+}
+
 /** The most recently approved revision. */
 export function approved(project: ProjectState): Revision | undefined {
   return [...project.revisions].reverse().find((r) => r.status === 'approved')
@@ -130,7 +135,10 @@ export function projectAvailability(
   if (level < brief.minLevel)
     return {
       state: 'locked',
-      reason: `Offered to a ${career.levels[brief.minLevel]?.title ?? 'more senior engineer'}`,
+      reason: (() => {
+        const title = career.levels[brief.minLevel]?.title ?? 'more senior engineer'
+        return `Offered to ${/^[AEIOU]/i.test(title) ? 'an' : 'a'} ${title}`
+      })(),
     }
   const index = BRIEFS.findIndex((b) => b.id === brief.id)
   const before = BRIEFS[index - 1]
@@ -185,7 +193,8 @@ function mail(
     from: 'manager',
     subject,
     body,
-    receivedAt: at,
+    // Mail is stamped with real time (milliseconds), like every other message.
+    receivedAt: Math.max(Math.round(Date.now()), Math.round(at)),
     readAt: null,
     kind: 'info',
   }
@@ -332,7 +341,8 @@ export function submitDesign(profile: ProfileData, id: string): ProfileData {
   const project = projectOf(profile, id)
   if (!project) return profile
   const last = latest(project)
-  if (last.status !== 'draft') return profile
+  // One revision with the checker at a time.
+  if (last.status !== 'draft' || submitted(project)) return profile
   const at = officeNow(profile.work)
   const revisions = [
     ...project.revisions.slice(0, -1),
@@ -387,7 +397,7 @@ function decideReview(
   project: ProjectState,
   at: number,
 ): ProfileData {
-  const last = latest(project)
+  const last = submitted(project) ?? latest(project)
   const brief = getBrief(project.id)!
   const { approve, comments, reviewer } = reviewDesign(project, last.design)
   const who = REVIEWERS[reviewer]
@@ -532,12 +542,27 @@ function applyRevisionToSite(
   }
 }
 
+/**
+ * What issuing for construction needs that is not done: an approved
+ * revision, its drawing issued and its bill of quantities made.
+ */
+export function constructionBlockers(project: ProjectState): string[] {
+  const ok = approved(project)
+  if (!ok) return ['An approved revision of the design']
+  const out: string[] = []
+  if (project.documents.drawings?.revision !== ok.n)
+    out.push('The drawing issued from the approved revision')
+  if (project.documents.quantities?.revision !== ok.n)
+    out.push('The bill of quantities made from it')
+  return out
+}
+
 /** Issues the approved design for construction: the site starts. */
 export function startConstruction(profile: ProfileData, id: string): ProfileData {
   const project = projectOf(profile, id)
   if (!project || project.status !== 'design') return profile
   const ok = approved(project)
-  if (!ok) return profile
+  if (!ok || constructionBlockers(project).length) return profile
   const now = siteNow(profile.work)
   const at = officeNow(profile.work)
   const site: SiteState = {
@@ -816,12 +841,8 @@ export function checkEngineering(profile: ProfileData): ProfileData {
   for (const id of Object.keys(e.projects)) {
     let project = projectOf(out, id)!
     const at = officeNow(out.work)
-    const last = latest(project)
-    if (
-      last.status === 'submitted' &&
-      last.submittedAt !== null &&
-      at >= last.submittedAt + REVIEW_MINUTES
-    ) {
+    const waiting = submitted(project)
+    if (waiting?.submittedAt != null && at >= waiting.submittedAt + REVIEW_MINUTES) {
       out = decideReview(out, project, at)
       project = projectOf(out, id)!
     }

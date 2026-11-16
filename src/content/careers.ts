@@ -676,7 +676,7 @@ CAREERS.push({
   description:
     'Work in a multi-discipline engineering firm: circuits, structures, mechanical drives, project planning, safe maintenance with lockout-tagout, inspection and environmental monitoring. Real formulas, simplified data: for learning, not real design.',
   toolsIntro:
-    'Your work is done in Works Desk, the firm’s circuits, beams, gears, planning, maintenance, inspection and environment tools, with reports in Word Craft.',
+    'Your work is done in Works Desk, the firm’s circuits, beams, gears, planning, maintenance, inspection and environment tools, with reports in Word Craft. Projects runs the firm’s design-and-build jobs: design in the plan editor, CAD Craft or your own FreeCAD, get the design checked and approved, and see it built on site.',
   skills: [
     'engineering-analysis',
     'safe-systems-of-work',
@@ -686,7 +686,7 @@ CAREERS.push({
     'accuracy',
     'ai-use',
   ],
-  apps: ['docs'],
+  apps: ['projects', 'docs', 'sheets'],
   tools: [
     {
       tool: 'engineering',

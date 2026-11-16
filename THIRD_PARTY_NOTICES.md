@@ -48,5 +48,27 @@ shown in the game as "Deck Craft".
   `crafts/deckcraft/`.
 - **Trademarks:** the same notice as for Grid Craft applies.
 
+## CAD Craft (the drafting workstation, Engineer career)
+
+GamHub WorkSim runs **CADCraft 0.20.1** by the ArtCraft team, unmodified. It is
+shown in the game as "CAD Craft".
+
+- **Source:** https://github.com/storytold/cadcraft (tag `v0.20.1`).
+- **Build used:** the official web release, `cadcraft-web-0.20.1.zip`, with SHA-256
+  `300e870c50b66d371055915ba95e3ddbfd4c45431466d5214743b5dcab95a0e1`.
+- **Licence:** MIT OR Apache-2.0, copyright (c) 2026 the ArtCraft Team and the
+  CADCraft contributors.
+- **Notices shipped with the app:** the full licence texts, the NOTICE and
+  `ATTRIBUTION.md` are served with it, in `crafts/cadcraft/`.
+- **Trademarks:** the same notice as for Grid Craft applies.
+
+## FreeCAD (not included)
+
+The Engineer career can exchange files with **FreeCAD**, which the player installs
+themselves from https://www.freecad.org (LGPL-2.1). No part of FreeCAD is copied
+into, bundled with or run by GamHub WorkSim: the game writes a macro (its own code,
+generated for the player's design) and reads the files FreeCAD exports. See
+`docs/ENGINEERING_PROJECTS.md`.
+
 The app files are not part of this repository. `npm run crafts` downloads them from
 the release above and checks them (see `docs/CRAFT_APPS.md`).

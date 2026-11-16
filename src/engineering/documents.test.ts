@@ -35,6 +35,9 @@ function approvedProject() {
     ...p,
     work: { ...p.work, minute: p.work.minute + REVIEW_MINUTES },
   })
+  const n = activeProject(p)!.revisions.at(-1)!.n
+  p = recordDocument(p, 'yard-store', 'drawings', 'doc-drawing', n)
+  p = recordDocument(p, 'yard-store', 'quantities', 'doc-quantities', n)
   return startConstruction(p, 'yard-store')
 }
 
@@ -81,6 +84,7 @@ describe('project documents', () => {
       ...p,
       work: { ...p.work, minute: p.work.minute + REVIEW_MINUTES },
     })
-    expect(staleDocuments(activeProject(p)!)).toEqual(['quantities'])
+    // The drawing and the bill of quantities were issued from the older revision.
+    expect(staleDocuments(activeProject(p)!)).toEqual(['drawings', 'quantities'])
   })
 })

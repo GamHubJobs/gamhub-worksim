@@ -95,3 +95,10 @@ behind screens (hot work only under a permit, with a fire watch), an
 inspection bench with a surface plate, steel stock, a forklift and the
 roller shutter to the yard. Works Desk opens at the permit board, the
 inspection bench and the lathe.
+
+## Design and build projects
+
+The career also designs and builds for Northbank's clients, in the **Projects** app:
+design (plan editor, CAD Craft, the player's own FreeCAD), checks and approval,
+documents, construction in 3D with issues and inspections, and handover. See
+[ENGINEERING_PROJECTS.md](ENGINEERING_PROJECTS.md).

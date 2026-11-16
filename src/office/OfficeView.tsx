@@ -48,6 +48,30 @@ import { fill, getPerson, placeText } from '../content/departments'
 import { activeBay, activeTheme, opensFor } from './scene/bays'
 import { ScenarioPanel, type LiveState } from './ScenarioPanel'
 import { CourtPanel, type CourtVisit } from '../court/CourtPanel'
+import { SitePanel } from '../apps/projects/SitePanel'
+import { dueInspection } from '../apps/projects/helpers'
+import {
+  activeProject,
+  builtDesign,
+  currentStage,
+  decideIssue,
+  handOver,
+  inspectionItems,
+  judgeItem,
+  projectOf,
+  signInspection,
+  siteBlock,
+} from '../engineering/engine'
+import type { InspectionId } from '../engineering/inspections'
+import {
+  backFromSite,
+  canGoToSite,
+  goToSite,
+  measureOnSite,
+  travelTo,
+  watchWork,
+} from '../engineering/visit'
+import { getBrief as getProjectBrief } from '../engineering/briefs'
 import { loadVisit, saveVisit } from '../court/visitStore'
 import { deviceFor, type Device } from './device'
 import { backFromCourt, canGoToCourt, COURT_TRAVEL, goToCourt } from '../game/court'
@@ -120,6 +144,9 @@ import { useHud } from '../ui/hud/hudContext'
 
 const OfficeScene = lazy(() => import('./scene/OfficeScene'))
 const CourthouseScene = lazy(() => import('../court/CourthouseScene'))
+const ConstructionSiteScene = lazy(
+  () => import('../engineering/scene/ConstructionSiteScene'),
+)
 
 const PANEL_KEY = 'worksim.hud.place'
 const readPanel = () => {
@@ -304,6 +331,40 @@ export function OfficeView({
   const current = getSpot(spot)
   const unread = unreadCount(profile)
   const { work } = profile
+  // On a construction site in person (src/engineering/visit.ts): its own scene and panel.
+  const siteId = work.engineering?.onSite ?? null
+  const siteProject = siteId ? projectOf(profile, siteId) : null
+  const siteDesign = siteProject ? builtDesign(siteProject) : null
+  const siteStage = siteProject ? currentStage(siteProject) : null
+  const siteInspection = siteProject ? dueInspection(siteProject) : null
+  const siteMeasureKey =
+    siteProject &&
+    siteInspection &&
+    siteProject.inspections[siteInspection]?.status === 'due'
+      ? inspectionItems(siteProject, siteInspection)
+          .filter(
+            (i) => !siteProject.inspections[siteInspection]!.measured.includes(i.id),
+          )
+          .map((i) => i.id)
+          .join(',')
+      : ''
+  const siteMeasure = useMemo(
+    () =>
+      siteProject && siteInspection && siteMeasureKey
+        ? inspectionItems(siteProject, siteInspection)
+            .filter((i) => siteMeasureKey.split(',').includes(i.id))
+            .map((item) => ({ inspection: siteInspection, item }))
+        : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [siteId, siteInspection, siteMeasureKey],
+  )
+  const siteIssue =
+    !!siteProject && Object.values(siteProject.issues).some((s) => s.status === 'open')
+  const [siteArea, setSiteArea] = useState<string | null>(null)
+  const [siteOverview, setSiteOverview] = useState(false)
+  const onSiteArea = useCallback((a: string) => setSiteArea(a), [])
+  const constructing = activeProject(profile)
+  const siteWhy = constructing ? canGoToSite(profile, constructing.id) : null
   const meetingNow = openMeeting(work)
   const upcoming = nextMeeting(work)
 
@@ -533,12 +594,24 @@ export function OfficeView({
   // Stable handlers for the 3D scene, so it does not redraw on every change.
   /** A meeting can be attended while it is on (see workday.ts), and not otherwise. */
   function blocked(action: string | null): string | null {
+    if (siteProject) return null
     if (away) return courtBlocked(action)
     if (action === 'celebration') return canJoinCelebration(profile)
     const id = meetingOf(action)
     if (!id || openMeeting(work)?.id === id) return null
     const m = getMeeting(id)
     return m ? fill(`The ${m.title.toLowerCase()} is not on now`) : 'Not now'
+  }
+
+  /** Something done on site: measured, watched, left (in person, or from the panel). */
+  function site(action: string) {
+    if (!siteProject) return
+    if (action === 'site:leave') void onAct(backFromSite)
+    else if (action === 'site:watch') void onAct((p) => watchWork(p, 30))
+    else if (action.startsWith('site:measure:')) {
+      const [, , inspection, item] = action.split(':')
+      void onAct((p) => measureOnSite(p, inspection, item))
+    }
   }
 
   /** Had cake with the team (in person, or from the panel without 3D). */
@@ -559,6 +632,7 @@ export function OfficeView({
     bedside,
     startLive,
     court,
+    site,
   })
   useEffect(() => {
     handlers.current = {
@@ -574,6 +648,7 @@ export function OfficeView({
       arriveOnSite,
       bedside,
       court,
+      site,
     }
   })
   const sceneGo = useCallback((next: SpotId) => handlers.current.go(next), [])
@@ -616,14 +691,16 @@ export function OfficeView({
   }, [away, courtName, courtCareer, courtDayNo])
   const [courtRoom, setCourtRoom] = useState<string | null>(null)
   const onCourtRoom = useCallback((r: string) => setCourtRoom(r), [])
-  // The office guide's next step is about the office: it steps aside at court.
+  // The office guide's next step (and the office's map) is about the office:
+  // it steps aside at court and on a construction site.
+  const awayAt = away ? 'court' : siteProject ? 'site' : null
   useEffect(() => {
-    if (!away) return
-    document.body.dataset.away = 'court'
+    if (!awayAt) return
+    document.body.dataset.away = awayAt
     return () => {
       delete document.body.dataset.away
     }
-  }, [away])
+  }, [awayAt])
   function goCourt() {
     const sc = atCourt[0]
     if (!sc || canGoToCourt(profile)) return
@@ -702,6 +779,7 @@ export function OfficeView({
       if (completed) handlers.current.joinMeeting(meeting)
     } else if (completed && action === 'celebration') handlers.current.celebrate()
     else if (completed && action?.startsWith('court:')) handlers.current.court(action)
+    else if (completed && action?.startsWith('site:')) handlers.current.site(action)
     else if (completed && action?.startsWith('scenario:'))
       handlers.current.startLive(action.slice('scenario:'.length))
     else if (completed && opensFor(action, activeBay())) handlers.current.bedside(action)
@@ -797,13 +875,35 @@ export function OfficeView({
                 <Suspense
                   fallback={
                     <div className="flex h-full items-center justify-center bg-slate-100 text-slate-500">
-                      {away
-                        ? 'Arriving at Westmark County Court…'
-                        : 'Arriving at the office…'}
+                      {siteProject
+                        ? 'Arriving on site…'
+                        : away
+                          ? 'Arriving at Westmark County Court…'
+                          : 'Arriving at the office…'}
                     </div>
                   }
                 >
-                  {away ? (
+                  {siteProject && siteDesign && siteProject.site ? (
+                    <ConstructionSiteScene
+                      project={siteProject.id}
+                      design={siteDesign}
+                      stages={siteProject.site.stages}
+                      cursor={siteProject.site.cursor}
+                      fraction={siteStage?.fraction ?? 0}
+                      blocked={!!siteBlock(siteProject)}
+                      measure={siteMeasure}
+                      issue={siteIssue}
+                      controls={api.controls}
+                      request={request}
+                      onPrompt={api.onPrompt}
+                      onProgress={api.onProgress}
+                      onDone={onActivityDone}
+                      onReady={onReady}
+                      blockedAction={sceneBlocked}
+                      onArea={onSiteArea}
+                      overview={siteOverview}
+                    />
+                  ) : away ? (
                     <CourthouseScene
                       controls={api.controls}
                       request={request}
@@ -897,7 +997,45 @@ export function OfficeView({
           />
         </HudSlot>
       )}
-      {!away && (
+      {siteProject && (
+        <AudioScene scene={{ place: 'site', time: timeOfDay(work.minute) }} />
+      )}
+      {siteProject && (
+        <HudSlot zone="top-left">
+          <SitePanel
+            project={siteProject}
+            area={siteArea}
+            onDecide={(issue, choice) =>
+              void onAct((p) => decideIssue(p, siteProject.id, issue, choice))
+            }
+            onMeasure={(inspection, item) =>
+              walkable
+                ? ask('site-measure-' + inspection + '-' + item)
+                : void onAct((p) => measureOnSite(p, inspection, item))
+            }
+            onJudge={(inspection, item, v) =>
+              void onAct((p) => judgeItem(p, siteProject.id, inspection, item, v))
+            }
+            onSign={(inspection) =>
+              void onAct((p) =>
+                signInspection(p, siteProject.id, inspection as InspectionId),
+              )
+            }
+            onWatch={() =>
+              walkable ? ask('site-watch') : void onAct((p) => watchWork(p, 30))
+            }
+            onHandOver={() => void onAct((p) => handOver(p, siteProject.id))}
+            onLeave={() => {
+              setSiteOverview(false)
+              if (walkable) ask('site-leave')
+              else void onAct(backFromSite)
+            }}
+            overview={siteOverview}
+            onOverview={setSiteOverview}
+          />
+        </HudSlot>
+      )}
+      {!away && !siteProject && (
         <HudSlot zone="top-left" hideWhen={live ? 'dialogue' : undefined}>
           <section
             className="onsite-hide max-h-full w-full overflow-y-auto rounded-xl bg-white/90 p-4 shadow-lg ring-1 ring-slate-200 backdrop-blur"
@@ -1044,6 +1182,30 @@ export function OfficeView({
                 </div>
               )}
 
+              {constructing?.status === 'construction' && (
+                <div className="mt-3 rounded-md bg-amber-50 p-2" data-testid="site-visit">
+                  <p className="text-xs font-semibold text-amber-900">On site</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {getProjectBrief(constructing.id)?.title}
+                  </p>
+                  <p className="text-[11px] text-slate-700">
+                    {siteBlock(constructing) ?? 'The crew is working.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void onAct((p) => goToSite(p, constructing.id))}
+                    disabled={!!siteWhy}
+                    className="mt-1 rounded bg-amber-700 px-2 py-1 text-xs font-medium text-white hover:bg-amber-800 disabled:opacity-50"
+                    data-testid="office-go-to-site"
+                  >
+                    Go to the site ({travelTo(constructing.id)} min)
+                  </button>
+                  {siteWhy && (
+                    <p className="mt-0.5 text-[11px] text-slate-500">{siteWhy}</p>
+                  )}
+                </div>
+              )}
+
               {atCourt.length > 0 && (
                 <div
                   className="mt-3 rounded-md bg-slate-100 p-2"
@@ -1160,7 +1322,7 @@ export function OfficeView({
       )}
 
       {/* Places */}
-      {!away && (
+      {!away && !siteProject && (
         <HudSlot zone="bottom-center" order={2}>
           <nav
             className="onsite-hide flex max-w-full flex-wrap justify-center gap-1 rounded-xl bg-white/90 p-1.5 shadow-lg ring-1 ring-slate-200 backdrop-blur"

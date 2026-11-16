@@ -192,6 +192,57 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-16 · Engineer career: design, CAD Craft, FreeCAD and construction
+
+The Engineer career gained design-and-build projects (see
+[docs/ENGINEERING_PROJECTS.md](docs/ENGINEERING_PROJECTS.md)).
+
+- **Projects app** (a new work app for the career): overview, design (plan editor and
+  specification, live checks and calculations, revisions), CAD Craft, FreeCAD,
+  documents, site.
+- **One shared design format** (`src/engineering`): checks, quantities, the programme,
+  revisions, the review, construction, issues, inspections and handover all read it.
+  It is saved in `work.engineering` (optional; nothing else in the save changed).
+- **CAD Craft 0.20.1** (CADCraft's official web build, MIT OR Apache-2.0, pinned by
+  checksum): the project's drawing as a layered DXF, read back as the draft revision.
+  Checked with the real app in a browser.
+- **FreeCAD bridge:** a generated macro builds a parametric model in the player's own
+  FreeCAD and exports the design data, OBJ, STEP and FCStd for import. Tested with
+  FreeCAD 1.1.4 itself (its export is the test fixture). Nothing of FreeCAD (LGPL) is
+  bundled.
+- **Construction in 3D:** the approved design built stage by stage, with plant, crew,
+  stores and a real trench. Inspections are measured on site in person. There is a
+  whole-site overview and construction sound.
+- **Three projects:**
+  - the yard store;
+  - the mill race footbridge;
+  - the two-storey workshop.
+
+  Each has seven issues to decide where they apply, five kinds of hold point, and a
+  defect that only measuring finds.
+
+- **Documents** made in Word Craft and Grid Craft from the data (the bill of quantities
+  and programme with live formulas), flagged out of date when the design moves on.
+- **Found and fixed while testing:**
+  - integer DXF group codes were written as decimals;
+  - R12 polyline vertices were dropped;
+  - FreeCAD rejected the roof expression (units), and its export missed objects
+    linked by expressions;
+  - engineering mail used office minutes as a timestamp (invalid for the save);
+  - the roof beams of a load-bearing building went up before its walls;
+  - the site camera faced the gate;
+  - the crew stood on the mill race;
+  - the cable runs showed outside the walls.
+- **Tests:**
+  - 40 new unit tests (plus 2 that run with FreeCAD);
+  - `engineering-projects.spec.ts` (the whole workflow through the real UI, including
+    a reload);
+  - `engineering-tour.spec.ts` (all three sites built in 3D, the store handed over at
+    87/100);
+  - the full check passes.
+
+---
+
 ## 2026-11-16 · Graphics and sound upgrade
 
 **Built**

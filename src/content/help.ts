@@ -154,6 +154,15 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    id: 'projects',
+    title: 'Engineering projects (Engineer career)',
+    text: [
+      '**Projects** runs Northbank’s design-and-build jobs. Take on a project, then correct its concept design: in the **plan editor** (drag corners, place doors, windows and columns, type exact sizes), the **specification**, **CAD Craft** (the drafting app) or your own **FreeCAD** (download the macro, model, export, import the files). The checks and calculations update as you go.',
+      'Submit the design for checking: it comes back approved, or with comments to put right. Make the drawing and the bill of quantities from the approved revision (Documents), then issue it for construction. The site builds only the approved revision; a newer approved one makes work already built into rework.',
+      'Go to the site to see it built. Decide the issues the site team brings you, and at each hold point walk to each item, measure it and judge it against the drawings: a defect you let through comes back at handover. Hand over with the inspection report and handover file. The calculations are standard formulas with simplified, fictional data, for learning.',
+    ],
+  },
+  {
     id: 'access',
     title: 'Keyboard and accessibility',
     text: [

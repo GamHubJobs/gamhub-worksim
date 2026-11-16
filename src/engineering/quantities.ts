@@ -70,6 +70,8 @@ const BRIDGE_NAMES: Partial<Record<StageId, StageInfo>> = {
 }
 
 export function stageInfo(id: StageId, design: Design): StageInfo {
+  if (design.kind === 'building' && id === 'structure' && design.columns.length === 0)
+    return { name: 'Roof beams', work: 'Lifting the roof beams onto the walls' }
   return (design.kind === 'bridge' && BRIDGE_NAMES[id]) || STAGES[id]
 }
 
@@ -266,11 +268,16 @@ export function stagesFor(design: Design): StageId[] {
       'inspection',
       'handover',
     ]
-  return STAGE_IDS.filter((id) => {
+  const stages = STAGE_IDS.filter((id) => {
     if (id === 'plumbing') return design.services.sanitary > 0
     if (id === 'hvac') return design.services.hvac > 0
     return true
   })
+  // Without a steel frame the walls carry the roof: its beams go up after the walls.
+  if (design.columns.length > 0) return stages
+  const out: StageId[] = stages.filter((s) => s !== 'structure')
+  out.splice(out.indexOf('walls') + 1, 0, 'structure')
+  return out
 }
 
 /** The construction programme: each stage's duration from its quantities (working days). */

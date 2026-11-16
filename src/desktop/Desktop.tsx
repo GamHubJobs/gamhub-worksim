@@ -6,6 +6,8 @@
  * are the same WorkSim apps as before.
  */
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { PROJECT_TABS, type ProjectTab } from '../apps/projects/tabs'
+import { goToSite } from '../engineering/visit'
 import { StoryPanel, StoryTracker } from './StoryPanel'
 import { PhoneHost } from '../phone/PhoneDevice'
 import { MapHost } from '../world/map/MapHost'
@@ -187,6 +189,9 @@ const AiApp = lazy(() => import('../apps/ai/AiApp').then((m) => ({ default: m.Ai
 const ReadinessApp = lazy(() =>
   import('../apps/readiness/ReadinessApp').then((m) => ({ default: m.ReadinessApp })),
 )
+const ProjectsApp = lazy(() =>
+  import('../apps/projects/ProjectsApp').then((m) => ({ default: m.ProjectsApp })),
+)
 const CasesApp = lazy(() =>
   import('../apps/cases/CasesApp').then((m) => ({ default: m.CasesApp })),
 )
@@ -209,6 +214,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'slides', label: 'Deck Craft', icon: 'slides' },
     { id: 'helpdesk', label: 'Help Desk', icon: 'helpdesk' },
     { id: 'code', label: 'Code', icon: 'code' },
+    { id: 'projects', label: 'Projects', icon: 'building' },
     { id: 'career', label: 'Career', icon: 'career' },
     { id: 'readiness', label: 'Readiness', icon: 'check' },
     { id: 'portfolio', label: 'Portfolio', icon: 'portfolio' },
@@ -225,6 +231,7 @@ const APP_COLORS: Record<string, string> = {
   slides: '#b7472a',
   helpdesk: '#00777a',
   code: '#5c2d91',
+  projects: '#b45309',
   career: '#a55f00',
   readiness: '#107c10',
   portfolio: '#744da9',
@@ -489,6 +496,25 @@ export function Desktop({
     if (!import.meta.env.DEV) return
     const hooks = {
       passTime: (minutes: number) => act((p) => passTime(p, minutes, 'work')),
+      /** Engineering projects played carefully, for tests and screenshot tours. */
+      engineering: {
+        submitCorrected: async (id: string) => {
+          const m = await import('../engineering/autoplay')
+          return act((p) => m.submitCorrected(p, id))
+        },
+        step: async () => {
+          const m = await import('../engineering/autoplay')
+          return act((p) => m.autoplayStep(p))
+        },
+        advanceTo: async (stage: string, fraction?: number) => {
+          const m = await import('../engineering/autoplay')
+          return act((p) => m.advanceTo(p, stage, fraction))
+        },
+        unlock: async (id: string) => {
+          const m = await import('../engineering/autoplay')
+          return act((p) => m.unlock(p, id))
+        },
+      },
       setWellbeing: (change: Partial<Wellbeing>) =>
         act((p) => ({
           ...p,
@@ -1152,6 +1178,26 @@ export function Desktop({
           />
         )
       }
+      case 'projects':
+        return (
+          <ProjectsApp
+            profile={profile}
+            act={act}
+            tab={
+              (PROJECT_TABS as readonly string[]).includes(v.item ?? '')
+                ? (v.item as ProjectTab)
+                : 'overview'
+            }
+            onTab={(tab) => setView({ app: 'projects', item: tab })}
+            onOpenDocument={(app, document) =>
+              setView({ app: app === 'doc' ? 'docs' : 'sheets', document })
+            }
+            onGoToSite={(id) => {
+              void act((p) => goToSite(p, id))
+              setView({ app: 'office', spot: 'desk' })
+            }}
+          />
+        )
       case 'cases':
         return (
           <CasesApp

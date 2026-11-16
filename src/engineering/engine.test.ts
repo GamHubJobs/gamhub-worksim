@@ -74,7 +74,11 @@ function approvedYard(): ProfileData {
   let p = startProject(engineer(), 'yard-store')
   p = saveDesign(p, 'yard-store', correctedYardStore(), 'plan-editor')
   p = submitDesign(p, 'yard-store')
-  return advance(p, REVIEW_MINUTES)
+  p = advance(p, REVIEW_MINUTES)
+  // The drawing and the bill of quantities, issued from the approved revision.
+  const n = activeProject(p)!.revisions.at(-1)!.n
+  p = recordDocument(p, 'yard-store', 'drawings', 'doc-drawing', n)
+  return recordDocument(p, 'yard-store', 'quantities', 'doc-quantities', n)
 }
 
 /** Measures every item of an inspection and judges each truthfully. */

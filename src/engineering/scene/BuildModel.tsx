@@ -218,44 +218,101 @@ function Building({
         </group>
       )}
 
-      {/* Trenches dug along the walls, then reinforcement, then concrete. */}
+      {/* Trenches dug along the walls (the ground has a hole cut for them, see
+          ConstructionSiteScene): soil walls and floor where dug, ground still
+          to dig elsewhere; then reinforcement in the trench, then concrete
+          rising to ground level. Each runs past the corners by half a footing. */}
       {!ghost &&
+        s('excavation') > 0 &&
         edges.map((e) => {
           const startAt =
             edges.slice(0, e.index).reduce((sum, x) => sum + x.length, 0) /
             perimeterLength
           const share = e.length / perimeterLength
           const dug = Math.max(0, Math.min(1, (s('excavation') - startAt) / share))
-          if (dug <= 0) return null
-          const a = p(e.a[0], e.a[1])
-          const full = p(e.b[0], e.b[1])
+          const ext = (fw * 1000) / 2
+          const a = p(e.a[0] - e.dir[0] * ext, e.a[1] - e.dir[1] * ext)
+          const full = p(e.b[0] + e.dir[0] * ext, e.b[1] + e.dir[1] * ext)
           const end = { x: a.x + (full.x - a.x) * dug, z: a.z + (full.z - a.z) * dug }
+          const dx = full.x - a.x
+          const dz = full.z - a.z
+          const len = Math.hypot(dx, dz) || 1
+          const n = { x: (-dz / len) * (fw / 2), z: (dx / len) * (fw / 2) }
+          const shift = (q: { x: number; z: number }, k: number) => ({
+            x: q.x + n.x * k,
+            z: q.z + n.z * k,
+          })
           const poured = s('foundations')
-          const fill = fd * poured
+          const level = -fd + fd * poured
+          const bars = s('reinforcement') > 0 && poured < 1
           return (
             <group key={e.index}>
-              <AlongWall a={a} b={end} width={fw} y0={-0.02} y1={0.004} color="#3f2d20" />
-              {s('reinforcement') > 0 && poured < 1 && (
+              {dug > 0 && (
                 <>
                   <AlongWall
                     a={a}
                     b={end}
-                    width={fw * 0.7}
-                    y0={0.005}
-                    y1={0.03}
-                    color="#9a4a1d"
+                    width={fw}
+                    y0={-fd - 0.03}
+                    y1={-fd}
+                    color="#3a2a1d"
                   />
+                  <AlongWall
+                    a={shift(a, 1)}
+                    b={shift(end, 1)}
+                    width={0.03}
+                    y0={-fd}
+                    y1={0}
+                    color="#5b4331"
+                  />
+                  <AlongWall
+                    a={shift(a, -1)}
+                    b={shift(end, -1)}
+                    width={0.03}
+                    y0={-fd}
+                    y1={0}
+                    color="#5b4331"
+                  />
+                </>
+              )}
+              {dug < 1 && (
+                <AlongWall
+                  a={end}
+                  b={full}
+                  width={fw + 0.02}
+                  y0={-fd}
+                  y1={0.0015}
+                  color="#5a5650"
+                />
+              )}
+              {bars && (
+                <>
+                  {[-0.6, 0.6].map((k) => (
+                    <AlongWall
+                      key={k}
+                      a={shift(a, k)}
+                      b={shift(
+                        {
+                          x: a.x + dx * s('reinforcement'),
+                          z: a.z + dz * s('reinforcement'),
+                        },
+                        k,
+                      )}
+                      width={0.02}
+                      y0={-fd + 0.06}
+                      y1={-fd + 0.08}
+                      color="#7c2d12"
+                    />
+                  ))}
                   {Array.from(
-                    { length: Math.floor((e.length / 1000) * 4 * s('reinforcement')) },
+                    { length: Math.floor((len / 0.2) * s('reinforcement')) },
                     (_, k) => {
-                      const f = (k + 0.5) / ((e.length / 1000) * 4)
-                      const x = a.x + (full.x - a.x) * f
-                      const z = a.z + (full.z - a.z) * f
+                      const f = (k + 0.5) / (len / 0.2)
                       return (
                         <Block
                           key={k}
-                          size={[0.025, 0.04, 0.025]}
-                          at={[x, 0.025, z]}
+                          size={[0.016, 0.06, fw * 0.75]}
+                          at={[a.x + dx * f, -fd + 0.07, a.z + dz * f]}
                           color="#7c2d12"
                           shadow={false}
                         />
@@ -264,13 +321,13 @@ function Building({
                   )}
                 </>
               )}
-              {fill > 0 && (
+              {poured > 0 && (
                 <AlongWall
                   a={a}
-                  b={end}
+                  b={full}
                   width={fw}
-                  y0={-0.02}
-                  y1={0.012 + fill * 0.01}
+                  y0={-fd - 0.01}
+                  y1={level + 0.003}
                   material={concrete}
                 />
               )}
@@ -462,17 +519,29 @@ function Building({
           })()}
           {edges
             .slice(0, Math.ceil(edges.length * (ghost ? 1 : s('electrical'))))
-            .map((e) => (
-              <AlongWall
-                key={e.index}
-                a={p(e.a[0], e.a[1])}
-                b={p(e.b[0], e.b[1])}
-                width={t + 0.06}
-                y0={2.3}
-                y1={2.34}
-                color="#f3f4f6"
-              />
-            ))}
+            .map((e) => {
+              // The cable tray on the inside face of the wall (seen through the
+              // windows and door), not round the outside.
+              const cx = (b.x0 + b.x1) / 2
+              const cy = (b.y0 + b.y1) / 2
+              const mx = (e.a[0] + e.b[0]) / 2
+              const my = (e.a[1] + e.b[1]) / 2
+              const nx = -e.dir[1]
+              const ny = e.dir[0]
+              const inward = (cx - mx) * nx + (cy - my) * ny > 0 ? 1 : -1
+              const off = (design.wall.thickness / 2 + 40) * inward
+              return (
+                <AlongWall
+                  key={e.index}
+                  a={p(e.a[0] + nx * off, e.a[1] + ny * off)}
+                  b={p(e.b[0] + nx * off, e.b[1] + ny * off)}
+                  width={0.06}
+                  y0={2.3}
+                  y1={2.36}
+                  color="#d1d5db"
+                />
+              )
+            })}
         </group>
       )}
       {(ghost || s('plumbing') > 0) && design.services.sanitary > 0 && (
@@ -649,6 +718,14 @@ function Bridge({
                 at={[x, 0.15 * s('reinforcement'), 0]}
                 color="#9a4a1d"
                 opacity={0.75}
+              />
+            )}
+            {/* The abutment's face, seen in the mill race, rising as it is poured. */}
+            {poured > 0 && (
+              <Block
+                size={[0.45, 1.8 * poured, width + 1]}
+                at={[side * (half - 0.3), -1.8 + (1.8 * poured) / 2, 0]}
+                color="#bdbab3"
               />
             )}
             {poured > 0 && (
