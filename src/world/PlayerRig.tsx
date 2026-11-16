@@ -454,12 +454,31 @@ export function PlayerRig(props: PlayerRigProps) {
     if (!completed && m.activity.id.startsWith('person:')) release()
     // Walking in from the doorway is not something the game hears about.
     if (m.activity.id !== 'arrive') latest.current.onDone(m.activity, completed)
+    // Through the doorway: now what was asked for meanwhile.
+    else if (queued.current) {
+      const next = queued.current
+      queued.current = null
+      handleRequest(next)
+    }
   }
 
   // A request from the list: walk there and do it.
   const request = props.request
+  // (Asked for while walking in through a doorway: done once through it.)
+  const queued = useRef<{ id: string; nonce: number } | null>(null)
   useEffect(() => {
     if (!request) return
+    const m = mode.current
+    if (m.kind === 'acting' && m.activity.id === 'arrive') {
+      queued.current = request
+      return
+    }
+    handleRequest(request)
+    // Only a new request (nonce) starts something.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request?.nonce])
+
+  function handleRequest(request: { id: string; nonce: number }) {
     // Someone clicked on (or chosen): walk over to talk to them.
     const person = request.id.startsWith('person:')
       ? npcById(request.id.slice('person:'.length))
@@ -490,9 +509,7 @@ export function PlayerRig(props: PlayerRigProps) {
         true,
       )
     }
-    // Only a new request (nonce) starts something.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [request?.nonce])
+  }
 
   useEffect(() => {
     latest.current.onReady?.()

@@ -192,6 +192,34 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-16 · Workplaces: the audit, and the district's buildings made working places
+
+- **Audit** of every career and its workplace, from the code:
+  [docs/WORKPLACES.md](docs/WORKPLACES.md). There are nine careers: six at Cobalt
+  Ridge (one office, a department corner each), the hospital ward, the law firm
+  (and the county court), and the engineering firm (and the construction site).
+  The audit lists each workplace's rooms, equipment, and the software its objects
+  open.
+- **The end of the street** (reported: Northbank's works looked like an empty
+  shell from the street):
+  - Northbank Engineering's office block on the works' street side
+    (`city/scene/workplaceGrounds.tsx`): two storeys of glazing with the design
+    office seen inside (desks with twin screens, engineers at them, drawing
+    boards, the lights on), an entrance canopy over real automatic doors, and the
+    company's sign. In front: a car park with painted bays, parked cars, lamp
+    columns, a footpath, trees and planting;
+  - Riverside Community Hospital: real automatic doors at its main entrance, a
+    car park and trees;
+  - the office towers: automatic doors in their lobbies, trees and planting.
+
+  Seen at High from the "go to work" door.
+
+- **Fixed:** asking the player to go somewhere while they were still stepping out
+  of a doorway lost the request. The arrival was cut short inside the building,
+  and they stayed at the door. It is now done once they are through.
+
+---
+
 ## 2026-11-16 · 3D upgrade, round 3 completion: walking in and out, doors in use, sound measured
 
 - **Going in and out is walked, not a jump** (the café, shop, gym, garage,

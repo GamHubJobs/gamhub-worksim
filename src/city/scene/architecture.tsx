@@ -16,6 +16,7 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import { BoxGeometry, Color, InstancedMesh, Matrix4, MeshStandardMaterial } from 'three'
 import { Box } from '../../office/scene/parts'
 import { Sign } from '../../office/scene/signs'
+import { Door } from '../../world/doors/Door'
 
 /** A grid of identical boxes (panes, mullions), drawn as one instanced mesh. */
 function Grid({
@@ -177,6 +178,17 @@ export function OfficeTower({
         color={dark ? '#fde68a' : '#9fbfd3'}
         emissive={dark ? '#b45309' : undefined}
       />
+      {/* The lobby's doors, in its glazing */}
+      <Door
+        position={[face + 1.1, 0, z]}
+        rotation={-Math.PI / 2}
+        kind="automatic"
+        width={2.4}
+        height={2.6}
+        leaf="glass"
+        frame="#334155"
+        sense={2.4}
+      />
       {[-1, 1].map((s) => (
         <Box
           key={s}
@@ -248,6 +260,17 @@ export function HospitalBlock({ x, z, dark }: { x: number; z: number; dark: bool
         position={[face - 0.02, 1.3, z - 4]}
         color={dark ? '#fef3c7' : '#a5c8d8'}
         emissive={dark ? '#a16207' : undefined}
+      />
+      {/* The main doors: automatic, parting for whoever walks up to them */}
+      <Door
+        position={[face - 0.1, 0, z - 4]}
+        rotation={-Math.PI / 2}
+        kind="automatic"
+        width={2.4}
+        height={2.5}
+        leaf="glass"
+        frame="#94a3b8"
+        sense={2.4}
       />
       <Sign
         position={[face - 0.06, 4.6, z - 4]}

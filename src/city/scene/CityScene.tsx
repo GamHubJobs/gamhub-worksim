@@ -8,6 +8,7 @@
  */
 import { lowDpr } from '../../world/lowDpr'
 import { EngineeringWorks, HospitalBlock, OfficeTower } from './architecture'
+import { Bed, CarPark, NorthbankOffice, Tree } from './workplaceGrounds'
 import { Door as BuildingDoor, type DoorProps } from '../../world/doors/Door'
 import { BUILDINGS, COURTHOUSE } from '../worldMap'
 import { useCursor } from '@react-three/drei'
@@ -989,6 +990,32 @@ function BusinessDistrict({ dark }: { dark: boolean }) {
       <OfficeTower x={104} z={6} w={12} d={12} h={58} tint="#7fa6bf" dark={dark} />
       <HospitalBlock x={86} z={-15} dark={dark} />
       <EngineeringWorks x={69} z={41} dark={dark} />
+      {/* Its office block in front, the car park, the path and trees (workplaceGrounds.tsx) */}
+      <NorthbankOffice x0={60.5} x1={77.5} z={25.8} door={66} dark={dark} />
+      <CarPark
+        x={57.8}
+        z={18.5}
+        bays={7}
+        facing={1}
+        taken={[0, 1, 3, 4, 6]}
+        dark={dark}
+      />
+      <Box size={[2.2, 0.03, 12]} position={[66, 0.03, 18.5]} color="#d6d3d1" />
+      {[57, 75.5].map((tx) => (
+        <Tree key={tx} position={[tx, 0, 24]} />
+      ))}
+      <Bed position={[62, 0, 24.6]} w={4} d={1} />
+      <Bed position={[70.5, 0, 24.6]} w={4} d={1} />
+      {/* At the hospital: a car park and trees by the entrance */}
+      <CarPark x={70.4} z={-26} bays={3} facing={-1} taken={[0, 2]} dark={dark} />
+      {[-9, -27].map((tz) => (
+        <Tree key={tz} position={[76.5, 0, tz]} scale={0.9} />
+      ))}
+      {/* By the towers: trees and a bed of planting */}
+      {[16, 28].map((tz) => (
+        <Tree key={tz} position={[76.5, 0, tz]} scale={1.1} />
+      ))}
+      <Bed position={[95.5, 0, -4.8]} w={5} d={1} />
       {/* A bus shelter at the end of the street */}
       <Box size={[3, 0.1, 1.4]} position={[58, 2.4, 9.6]} color="#334155" />
       <Box
