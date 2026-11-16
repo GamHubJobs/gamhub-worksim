@@ -12,7 +12,36 @@ interface Ear {
 }
 
 let ear: Ear | null = null
-const facing = { x: 0, y: 0, z: -1 }
+/**
+ * Where the camera faces, filled in by three.js's getWorldDirection, which
+ * calls the target's set(), normalize() and negate() (so not a plain object; three.js
+ * itself is not imported here, to keep it out of the start-up download).
+ */
+const facing = {
+  x: 0,
+  y: 0,
+  z: -1,
+  set(x: number, y: number, z: number) {
+    this.x = x
+    this.y = y
+    this.z = z
+    return this
+  },
+  normalize() {
+    const l = Math.hypot(this.x, this.y, this.z) || 1
+    this.x /= l
+    this.y /= l
+    this.z /= l
+    return this
+  },
+  // A camera looks down its −z, so it negates the direction.
+  negate() {
+    this.x = -this.x
+    this.y = -this.y
+    this.z = -this.z
+    return this
+  },
+}
 
 /** The 3D view's camera is where the player hears from (null: no 3D view). */
 export function hearFrom(camera: Ear | null): void {

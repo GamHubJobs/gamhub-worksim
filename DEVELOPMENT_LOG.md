@@ -192,6 +192,48 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-16 · 3D upgrade, round 1: people, equipment, vehicles, sound from its source
+
+- **People** (every character, shared shapes, every existing animation kept):
+  - a torso turned on a lathe (hips, waist, chest, sloping shoulders);
+  - limbs that taper, with joints at the shoulders, elbows and knees;
+  - hands with a palm, four fingers and a thumb;
+  - cuffs on long sleeves, trouser hems, a belt and buckle, and heels on the shoes.
+- **Hospital ward:** beds with castors, side rails and a raised head section. A
+  working patient monitor draws a live ECG trace with the heart rate and SpO₂, and
+  beeps with the beat from where it stands while a patient is in the bed. There is a
+  drip stand with its bag and line.
+- **Construction site:**
+  - materials arrive on a flatbed lorry (bars, blocks, steel, roofing) just before
+    their stage, appear in the stores and run down as they are used;
+  - a bulldozer clears the site during the survey;
+  - a generator runs while the crew works.
+- **Street:** cars have a shaped body (bonnet, raked windscreen, roofline, boot),
+  tinted glass, lights, bumpers, number plates, mirrors and alloy wheels. The bus has
+  a window band, doors, a lit destination board and lights.
+- **Sound from its source** (`audio/SoundSource.tsx`, `audio/playFrom.ts`):
+  - other people's footsteps and typing are heard from where they are, within
+    earshot (the player's own still come from the player's rig);
+  - the site's excavator, mixer, crane, crew tools, generator, lorry and bulldozer
+    play from their positions, only while working;
+  - patient monitors beep from the bedside.
+
+  Distance and direction come from the listener; nothing plays when the activity is
+  not happening. The site's general bed of sound is quieter now that the machines
+  are placed.
+
+- **A bug found on the way:** the listener gave three.js a plain object to fill
+  with the camera's direction; three.js calls `set()`, `normalize()` and
+  `negate()` on it, so every placed sound (the doorbell since Sound 3) threw.
+  Fixed, with a test using a real camera.
+- **Not changed this round** (still to do):
+  - building architecture (exteriors and interiors);
+  - courtroom, IT and office equipment models;
+  - skinned or downloaded human models;
+  - the professional scenarios themselves.
+
+---
+
 ## 2026-11-16 · Engineer career: design, CAD Craft, FreeCAD and construction
 
 The Engineer career gained design-and-build projects (see

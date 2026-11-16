@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { spatial } from './listener'
+import { PerspectiveCamera } from 'three'
+import { hearFrom, listenerNow, spatial } from './listener'
 
 // Facing along -z (yaw 0), as the cameras do at rest.
 const at = (x: number, z: number, yaw = 0) =>
@@ -27,5 +28,22 @@ describe('sounds heard from where they are', () => {
       pan: 0,
       gain: 1,
     })
+  })
+})
+
+describe('hearing from a real camera', () => {
+  it('reads where a three.js camera is and faces (it fills the direction in itself)', () => {
+    const camera = new PerspectiveCamera()
+    camera.position.set(3, 1.6, 4)
+    camera.lookAt(3, 1.6, -10)
+    camera.updateMatrixWorld()
+    hearFrom(camera)
+    const ear = listenerNow()
+    expect(ear).toMatchObject({ x: 3, z: 4, active: true })
+    expect(Math.abs(ear.yaw)).toBeLessThan(1e-6)
+    // A sound to the camera's right is heard on the right.
+    expect(spatial(8, 4).pan).toBeGreaterThan(0.5)
+    hearFrom(null)
+    expect(listenerNow().active).toBe(false)
   })
 })

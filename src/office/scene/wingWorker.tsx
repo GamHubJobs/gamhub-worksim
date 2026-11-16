@@ -31,7 +31,7 @@ export function WingWorker({
   })
   return (
     <group position={[x, 0, z]} rotation={[0, heading, 0]}>
-      <Person look={look} seated={false} rig={rig} motion={motion} />
+      <Person sounds look={look} seated={false} rig={rig} motion={motion} />
     </group>
   )
 }

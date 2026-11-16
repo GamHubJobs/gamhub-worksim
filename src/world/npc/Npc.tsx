@@ -226,6 +226,7 @@ export function Npc({
             {children ??
               (look && (
                 <Person
+                  sounds
                   look={look}
                   seated={seated}
                   phase={phase}

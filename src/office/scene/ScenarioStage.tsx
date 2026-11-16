@@ -98,7 +98,7 @@ function Figure({
     <group>
       {member.figure !== false && (
         <group ref={body} position={[place.at.x, y, place.at.z]}>
-          <Person look={member.look} seated={seated} rig={rig} motion={motion} />
+          <Person sounds look={member.look} seated={seated} rig={rig} motion={motion} />
         </group>
       )}
       {speaking && (

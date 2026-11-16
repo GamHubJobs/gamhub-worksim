@@ -270,8 +270,8 @@ function baseLayers(scene: Scene): Partial<Record<Layer, number>> {
       // voices, reversing beepers, the wind; no music.
       return {
         machines: 1,
-        construction: 5,
-        tools: 4,
+        construction: 2,
+        tools: 1.5,
         alarm: 1.2,
         engines: 1,
         chatter: 1.5,

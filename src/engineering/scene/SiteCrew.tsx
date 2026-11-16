@@ -105,6 +105,7 @@ export function SiteWorker({ member }: { member: CrewMember }) {
       rotation={[0, member.heading, 0]}
     >
       <Person
+        sounds
         look={member.look}
         seated={false}
         rig={rig}

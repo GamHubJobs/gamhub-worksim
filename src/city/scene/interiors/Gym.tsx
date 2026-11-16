@@ -73,7 +73,7 @@ function Treadmill({
       />
       {runner && (
         <Npc who={who!} position={[0, 0.2, 0]} availability="exercising">
-          <Person look={runner} motion={motion} phase={position[0]} />
+          <Person sounds look={runner} motion={motion} phase={position[0]} />
         </Npc>
       )}
     </group>

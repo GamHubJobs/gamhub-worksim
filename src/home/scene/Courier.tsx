@@ -115,6 +115,7 @@ export function Courier({
     <>
       <group ref={group} visible={false} userData={{ passable: true }}>
         <Person
+          sounds
           look={COURIER_LOOK}
           motion={motion}
           rig={rig}

@@ -48,7 +48,11 @@ import {
   Stores,
   Van,
   Welfare,
+  Bulldozer,
+  Generator,
+  Lorry,
 } from './SiteKit'
+import { SoundSource } from '../../audio/SoundSource'
 import {
   siteActivities,
   siteAreaAt,
@@ -331,6 +335,32 @@ function ConstructionSiteScene(props: ConstructionSiteSceneProps) {
   const mixerOn = stage === 'foundations' || stage === 'slab'
   const vanOn = !!stage && ['electrical', 'plumbing', 'hvac', 'finishing'].includes(stage)
   const progress = (s: StageId) => state[s] ?? 0
+  // Materials arrive just before their stage (the stage before it well on),
+  // sit in the stores, and run down as they are used.
+  const before = (s: StageId) => {
+    const i = stages.indexOf(s)
+    return i > 0 ? progress(stages[i - 1]) : 1
+  }
+  const stock = (s: StageId) =>
+    !stages.includes(s) ? 0 : progress(s) > 0 ? 1 - progress(s) : before(s) > 0.6 ? 1 : 0
+  /** What the lorry is bringing now, if anything: a stage about to start, or just started. */
+  const delivery: { load: 'blocks' | 'rebar' | 'steel' | 'roof' } | null = (() => {
+    const loads: Array<[StageId, 'blocks' | 'rebar' | 'steel' | 'roof']> = [
+      ['reinforcement', 'rebar'],
+      ['structure', 'steel'],
+      ['walls', 'blocks'],
+      ['roofing', 'roof'],
+    ]
+    for (const [s, load] of loads) {
+      if (!stages.includes(s)) continue
+      const p = progress(s)
+      if ((p === 0 && before(s) > 0.6) || (p > 0 && p < 0.15)) return { load }
+    }
+    return null
+  })()
+  const working = !!stage && !blocked
+  const crewAt = crew.find((m) => m.id !== 'supervisor' && m.id !== 'manager-site')
+    ?.path[0]
   const extent = Math.max(layout.x1 - layout.x0, layout.z1 - layout.z0) / 2 + 4
 
   return (
@@ -377,12 +407,70 @@ function ConstructionSiteScene(props: ConstructionSiteSceneProps) {
             x={layout.stores.x}
             z={layout.stores.z}
             stock={{
-              blocks: 1 - progress('walls'),
-              rebar: 1 - progress('reinforcement'),
-              steel: 1 - progress('structure'),
+              blocks: stock('walls'),
+              rebar: stock('reinforcement'),
+              steel: stock('structure'),
             }}
           />
           <Skip x={layout.stores.x} z={layout.stores.z + 4.2} />
+          {/* The generator by the cabin powers the site while the crew works. */}
+          <Generator
+            x={layout.cabin.x + 4.2}
+            z={layout.cabin.z + 3.2}
+            running={working}
+          />
+          <SoundSource
+            x={layout.cabin.x + 4.2}
+            z={layout.cabin.z + 3.2}
+            id="engine"
+            every={2.6}
+            range={10}
+            active={working}
+          />
+          {delivery && (
+            <Lorry
+              x={layout.gate.x + 3.5}
+              z={layout.z1 - 3.2}
+              heading={Math.PI}
+              load={delivery.load}
+            />
+          )}
+          {delivery && (
+            <SoundSource
+              x={layout.gate.x + 3.5}
+              z={layout.z1 - 3.2}
+              id="engine"
+              every={1.4}
+              range={18}
+            />
+          )}
+          {/* Site clearance at the start: the bulldozer strips the plot. */}
+          {active('survey') && (
+            <>
+              <Bulldozer
+                from={{ x: -hw - 1, z: hd + 3.5 }}
+                to={{ x: hw + 1, z: hd + 3.5 }}
+                working
+              />
+              <SoundSource x={0} z={hd + 3.5} id="engine" every={1.1} range={20} />
+            </>
+          )}
+          {/* The crew's tools, from where they are working. */}
+          {crewAt && (
+            <SoundSource
+              x={crewAt.x}
+              z={crewAt.z}
+              id="clank"
+              every={2.4}
+              range={14}
+              active={
+                working &&
+                stage !== 'survey' &&
+                stage !== 'inspection' &&
+                stage !== 'handover'
+              }
+            />
+          )}
           <BuildModel design={design} state={state} />
           {excavatorOn && (
             <Excavator
@@ -391,6 +479,24 @@ function ConstructionSiteScene(props: ConstructionSiteSceneProps) {
               heading={design.kind === 'bridge' ? Math.PI : Math.PI * 0.75}
               working={active('excavation')}
             />
+          )}
+          {active('excavation') && (
+            <>
+              <SoundSource
+                x={design.kind === 'bridge' ? -hw - 4 : hw + 3.2}
+                z={design.kind === 'bridge' ? 2.8 : hd + 2.6}
+                id="engine"
+                every={0.9}
+                range={22}
+              />
+              <SoundSource
+                x={design.kind === 'bridge' ? -hw - 4 : hw + 3.2}
+                z={design.kind === 'bridge' ? 2.8 : hd + 2.6}
+                id="clank"
+                every={3.2}
+                range={18}
+              />
+            </>
           )}
           {active('excavation') && design.kind === 'building' && (
             <Dumper
@@ -406,6 +512,36 @@ function ConstructionSiteScene(props: ConstructionSiteSceneProps) {
               heading={design.kind === 'bridge' ? Math.PI / 2 : 0}
               pouring={!blocked}
             />
+          )}
+          {mixerOn && (
+            <SoundSource
+              x={design.kind === 'bridge' ? -hw - 6 : -hw - 4.5}
+              z={design.kind === 'bridge' ? -2.5 : hd + 3.5}
+              id="engine"
+              every={1.3}
+              range={20}
+              active={!blocked}
+            />
+          )}
+          {craneOn && (
+            <>
+              <SoundSource
+                x={layout.crane.x}
+                z={layout.crane.z}
+                id="engine"
+                every={1.6}
+                range={22}
+                active={!blocked}
+              />
+              <SoundSource
+                x={layout.crane.x}
+                z={layout.crane.z}
+                id="clank"
+                every={4.5}
+                range={16}
+                active={!blocked}
+              />
+            </>
           )}
           {craneOn && (
             <MobileCrane

@@ -496,6 +496,7 @@ export function Crowd(props: CrowdProps) {
         const live = lives.get(person.id)!
         const body = (
           <Person
+            sounds
             look={props.looks[person.id]}
             motion={live.motion}
             rig={live.rig}

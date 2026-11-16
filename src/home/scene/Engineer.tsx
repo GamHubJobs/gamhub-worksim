@@ -203,6 +203,7 @@ export function Engineer({
     <>
       <group ref={group} visible={false} userData={{ passable: true }}>
         <Person
+          sounds
           look={ENGINEER_LOOK}
           motion={motion}
           rig={rig}

@@ -2,6 +2,7 @@
 import { Sign } from './signs'
 import type { Vector } from '../../content/office'
 import { Box } from './parts'
+import { DripStand, PatientMonitor } from './medicalKit'
 import { BED_X as BED_X_A, type WARD_BEDS } from './wardLayout'
 
 /** A bed with its headboard to +x: at x (its middle), its sign on the wall at signX. */
@@ -28,14 +29,46 @@ export function Bed({
       <Box size={[0.06, 0.6, 0.95]} position={[BED_X - 1.03, 0.62, z]} color="#cbd5e1" />
       {[-0.85, 0.85].map((dx) =>
         [-0.42, 0.42].map((dz) => (
-          <Box
-            key={`${dx}${dz}`}
-            size={[0.05, 0.44, 0.05]}
-            position={[BED_X + dx, 0.22, z + dz]}
-            color="#64748b"
-          />
+          <group key={`${dx}${dz}`} position={[BED_X + dx, 0, z + dz]}>
+            <Box size={[0.05, 0.36, 0.05]} position={[0, 0.26, 0]} color="#64748b" />
+            {/* A castor */}
+            <mesh position={[0, 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.055, 0.055, 0.04, 12]} />
+              <meshStandardMaterial color="#1f2937" roughness={0.8} />
+            </mesh>
+          </group>
         )),
       )}
+      {/* Side rails, either side of the top half */}
+      {[-0.47, 0.47].map((dz) => (
+        <group key={dz}>
+          <Box
+            size={[0.9, 0.03, 0.025]}
+            position={[BED_X + 0.45, 0.86, z + dz]}
+            color="#cbd5e1"
+          />
+          <Box
+            size={[0.9, 0.03, 0.025]}
+            position={[BED_X + 0.45, 0.74, z + dz]}
+            color="#cbd5e1"
+          />
+          {[0.05, 0.85].map((dx) => (
+            <Box
+              key={dx}
+              size={[0.025, 0.2, 0.025]}
+              position={[BED_X + dx, 0.78, z + dz]}
+              color="#94a3b8"
+            />
+          ))}
+        </group>
+      ))}
+      {/* The head section, raised a little */}
+      <Box
+        size={[0.7, 0.1, 0.88]}
+        position={[BED_X + 0.62, 0.72, z]}
+        color="#f1f5f9"
+        radius={0.03}
+      />
       {patient && (
         <>
           {/* The patient, resting: a pillow, a head and a blanket */}
@@ -68,12 +101,15 @@ export function Bed({
         position={[BED_X + 0.95, 0.75, z + 0.62]}
         color="#64748b"
       />
-      <Box
-        size={[0.32, 0.24, 0.08]}
-        position={[BED_X + 0.95, 1.55, z + 0.62]}
-        color="#0f172a"
-        emissive="#22c55e"
+      <PatientMonitor
+        x={BED_X + 0.95}
+        y={1.55}
+        z={z + 0.62}
+        rotation={-Math.PI / 2}
+        rate={patient ? 72 + (Math.round(z * 7) % 18) : 0}
+        live={!!patient}
       />
+      {patient && <DripStand x={BED_X + 0.95} z={z - 0.55} />}
       {/* Curtain (pulled back) and the bed sign */}
       <Box
         size={[0.9, 1.7, 0.03]}

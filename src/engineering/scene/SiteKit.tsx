@@ -505,3 +505,147 @@ export function Welfare({ x, z }: { x: number; z: number }) {
 export function BeamLoad({ length = 4 }: { length?: number }) {
   return <B size={[length, 0.3, 0.15]} at={[0, -0.15, 0]} color="#3b5b7a" metal={0.4} />
 }
+
+/** A bulldozer; `working` pushes it back and forth between `from` and `to`, blade down. */
+export function Bulldozer({
+  from,
+  to,
+  working,
+}: {
+  from: { x: number; z: number }
+  to: { x: number; z: number }
+  working: boolean
+}) {
+  const g = useRef<Group>(null)
+  const blade = useRef<Group>(null)
+  const t = useRef(0)
+  useFrame((_, dt) => {
+    if (!g.current) return
+    if (working && !STILL) t.current += dt
+    const c = (t.current % 12) / 12
+    const f = c < 0.5 ? c * 2 : 2 - c * 2
+    g.current.position.set(from.x + (to.x - from.x) * f, 0, from.z + (to.z - from.z) * f)
+    g.current.rotation.y = Math.atan2(-(to.z - from.z), to.x - from.x)
+    if (blade.current) blade.current.position.y = c < 0.5 ? 0.35 : 0.6
+  })
+  return (
+    <group ref={g} position={[from.x, 0, from.z]}>
+      {[-0.8, 0.8].map((s) => (
+        <B key={s} size={[2.8, 0.55, 0.5]} at={[0, 0.28, s]} color="#262626" rough={1} />
+      ))}
+      <B size={[2.2, 0.9, 1.6]} at={[-0.1, 1.0, 0]} color={YELLOW} />
+      <B size={[1.0, 0.9, 1.3]} at={[-0.6, 1.85, 0]} color={YELLOW} />
+      <B
+        size={[0.02, 0.6, 1.1]}
+        at={[-0.09, 1.9, 0]}
+        color="#93c5fd"
+        metal={0.2}
+        rough={0.1}
+      />
+      <B size={[0.08, 0.6, 0.08]} at={[0.3, 1.8, 0.5]} color="#374151" />
+      <group ref={blade} position={[1.7, 0.35, 0]}>
+        <B size={[0.15, 0.7, 2.4]} at={[0, 0, 0]} color={YELLOW} />
+        <B size={[0.9, 0.1, 0.12]} at={[-0.5, 0.15, 0.7]} color="#374151" />
+        <B size={[0.9, 0.1, 0.12]} at={[-0.5, 0.15, -0.7]} color="#374151" />
+      </group>
+    </group>
+  )
+}
+
+/** A flatbed lorry with its load (pallets of blocks, bundles of bars, steel), delivering. */
+export function Lorry({
+  x,
+  z,
+  heading = 0,
+  load,
+}: {
+  x: number
+  z: number
+  heading?: number
+  load: 'blocks' | 'rebar' | 'steel' | 'roof'
+}) {
+  return (
+    <group position={[x, 0, z]} rotation={[0, heading, 0]}>
+      <B size={[7.2, 0.35, 2.3]} at={[-0.6, 1.0, 0]} color="#475569" />
+      <B size={[1.9, 2.0, 2.3]} at={[3.4, 1.9, 0]} color="#1d4ed8" />
+      <B
+        size={[0.05, 0.9, 2.0]}
+        at={[4.36, 2.3, 0]}
+        color="#93c5fd"
+        metal={0.2}
+        rough={0.1}
+      />
+      <B size={[0.1, 1.0, 2.3]} at={[2.4, 1.6, 0]} color="#334155" />
+      {[-3.4, -2.2, 3.2].flatMap((wx) =>
+        [-1, 1].map((s) => (
+          <Wheel key={`${wx}${s}`} at={[wx, 0.5, s * 1.1]} r={0.5} w={0.35} />
+        )),
+      )}
+      {/* The load on the bed */}
+      {load === 'blocks' &&
+        [-3, -1.8, -0.6, 0.6].flatMap((lx) =>
+          [-0.5, 0.5].map((lz) => (
+            <group key={`${lx}${lz}`} position={[lx, 1.18, lz]}>
+              <B size={[1.0, 0.12, 0.95]} at={[0, 0.06, 0]} color="#a16207" />
+              <B size={[0.95, 0.6, 0.9]} at={[0, 0.42, 0]} color="#b9b6ae" />
+            </group>
+          )),
+        )}
+      {load === 'rebar' &&
+        Array.from({ length: 10 }, (_, i) => (
+          <mesh
+            key={i}
+            position={[-0.6, 1.25 + (i % 3) * 0.06, -0.7 + (i % 5) * 0.32]}
+            rotation={[0, 0, Math.PI / 2]}
+          >
+            <cylinderGeometry args={[0.02, 0.02, 6.4, 6]} />
+            <meshStandardMaterial color="#7c2d12" />
+          </mesh>
+        ))}
+      {(load === 'steel' || load === 'roof') &&
+        Array.from({ length: 5 }, (_, i) => (
+          <B
+            key={i}
+            size={[6.4, load === 'steel' ? 0.3 : 0.08, load === 'steel' ? 0.16 : 2.0]}
+            at={[
+              -0.6,
+              1.33 + i * (load === 'steel' ? 0.31 : 0.09),
+              load === 'steel' ? -0.7 + i * 0.35 : 0,
+            ]}
+            color={load === 'steel' ? '#3b5b7a' : '#4b5563'}
+            metal={0.4}
+          />
+        ))}
+    </group>
+  )
+}
+
+/** The site generator, its exhaust stack and a cable to the cabin. */
+export function Generator({ x, z, running }: { x: number; z: number; running: boolean }) {
+  const lid = useRef<Group>(null)
+  const t = useRef(0)
+  useFrame((_, dt) => {
+    // A running engine shakes its canopy a little.
+    if (!running || STILL || !lid.current) return
+    t.current += dt
+    lid.current.position.y = Math.sin(t.current * 60) * 0.004
+  })
+  return (
+    <group position={[x, 0, z]}>
+      <B size={[2.0, 0.15, 1.0]} at={[0, 0.08, 0]} color="#374151" />
+      <group ref={lid}>
+        <B size={[1.9, 1.1, 0.95]} at={[0, 0.7, 0]} color="#16a34a" />
+        <B size={[0.6, 0.3, 0.02]} at={[0.5, 0.9, 0.48]} color="#0f172a" />
+        <B
+          size={[0.08, 0.06, 0.02]}
+          at={[0.35, 0.95, 0.49]}
+          color={running ? '#22c55e' : '#7f1d1d'}
+        />
+      </group>
+      <mesh position={[-0.7, 1.45, 0.2]}>
+        <cylinderGeometry args={[0.05, 0.05, 0.5, 8]} />
+        <meshStandardMaterial color="#1f2937" metalness={0.5} />
+      </mesh>
+    </group>
+  )
+}

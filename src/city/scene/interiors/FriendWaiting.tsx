@@ -95,7 +95,7 @@ function ParkRunner({ who, look }: { who: Who; look: PersonLook }) {
       {/* Waiting: talked to like anyone else. */}
       <WaitingDan who={who} look={look} />
       <group ref={group} visible={false} userData={{ passable: true }}>
-        <Person look={look} motion={motion} talking={false} phase={0.9} />
+        <Person sounds look={look} motion={motion} talking={false} phase={0.9} />
       </group>
     </>
   )

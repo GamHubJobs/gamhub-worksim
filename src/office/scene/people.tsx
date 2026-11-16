@@ -25,10 +25,12 @@ import {
   Color,
   CylinderGeometry,
   IcosahedronGeometry,
+  LatheGeometry,
   MathUtils,
   MeshStandardMaterial,
   SphereGeometry,
   TorusGeometry,
+  Vector2,
   Vector3,
   type Group,
   type Mesh,
@@ -40,6 +42,7 @@ import { clipFrame } from '../../world/character/rig'
 import { bodyOf } from '../../world/npc/bodies'
 import { engagedFor, removeNpc, setNpc } from '../../world/npc/people'
 import { Talkable } from '../../world/npc/Talkable'
+import { playFrom } from '../../audio/playFrom'
 
 /** With reduced motion, people hold a natural pose and do not move. */
 const STILL = prefersReducedMotion()
@@ -180,6 +183,37 @@ const CROUCH_DROP = -0.32
 // Shared geometry and materials
 // ---------------------------------------------------------------------------
 
+/** A shape turned about the y axis through these (radius, height) points, bottom to top. */
+function turned(points: Array<[number, number]>, segments = 18) {
+  return new LatheGeometry(
+    points.map(([r, y]) => new Vector2(r, y)),
+    segments,
+  )
+}
+
+/**
+ * A limb: rounded at both ends, wider at the top (`top`) than the bottom
+ * (`bottom`), `length` between the joints, centred on its middle.
+ */
+function limb(top: number, bottom: number, length: number, swell = 1.08) {
+  const h = length / 2
+  const mid = ((top + bottom) / 2) * swell
+  return turned(
+    [
+      [0, -h - bottom * 0.9],
+      [bottom * 0.62, -h - bottom * 0.7],
+      [bottom, -h],
+      [bottom * 1.02, -h * 0.55],
+      [mid, -h * 0.05],
+      [top * 1.02, h * 0.55],
+      [top, h],
+      [top * 0.62, h + top * 0.7],
+      [0, h + top * 0.9],
+    ],
+    14,
+  )
+}
+
 const GEO = {
   head: new SphereGeometry(0.115, 24, 18),
   jaw: new SphereGeometry(0.09, 18, 12),
@@ -191,14 +225,42 @@ const GEO = {
   mouth: new BoxGeometry(0.036, 0.006, 0.006),
   smile: new TorusGeometry(0.019, 0.0034, 6, 14, Math.PI),
   neck: new CylinderGeometry(0.047, 0.054, 0.12, 14),
-  torso: new CapsuleGeometry(0.13, 0.28, 8, 18),
+  // The torso, from the waistband to the base of the neck: hips, a narrower
+  // waist, the chest, then shoulders sloping in to the neck.
+  torso: turned(
+    [
+      [0, -0.27],
+      [0.108, -0.262],
+      [0.118, -0.22],
+      [0.106, -0.12],
+      [0.112, -0.03],
+      [0.126, 0.06],
+      [0.13, 0.13],
+      [0.127, 0.19],
+      [0.112, 0.232],
+      [0.082, 0.258],
+      [0.05, 0.27],
+      [0, 0.272],
+    ],
+    20,
+  ),
   pelvis: new SphereGeometry(0.14, 16, 12),
-  upperArm: new CapsuleGeometry(0.054, 0.21, 6, 12),
-  forearm: new CapsuleGeometry(0.045, 0.19, 6, 12),
+  upperArm: limb(0.058, 0.044, 0.22),
+  forearm: limb(0.045, 0.034, 0.2, 1.04),
   hand: new SphereGeometry(0.043, 12, 10),
   thumb: new CapsuleGeometry(0.012, 0.03, 4, 6),
-  thigh: new CapsuleGeometry(0.086, 0.28, 6, 12),
-  shin: new CapsuleGeometry(0.066, 0.29, 6, 12),
+  // Four fingers, a touch shorter at the edges, and the palm they come from.
+  finger: new CapsuleGeometry(0.0085, 0.034, 4, 6),
+  palm: new BoxGeometry(0.062, 0.07, 0.026),
+  // Cuffs at the wrists and ankles, a belt at the waist.
+  cuff: new CylinderGeometry(0.041, 0.043, 0.026, 14, 1, true),
+  hem: new CylinderGeometry(0.052, 0.056, 0.03, 14, 1, true),
+  belt: new CylinderGeometry(0.146, 0.146, 0.034, 24, 1, true),
+  buckle: new BoxGeometry(0.04, 0.03, 0.008),
+  // A shoe's toe cap and heel, over the sole.
+  heel: new BoxGeometry(0.085, 0.03, 0.06),
+  thigh: limb(0.092, 0.062, 0.3, 1.05),
+  shin: limb(0.06, 0.042, 0.3, 1.12),
   unit: new SphereGeometry(1, 16, 12),
   sole: new BoxGeometry(0.1, 0.016, 0.25),
   // The hair cap covers the top of the head; tilted back, it leaves the face clear.
@@ -342,6 +404,7 @@ export function Person({
   rig,
   hold,
   hands,
+  sounds = false,
 }: {
   position?: Vector
   rotation?: number
@@ -359,10 +422,16 @@ export function Person({
   hold?: { left?: ReactNode; right?: ReactNode }
   /** Filled in with the hands, for objects that follow them. */
   hands?: RefObject<HandMarkers>
+  /**
+   * Someone other than the player: their footsteps and typing are heard from
+   * where they are (the player's own are played by the player's rig).
+   */
+  sounds?: boolean
 }) {
   const camera = useThree((state) => state.camera)
 
   const outer = useRef<Group>(null)
+  const soundAt = useRef(0)
   const turn = useRef<Group>(null)
   const body = useRef<Group>(null)
   const spine = useRef<Group>(null)
@@ -395,6 +464,9 @@ export function Person({
       under: mat(look.under ?? '#f8fafc', 0.8),
       trousers: mat(look.trousers, 0.85),
       shoes: mat(look.shoes ?? '#1f1a17', 0.45, 0.1),
+      shoesShade: mat(shade(look.shoes ?? '#1f1a17', '#000000', 0.35), 0.6),
+      trousersShade: mat(shade(look.trousers, '#000000', 0.15), 0.85),
+      belt: mat('#1c1917', 0.5, 0.05),
       white: mat('#f8fafc', 0.25),
       iris: mat('#2a1d16', 0.3),
       tie: mat(look.tie ?? '#1e3a8a', 0.6),
@@ -578,6 +650,20 @@ export function Person({
       )
     }
 
+    // Their footsteps and typing, from where they are (people other than the player).
+    if (sounds && outer.current) {
+      soundAt.current -= delta
+      const walkingNow = !!motion?.current?.walking
+      if (soundAt.current <= 0 && (walkingNow || typing)) {
+        soundAt.current = walkingNow
+          ? motion?.current?.running
+            ? 0.32
+            : 0.5
+          : 0.18 + Math.random() * 0.25
+        outer.current.getWorldPosition(SOUND_AT)
+        playFrom(walkingNow ? 'step' : 'type', SOUND_AT.x, SOUND_AT.z, walkingNow ? 9 : 5)
+      }
+    }
     // Blinks every few seconds.
     if (eyes.current) {
       const blink = !STILL && (t * 0.31 + phase) % 1 > 0.975 ? 0.12 : 1
@@ -630,12 +716,32 @@ export function Person({
                 />
                 <group ref={knee} position={[0, -0.41, 0]} rotation={[kneeAngle, 0, 0]}>
                   <mesh
+                    geometry={GEO.unit}
+                    material={m.trousers}
+                    scale={[0.062, 0.066, 0.064]}
+                  />
+                  <mesh
                     geometry={GEO.shin}
                     material={m.trousers}
                     position={[0, -0.19, 0]}
                   />
+                  {/* The trouser hem at the ankle */}
+                  <Detail>
+                    <mesh
+                      geometry={GEO.hem}
+                      material={m.trousersShade}
+                      position={[0, -0.355, 0]}
+                    />
+                  </Detail>
                   {/* Shoe */}
                   <group position={[0, -0.4, 0]}>
+                    <Detail>
+                      <mesh
+                        geometry={GEO.heel}
+                        material={m.shoesShade}
+                        position={[0, -0.05, 0.035]}
+                      />
+                    </Detail>
                     <mesh
                       geometry={GEO.unit}
                       material={m.shoes}
@@ -674,6 +780,24 @@ export function Person({
                   />
                 </group>
               )}
+              {/* A belt at the waistband, with its buckle */}
+              {look.outfit !== 'scrubs' &&
+                look.outfit !== 'hoodie' &&
+                look.outfit !== 'coat' && (
+                  <Detail>
+                    <mesh
+                      geometry={GEO.belt}
+                      material={m.belt}
+                      position={[0, hipY + 0.07, 0]}
+                      scale={[0.98 * width, 1, 0.8]}
+                    />
+                    <mesh
+                      geometry={GEO.buckle}
+                      material={m.steel}
+                      position={[0, hipY + 0.07, -0.118]}
+                    />
+                  </Detail>
+                )}
               {/* Hips */}
               <mesh
                 geometry={GEO.pelvis}
@@ -871,6 +995,12 @@ export function Person({
                     rotation={shoulderAngle}
                   >
                     <mesh
+                      geometry={GEO.unit}
+                      material={armMaterial}
+                      position={[0, -0.03, 0]}
+                      scale={[0.05, 0.056, 0.05]}
+                    />
+                    <mesh
                       geometry={GEO.upperArm}
                       material={armMaterial}
                       position={[0, -0.14, 0]}
@@ -880,6 +1010,11 @@ export function Person({
                       position={[0, -0.29, 0]}
                       rotation={[elbowAngle, 0, 0]}
                     >
+                      <mesh
+                        geometry={GEO.unit}
+                        material={sleeves === 'short' ? m.skin : forearmMaterial}
+                        scale={[0.045, 0.047, 0.045]}
+                      />
                       <mesh
                         geometry={GEO.forearm}
                         material={forearmMaterial}
@@ -893,19 +1028,36 @@ export function Person({
                       >
                         {x < 0 ? hold?.left : hold?.right}
                       </group>
-                      {/* Hand, with a thumb on the inside */}
+                      {/* The cuff of a long sleeve at the wrist */}
+                      {sleeves === 'long' && (
+                        <mesh
+                          geometry={GEO.cuff}
+                          material={m.topShade}
+                          position={[0, -0.235, 0]}
+                        />
+                      )}
+                      {/* Hand: a palm with four fingers and a thumb on the inside */}
                       <mesh
-                        geometry={GEO.hand}
+                        geometry={GEO.palm}
                         material={m.skin}
-                        position={[0, -0.295, -0.004]}
-                        scale={[0.72, 1.15, 0.5]}
+                        position={[0, -0.282, -0.004]}
                       />
                       <Detail>
+                        {[-0.022, -0.0075, 0.0075, 0.022].map((fx, k) => (
+                          <mesh
+                            key={fx}
+                            geometry={GEO.finger}
+                            material={m.skin}
+                            position={[fx, k === 0 || k === 3 ? -0.33 : -0.335, -0.006]}
+                            rotation={[0.18, 0, 0]}
+                            scale={[1, k === 0 || k === 3 ? 0.85 : 1, 1]}
+                          />
+                        ))}
                         <mesh
                           geometry={GEO.thumb}
                           material={m.skin}
-                          position={[x > 0 ? -0.024 : 0.024, -0.27, -0.012]}
-                          rotation={[0, 0, x > 0 ? -0.5 : 0.5]}
+                          position={[x > 0 ? -0.034 : 0.034, -0.285, -0.016]}
+                          rotation={[0.2, 0, x > 0 ? -0.6 : 0.6]}
                         />
                       </Detail>
                     </group>
@@ -1329,13 +1481,15 @@ export function Walker({
       </mesh>
       {who ? (
         <Talkable id={who.id} name={who.name} role={who.role}>
-          <Person look={look} phase={phase} motion={motion} rig={rig} />
+          <Person look={look} phase={phase} motion={motion} rig={rig} sounds />
         </Talkable>
       ) : (
-        <Person look={look} phase={phase} motion={motion} />
+        <Person look={look} phase={phase} motion={motion} sounds />
       )}
     </group>
   )
 }
 
 const WORLD = new Vector3()
+/** Where a person is, when one of their sounds plays. */
+const SOUND_AT = new Vector3()
