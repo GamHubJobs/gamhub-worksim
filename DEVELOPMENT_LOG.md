@@ -192,6 +192,46 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-17 · Workplaces at work: every career's equipment used, and the work shown
+
+Every career, from shared systems:
+
+- **Colleagues at the profession's own equipment** (`office/scene/stations.ts`):
+  - a workplace's work stations are taken from the activities the player does
+    there: the copier and pigeonholes, the ledger desk and filing, the photo set
+    and campaign wall, the dashboards and standing table, the pairing desk and
+    sprint board, the comms rack and repair bench, the beds and treatment room,
+    the library and counsel's table, the test bench, test beam and CAD station;
+  - the senior colleague and the team go to them through the day and work there
+    (`officeCast.ts`: `station:<n>` errands);
+  - a new career gets this as soon as its workplace has activities. The unit test
+    checks every career has stations of its own; `tests/e2e/workplace-life.spec.ts`
+    sees colleagues go to them in the dev team area and on the ward.
+- **The work shown, from the save** (`workBoard.ts`, `TeamBoard.tsx`, `workState.ts`):
+  - the team whiteboard in every workplace is written up from the career's
+    tasks: the team's name, the work in hand (in progress, sent back, next), the
+    last tasks done (struck through), and how many of the career's tasks are
+    done. For the engineer, the project in hand too, from the engineering save:
+    its revision, the stage on site and how much is built;
+  - each Cobalt Ridge department's equipment shows the same work:
+    - the dev team's sprint board has a card per real task in each column (to
+      do, doing, fix, done), and the build monitor turns red while work sent
+      back is outstanding;
+    - the campaign wall's cards turn green as pieces are published, and it says
+      how many;
+    - the insights wall has an "analyses delivered" bar under the dashboards;
+    - the records desk's in-tray and out-tray hold a sheet per open and per
+      closed task, and its sign says what is closed;
+    - the post room's pigeonhole fills with the player's open work.
+
+  Handing a task in, in the Tasks app, changes these.
+
+Seen in play (screenshots of all nine careers): each workplace's own room, its
+board, and its equipment opening its software (Grid Craft, Books, Social Planner,
+Data Studio, Code, Ward Systems, Matter Desk, Works Desk).
+
+---
+
 ## 2026-11-16 · Workplaces: the audit, and the district's buildings made working places
 
 - **Audit** of every career and its workplace, from the code:

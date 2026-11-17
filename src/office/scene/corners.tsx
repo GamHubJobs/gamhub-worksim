@@ -4,6 +4,7 @@
  * the rest of the office.
  */
 import { Box } from './parts'
+import { useWork } from './workState'
 import { DEVTEAM, INSIGHTS, POST, RECORDS, STUDIO } from './cornersLayout'
 import { ON_RIGHT_WALL, RoomSign, Sign } from './signs'
 
@@ -58,6 +59,7 @@ function Shelf({
 }
 
 export function PostRoom() {
+  const work = useWork()
   const { copier, pigeonholes, supplies, table } = POST
   return (
     <group>
@@ -92,7 +94,15 @@ export function PostRoom() {
             key={`${y}${dz}`}
             size={[0.02, 0.3, 0.42]}
             position={[pigeonholes.x - 0.31, y, pigeonholes.z + dz]}
-            color={(y * 10 + dz * 4) % 3 > 1.5 ? '#f8fafc' : '#713f12'}
+            color={
+              y === 1.7 && dz === -0.75
+                ? work.todo + work.doing + work.redo > 0
+                  ? '#f8fafc'
+                  : '#713f12'
+                : (y * 10 + dz * 4) % 3 > 1.5
+                  ? '#f8fafc'
+                  : '#713f12'
+            }
           />
         )),
       )}
@@ -150,6 +160,7 @@ export function PostRoom() {
 }
 
 export function RecordsRoom() {
+  const work = useWork()
   const { safe, cabinets, archive, ledger } = RECORDS
   return (
     <group>
@@ -230,14 +241,34 @@ export function RecordsRoom() {
         position={[ledger.x, 1.35, ledger.z]}
         className="bg-white text-[9px] text-slate-800"
       >
-        Month end: bank reconciled? ✔
+        {work.total && work.done === work.total
+          ? 'Month end: all closed ✔'
+          : `Month end: ${work.done} of ${work.total} closed`}
       </Sign>
+      {/* In-tray and out-tray: a sheet for each task open, and each done */}
+      {[
+        { dz: -0.55, n: work.todo + work.doing + work.redo, colour: '#fef3c7' },
+        { dz: 0.05, n: work.done, colour: '#dcfce7' },
+      ].map((tray) => (
+        <group key={tray.dz} position={[ledger.x - 0.2, 0.79, ledger.z + tray.dz]}>
+          <Box size={[0.3, 0.04, 0.24]} position={[0, 0.02, 0]} color="#334155" />
+          {Array.from({ length: Math.min(12, tray.n) }, (_, i) => (
+            <Box
+              key={i}
+              size={[0.26, 0.008, 0.2]}
+              position={[0, 0.05 + i * 0.01, 0]}
+              color={tray.colour}
+            />
+          ))}
+        </group>
+      ))}
       <RoomSign position={[8.2, 2.45, -0.89]}>Records room</RoomSign>
     </group>
   )
 }
 
 export function Studio() {
+  const work = useWork()
   const { backdrop, product, tripod, lights, wall } = STUDIO
   return (
     <group>
@@ -304,22 +335,31 @@ export function Studio() {
       </group>
       {/* The campaign wall: weeks across, channels down, on cards */}
       <Box size={[0.05, 1.3, 2.4]} position={[wall.x, 1.45, wall.z]} color="#c2a477" />
+      {/* A card for each of the month's pieces of work (Tasks): green once published */}
       {[0, 1, 2, 3].map((col) =>
-        [0, 1, 2].map((row) => (
-          <Box
-            key={`${col}${row}`}
-            size={[0.02, 0.22, 0.4]}
-            position={[wall.x - 0.03, 1.85 - row * 0.38, wall.z - 0.85 + col * 0.57]}
-            color={['#fde047', '#f9a8d4', '#86efac', '#93c5fd'][(col + row) % 4]}
-          />
-        )),
+        [0, 1, 2].map((row) => {
+          const i = row * 4 + col
+          const published = i < work.done
+          return (
+            <Box
+              key={`${col}${row}`}
+              size={[0.02, 0.22, 0.4]}
+              position={[wall.x - 0.03, 1.85 - row * 0.38, wall.z - 0.85 + col * 0.57]}
+              color={
+                published
+                  ? '#16a34a'
+                  : ['#fde047', '#f9a8d4', '#fde68a', '#93c5fd'][(col + row) % 4]
+              }
+            />
+          )
+        }),
       )}
       <Sign
         position={[wall.x - 0.06, 2.3, wall.z]}
         rotation={ON_RIGHT_WALL}
         className="bg-white text-[10px] text-slate-800"
       >
-        Campaign wall · this month
+        {`Campaign wall · ${work.done} of ${work.total} published`}
       </Sign>
       <RoomSign position={[8.2, 2.45, -0.89]}>Content studio</RoomSign>
     </group>
@@ -327,6 +367,7 @@ export function Studio() {
 }
 
 export function InsightsWall() {
+  const work = useWork()
   const { console: desk, table, board } = INSIGHTS
   const screens = [
     { dz: -1.0, glow: '#38bdf8', title: 'Sales by region' },
@@ -355,6 +396,29 @@ export function InsightsWall() {
         </group>
       ))}
       <Box size={[0.6, 0.9, 3.0]} position={[desk.x, 0.45, desk.z]} color="#e5e7eb" />
+      {/* Under the dashboards: the analyses delivered so far, as a bar (Tasks) */}
+      <Box size={[0.03, 0.08, 2.8]} position={[11.97, 1.3, desk.z]} color="#1e293b" />
+      <Box
+        size={[
+          0.035,
+          0.06,
+          Math.max(0.02, 2.76 * (work.total ? work.done / work.total : 0)),
+        ]}
+        position={[
+          11.96,
+          1.3,
+          desk.z - 1.38 + 1.38 * (work.total ? work.done / work.total : 0),
+        ]}
+        color="#22c55e"
+        emissive="#16a34a"
+      />
+      <Sign
+        position={[11.93, 1.16, desk.z]}
+        rotation={ON_RIGHT_WALL}
+        className="bg-slate-900 text-[8px] text-white"
+      >
+        {`Analyses delivered: ${work.done} of ${work.total}`}
+      </Sign>
       {/* The standing table, with printed charts and pens */}
       <Box size={[1.0, 0.05, 1.8]} position={[table.x, 1.05, table.z]} color="#f1f5f9" />
       <Box size={[0.1, 1.02, 0.1]} position={[table.x, 0.51, table.z]} color="#475569" />
@@ -386,7 +450,11 @@ export function InsightsWall() {
 
 export function DevTeamArea() {
   const { sprint, devices, rack, pairing } = DEVTEAM
-  const columns = ['To do', 'Doing', 'Review', 'Done']
+  const columns = ['To do', 'Doing', 'Fix', 'Done']
+  // The cards are the team's real tasks (Tasks): to do, in progress, sent back, done.
+  const work = useWork()
+  const cards = [work.todo, work.doing, work.redo, work.done].map((n) => Math.min(4, n))
+  const failing = work.redo > 0
   return (
     <group>
       <CornerFloor color="#d1d5db" />
@@ -405,7 +473,7 @@ export function DevTeamArea() {
           >
             {name}
           </Sign>
-          {Array.from({ length: 4 - Math.abs(col - 1) }, (_, row) => (
+          {Array.from({ length: cards[col] }, (_, row) => (
             <Box
               key={row}
               size={[0.02, 0.18, 0.3]}
@@ -419,19 +487,19 @@ export function DevTeamArea() {
           ))}
         </group>
       ))}
-      {/* The build monitor: is main green? */}
+      {/* The build monitor: red while work sent back is still to be put right */}
       <Box
         size={[0.06, 0.55, 0.95]}
         position={[11.98, 1.8, 6.9]}
         color="#0f172a"
-        emissive="#16a34a"
+        emissive={failing ? '#dc2626' : '#16a34a'}
       />
       <Sign
         position={[11.93, 1.8, 6.9]}
         rotation={ON_RIGHT_WALL}
-        className="bg-green-700 text-[9px] text-white"
+        className={`${failing ? 'bg-red-700' : 'bg-green-700'} text-[9px] text-white`}
       >
-        main · build passing ✔
+        {failing ? 'main · checks failing ✖' : 'main · build passing ✔'}
       </Sign>
       {/* Test devices on a shelf: phones and tablets */}
       <Box

@@ -7,6 +7,7 @@
  * Office actions take office time (a coffee is 10 minutes); the rules live in
  * `src/game` and are applied through `onAct`.
  */
+import { boardFor } from './scene/workBoard'
 import {
   Component,
   lazy,
@@ -330,6 +331,8 @@ export function OfficeView({
   }, [talking])
   const current = getSpot(spot)
   const unread = unreadCount(profile)
+  // The team board on the wall, from the save (it changes as tasks are handed in).
+  const board = JSON.stringify(boardFor(profile))
   const { work } = profile
   // On a construction site in person (src/engineering/visit.ts): its own scene and panel.
   const siteId = work.engineering?.onSite ?? null
@@ -939,6 +942,7 @@ export function OfficeView({
                       }}
                       spot={spot}
                       computerAlert={unread > 0}
+                      board={board}
                       playerName={profile.name}
                       desk={Object.values(deskLayout(profile))
                         .map((item) => item!.id)

@@ -113,7 +113,39 @@ const wingErrand = (minutes: number, chance: number) => ({
   },
 })
 
+/**
+ * Today's workplace's work stations (stations.ts: its own equipment, from the
+ * activities there), handed over by the office scene for the workplace it
+ * draws. Colleagues go to them through the day: the profession's own work.
+ */
+let STATIONS: Place[] = []
+export function setStations(places: Place[]): void {
+  STATIONS = places
+}
+const stationAt = (i: number): Place =>
+  STATIONS.length ? STATIONS[i % STATIONS.length] : OFFICE_PLACES.printer
+/** A spell at one of the workplace's work stations (none if it has none). */
+const stationErrand = (i: number, minutes: number, chance: number) => ({
+  to: `station:${i}`,
+  minutes,
+  get chance() {
+    return STATIONS.length ? chance : 0
+  },
+})
+
 export const OFFICE_PLACES: Record<string, Place> = {
+  get 'station:0'(): Place {
+    return stationAt(0)
+  },
+  get 'station:1'(): Place {
+    return stationAt(1)
+  },
+  get 'station:2'(): Place {
+    return stationAt(2)
+  },
+  get 'station:3'(): Place {
+    return stationAt(3)
+  },
   /** In the workplace's wing (see WING_PLACES); the printer where there is none. */
   get 'wing:work'(): Place {
     return WING_PLACES[workplaceKind()] ?? OFFICE_PLACES.printer
@@ -534,6 +566,20 @@ export const OFFICE_PEOPLE: Person[] = [
     ],
   },
 ]
+
+// Who uses which of the workplace's work stations, and how often: the senior
+// colleague and the team at the back desks (the receptionist, the manager and
+// facilities keep to their own work).
+const STATION_USERS: Array<[string, number, number]> = [
+  ['senior', 0, 0.35],
+  ['backM', 1, 0.35],
+  ['backR', 2, 0.35],
+  ['backL', 3, 0.3],
+  ['front2', 1, 0.25],
+  ['analyst', 2, 0.3],
+]
+for (const [id, station, chance] of STATION_USERS)
+  OFFICE_PEOPLE.find((p) => p.id === id)?.errands.push(stationErrand(station, 14, chance))
 
 /** The meetings everyone keeps to (from the working day). */
 export const OFFICE_GATHERINGS: Gathering[] = [

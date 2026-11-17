@@ -37,6 +37,9 @@ import {
 } from '../../content/departments'
 import { WardBay } from './ward'
 import { activeBay, activeTheme, floorBoxes, roomAt, workplaceActivities } from './bays'
+import { stationsFrom } from './stations'
+import { TeamBoard } from './TeamBoard'
+import { WorkContext, workStateOf } from './workState'
 import { DeskDressing } from './deskStyles'
 import { SPLIT_RIGHT_WALL } from './wingShell'
 import { WardWing } from './wardWing.view'
@@ -98,6 +101,7 @@ import {
   PRINTER,
   STANDING_DESK,
   officeWho,
+  setStations,
 } from './officeCast'
 import { isLow, useGraphicsQuality } from '../../ui/graphics'
 
@@ -245,6 +249,8 @@ export interface OfficeSceneProps {
   spot: SpotId
   /** Highlights the computer when there is something new to read. */
   computerAlert: boolean
+  /** The team board, written up from the save (workBoard.ts), as JSON. */
+  board?: string
   playerName: string
   /** The items on the player's desk, by ID, comma-separated (a string so the scene only redraws when they change). */
   desk: string
@@ -359,9 +365,23 @@ function OfficeScene(props: OfficeSceneProps) {
   const live = props.liveScenario ? (getScenario(props.liveScenario) ?? null) : null
   // Who everyone is (names follow the department).
   const who = useMemo(() => officeWho(), [])
+  // Where colleagues do this profession's work: the workplace's own equipment
+  // (stations.ts), before their day is planned.
+  useState(() => {
+    const bay = activeBay()
+    setStations(
+      stationsFrom([
+        ...workplaceActivities(bay, activeTheme()),
+        ...(bay ? [] : itActivities([])),
+      ]),
+    )
+    return true
+  })
   // Dressed for the workplace: scrubs on the ward, hi-vis in the workshop, suits at a law firm.
   const castLooks = useMemo(() => dressAll(workplaceKind(), CAST_LOOKS), [])
   const start = getSpot(props.spot).camera
+  // How the team's work stands (from the save), for the things on the floor that show it.
+  const work = useMemo(() => workStateOf(props.board), [props.board])
   // What the computer can do, and the player's choice in Settings.
   const [software, setLowPower] = useState(false)
   const quality = useGraphicsQuality()
@@ -408,18 +428,21 @@ function OfficeScene(props: OfficeSceneProps) {
         <CameraRig spot={props.spot} />
       )}
       <PeopleDetail low={lowPower}>
-        <Building playerName={props.playerName} />
-        <Reception />
-        <Workspace
-          computerAlert={props.computerAlert}
-          desk={props.desk}
-          onInteract={props.onInteract}
-        />
-        <ManagerOffice />
-        <CornerFor itJobs={props.itJobs} />
-        <WingFor />
-        <ThemeDressing theme={activeTheme()} />
-        <BreakRoom onInteract={props.onInteract} />
+        <WorkContext.Provider value={work}>
+          <Building playerName={props.playerName} />
+          <Reception />
+          <Workspace
+            computerAlert={props.computerAlert}
+            desk={props.desk}
+            board={props.board ?? ''}
+            onInteract={props.onInteract}
+          />
+          <ManagerOffice />
+          <CornerFor itJobs={props.itJobs} />
+          <WingFor />
+          <ThemeDressing theme={activeTheme()} />
+          <BreakRoom onInteract={props.onInteract} />
+        </WorkContext.Provider>
         {live && (
           <ScenarioStage
             scenario={live}
@@ -1205,8 +1228,9 @@ function DeskDecor({ items }: { items: DeskItem[] }) {
 function Workspace({
   computerAlert,
   desk,
+  board,
   onInteract,
-}: Interact & { computerAlert: boolean; desk: string }) {
+}: Interact & { computerAlert: boolean; desk: string; board: string }) {
   const items = desk
     .split(',')
     .flatMap((id) => (getDeskItem(id) ? [getDeskItem(id)!] : []))
@@ -1290,14 +1314,10 @@ function Workspace({
             position={[0, 1.45, -0.02]}
             color={COLORS.metal}
           />
-          {[1.7, 1.55, 1.4, 1.25].map((y, i) => (
-            <Box
-              key={y}
-              size={[0.6 + (i % 2) * 0.35, 0.03, 0.01]}
-              position={[-0.25, y, 0.025]}
-              color={['#2563eb', '#16a34a', '#dc2626', '#2563eb'][i]}
-            />
-          ))}
+          {/* Written up from the save: the team's work, done ticked off (TeamBoard.tsx) */}
+          <group position={[0, 1.45, 0.022]}>
+            <TeamBoard board={board} w={1.46} h={0.91} />
+          </group>
           {[-0.5, 0.5].map((x) => (
             <Box
               key={x}

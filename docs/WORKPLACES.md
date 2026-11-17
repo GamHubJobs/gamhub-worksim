@@ -76,3 +76,12 @@ They now have the following (`city/scene/workplaceGrounds.tsx`, `architecture.ts
 - No education career exists, so no school or laboratory was invented.
 - The six Cobalt Ridge careers share one office building, with a department
   corner each. That is the design: one consultancy with six departments.
+
+## Shared systems for every workplace (2026-11-17)
+
+- **Work stations** (`office/scene/stations.ts`): derived from a workplace's
+  activities. Colleagues go to them through the day. A new career's workplace
+  gets them from its activities, with nothing else to add.
+- **The work shown** (`workBoard.ts`, `workState.ts`, `TeamBoard.tsx`): the
+  team board and each department's equipment read the save. To make a new
+  workplace's equipment show the work, read `useWork()` in its corner.
