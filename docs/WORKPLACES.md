@@ -121,3 +121,4 @@ They now have the following (`city/scene/workplaceGrounds.tsx`, `architecture.ts
   bodies to the doors, `Walker`'s `body`). They go in, out of sight for a while
   (`inside`), and come back out. `tests/e2e/district-people.spec.ts` sees all
   three doors open with the player at the far end of the street.
+- **Each workplace's light** (`world/look/looks.ts`): the ward has cool clinical light, the workshop neutral industrial light, and the law firm a warm light of its own (`law`: as bright as the office, warmer, with a wood-toned bounce). The office floors keep the office light. At Low graphics every place uses the plain lights.

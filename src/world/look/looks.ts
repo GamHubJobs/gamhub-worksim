@@ -85,6 +85,25 @@ export const LOOKS = {
     panels: [ceiling('#fffbeb', 2.0), windows('#e2e8f0', 1.4)],
     exposure: 1,
   },
+  /**
+   * A law firm's floor: as bright as an office to work by, but warmer, with
+   * the wood of the library, the panelled moot court and the meeting rooms
+   * bouncing a little warmth back.
+   */
+  law: {
+    sky: '#fffdf7',
+    ground: '#a08868',
+    hemi: 0.82,
+    key: { position: [6, 12, 8], intensity: 1.8, color: '#fff3e0' },
+    fill: { position: [-8, 6, -4], intensity: 0.32, color: '#dbe7ff' },
+    environment: 0.52,
+    panels: [
+      ceiling('#ffefd6', 2.0),
+      windows('#dbeafe', 1.5),
+      windows('#ffffff', 0.6, 12),
+    ],
+    exposure: 1,
+  },
   /** The courthouse: tall windows, warm wood, a calm and serious light. */
   court: {
     sky: '#fffaf0',

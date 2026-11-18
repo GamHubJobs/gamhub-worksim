@@ -496,10 +496,13 @@ function OfficeScene(props: OfficeSceneProps) {
   )
 }
 
-/** The light of the workplace: clinical on the ward, a workshop's, or an office's. */
+/** The light of the workplace: clinical on the ward, a workshop's, a law firm's, or an office's. */
 function officeLook(): LookId {
   const kind = workplaceKind()
-  return kind === 'ward' ? 'clinical' : kind === 'workshop' ? 'workshop' : 'office'
+  if (kind === 'ward') return 'clinical'
+  if (kind === 'workshop') return 'workshop'
+  if (kind === 'courtroom') return 'law'
+  return 'office'
 }
 
 /**
