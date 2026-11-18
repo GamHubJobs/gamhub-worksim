@@ -211,8 +211,8 @@ const CAREERS: Array<[string, RegExp, string, string, string]> = [
   [
     'healthcare',
     /Healthcare & Medical Services/,
-    'Ward round and emergency: bed 4A-2',
-    'Mr Price stabilised: early escalation and an allergy caught',
+    'Ward round and emergency: bed 4B-2',
+    'Mr Novak stabilised: early escalation and an allergy caught',
     'allergy',
   ],
   [

@@ -20,12 +20,11 @@ import {
 /**
  * The bay, the medicines trolley, hand gel and the ward's signs. Once the
  * patient-flow task is done, the patient discharged in it has gone home and
- * their bed is empty (not while a scenario is played at the bay, whose patient
- * is the one in the bed).
+ * their bed is empty.
  */
-export function WardBay({ staged = false }: { staged?: boolean }) {
+export function WardBay() {
   const work = useWork()
-  const discharged = !staged && work.tasks[DISCHARGE.task] === 'done'
+  const discharged = work.tasks[DISCHARGE.task] === 'done'
   return (
     <group>
       {/* Hospital floor (pale vinyl) in the bay */}

@@ -1,5 +1,5 @@
 /**
- * Healthcare: the morning ward round at bed 4A-2 in Bay A, then an
+ * Healthcare: the morning ward round at bed 4B-2 in Bay B, then an
  * emergency. The player is the healthcare support worker on the round: they
  * hand over the observations, introduce themselves and check the patient's
  * identity, escalate a high early warning score, speak up about an allergy
@@ -11,27 +11,27 @@
 import { SCRUBS, SMART } from './looks'
 import type { Scenario } from './types'
 
-const BED = { x: 10.4, z: 3.9 }
+const BED = { x: 20.7, z: 3.2 }
 
 export const WARD_ROUND: Scenario = {
   id: 'ward-round',
   careerId: 'healthcare',
-  title: 'Ward round and emergency: bed 4A-2',
+  title: 'Ward round and emergency: bed 4B-2',
   summary:
-    'Join the doctor’s round at Mr Price’s bed: hand over, check, escalate, speak up, and respond when he deteriorates.',
+    'Join the doctor’s round at Mr Novak’s bed: hand over, check, escalate, speak up, and respond when he deteriorates.',
   workplace: 'ward',
-  room: 'Bay A, Ward 4',
+  room: 'Bay B, Ward 4',
   minLevel: 1,
-  player: { at: { x: 8.85, z: 3.1 }, faces: BED },
-  camera: { from: [6.6, 2.9, 1.0], looks: [10.2, 1.0, 4.2] },
+  player: { at: { x: 19.15, z: 2.4 }, faces: BED },
+  camera: { from: [16.9, 2.9, 0.3], looks: [20.5, 1.0, 3.5] },
   cast: [
     {
       id: 'price',
-      name: 'Derek Price',
-      role: 'Patient, 74, bed 4A-2 (fictional)',
+      name: 'Derek Novak',
+      role: 'Patient, 74, bed 4B-2 (fictional)',
       look: SMART(1, 'bald', 0, '#a7f3d0'),
-      at: { x: 10.9, z: 3.9 },
-      faces: { x: 8, z: 3.9 },
+      at: { x: 21.2, z: 3.2 },
+      faces: { x: 18.3, z: 3.2 },
       figure: false,
     },
     {
@@ -39,7 +39,7 @@ export const WARD_ROUND: Scenario = {
       name: 'Dr Amira Haddad',
       role: 'Medical registrar',
       look: SMART(4, 'long', 1, '#f8fafc', { under: '#bfdbfe' }),
-      at: { x: 8.85, z: 4.75 },
+      at: { x: 19.15, z: 4.05 },
       faces: BED,
     },
     {
@@ -47,16 +47,16 @@ export const WARD_ROUND: Scenario = {
       name: 'Owen Fraser',
       role: 'Nurse in charge',
       look: SCRUBS(2, 'short', 2, '#1e3a8a'),
-      at: { x: 9.25, z: 2.55 },
+      at: { x: 19.55, z: 1.85 },
       faces: BED,
       personId: 'senior',
     },
     {
       id: 'julie',
-      name: 'Julie Price',
-      role: 'Mr Price’s daughter',
+      name: 'Julie Novak',
+      role: 'Mr Novak’s daughter',
       look: SMART(1, 'bob', 3, '#be185d'),
-      at: { x: 8.6, z: 5.6 },
+      at: { x: 18.9, z: 4.9 },
       faces: BED,
     },
   ],
@@ -83,7 +83,7 @@ export const WARD_ROUND: Scenario = {
       kind: 'say',
       who: 'owen',
       gesture: 'talk',
-      text: 'Round’s here. Bed two, Mr Price. You did his observations at ten, didn’t you? Dr Haddad will want them.',
+      text: 'Round’s here. Bed two, Mr Novak. You did his observations at ten, didn’t you? Dr Haddad will want them.',
     },
     {
       id: 'handover',
@@ -95,7 +95,7 @@ export const WARD_ROUND: Scenario = {
         {
           id: 'sbar',
           label:
-            '“Mr Price, 74, admitted yesterday with a chest infection. At ten: breathing 24, sats 91% on air, pulse 112, BP 104 over 68, temperature 38.4. NEWS of 8, up from 3 last night. I’m worried he’s getting worse.”',
+            '“Mr Novak, 74, admitted yesterday with a chest infection. At ten: breathing 24, sats 91% on air, pulse 112, BP 104 over 68, temperature 38.4. NEWS of 8, up from 3 last night. I’m worried he’s getting worse.”',
           score: 1,
           reply: [
             {
@@ -139,16 +139,16 @@ export const WARD_ROUND: Scenario = {
       id: 'introduce',
       kind: 'choose',
       prompt:
-        'Mr Price asks who you are. You need to check him before the doctor examines him.',
+        'Mr Novak asks who you are. You need to check him before the doctor examines him.',
       points: 10,
       options: [
         {
           id: 'hello-my-name',
           label:
-            '“Hello Mr Price, I’m {name}, a healthcare support worker. Can I check your wristband and your date of birth, please?”',
+            '“Hello Mr Novak, I’m {name}, a healthcare support worker. Can I check your wristband and your date of birth, please?”',
           score: 1,
           reply: [
-            { who: 'price', text: 'Derek Price, fourteenth of May, 1951.' },
+            { who: 'price', text: 'Derek Novak, fourteenth of May, 1951.' },
             { who: 'narrator', text: 'The wristband matches the chart.' },
           ],
           lesson:
@@ -327,7 +327,7 @@ export const WARD_ROUND: Scenario = {
         {
           id: 'kind',
           label:
-            'Acknowledge how worrying this is, check with Mr Price that he is happy for you to talk with Julie, and ask Dr Haddad to explain the plan to them both.',
+            'Acknowledge how worrying this is, check with Mr Novak that he is happy for you to talk with Julie, and ask Dr Haddad to explain the plan to them both.',
           score: 1,
           reply: [
             { who: 'price', text: 'Of course, she’s my daughter.' },
@@ -362,7 +362,7 @@ export const WARD_ROUND: Scenario = {
       id: 'alarm',
       kind: 'say',
       who: 'narrator',
-      text: 'Ten minutes later the monitor alarms. Mr Price’s oxygen saturation is 86% and he looks grey and drowsy.',
+      text: 'Ten minutes later the monitor alarms. Mr Novak’s oxygen saturation is 86% and he looks grey and drowsy.',
     },
     {
       id: 'emergency',
@@ -497,25 +497,25 @@ export const WARD_ROUND: Scenario = {
   ],
   outcomes: {
     excellent: {
-      verdict: 'Mr Price stabilised: early escalation and an allergy caught',
+      verdict: 'Mr Novak stabilised: early escalation and an allergy caught',
       feedback:
         'You escalated early, stopped a serious drug error and called for help at once. That is exactly how patients stay safe.',
       effects: { trust: { senior: 3, manager: 2 }, reputation: 3 },
     },
     good: {
-      verdict: 'Mr Price stabilised',
+      verdict: 'Mr Novak stabilised',
       feedback:
         'Good work on the round. Some things took longer than they should; we’ll go through them.',
       effects: { trust: { senior: 2 }, reputation: 1 },
     },
     pass: {
-      verdict: 'Mr Price stabilised, with delays',
+      verdict: 'Mr Novak stabilised, with delays',
       feedback:
         'He’s safe now, but there were delays in escalating. Let’s talk about the NEWS thresholds.',
       effects: { trust: { senior: 1 } },
     },
     poor: {
-      verdict: 'Mr Price was transferred to high dependency after delays',
+      verdict: 'Mr Novak was transferred to high dependency after delays',
       feedback:
         'His deterioration wasn’t escalated in time. We’ll do a learning review together, no blame.',
       effects: { trust: { senior: -2 }, wellbeing: { stress: 6 } },

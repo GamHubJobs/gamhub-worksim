@@ -107,14 +107,8 @@ They now have the following (`city/scene/workplaceGrounds.tsx`, `architecture.ts
 - **Responding to the work** (`officeCast.ts`): while any of the player's
   work has been sent back, the senior colleague now and then comes to the
   player's desk "going through the work that came back".
-- **The discharge on the ward** (`wardLayout.ts` `DISCHARGE`, `ward.tsx`): once
-  the patient-flow task is done, Daniel Price has gone home (as in Ward
-  Systems) and bed 4A-2 in Bay A is empty. The exception is while the ward
-  round scenario is played there: its patient is the one in that bed. The
-  task's admission is to bed 4A-6. The software has six Bay A beds and the 3D
-  bay four, so that bed is not drawn. (The scenario's patient at 4A-2, Derek
-  Price, 74, is a different patient from the software's Daniel Price, 46. That
-  content mismatch predates this work.)
+- **The discharge on the ward** (`wardLayout.ts` `DISCHARGE`, `ward.tsx`): once the patient-flow task is done, Daniel Price has gone home (as in Ward Systems) and bed 4A-2 in Bay A is empty. The task's admission is to bed 4A-6, which the 3D bay (four beds; the software has six) does not draw.
+- **The ward's scenarios agree with Ward Systems** (`content/scenarios/wardPatients.test.ts`): the ward round, whose patient is a 74-year-old with a chest infection, was set at 4A-2, where Ward Systems has Daniel Price, 46, after a knee operation. It now plays at bed 4B-2 in Bay B, which the systems do not hold, with its patient renamed Derek Novak. Mr Whitfield's admission at 4A-4 matches his record, and his age is now 88, from his date of birth. The test checks that any scenario patient in a bed the systems know is that bed's patient, at their age.
 - **People at the district's workplaces** (`CityScene.tsx` `COMERS`): staff and
   visitors walk from the car parks and the bus stop to the hospital, the office
   tower and Northbank's office. The automatic doors open for them (they are

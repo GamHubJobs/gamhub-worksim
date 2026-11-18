@@ -192,6 +192,28 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-18 · The ward's scenarios agree with Ward Systems; the law firm's own light
+
+- **Ward round moved to Bay B:** the ward round's patient is a 74-year-old with
+  a chest infection, sepsis and a penicillin allergy. The scenario was set at
+  bed 4A-2, where Ward Systems (and the bed task) has Daniel Price, 46, after a
+  knee operation. Rewriting a working clinical story was not worth it, so the
+  scenario now plays at bed 4B-2 in Bay B, which the systems do not hold. Its
+  patient is renamed Derek Novak (and his daughter Julie Novak), the bed's
+  label reads "D. Novak", and the cast and camera are moved with the bed. Bed
+  4A-2 now always shows the discharge once the bed task is done.
+- **Mr Whitfield's age** in the admission scenario is now 88 (born 1937, as in
+  his record), not 82.
+- **Test:** `content/scenarios/wardPatients.test.ts`. A scenario patient in a
+  bed Ward Systems knows must be that bed's patient, at their age.
+- **The law firm's own light** (`world/look/looks.ts`, `law`): as bright as the
+  office, warmer, with a wood-toned bounce.
+
+Tested: unit (3,412 pass); the ward round and the admission played in person,
+best outcome; the ward and law firm browser suites.
+
+---
+
 ## 2026-11-18 · Workplaces at work 3: the discharge seen on the ward, people at the district's doors
 
 - **The ward shows the discharge:** once the patient-flow task is done, the

@@ -42,7 +42,7 @@ export const BAY_B_BEDS: Array<{
   blanket: string
 }> = [
   { id: '4B-1', z: 1.0, patient: 'J. Mensah', blanket: '#c7d2fe' },
-  { id: '4B-2', z: 3.2, patient: 'L. Novak', blanket: '#bbf7d0' },
+  { id: '4B-2', z: 3.2, patient: 'D. Novak', blanket: '#bbf7d0' },
   { id: '4B-3', z: 5.4, patient: null, blanket: '#e2e8f0' },
   { id: '4B-4', z: 7.6, patient: 'R. Shah', blanket: '#fed7aa' },
 ]

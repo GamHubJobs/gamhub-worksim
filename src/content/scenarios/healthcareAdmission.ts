@@ -26,7 +26,7 @@ export const ADMISSION: Scenario = {
     {
       id: 'whitfield',
       name: 'George Whitfield',
-      role: 'Patient, 82, bed 4A-4 (fictional)',
+      role: 'Patient, 88, bed 4A-4 (fictional)',
       look: SMART(0, 'bald', 0, '#fbcfe8'),
       at: { x: 10.9, z: 8.3 },
       faces: { x: 8, z: 8.3 },
@@ -73,7 +73,7 @@ export const ADMISSION: Scenario = {
       kind: 'say',
       who: 'owen',
       gesture: 'talk',
-      text: 'New admission in bed four: Mr Whitfield, 82, from A&E after a fall at home. Can you do his admission checks? Shout if anything worries you.',
+      text: 'New admission in bed four: Mr Whitfield, 88, from A&E after a fall at home. Can you do his admission checks? Shout if anything worries you.',
     },
     {
       id: 'consent',
