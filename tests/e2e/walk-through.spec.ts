@@ -57,19 +57,33 @@ test('into the café through its door, about inside, and out through it again', 
     .click()
   await page.waitForTimeout(2000)
 
+  // The path walked, frame by frame (`__worksimPlayer.trail`): on a busy computer
+  // a doorway can be passed between two samples of where the player is.
+  const trailOf = async () =>
+    (await page.evaluate(
+      () =>
+        (
+          globalThis as unknown as {
+            __worksimPlayer?: { trail?: Array<{ x: number; z: number }> }
+          }
+        ).__worksimPlayer?.trail ?? [],
+    )) as Array<{ x: number; z: number }>
+
   // Out of the flat: the street starts in the building's doorway (z ≈ 10.7) and
   // the player walks out onto the pavement, to where they stand at the door (z = 5).
+  const markOut = (await trailOf()).length
   await home.getByRole('button', { name: /Go out into the neighbourhood/ }).click()
   const city = page.getByTestId('city')
   const out = await track(page, async () => {
     const p = await player(page)
     return !!p && Math.abs(p.x + 40) < 1 && p.z < 5.2 && p.mode === 'free'
   })
-  const street = out.filter((p) => Math.abs(p.x + 40) < 1.5)
+  const street = (await trailOf()).slice(markOut).filter((p) => Math.abs(p.x + 40) < 1.5)
   expect(street.some((p) => p.z > 8.6)).toBe(true)
-  expect(street.at(-1)!.z).toBeLessThan(5.2)
+  expect(out.at(-1)!.z).toBeLessThan(5.2)
 
   // Into the café: across the road, up to its door, and on through it (z < -10).
+  const mark = (await trailOf()).length
   await page.evaluate("window.__worksimStreetWalk('door-cafe')")
   const inside = city.locator('[data-interior="cafe"]')
   const going = await track(page, async () => (await inside.count()) > 0)
@@ -80,7 +94,8 @@ test('into the café through its door, about inside, and out through it again', 
     const p = await player(page)
     return !!p && p.mode === 'free' && p.z < 2
   })
-  const first = arriving.find((p) => p.x > -5)!
+  // (Frame by frame: on a busy computer the doorway can pass between samples.)
+  const first = (await trailOf()).slice(mark).find((p) => p.x > -5)!
   expect(first.z).toBeGreaterThan(4.3)
   expect(arriving.at(-1)!.z).toBeLessThan(2)
 
@@ -92,16 +107,18 @@ test('into the café through its door, about inside, and out through it again', 
 
   // And out: to the door, through it (z > 4.5), then in the street in the café's
   // doorway (z ≈ -10.7) and out onto the pavement.
+  const markBack = (await trailOf()).length
   await page.getByRole('button', { name: 'Back out to the street' }).click()
-  const leaving = await track(page, async () => (await inside.count()) === 0)
-  expect(leaving.some((p) => p.z > 4.6)).toBe(true)
+  await track(page, async () => (await inside.count()) === 0)
   const back = await track(page, async () => {
     const p = await player(page)
     return !!p && p.x < -30 && p.mode === 'free' && p.z > -5.2
   })
-  const onStreet = back.filter((p) => p.x < -30)
+  const walked = (await trailOf()).slice(markBack)
+  expect(walked.some((p) => p.x > -5 && p.z > 4.6)).toBe(true)
+  const onStreet = walked.filter((p) => p.x < -30)
   expect(onStreet.some((p) => p.z < -8.6)).toBe(true)
-  expect(onStreet.at(-1)!.z).toBeGreaterThan(-5.2)
+  expect(back.at(-1)!.z).toBeGreaterThan(-5.2)
   // Not back in again (what was asked of the street is not asked twice).
   await page.waitForTimeout(3000)
   await expect(inside).toHaveCount(0)

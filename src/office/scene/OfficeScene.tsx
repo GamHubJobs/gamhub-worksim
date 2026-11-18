@@ -371,12 +371,15 @@ function OfficeScene(props: OfficeSceneProps) {
   // (stations.ts), before their day is planned.
   useState(() => {
     const bay = activeBay()
-    setStations(
-      stationsFrom([
-        ...workplaceActivities(bay, activeTheme()),
-        ...(bay ? [] : itActivities([])),
-      ]),
-    )
+    const own = [
+      ...workplaceActivities(bay, activeTheme()),
+      ...(bay ? [] : itActivities([])),
+    ]
+    setStations(stationsFrom(own))
+    // Development builds: where each of the workplace's activities is done (tests).
+    if (import.meta.env.DEV)
+      (window as unknown as { __worksimEquipment?: unknown }).__worksimEquipment =
+        own.map((a) => ({ id: a.id, ...a.anchor }))
     return true
   })
   // Dressed for the workplace: scrubs on the ward, hi-vis in the workshop, suits at a law firm.

@@ -131,7 +131,8 @@ async function enter(page: Page, place: string, name: RegExp) {
   await page.getByTestId('city').getByTestId(`place-${place}`).click()
   await expect(page.getByTestId('city')).toContainText(name, { timeout: 30_000 })
   await expect
-    .poll(async () => (await poses(page)).length, { timeout: 90_000 })
+    // (Generous: a busy computer without a graphics card takes a while to fill a place.)
+    .poll(async () => (await poses(page)).length, { timeout: 180_000 })
     .toBeGreaterThan(0)
   await page.waitForTimeout(3000)
 }

@@ -1,11 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// Every career's workplace at work, for review by eye (High graphics unless
-// SHOTS_QUALITY=low: on a machine without a graphics card, High is too slow to
-// walk to the equipment): the
-// afternoon huddle at the workplace's main equipment, the player at another
-// piece of equipment beside it (in the themed workplaces, with the task lamps
-// and their tags), and the team board. Opt in with SHOTS_DIR.
+// Every career's workplace at work, for review by eye, at High graphics (or
+// SHOTS_QUALITY=low): the afternoon huddle at the workplace's main equipment,
+// and the workplace's equipment (in the themed workplaces, with the task lamps
+// and their tags). The player is put just behind each piece of equipment, facing
+// it (development hook `__worksimPlace`), rather than walked there: on a
+// computer without a graphics card, walking at High takes too long.
+// Opt in with SHOTS_DIR.
 
 const DIR = process.env.SHOTS_DIR
 test.skip(!DIR, 'Set SHOTS_DIR to take the screenshots')
@@ -54,32 +55,21 @@ for (const [id, career, activities] of CAREERS) {
       )
       .toBe(3)
     await page.screenshot({ path: `${DIR}/${id}-huddle-from-desk.png` })
-    for (const activity of activities) {
-      await page.waitForFunction('typeof window.__worksimWalk === "function"')
-      await page.evaluate(`window.__worksimWalk('${activity}')`)
-      const doing = page.getByTestId('activity')
-      const leave = page.getByRole('button', { name: /Leave desk/ })
-      for (let t = 0; t < 1200; t++) {
-        const text = (await doing.isVisible())
-          ? await doing.innerText({ timeout: 1000 }).catch(() => '')
-          : ''
-        if (text && !text.includes('Going to')) break
-        if (
-          (await leave.isVisible()) ||
-          (await page.getByRole('button', { name: /Step back/ }).isVisible())
-        )
-          break
-        await page.waitForTimeout(100)
-      }
-      await page.screenshot({ path: `${DIR}/${id}-at-${activity}.png` })
-      // The work opens at the computer (Leave desk) or on the tablet (Step back).
-      const back = page.getByRole('button', { name: /Step back/ })
-      const open = leave.or(back)
-      await expect(open.first()).toBeVisible({ timeout: 300_000 })
-      await open.first().click()
-      await expect(open).toHaveCount(0, { timeout: 120_000 })
-      await page.waitForTimeout(4000)
-      await page.screenshot({ path: `${DIR}/${id}-after-${activity}.png` })
+    type Anchor = { id: string; x: number; z: number; heading: number }
+    const anchors = (await page.evaluate('window.__worksimEquipment')) as Anchor[]
+    // The huddle, at the first work station, then each piece of equipment.
+    const views = [
+      { name: 'huddle', at: anchors[0] },
+      ...activities.map((a) => ({ name: a, at: anchors.find((x) => x.id === a)! })),
+    ]
+    for (const { name, at } of views) {
+      expect(at, name).toBeDefined()
+      // 2.2 m behind where it is used, facing it (forward is −sin h, −cos h).
+      const x = at.x + Math.sin(at.heading) * 2.2
+      const z = at.z + Math.cos(at.heading) * 2.2
+      await page.evaluate(`window.__worksimPlace(${x}, ${z}, ${at.heading})`)
+      await page.waitForTimeout(8000)
+      await page.screenshot({ path: `${DIR}/${id}-at-${name}.png` })
     }
   })
 }

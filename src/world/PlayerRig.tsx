@@ -222,6 +222,24 @@ function arrival(
   }
 }
 
+/**
+ * Development builds: the path walked, frame by frame (a point each time the
+ * player has moved a centimetre; the last few thousand). Tests read it, since
+ * sampling can miss a doorway passed on a slow computer.
+ */
+function trailed(x: number, z: number): Array<{ x: number; z: number }> {
+  const w = window as unknown as {
+    __worksimPlayer?: { trail?: Array<{ x: number; z: number }> }
+  }
+  const trail = w.__worksimPlayer?.trail ?? []
+  const last = trail[trail.length - 1]
+  if (!last || Math.hypot(last.x - x, last.z - z) > 0.01) {
+    trail.push({ x, z })
+    if (trail.length > 4000) trail.shift()
+  }
+  return trail
+}
+
 /** When a stage starts, in seconds from the start of the activity. */
 function startOf(a: Activity, index: number): number {
   return a.stages.slice(0, index).reduce((sum, st) => sum + st.seconds, 0)
@@ -324,6 +342,20 @@ export function PlayerRig(props: PlayerRigProps) {
       ...props.startOrbit,
     }),
   )
+  // Development builds only: put the player somewhere at once, facing a way (for
+  // screenshots on a computer too slow to walk there at High graphics).
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    const w = window as unknown as { __worksimPlace?: unknown }
+    w.__worksimPlace = (x: number, z: number, heading: number) => {
+      state.current = makeBody(x, z, heading)
+      orbit.current = clampOrbit({ ...orbit.current, yaw: heading })
+      invalidate()
+    }
+    return () => {
+      delete w.__worksimPlace
+    }
+  }, [invalidate])
   const fresh = useRef(0)
   const mode = useRef<Mode>(
     props.arrive
@@ -888,7 +920,13 @@ export function PlayerRig(props: PlayerRigProps) {
           // between an activity's spots too: through a doorway, say.)
           if (import.meta.env.DEV) {
             const w = window as unknown as { __worksimPlayer?: Record<string, unknown> }
-            w.__worksimPlayer = { ...w.__worksimPlayer, x: s.x, z: s.z, mode: m.kind }
+            w.__worksimPlayer = {
+              ...w.__worksimPlayer,
+              x: s.x,
+              z: s.z,
+              mode: m.kind,
+              trail: trailed(s.x, s.z),
+            }
           }
           if (group.current) {
             group.current.position.set(s.x, 0, s.z)
@@ -959,8 +997,12 @@ export function PlayerRig(props: PlayerRigProps) {
     playerNow.current = now.current
     if (import.meta.env.DEV) {
       const w = window as unknown as {
-        __worksimPlayer?: { insideFrames?: number }
+        __worksimPlayer?: {
+          insideFrames?: number
+          trail?: Array<{ x: number; z: number }>
+        }
       }
+      const trail = trailed(s.x, s.z)
       // Inside something solid (only free walking counts: sitting is meant to be).
       const inside =
         mode.current.kind === 'free' &&
@@ -976,6 +1018,7 @@ export function PlayerRig(props: PlayerRigProps) {
         inside,
         // Frames found inside something, ever (for tests).
         insideFrames: (w.__worksimPlayer?.insideFrames ?? 0) + (inside ? 1 : 0),
+        trail,
       } as typeof w.__worksimPlayer
     }
 

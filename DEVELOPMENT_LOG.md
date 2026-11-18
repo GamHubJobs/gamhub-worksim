@@ -192,6 +192,34 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-18 · Every workplace photographed at High; the doorway tests made reliable
+
+- **High graphics pictures at the equipment, for every career:** two
+  development-only hooks, `__worksimPlace(x, z, heading)` in the player rig
+  (puts the player somewhere at once) and `__worksimEquipment` in the office
+  scene (where each activity is done). The tour
+  (`workplaces-at-work.shots.spec.ts`) stands the player 2.2 m behind each piece
+  of equipment, facing it, instead of walking there, which takes too long at
+  High on a computer without a graphics card. Nine careers, 19 pictures, in 19
+  minutes. Neither hook is in the production build.
+- **The doorway tests made reliable** (`walk-through.spec.ts`):
+  - the problem: on a busy computer, the test failed now and then, with or
+    without this round's changes. It sampled where the player was every tenth
+    of a second, and a doorway could be passed between two samples;
+  - the fix: the player's path is now recorded frame by frame in development
+    builds (`__worksimPlayer.trail`, a point per centimetre moved), and the test
+    checks the path walked since each step began. This also confirmed the walk
+    in and out of the café is walked through the doorway, not jumped;
+  - the café activities test waits longer for a place to fill (180 s).
+- **A mistake of mine, found and fixed:** my first hook was named
+  `__worksimAnchors`, which already existed (the activities test uses it). It
+  is now `__worksimEquipment`.
+
+Tested: unit (3,412 pass); the walk-through, collision and activities suites
+under load (two at once), which had failed before the fix.
+
+---
+
 ## 2026-11-18 · The ward's scenarios agree with Ward Systems; the law firm's own light
 
 - **Ward round moved to Bay B:** the ward round's patient is a 74-year-old with
