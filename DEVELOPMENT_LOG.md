@@ -192,6 +192,24 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-18 · Accessories: the phone case, café customers, the watch in the top bar
+
+- The phone the player holds is in their phone case, in its colour (only the
+  player's: colleagues' phones are unchanged).
+- Café customers wear watches, caps, glasses and earbuds, but no bags, since they
+  sit down.
+- The watch display no longer squeezes the top bar: it stays on one line, and
+  shows energy, stress and bedtime only on wide screens (the rest on hover).
+  Found in a screenshot at 1440 px, where the logo and buttons had wrapped.
+- Seen in play: the player's own blue hard hat and orange hi-vis on site, with
+  the site's safety glasses lent; the phone in its pink case; colleagues'
+  ear defenders and hi-vis in the workshop, and scrub caps on the ward; the coat
+  stand and tray by the front door at home; customers seated in the café.
+
+Tested: unit (3,438 pass); phone, accessories, interiors and door suites.
+
+---
+
 ## 2026-11-18 · Accessories, equipment and personal belongings
 
 See `docs/ACCESSORIES.md`.

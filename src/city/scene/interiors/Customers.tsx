@@ -9,6 +9,7 @@
  * are passers-through. On low graphics, one each.
  */
 import { useMemo } from 'react'
+import { townWear } from '../../../office/scene/npcWear'
 import { PLACES } from '../../../content/city'
 import type { Who } from '../../../game/encounters'
 import type { PersonLook } from '../../../office/scene/people'
@@ -138,7 +139,17 @@ export function Customers({ room }: { room: Room }) {
     [cast],
   )
   const looks = useMemo(
-    () => Object.fromEntries(cast.people.map((p, i) => [p.id, cast.looks[i]])),
+    () =>
+      Object.fromEntries(
+        cast.people.map((p, i) => [
+          p.id,
+          // What they wear and carry (npcWear.ts), but no bag: they sit down.
+          {
+            ...cast.looks[i],
+            wear: townWear(p.id, cast.looks[i]).filter((w) => w.slot !== 'back'),
+          },
+        ]),
+      ),
     [cast],
   )
   return (

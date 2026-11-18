@@ -14,6 +14,7 @@
  * (physics/nav.ts) and only step into place at the very end.
  */
 import { useFrame, useThree } from '@react-three/fiber'
+import { usePlayerWear } from './character/playerWear'
 import {
   useEffect,
   useMemo,
@@ -367,6 +368,8 @@ export function PlayerRig(props: PlayerRigProps) {
       delete w.__worksimPlace
     }
   }, [invalidate])
+  // The phone case the player has in their pocket (playerWear.ts), on the phone they hold.
+  const phoneCase = usePlayerWear().find((w) => w.model === 'phone-case')?.colour
   const fresh = useRef(0)
   const mode = useRef<Mode>(
     props.arrive
@@ -1164,8 +1167,8 @@ export function PlayerRig(props: PlayerRigProps) {
   }
 
   const holding: { left?: ReactNode; right?: ReactNode } = {
-    left: held.left ? <Prop kind={held.left} /> : undefined,
-    right: held.right ? <Prop kind={held.right} /> : undefined,
+    left: held.left ? <Prop kind={held.left} caseColour={phoneCase} /> : undefined,
+    right: held.right ? <Prop kind={held.right} caseColour={phoneCase} /> : undefined,
   }
 
   // The exhaust, from the back of the car (left in the air behind it as it moves).

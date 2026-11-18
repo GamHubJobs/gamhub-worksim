@@ -4,7 +4,11 @@
  */
 import type { PropKind } from './interaction/activity'
 
-export function Prop({ kind }: { kind: PropKind }) {
+/**
+ * A thing held. `caseColour`: the player's own phone case (content/accessories.ts),
+ * round the phone they hold.
+ */
+export function Prop({ kind, caseColour }: { kind: PropKind; caseColour?: string }) {
   switch (kind) {
     case 'cup':
     case 'mug':
@@ -105,14 +109,23 @@ export function Prop({ kind }: { kind: PropKind }) {
       )
     case 'phone':
       return (
-        <mesh position={[0, -0.03, -0.025]}>
-          <boxGeometry args={[0.07, 0.14, 0.01]} />
-          <meshStandardMaterial
-            color="#111827"
-            emissive="#1e3a8a"
-            emissiveIntensity={0.4}
-          />
-        </mesh>
+        <group position={[0, -0.03, -0.025]}>
+          <mesh>
+            <boxGeometry args={[0.07, 0.14, 0.01]} />
+            <meshStandardMaterial
+              color="#111827"
+              emissive="#1e3a8a"
+              emissiveIntensity={0.4}
+            />
+          </mesh>
+          {caseColour && (
+            /* The case: round the edges and over the back */
+            <mesh position={[0, 0, 0.004]}>
+              <boxGeometry args={[0.078, 0.148, 0.012]} />
+              <meshStandardMaterial color={caseColour} roughness={0.7} />
+            </mesh>
+          )}
+        </group>
       )
     case 'dumbbell':
       return (

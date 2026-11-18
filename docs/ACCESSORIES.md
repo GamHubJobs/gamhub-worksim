@@ -65,8 +65,7 @@ professional-grade. Every career has professional equipment of its own:
 - **ID badges**: shown at reception before saying hello.
 - **Bags**: carry work things; a bag comes off while sitting, and what is carried
   is put down while sitting or doing something.
-- **Phone case**: listed with pocket items (its colour is not yet on the phone in
-  the hand; see limits).
+- **Phone case**: the phone the character holds is in its case, in its colour.
 
 ## Where the player gets to them
 
@@ -87,8 +86,10 @@ load with an empty wardrobe and nothing else changed (tested in
 
 - Models are made from simple shapes, like the characters; no external models
   were added.
-- A phone case's colour does not yet show on the phone the character holds.
 - Colleagues' accessories are fixed per person and workplace; they do not change
   through the day.
-- Café customers have no accessories: they sit, and bags would pass through the
-  chairs.
+- Café customers wear watches, caps, glasses and earbuds, but no bags: they sit
+  down, and bags would pass through the chairs.
+- The watch display shows energy, stress and bedtime only on wide screens (1536
+  px and up); on narrower ones it shows the time and messages, and the rest on
+  hover.
