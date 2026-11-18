@@ -7,7 +7,7 @@
  * back arrow goes back. While it is out, the character holds it and stands
  * still (see PlayerRig). New news arrives as a banner, also when it is away.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Icon } from '../ui/Icon'
 import { audio } from '../audio/manager'
 import { weekdayName, formatTime } from '../game/clock'
@@ -42,9 +42,17 @@ export interface PhoneActions {
   onGo: (place: string) => void
 }
 
-import { AccessoryStore } from '../accessories/AccessoryStore'
+import { useStore } from '../accessories/store'
 import { keptModels, usesOf, wornModels } from '../game/accessories'
 import { setPlayerKept, setPlayerWear } from '../world/character/playerWear'
+
+/**
+ * The accessories shop and wardrobe, loaded the first time they are opened (they
+ * bring the 3D character and its previews: not needed to start the game).
+ */
+const AccessoryStore = lazy(() =>
+  import('../accessories/AccessoryStore').then((m) => ({ default: m.AccessoryStore })),
+)
 
 const TITLES = Object.fromEntries(APPS.map((a) => [a.id, a.name])) as Record<
   PhoneApp,
@@ -57,6 +65,7 @@ export function PhoneHost({
   ...actions
 }: { profile: ProfileData } & PhoneActions) {
   const phone = usePhone()
+  const store = useStore()
   // What the player wears, for every scene that draws them (playerWear.ts).
   const wardrobe = profile.work.life.wardrobe
   useEffect(() => {
@@ -87,7 +96,11 @@ export function PhoneHost({
     <>
       <Banner profile={profile} hidden={phone.open} />
       {phone.open && <PhoneDevice profile={profile} app={phone.app} {...actions} />}
-      <AccessoryStore profile={profile} act={actions.act} />
+      {store.open && (
+        <Suspense fallback={null}>
+          <AccessoryStore profile={profile} act={actions.act} />
+        </Suspense>
+      )}
     </>
   )
 }

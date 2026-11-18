@@ -10,7 +10,7 @@ was tested, and known limitations.
 **Phase 0: Foundations is complete.** Online deployment (0.22) is postponed by the
 owner.
 
-**Phase 1: "Your First Day as an Intern"** (in progress). Milestones:
+**Phase 1: "Your First Day as an Intern"** (complete). Milestones:
 
 - [x] 1.1 Formula engine (pure TypeScript, heavily tested)
 - [x] 1.2 Spreadsheet editor: formula bar, selection, copy/paste, undo/redo, formatting
@@ -21,7 +21,7 @@ owner.
 
 **Phase 1 is complete.**
 
-**Phase 2: "The Living Workplace"** (in progress). Milestones:
+**Phase 2: "The Living Workplace"** (complete). Milestones:
 
 - [x] 2.1 Workday and daily routine: office clock, schedule, meetings, lunch, deadlines,
       end of day
@@ -33,7 +33,7 @@ owner.
 
 **Phase 2 is complete.**
 
-**Phase 3: "Productivity Depth"** (in progress). Milestones:
+**Phase 3: "Productivity Depth"** (complete). Milestones:
 
 - [x] 3.1 Docs: a real document editor with templates, autosave and version history
 - [x] 3.2 Advanced Sheets: charts, sorting, filtering, conditional formatting, validation
@@ -43,7 +43,7 @@ owner.
 
 **Phase 3 is complete.**
 
-**Phase 4: "Multiple Careers and Departments"** (in progress). Milestones:
+**Phase 4: "Multiple Careers and Departments"** (complete). Milestones:
 
 - [x] 4.1 A reusable career and department framework
 - [x] 4.2 Accounting
@@ -165,7 +165,7 @@ working simulations of the professional software used in its field (see
 - [x] B. More realistic 3D people
 - [x] C. A more realistic 3D office
 
-**Talking to anyone** (in progress). Guide: [docs/PEOPLE.md](docs/PEOPLE.md).
+**Talking to anyone** (complete). Guide: [docs/PEOPLE.md](docs/PEOPLE.md).
 
 - [x] P1 Every person in every place can be talked to (E or a click)
 
@@ -182,13 +182,37 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 **Relationships, romance and family** (R1–R11 done): [docs/RELATIONSHIPS_PLAN.md](docs/RELATIONSHIPS_PLAN.md).
 
-**Story Mode** (in progress). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
+**Story Mode** (complete: a campaign for each of the nine careers). Plan: [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md).
 
 - [x] Story 1–4 Engine and save, the Story screen and tracker, missions played in the
       world, Finance & Administration chapter 1
 - [x] Story 5 Chapters 2 and 3 of the same campaign, and its ending
 - [x] Story 6–10 The other five careers
 - [x] Story 11 Presentation and polish
+
+---
+
+## 2026-11-18 · The full browser regression; a slower start found and fixed
+
+The whole browser suite was run (351 tests, 3.5 hours, two at a time): 277 passed,
+34 were screenshot tours (skipped without a screenshot folder) and 40 failed. Each
+failure was then run on its own: 32 passed (they were the busy computer, with two
+3D tests at once), and 8 failed for real.
+
+- **Seven of those were caused by the accessories work:** the shop and wardrobe
+  were part of the phone, which loads with the desk, and brought the 3D
+  character and the preview libraries into what loads at the start. The office
+  then took two to six seconds to appear after "Start my first day", and these
+  tests allow five. The shop is now loaded the first time it is opened (its own
+  24 KB file in the build). All seven pass.
+- **The eighth** (a whole working day, home and back) takes longer than its 90
+  seconds on this computer without a graphics card. It passes with 180 seconds,
+  now its limit, with the reason by it. Colleagues' accessories make no
+  measurable difference to the office's frame rate (1.05 drawn frames a second
+  either way, where the office draws only as often as it needs).
+- The roadmap's status labels said "in progress" for phases that are complete
+  (1 to 4, Talking to anyone, Story Mode, which has a campaign for all nine
+  careers). They now say complete.
 
 ---
 

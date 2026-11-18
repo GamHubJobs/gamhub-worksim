@@ -21,7 +21,8 @@ async function passTime(page: Page, minutes: number) {
 test('a working day: stand-up, lunch, going home and the next morning', async ({
   page,
 }) => {
-  test.setTimeout(90_000)
+  // (A whole day, home and back: over 90 seconds on a computer without a graphics card.)
+  test.setTimeout(180_000)
   await page.goto('/')
   await startCareerIfNeeded(page, 'Alex Morgan')
 
