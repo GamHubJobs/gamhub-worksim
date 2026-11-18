@@ -85,3 +85,25 @@ They now have the following (`city/scene/workplaceGrounds.tsx`, `architecture.ts
 - **The work shown** (`workBoard.ts`, `workState.ts`, `TeamBoard.tsx`): the
   team board and each department's equipment read the save. To make a new
   workplace's equipment show the work, read `useWork()` in its corner.
+- **Each task at its equipment** (`taskSpots.ts`, `TaskLamps.tsx`): in the
+  ward, the law firm and the engineering firm, each of the career's tasks has a
+  status lamp on the equipment it is done at. The lamp is white while the task
+  is to start, amber while it is in hand, red when it was sent back, and green
+  when it is done. Up close, a tag names the work and its state.
+
+  | Workplace   | Task → where its lamp is                                                                                                                                                                    |
+  | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | Ward        | medicines round → medicines trolley; observations → vital signs stand; specimens → the sharps and gloves station; discharge and admission → the empty bed in Bay B; clinic list → reception |
+  | Law firm    | new enquiries → reception; research → the library; disclosure → the scanner; Millstone contract → the conference table; deadlines → the court list                                          |
+  | Engineering | lamp circuit → test bench; mezzanine beam → beam rig; Conveyor 3 bearing → the pump; drive and install plan → CAD desk; shaft inspection → inspection table                                 |
+
+  Locked tasks (not yet given) have no lamp. To add a workplace's tasks, add
+  them to `TASK_SPOTS`. The unit test checks each spot names one of that
+  career's tasks.
+
+- **Working together** (`officeCast.ts`): at 14:30 on weekdays, a 15-minute
+  huddle at the workplace's main work station. The senior colleague works at
+  it and two of the team stand in beside them. Chat shows them as busy.
+- **Responding to the work** (`officeCast.ts`): while any of the player's
+  work has been sent back, the senior colleague now and then comes to the
+  player's desk "going through the work that came back".

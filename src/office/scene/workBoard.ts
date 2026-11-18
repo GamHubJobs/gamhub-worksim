@@ -33,6 +33,8 @@ export interface Board {
    * the latest revision and where the site is), from the save.
    */
   project?: string
+  /** Each task's state, by the assignment's id (for the equipment it is done at). */
+  tasks: Record<string, BoardState>
   /** Every task of the career by state (the board only lists some). */
   counts: { todo: number; doing: number; redo: number; done: number; total: number }
 }
@@ -50,17 +52,22 @@ const STATE: Partial<Record<AssignmentStatus, BoardState>> = {
  */
 export function boardFor(profile: ProfileData): Board {
   const all = careerAssignments(profile.careerId).map((a) => ({
+    id: a.id,
     title: a.title,
     state: STATE[assignmentStatus(profile, a)],
   }))
-  const open = all.filter((a) => a.state && a.state !== 'done') as Board['items']
-  const done = all.filter((a) => a.state === 'done') as Board['items']
+  const line = (a: (typeof all)[number]) => ({ title: a.title, state: a.state! })
+  const open = all.filter((a) => a.state && a.state !== 'done').map(line)
+  const done = all.filter((a) => a.state === 'done').map(line)
+  const tasks: Record<string, BoardState> = {}
+  for (const a of all) if (a.state) tasks[a.id] = a.state
   const order: BoardState[] = ['doing', 'redo', 'next']
   open.sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state))
   const items = [...open.slice(0, 4), ...done.slice(-2)].slice(0, 6)
   const count = (s: BoardState) => all.filter((a) => a.state === s).length
   return {
     project: projectLine(profile),
+    tasks,
     team: activeDepartment().name,
     items,
     done: done.length,

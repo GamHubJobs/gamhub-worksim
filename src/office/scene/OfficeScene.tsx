@@ -38,6 +38,7 @@ import {
 import { WardBay } from './ward'
 import { activeBay, activeTheme, floorBoxes, roomAt, workplaceActivities } from './bays'
 import { stationsFrom } from './stations'
+import { TaskLamps } from './TaskLamps'
 import { TeamBoard } from './TeamBoard'
 import { WorkContext, workStateOf } from './workState'
 import { DeskDressing } from './deskStyles'
@@ -102,6 +103,7 @@ import {
   STANDING_DESK,
   officeWho,
   setStations,
+  setWorkNow,
 } from './officeCast'
 import { isLow, useGraphicsQuality } from '../../ui/graphics'
 
@@ -382,6 +384,8 @@ function OfficeScene(props: OfficeSceneProps) {
   const start = getSpot(props.spot).camera
   // How the team's work stands (from the save), for the things on the floor that show it.
   const work = useMemo(() => workStateOf(props.board), [props.board])
+  // Colleagues respond to how the work stands (work sent back: a word about it).
+  useEffect(() => setWorkNow(work), [work])
   // What the computer can do, and the player's choice in Settings.
   const [software, setLowPower] = useState(false)
   const quality = useGraphicsQuality()
@@ -441,6 +445,7 @@ function OfficeScene(props: OfficeSceneProps) {
           <CornerFor itJobs={props.itJobs} />
           <WingFor />
           <ThemeDressing theme={activeTheme()} />
+          <TaskLamps theme={activeTheme()} />
           <BreakRoom onInteract={props.onInteract} />
         </WorkContext.Provider>
         {live && (

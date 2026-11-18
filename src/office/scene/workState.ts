@@ -5,7 +5,7 @@
  * Provided by the office scene; zero everywhere when there is no save to show.
  */
 import { createContext, useContext } from 'react'
-import type { Board } from './workBoard'
+import type { Board, BoardState } from './workBoard'
 
 export interface WorkState {
   /** Not started yet. */
@@ -15,9 +15,18 @@ export interface WorkState {
   redo: number
   done: number
   total: number
+  /** Each task's state, by assignment id (taskSpots.ts puts some at their equipment). */
+  tasks: Record<string, BoardState>
 }
 
-export const NO_WORK: WorkState = { todo: 0, doing: 0, redo: 0, done: 0, total: 0 }
+export const NO_WORK: WorkState = {
+  todo: 0,
+  doing: 0,
+  redo: 0,
+  done: 0,
+  total: 0,
+  tasks: {},
+}
 
 export const WorkContext = createContext<WorkState>(NO_WORK)
 export const useWork = (): WorkState => useContext(WorkContext)
@@ -26,8 +35,8 @@ export const useWork = (): WorkState => useContext(WorkContext)
 export function workStateOf(json: string | undefined): WorkState {
   if (!json) return NO_WORK
   try {
-    const b = JSON.parse(json) as Board & { counts?: WorkState }
-    return b.counts ?? NO_WORK
+    const b = JSON.parse(json) as Partial<Board>
+    return b.counts ? { ...b.counts, tasks: b.tasks ?? {} } : NO_WORK
   } catch {
     return NO_WORK
   }

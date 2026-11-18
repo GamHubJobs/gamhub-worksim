@@ -51,3 +51,63 @@ for (const [name, career] of [
     const seen = await atStations(page)
     expect(seen.size).toBeGreaterThan(0)
   })
+
+/**
+ * The afternoon huddle (officeCast.ts): at half past two on a weekday the
+ * senior colleague goes to the workplace's main work station and two of the
+ * team stand in with them. Every career: they must actually get there.
+ */
+const CAREERS: Array<[string, RegExp]> = [
+  ['office administration', /Office Administration/],
+  ['accounting', /Accounting/],
+  ['IT help desk', /IT Help Desk/],
+  ['digital marketing', /Digital Marketing/],
+  ['data analysis', /Data Analysis/],
+  ['software development', /Software Development/],
+  ['healthcare', /Healthcare & Medical Services/],
+  ['legal', /Law & Legal Services/],
+  ['engineering', /Engineering & Technical Services/],
+]
+for (const [name, career] of CAREERS)
+  test(`${name}: the afternoon huddle gathers at the workplace's equipment`, async ({
+    page,
+  }) => {
+    test.setTimeout(300_000)
+    await start(page, career)
+    await page.evaluate('window.__worksim.setTime(1, 14 * 60 + 31)')
+    await expect
+      .poll(
+        async () =>
+          (
+            (await page.evaluate(
+              '(window.__worksimNpcs ?? []).map((p) => ({ id: p.id, place: p.place, status: p.status }))',
+            )) as Npc[]
+          )
+            .filter((p) => p.place?.startsWith('huddle:') && p.status === 'there')
+            .map((p) => p.place)
+            .sort(),
+        { timeout: 120_000, intervals: [2000] },
+      )
+      .toEqual(['huddle:0', 'huddle:1', 'huddle:2'])
+  })
+
+/**
+ * Each themed workplace's tasks are lit at the equipment they are done at
+ * (taskSpots.ts, TaskLamps.tsx): on a new save, the first task is there, to
+ * start.
+ */
+for (const [name, career, task] of [
+  ['healthcare', /Healthcare & Medical Services/, 'ward-'],
+  ['legal', /Law & Legal Services/, 'legal-'],
+  ['engineering', /Engineering & Technical Services/, 'eng-'],
+] as const)
+  test(`${name}: the work in hand is lit at its equipment`, async ({ page }) => {
+    test.setTimeout(300_000)
+    await start(page, career)
+    const lamps = page.locator(`[data-task^="${task}"]`)
+    await expect(lamps.first()).toBeAttached({ timeout: 60_000 })
+    const states = await lamps.evaluateAll((els) =>
+      els.map((e) => e.getAttribute('data-state')),
+    )
+    expect(states).toContain('next')
+  })

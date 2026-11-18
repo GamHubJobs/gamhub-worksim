@@ -192,6 +192,42 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-18 · Workplaces at work 2: each task at its equipment, huddles, and responses to the work
+
+- **Each task lit at its equipment** (`office/scene/taskSpots.ts`, `TaskLamps.tsx`):
+  - in the ward, the law firm and the engineering firm, each of the career's
+    tasks has a status lamp on the equipment it is done at. For example, the
+    medicines round is at the medicines trolley, research at the library,
+    disclosure at the scanner, the failing lamp circuit at the test bench and
+    the mezzanine beam at the beam rig;
+  - the lamp is white while a task is to start, amber while it is in hand, red
+    when it was sent back, and green when it is done. Up close, a tag names the
+    work and its state;
+  - the state comes from the save: the board now carries each task's state, and
+    the scene reads it with `useWork()`. Locked tasks have no lamp.
+- **Working together** (`officeCast.ts`): a 15-minute huddle at 14:30 on
+  weekdays at the workplace's main work station, in every career. The senior
+  colleague works at it and two of the team stand in beside them, facing it.
+  Chat shows them as busy.
+- **Responding to the work**: while any of the player's work has been sent back,
+  the senior colleague now and then comes to the player's desk, "going through
+  the work that came back".
+- **Not done:** putting the admitted patient in a 3D bed when the bed task is
+  done. The task admits him to bed 4A-6, and the 3D ward has no such bed, so
+  showing him in Bay B would contradict the software.
+
+Tested:
+
+- unit tests (`workplaceLife.test.ts`): every spot names one of that career's
+  own tasks (15 spots); the state goes from the save through to the scene; the
+  huddle puts three people at the main station in every career; the review
+  visit only happens while work is sent back;
+- browser tests (`workplace-life.spec.ts`): in all nine careers the three
+  colleagues reach the huddle, and the themed workplaces' lamps are in the
+  scene with the save's state.
+
+---
+
 ## 2026-11-17 · Workplaces at work: every career's equipment used, and the work shown
 
 Every career, from shared systems:

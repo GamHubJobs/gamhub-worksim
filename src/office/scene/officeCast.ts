@@ -18,6 +18,7 @@ import { activeDepartment, getPerson, workplaceKind } from '../../content/depart
 import { CELEBRATION, MEETINGS } from '../../content/workday'
 import type { Who } from '../../game/encounters'
 import type { Gathering, Person, Place } from '../../world/npc/schedule'
+import type { ClipId } from '../../world/character/rig'
 
 /** Facing from a spot towards a point. */
 const face = (x: number, z: number, tx: number, tz: number) =>
@@ -133,7 +134,49 @@ const stationErrand = (i: number, minutes: number, chance: number) => ({
   },
 })
 
+/**
+ * Standing in with whoever is at the workplace's main work station, for the
+ * afternoon huddle: just behind them, either side, facing the equipment (the
+ * bed, the sprint board, the test bench...), talking it through.
+ */
+const huddleBeside = (side: 1 | -1, clip: ClipId, also: ClipId[]): Place => {
+  const s = stationAt(0)
+  // Forward is (−sin h, −cos h) (as face() turns people); behind and to the side.
+  const fx = -Math.sin(s.heading)
+  const fz = -Math.cos(s.heading)
+  const x = s.x - fx * 0.85 + fz * 0.6 * side
+  const z = s.z - fz * 0.85 - fx * 0.6 * side
+  return {
+    x,
+    z,
+    heading: face(x, z, s.x + fx * 0.5, s.z + fz * 0.5),
+    clip,
+    also,
+    label: 'at the huddle, working it through together',
+  }
+}
+
+/**
+ * How the player's work stands (workState.ts), handed over by the office scene,
+ * for colleagues to respond to: work sent back brings the senior colleague
+ * over to go through it.
+ */
+let SENT_BACK = 0
+export function setWorkNow(work: { redo: number }): void {
+  SENT_BACK = work.redo
+}
+
 export const OFFICE_PLACES: Record<string, Place> = {
+  /** The afternoon huddle at the workplace's main work station. */
+  get 'huddle:0'(): Place {
+    return { ...stationAt(0), label: 'at the huddle, showing the team' }
+  },
+  get 'huddle:1'(): Place {
+    return huddleBeside(1, 'talk', ['stand'])
+  },
+  get 'huddle:2'(): Place {
+    return huddleBeside(-1, 'stand', ['write'])
+  },
   get 'station:0'(): Place {
     return stationAt(0)
   },
@@ -320,6 +363,11 @@ export const OFFICE_PLACES: Record<string, Place> = {
   'visit:backM': beside(0.0, -1.65, 0.6, -1.0),
   'visit:backR': beside(1.8, -1.65, 2.4, -1.0),
   'visit:manager': beside(8.4, -3.55, 8.4, -5.1),
+  /** Come over to go through the player's work that was sent back. */
+  'review:player': {
+    ...beside(1.55, 2.75, 0.68, 1.9),
+    label: 'going through the work that came back',
+  },
   /** Come over to the player's desk for a word (a workplace event). */
   'call:player': { ...beside(1.55, 2.75, 0.68, 1.9), label: 'waiting to talk to you' },
   /** Beside them, someone they have brought over (a new starter). */
@@ -581,6 +629,38 @@ const STATION_USERS: Array<[string, number, number]> = [
 for (const [id, station, chance] of STATION_USERS)
   OFFICE_PEOPLE.find((p) => p.id === id)?.errands.push(stationErrand(station, 14, chance))
 
+// When the player's work has been sent back, the senior colleague comes over
+// to go through it, now and then (none while nothing is outstanding).
+OFFICE_PEOPLE.find((p) => p.id === 'senior')?.errands.push({
+  to: 'review:player',
+  minutes: 8,
+  get chance() {
+    return SENT_BACK > 0 ? 0.45 : 0
+  },
+})
+
+/**
+ * The afternoon huddle at the workplace's main piece of equipment (its first
+ * work station): the senior colleague at it, two of the team beside them,
+ * working it through. The case at the bedside on the ward, pairing at the
+ * sprint board, the test bench in the engineering lab.
+ */
+export const HUDDLE: Gathering = {
+  id: 'huddle',
+  days: [0, 1, 2, 3, 4],
+  start: at(14, 30),
+  minutes: 15,
+}
+const HUDDLERS: Array<[string, string]> = [
+  ['senior', 'huddle:0'],
+  ['backM', 'huddle:1'],
+  ['backR', 'huddle:2'],
+]
+for (const [id, place] of HUDDLERS) {
+  const who = OFFICE_PEOPLE.find((p) => p.id === id)
+  if (who) who.meetings = { ...who.meetings, huddle: place }
+}
+
 /** The meetings everyone keeps to (from the working day). */
 export const OFFICE_GATHERINGS: Gathering[] = [
   ...MEETINGS.map((m) => ({
@@ -591,6 +671,7 @@ export const OFFICE_GATHERINGS: Gathering[] = [
   })),
   // The team's Friday cake in the break room (game/celebration.ts).
   CELEBRATION,
+  HUDDLE,
 ]
 
 /**
