@@ -39,7 +39,7 @@ import type { Vector } from '../../content/office'
 import { prefersReducedMotion } from '../../ui/motion'
 import type { Who } from '../../game/encounters'
 import { clipFrame } from '../../world/character/rig'
-import { bodyOf } from '../../world/npc/bodies'
+import { bodyOf, removeBody, setBody } from '../../world/npc/bodies'
 import { engagedFor, removeNpc, setNpc } from '../../world/npc/people'
 import { Talkable } from '../../world/npc/Talkable'
 import { playFrom } from '../../audio/playFrom'
@@ -1376,6 +1376,8 @@ export function Walker({
   pause = 4,
   phase = 0,
   who,
+  body,
+  inside = 0,
 }: {
   path: Vector[]
   look: PersonLook
@@ -1385,6 +1387,13 @@ export function Walker({
   phase?: number
   /** Who they are: then they can be talked to (they stop, turn and talk). */
   who?: Who
+  /** Felt by the world (world/npc/bodies.ts) under this id: automatic doors open for them. */
+  body?: string
+  /**
+   * Seconds spent out of sight at the far end of the route: the route ends
+   * inside a building, through its door, and they come back out after a while.
+   */
+  inside?: number
 }) {
   const group = useRef<Group>(null)
   const motion = useRef<Motion>({ walking: false })
@@ -1392,6 +1401,7 @@ export function Walker({
   const state = useRef({ leg: 0, along: 0, waited: 0, heading: 0 })
   const invalidate = useThree((st) => st.invalidate)
   useEffect(() => () => (who ? removeNpc(who.id) : undefined), [who])
+  useEffect(() => () => (body ? removeBody(body) : undefined), [body])
 
   // Out and back along the path.
   const route = useMemo(() => [...path, ...path.slice(1, -1).reverse()], [path])
@@ -1444,7 +1454,10 @@ export function Walker({
     s.heading += turnLeft * Math.min(1, delta * 3.5)
 
     const endOfRoute = s.leg % (route.length / 2 || 1) === 0 && s.along === 0
-    if (endOfRoute && s.waited < pause) {
+    // At the far end, inside the building: out of sight for a while.
+    const indoors = inside > 0 && s.leg === path.length - 1 && s.along === 0
+    g.visible = !(indoors && s.waited > 0.3 && s.waited < inside - 0.3)
+    if (endOfRoute && s.waited < (indoors ? inside : pause)) {
       s.waited += delta
       motion.current.walking = false
     } else if (turning && s.along === 0) {
@@ -1461,6 +1474,10 @@ export function Walker({
     const f = length ? s.along / length : 0
     g.position.set(from[0] + dx * f, 0, from[2] + dz * f)
     g.rotation.y = s.heading
+    if (body) {
+      if (g.visible) setBody(body, g.position.x, g.position.z, 0.3)
+      else removeBody(body)
+    }
   })
 
   return (

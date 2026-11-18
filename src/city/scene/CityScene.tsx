@@ -980,12 +980,135 @@ function Park() {
 }
 
 /**
+ * People going in and out of the district's workplaces, through their doors
+ * (which open for them): staff from the car parks and the bus stop, visitors
+ * to the hospital. Each route ends a few metres inside, where they are out of
+ * sight for a while before coming back out.
+ */
+const COMERS: Array<{
+  id: string
+  path: Vector[]
+  look: PersonLook
+  speed: number
+  inside: number
+}> = [
+  {
+    id: 'comer-northbank-1',
+    path: [
+      [58.5, 0, 17],
+      [66, 0, 17.5],
+      [66, 0, 24.2],
+      [66, 0, 28],
+    ],
+    look: {
+      skin: 3,
+      hair: 'short',
+      hairColor: 1,
+      outfit: 'hivis',
+      top: '#f97316',
+      trousers: '#1f2937',
+    },
+    speed: 1.0,
+    inside: 24,
+  },
+  {
+    id: 'comer-northbank-2',
+    path: [
+      [58, 0, 9.6],
+      [64.5, 0, 12],
+      [65.4, 0, 24.2],
+      [65.4, 0, 28],
+    ],
+    look: {
+      skin: 1,
+      hair: 'bob',
+      hairColor: 3,
+      outfit: 'blazer',
+      top: '#334155',
+      trousers: '#111827',
+    },
+    speed: 0.9,
+    inside: 40,
+  },
+  {
+    id: 'comer-hospital-1',
+    path: [
+      [70.4, 0, -23.5],
+      [75.5, 0, -19],
+      [78.2, 0, -19],
+      [81.5, 0, -19],
+    ],
+    look: {
+      skin: 5,
+      hair: 'long',
+      hairColor: 0,
+      outfit: 'scrubs',
+      top: '#0d9488',
+      trousers: '#0d9488',
+    },
+    speed: 1.05,
+    inside: 30,
+  },
+  {
+    id: 'comer-hospital-2',
+    path: [
+      [58, 0, 9.6],
+      [74, 0, -6],
+      [76, 0, -18.4],
+      [78.2, 0, -18.4],
+      [81.5, 0, -18.4],
+    ],
+    look: {
+      skin: 2,
+      hair: 'short',
+      hairColor: 4,
+      outfit: 'cardigan',
+      top: '#7c3aed',
+      trousers: '#374151',
+    },
+    speed: 0.75,
+    inside: 45,
+  },
+  {
+    id: 'comer-tower-1',
+    path: [
+      [58, 0, 9.6],
+      [74, 0, 14],
+      [77.5, 0, 22],
+      [82.5, 0, 22],
+    ],
+    look: {
+      skin: 4,
+      hair: 'short',
+      hairColor: 2,
+      outfit: 'shirt',
+      top: '#e0f2fe',
+      trousers: '#1e3a8a',
+    },
+    speed: 1.1,
+    inside: 20,
+  },
+]
+
+/**
  * The end of the street, the way to work: an office tower, Riverside
  * Community Hospital and Northbank Engineering's works (architecture.tsx).
  */
 function BusinessDistrict({ dark }: { dark: boolean }) {
   return (
     <group>
+      {COMERS.map((c, i) => (
+        <Walker
+          key={c.id}
+          path={c.path}
+          look={c.look}
+          speed={c.speed}
+          pause={3 + i * 2}
+          phase={i * 1.3}
+          body={c.id}
+          inside={c.inside}
+        />
+      ))}
       <OfficeTower x={86} z={22} w={14} d={14} h={46} tint="#8fb4cc" dark={dark} />
       <OfficeTower x={104} z={6} w={12} d={12} h={58} tint="#7fa6bf" dark={dark} />
       <HospitalBlock x={86} z={-15} dark={dark} />

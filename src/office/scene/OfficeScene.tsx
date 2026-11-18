@@ -442,7 +442,7 @@ function OfficeScene(props: OfficeSceneProps) {
             onInteract={props.onInteract}
           />
           <ManagerOffice />
-          <CornerFor itJobs={props.itJobs} />
+          <CornerFor itJobs={props.itJobs} staged={live !== null} />
           <WingFor />
           <ThemeDressing theme={activeTheme()} />
           <TaskLamps theme={activeTheme()} />
@@ -1414,10 +1414,10 @@ function AlertBubble({ position }: { position: Vector }) {
  * the IT workbench, with a marker over any equipment that needs a technician.
  */
 /** The workplace's own corner, where the IT team has its IT corner. */
-function CornerFor({ itJobs }: { itJobs?: string }) {
+function CornerFor({ itJobs, staged }: { itJobs?: string; staged?: boolean }) {
   switch (workplaceKind()) {
     case 'ward':
-      return <WardBay />
+      return <WardBay staged={staged} />
     case 'workshop':
       return <Workshop />
     case 'courtroom':

@@ -7,7 +7,8 @@
 import { Html } from '@react-three/drei'
 import { Box } from './parts'
 import { Bed } from './wardBed'
-import { MED_TROLLEY, RESUS, VITALS, WARD_BEDS } from './wardLayout'
+import { DISCHARGE, MED_TROLLEY, RESUS, VITALS, WARD_BEDS } from './wardLayout'
+import { useWork } from './workState'
 import {
   BedHeadServices,
   CurtainTrack,
@@ -16,14 +17,25 @@ import {
   VitalsStand,
 } from './clinicalKit'
 
-/** The bay, the medicines trolley, hand gel and the ward's signs. */
-export function WardBay() {
+/**
+ * The bay, the medicines trolley, hand gel and the ward's signs. Once the
+ * patient-flow task is done, the patient discharged in it has gone home and
+ * their bed is empty (not while a scenario is played at the bay, whose patient
+ * is the one in the bed).
+ */
+export function WardBay({ staged = false }: { staged?: boolean }) {
+  const work = useWork()
+  const discharged = !staged && work.tasks[DISCHARGE.task] === 'done'
   return (
     <group>
       {/* Hospital floor (pale vinyl) in the bay */}
       <Box size={[6.8, 0.01, 9]} position={[8.6, 0.012, 4.7]} color="#d9e7e4" />
       {WARD_BEDS.map((b) => (
-        <Bed key={b.id} {...b} />
+        <Bed
+          key={b.id}
+          {...b}
+          patient={discharged && b.id === DISCHARGE.bed ? null : b.patient}
+        />
       ))}
       {/* At each bed's head: oxygen, suction, the nurse call and the light; and
           the curtain tracks between the beds (clinicalKit.tsx) */}

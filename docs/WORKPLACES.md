@@ -107,3 +107,17 @@ They now have the following (`city/scene/workplaceGrounds.tsx`, `architecture.ts
 - **Responding to the work** (`officeCast.ts`): while any of the player's
   work has been sent back, the senior colleague now and then comes to the
   player's desk "going through the work that came back".
+- **The discharge on the ward** (`wardLayout.ts` `DISCHARGE`, `ward.tsx`): once
+  the patient-flow task is done, Daniel Price has gone home (as in Ward
+  Systems) and bed 4A-2 in Bay A is empty. The exception is while the ward
+  round scenario is played there: its patient is the one in that bed. The
+  task's admission is to bed 4A-6. The software has six Bay A beds and the 3D
+  bay four, so that bed is not drawn. (The scenario's patient at 4A-2, Derek
+  Price, 74, is a different patient from the software's Daniel Price, 46. That
+  content mismatch predates this work.)
+- **People at the district's workplaces** (`CityScene.tsx` `COMERS`): staff and
+  visitors walk from the car parks and the bus stop to the hospital, the office
+  tower and Northbank's office. The automatic doors open for them (they are
+  bodies to the doors, `Walker`'s `body`). They go in, out of sight for a while
+  (`inside`), and come back out. `tests/e2e/district-people.spec.ts` sees all
+  three doors open with the player at the far end of the street.

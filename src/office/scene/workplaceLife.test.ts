@@ -200,3 +200,18 @@ describe("the engineer's project on the board", () => {
     expect(boardFor(started).project).toBe('Yard store · rev 1 draft')
   })
 })
+
+describe('the discharge on the ward', () => {
+  it("empties the bed of the software's patient who goes home in the task", async () => {
+    const { DISCHARGE, WARD_BEDS } = await import('./wardLayout')
+    const { sampleClinical } = await import('../../tools/clinical/data')
+    expect(careerAssignments('healthcare').map((a) => a.id)).toContain(DISCHARGE.task)
+    const state = sampleClinical()
+    const bed = state.beds.find((b) => b.id === DISCHARGE.bed)!
+    const patient = state.patients.find((p) => p.id === bed.patientId)!
+    // The same patient in the 3D bed ("D. Price") as in Ward Systems.
+    const shown = WARD_BEDS.find((b) => b.id === DISCHARGE.bed)!.patient!
+    expect(patient.name.endsWith(shown.split(' ').pop()!)).toBe(true)
+    expect(shown[0]).toBe(patient.name[0])
+  })
+})

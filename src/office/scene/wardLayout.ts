@@ -19,6 +19,11 @@ export const WARD_BEDS: Array<{
   { id: '4A-4', z: 8.3, patient: 'G. Whitfield', blanket: '#fbcfe8' },
 ]
 export const BED_X = 10.55
+/**
+ * The bed the patient-flow task discharges from (content/assignments/healthcare/
+ * beds.ts: Daniel Price goes home from 4A-2): empty once that task is done.
+ */
+export const DISCHARGE = { bed: '4A-2', task: 'ward-beds' }
 export const MED_TROLLEY = { x: 6.4, z: 5.2 }
 /** At the far end of the bay: the resuscitation trolley and the vital signs monitor. */
 export const RESUS = { x: 5.9, z: 8.75 }

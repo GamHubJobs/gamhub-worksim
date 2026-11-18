@@ -192,6 +192,31 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-18 · Workplaces at work 3: the discharge seen on the ward, people at the district's doors
+
+- **The ward shows the discharge:** once the patient-flow task is done, the
+  patient it sends home (Daniel Price, bed 4A-2, as in Ward Systems) is gone and
+  the bed is empty. The exception is during the ward-round scenario, whose
+  patient is the one in that bed. A unit test checks that the 3D patient is the
+  software's patient in that bed.
+- **People at the district's workplaces:** five people walk from the car parks
+  and the bus stop to the hospital, the office tower and Northbank's office.
+  The automatic doors open for them, they go in, and they come back out a while
+  later. `Walker` gained two options for this: `body` (felt by doors) and
+  `inside` (time out of sight at the end of the route). Existing walkers are
+  unchanged.
+- **Not done:**
+  - photographs at the equipment at High graphics: this machine renders without
+    a graphics card, and at High walking to the equipment does not finish in 20
+    minutes;
+  - colleagues "finishing" tasks of their own: there are no colleague tasks in
+    the save, so it would be made up, which the brief rules out.
+
+Tested: unit (3,408 pass), `district-people.spec.ts`, and the ward, scenario,
+street and door suites.
+
+---
+
 ## 2026-11-18 · Workplaces at work 2: each task at its equipment, huddles, and responses to the work
 
 - **Each task lit at its equipment** (`office/scene/taskSpots.ts`, `TaskLamps.tsx`):
