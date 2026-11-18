@@ -21,6 +21,8 @@ import { weekdayName } from '../game/clock'
 import { whoOf } from '../game/dates'
 import { bondOf, interestName, STAGE_NAMES } from '../game/romance'
 import { openPhone, usePhone } from '../phone/store'
+import { openStore } from '../accessories/store'
+import { packedItems, wornItems } from '../game/accessories'
 import { openMap, useMap } from '../world/map/store'
 import { MiniMap } from '../world/map/MiniMap'
 
@@ -411,6 +413,12 @@ export function CharacterScreen({
         <dd>{profile.work.reputation}/100</dd>
         <dt className="text-slate-500">Home</dt>
         <dd>{life.home.id}</dd>
+        <dt className="text-slate-500">Wearing</dt>
+        <dd data-testid="character-wearing">
+          {wornItems(life)
+            .map((w) => w.item.name)
+            .join(', ') || 'Nothing extra'}
+        </dd>
       </dl>
       <div className="mt-4">
         <NeedsHud profile={profile} />
@@ -457,6 +465,52 @@ export function InventoryScreen({
           </li>
         ))}
       </ul>
+      <p className="mt-4 font-semibold text-slate-900">Accessories and equipment</p>
+      <ul className="mt-1 space-y-1" data-testid="inventory-accessories">
+        {wornItems(life).map((w) => (
+          <li
+            key={w.owned.uid}
+            className="flex justify-between gap-2 rounded bg-slate-50 px-2 py-1"
+          >
+            <span>{w.item.name}</span>
+            <span className="text-xs text-slate-500">wearing</span>
+          </li>
+        ))}
+        {packedItems(life).map((w) => (
+          <li
+            key={w.owned.uid}
+            className="flex justify-between gap-2 rounded bg-slate-50 px-2 py-1"
+          >
+            <span>{w.item.name}</span>
+            <span className="text-xs text-slate-500">in your bag</span>
+          </li>
+        ))}
+        <li className="text-xs text-slate-500">
+          {life.wardrobe.owned.length} things in your wardrobe in all.
+        </li>
+      </ul>
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            onClose()
+            openStore('wardrobe')
+          }}
+          className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
+        >
+          Open your wardrobe
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onClose()
+            openStore('shop')
+          }}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700"
+        >
+          Accessories shop
+        </button>
+      </div>
     </Overlay>
   )
 }

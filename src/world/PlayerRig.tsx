@@ -347,9 +347,20 @@ export function PlayerRig(props: PlayerRigProps) {
   useEffect(() => {
     if (!import.meta.env.DEV) return
     const w = window as unknown as { __worksimPlace?: unknown }
-    w.__worksimPlace = (x: number, z: number, heading: number) => {
+    // (And the camera: round to a yaw, at a distance and pitch, to look at them.)
+    w.__worksimPlace = (
+      x: number,
+      z: number,
+      heading: number,
+      view?: { yaw?: number; distance?: number; pitch?: number },
+    ) => {
       state.current = makeBody(x, z, heading)
-      orbit.current = clampOrbit({ ...orbit.current, yaw: heading })
+      orbit.current = clampOrbit({
+        ...orbit.current,
+        yaw: view?.yaw ?? heading,
+        ...(view?.distance ? { distance: view.distance } : {}),
+        ...(view?.pitch !== undefined ? { pitch: view.pitch } : {}),
+      })
       invalidate()
     }
     return () => {

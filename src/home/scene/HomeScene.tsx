@@ -8,6 +8,8 @@
  * when the player is at home.
  */
 import { lowDpr } from '../../world/lowDpr'
+import { dressed, usePlayerKept, usePlayerWear } from '../../world/character/playerWear'
+import { Belongings } from './belongings'
 import { Canvas, type RootState } from '@react-three/fiber'
 import { memo, useMemo, useRef, useState, type RefObject } from 'react'
 import type { WebGLRenderer } from 'three'
@@ -133,6 +135,9 @@ function isSoftware(gl: WebGLRenderer): boolean {
 export default memo(HomeScene)
 
 function HomeScene(props: HomeSceneProps) {
+  // What the player wears (playerWear.ts).
+  const worn = usePlayerWear()
+  const kept = usePlayerKept()
   const home = getHome(props.homeId)
   // What the computer can do, and the player's choice in Settings.
   const [software, setLowPower] = useState(false)
@@ -212,6 +217,8 @@ function HomeScene(props: HomeSceneProps) {
         <Interior.Provider value={state}>
           <PeopleDetail low={lowPower}>
             <Floor kind="wood" position={[0, 0, 0]} size={[w, d]} />
+            {/* What is kept at home by the door: bags, hats, watches (belongings.tsx) */}
+            <Belongings kept={kept} door={home.rooms.door} />
             <Fittings home={home} evening={evening} />
             {/* Low walls on the front and right, so the rooms can be seen */}
             <Box size={[0.12, 1.1, d]} position={[w / 2, 0.55, 0]} color="#efe9df" />
@@ -258,11 +265,12 @@ function HomeScene(props: HomeSceneProps) {
               onDone={(a, completed) =>
                 onDone(a.action ?? (a.id.startsWith('date-') ? a.id : null), completed)
               }
-              look={
+              look={dressed(
                 props.dressed
                   ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
-                  : PLAYER
-              }
+                  : PLAYER,
+                worn,
+              )}
               surface="wood"
               low={lowPower}
               now={now}

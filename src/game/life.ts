@@ -48,6 +48,7 @@ import {
 import { parcelBlock, parcelReturned, parcelStage, parcelTaken } from './parcel'
 import { canCommute, chargeCarLease } from './transport'
 import { careerEvening, weeklyPay } from './careerLife'
+import { wearAndTear } from './accessories'
 import { clamp, decayed, earn, note, spend, withLife, withWellbeing } from './lifeTime'
 
 export const commuteOf = (id: CommuteId) => COMMUTES.find((c) => c.id === id)!
@@ -97,6 +98,8 @@ export function goHome(profile: ProfileData): ProfileData {
   life = eveningMessages(life, work.day)
   // Now and then something at home has broken (see repair.ts).
   life = checkBoiler(life, work.day)
+  // What was worn today wears a little (see accessories.ts).
+  life = wearAndTear(life, work.day)
   // Employers and the manager answer (see careerLife.ts).
   const next = careerEvening(withLife(profile, life))
   life = next.work.life

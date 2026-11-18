@@ -28,6 +28,7 @@ import {
   MessagesApp,
   SettingsApp,
   SocialApp,
+  StyleApp,
 } from './apps'
 
 export interface PhoneActions {
@@ -41,6 +42,10 @@ export interface PhoneActions {
   onGo: (place: string) => void
 }
 
+import { AccessoryStore } from '../accessories/AccessoryStore'
+import { keptModels, usesOf, wornModels } from '../game/accessories'
+import { setPlayerKept, setPlayerWear } from '../world/character/playerWear'
+
 const TITLES = Object.fromEntries(APPS.map((a) => [a.id, a.name])) as Record<
   PhoneApp,
   string
@@ -52,6 +57,17 @@ export function PhoneHost({
   ...actions
 }: { profile: ProfileData } & PhoneActions) {
   const phone = usePhone()
+  // What the player wears, for every scene that draws them (playerWear.ts).
+  const wardrobe = profile.work.life.wardrobe
+  useEffect(() => {
+    setPlayerWear(wornModels({ wardrobe }))
+    setPlayerKept(keptModels({ wardrobe }))
+  }, [wardrobe])
+  // Earbuds and headphones: the world around quieter (much quieter, noise cancelling).
+  useEffect(() => {
+    const uses = usesOf({ wardrobe } as ProfileData['work']['life'])
+    audio.hushAround(uses.has('noise-cancel') ? 0.25 : uses.has('audio') ? 0.55 : 1)
+  }, [wardrobe])
   // P takes the phone out or puts it away (not while typing in a field).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -71,6 +87,7 @@ export function PhoneHost({
     <>
       <Banner profile={profile} hidden={phone.open} />
       {phone.open && <PhoneDevice profile={profile} app={phone.app} {...actions} />}
+      <AccessoryStore profile={profile} act={actions.act} />
     </>
   )
 }
@@ -376,6 +393,8 @@ function AppBody({
       return <BrowserApp />
     case 'camera':
       return <CameraApp />
+    case 'style':
+      return <StyleApp profile={profile} />
     case 'settings':
       return <SettingsApp profile={profile} act={a.act} />
   }

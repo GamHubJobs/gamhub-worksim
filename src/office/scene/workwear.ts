@@ -6,6 +6,7 @@
  * software team, more casual clothes; everywhere else, office clothes with a
  * staff badge. The same people (the office's cast) are dressed for the place.
  */
+import { workWear } from './npcWear'
 import type { PersonLook } from './people'
 
 type Kind =
@@ -124,7 +125,11 @@ export function dressAll(
   looks: Record<string, PersonLook>,
 ): Record<string, PersonLook> {
   return Object.fromEntries(
-    Object.entries(looks).map(([id, look]) => [id, dressFor(kind, id, look)]),
+    Object.entries(looks).map(([id, look]) => {
+      const dressed = dressFor(kind, id, look)
+      // With what they wear besides (npcWear.ts): a watch, glasses, safety kit...
+      return [id, { ...dressed, wear: workWear(kind, id, dressed) }]
+    }),
   )
 }
 

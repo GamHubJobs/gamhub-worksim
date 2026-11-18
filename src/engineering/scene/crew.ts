@@ -7,8 +7,10 @@
  * the construction manager at the cabin. When the site is held up, the crew
  * stands by. Pure.
  */
+import { getAccessory } from '../../content/accessories'
 import { HI_VIS } from '../../content/scenarios/looks'
 import type { PersonLook } from '../../office/scene/people'
+import type { Wear } from '../../world/character/accessoryLook'
 import type { ClipId } from '../../world/character/rig'
 import { bounds, walls, type Design } from '../design'
 import { plotPoint } from '../inspections'
@@ -42,7 +44,30 @@ const LOOKS: Record<string, PersonLook> = {
 }
 
 export function crewLook(id: string): PersonLook {
-  return LOOKS[id] ?? LOOKS.labourer
+  return withSiteKit(id, LOOKS[id] ?? LOOKS.labourer)
+}
+
+/**
+ * Everyone on site in full safety kit (content/accessories.ts): safety boots and
+ * glasses for all, gloves for those handling steel and blocks, tool belts for
+ * the trades, ear defenders in the digger's cab.
+ */
+const GLOVED = new Set(['fixer', 'bricklayer', 'labourer', 'roofer'])
+const BELTED = new Set(['electrician', 'plumber', 'roofer', 'fixer'])
+function withSiteKit(id: string, look: PersonLook): PersonLook {
+  const kit = (itemId: string, colour?: string): Wear | null => {
+    const a = getAccessory(itemId)
+    return a ? { model: a.model, slot: a.slot, colour: colour ?? a.colours[0] } : null
+  }
+  const wear = [
+    kit('safety-boots'),
+    kit('glasses-safety'),
+    GLOVED.has(id) ? kit('work-gloves') : null,
+    BELTED.has(id) ? kit('tool-belt') : null,
+    id === 'operator' ? kit('earmuffs') : null,
+  ].filter((w): w is Wear => w !== null)
+  // The hard hat stays as it is (its own colour, by role).
+  return { ...look, glasses: false, wear }
 }
 
 /** Where the work is now: a point on the walls, the trench, the deck… */

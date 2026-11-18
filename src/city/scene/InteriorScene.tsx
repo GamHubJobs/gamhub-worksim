@@ -7,6 +7,7 @@
  * the same activity; its game action is completed when it has been played.
  */
 import { lowDpr } from '../../world/lowDpr'
+import { dressed, usePlayerWear } from '../../world/character/playerWear'
 import { Canvas, type RootState } from '@react-three/fiber'
 import { lazy, memo, Suspense, useMemo, useRef, useState, type RefObject } from 'react'
 import type { WebGLRenderer } from 'three'
@@ -170,9 +171,14 @@ function InteriorScene(props: InteriorSceneProps) {
   )
   const world = useMemo(() => ({ now, hands, low }), [low])
   const onDone = props.onDone
-  const look = props.dressed
-    ? { ...PLAYER, outfit: 'shirt' as const, top: '#dbeafe', tie: '#1e3a8a' }
-    : PLAYER
+  // With what they wear (playerWear.ts).
+  const worn = usePlayerWear()
+  const look = dressed(
+    props.dressed
+      ? { ...PLAYER, outfit: 'shirt' as const, top: '#dbeafe', tie: '#1e3a8a' }
+      : PLAYER,
+    worn,
+  )
 
   return (
     <Canvas

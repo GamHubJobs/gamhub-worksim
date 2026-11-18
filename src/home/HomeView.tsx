@@ -20,6 +20,7 @@ import { getHome, type HomeId, type SlotId } from '../content/home'
 import { homeOf } from '../game/home'
 import { supportsWebGL } from '../office/webgl'
 import { HomeShop } from './HomeShop'
+import { openStore } from '../accessories/store'
 import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { CommuteChoices } from './CommuteChoices'
 import { captureStill } from '../world/transition/capture'
@@ -142,6 +143,13 @@ export function HomeView({
           },
         ]
       : []),
+    // At the wardrobe: what to wear and carry (the wardrobe's screen).
+    {
+      id: 'accessories',
+      label: 'Choose your accessories',
+      detail: `${life.wardrobe.owned.length} things in your wardrobe`,
+      blocked: null,
+    },
     {
       id: 'go-out',
       label: 'Go out into the neighbourhood',
@@ -244,6 +252,8 @@ export function HomeView({
       }
       if (completed && action?.startsWith('person:'))
         return meetPerson(action.slice('person:'.length))
+      // At the wardrobe: choosing what to wear (the wardrobe's own screen).
+      if (completed && action === 'accessories') return openStore('wardrobe')
       if (completed && action === 'takeaway-door' && stage === 'at-door') setCourier(true)
       if (completed && action) commit(action)
     },
@@ -664,6 +674,13 @@ export function HomeView({
                 className="rounded-md border border-slate-300 px-2.5 py-1 text-sm hover:bg-amber-50"
               >
                 Move home
+              </button>
+              <button
+                type="button"
+                onClick={() => openStore('wardrobe')}
+                className="rounded-md border border-slate-300 px-2.5 py-1 text-sm hover:bg-amber-50"
+              >
+                Wardrobe
               </button>
             </div>
           </section>

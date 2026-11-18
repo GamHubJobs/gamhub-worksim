@@ -43,6 +43,22 @@ import { bodyOf, removeBody, setBody } from '../../world/npc/bodies'
 import { engagedFor, removeNpc, setNpc } from '../../world/npc/people'
 import { Talkable } from '../../world/npc/Talkable'
 import { playFrom } from '../../audio/playFrom'
+import {
+  BackWear,
+  Carried,
+  Footwear,
+  HeadWear,
+  TorsoWear,
+  WaistWear,
+  WristWear,
+} from '../../world/character/accessories3d'
+import {
+  finish,
+  gloveColour,
+  hidesHair,
+  vestColour,
+  type Wear,
+} from '../../world/character/accessoryLook'
 
 /** With reduced motion, people hold a natural pose and do not move. */
 const STILL = prefersReducedMotion()
@@ -112,6 +128,12 @@ export interface PersonLook {
   badge?: string
   /** A stethoscope round the neck. */
   stethoscope?: boolean
+  /**
+   * Accessories and equipment worn (content/accessories.ts), drawn where they go
+   * (world/character/accessories3d.tsx). What is worn here takes the place of
+   * the simple flags above (glasses, a hard hat, a badge) in the same place.
+   */
+  wear?: Wear[]
 }
 
 /**
@@ -449,6 +471,9 @@ export function Person({
   const kneeL = useRef<Group>(null)
   const kneeR = useRef<Group>(null)
   const pose = useRef<Group>(null)
+  // A bag and what is carried: put down while sitting or busy at something.
+  const bagAt = useRef<Group>(null)
+  const carryAt = useRef<Group>(null)
   const scratch = useRef({ v: new Vector3(), walk: 0 }).current
 
   const width = WIDTH[look.build ?? 'average']
@@ -491,6 +516,14 @@ export function Person({
       look.hardhat,
     ],
   )
+  // Accessories worn (accessories3d.tsx): gloves on the hands, a vest over the
+  // clothes, and what is worn in place of the simple flags.
+  const wear = look.wear
+  const glove = gloveColour(wear)
+  const hand = glove ? finish(glove, 'rubber') : m.skin
+  const vestOn = vestColour(wear)
+  const vest = vestOn ? finish(vestOn, 'fabric') : m.vest
+  const ownNeck = !!wear?.some((w) => w.slot === 'neck')
 
   const base = typing ? TYPING : seated ? SEATED : STANDING
   // With a rig, the body is laid out standing and lowered or laid down as a whole.
@@ -525,6 +558,10 @@ export function Person({
     const still = STILL ? 0 : 1
     // What the body is doing: an activity's pose, crouching, or the usual one.
     const b = frame ?? (crouching ? CROUCH_POSE : base)
+    // Sitting, the bag comes off the back; busy, what was carried is put down.
+    const sitting = seated || !!frame?.seated
+    if (bagAt.current) bagAt.current.visible = !sitting
+    if (carryAt.current) carryAt.current.visible = !sitting && !frame
     if (pose.current) {
       const drop = frame
         ? (frame.seated ? HIP.seated - HIP.standing : 0) + frame.y
@@ -733,26 +770,32 @@ export function Person({
                       position={[0, -0.355, 0]}
                     />
                   </Detail>
-                  {/* Shoe */}
+                  {/* Shoe (or the shoes worn: accessories3d.tsx) */}
                   <group position={[0, -0.4, 0]}>
-                    <Detail>
-                      <mesh
-                        geometry={GEO.heel}
-                        material={m.shoesShade}
-                        position={[0, -0.05, 0.035]}
-                      />
-                    </Detail>
-                    <mesh
-                      geometry={GEO.unit}
-                      material={m.shoes}
-                      position={[0, -0.028, -0.045]}
-                      scale={[0.05, 0.036, 0.125]}
-                    />
-                    <mesh
-                      geometry={GEO.sole}
-                      material={m.shoes}
-                      position={[0, -0.057, -0.04]}
-                    />
+                    {wear?.some((w) => w.slot === 'feet') ? (
+                      <Footwear wear={wear} skin={m.skin} />
+                    ) : (
+                      <>
+                        <Detail>
+                          <mesh
+                            geometry={GEO.heel}
+                            material={m.shoesShade}
+                            position={[0, -0.05, 0.035]}
+                          />
+                        </Detail>
+                        <mesh
+                          geometry={GEO.unit}
+                          material={m.shoes}
+                          position={[0, -0.028, -0.045]}
+                          scale={[0.05, 0.036, 0.125]}
+                        />
+                        <mesh
+                          geometry={GEO.sole}
+                          material={m.shoes}
+                          position={[0, -0.057, -0.04]}
+                        />
+                      </>
+                    )}
                   </group>
                 </group>
               </group>
@@ -798,6 +841,7 @@ export function Person({
                     />
                   </Detail>
                 )}
+              <WaistWear wear={wear} y={hipY + 0.07} width={width} />
               {/* Hips */}
               <mesh
                 geometry={GEO.pelvis}
@@ -817,12 +861,17 @@ export function Person({
                   position={[0, 0.27, 0]}
                   scale={[1.4 * width, 1, 0.82]}
                 />
-                {look.outfit === 'hivis' && (
+                {/* What is worn on the torso: round the neck, on the chest, a bag */}
+                <TorsoWear wear={wear} width={width} />
+                <group ref={bagAt}>
+                  <BackWear wear={wear} width={width} />
+                </group>
+                {(look.outfit === 'hivis' || vestOn) && (
                   <>
                     {/* A hi-vis vest over the top, with two reflective bands */}
                     <mesh
                       geometry={GEO.torso}
-                      material={m.vest}
+                      material={vest}
                       position={[0, 0.25, 0]}
                       scale={[1.47 * width, 0.86, 0.9]}
                     />
@@ -915,7 +964,7 @@ export function Person({
                       />
                     </>
                   )}
-                  {look.badge && (
+                  {look.badge && !ownNeck && (
                     <>
                       {/* A lanyard round the neck, and the ID badge on it */}
                       <mesh
@@ -938,7 +987,7 @@ export function Person({
                       />
                     </>
                   )}
-                  {look.stethoscope && (
+                  {look.stethoscope && !ownNeck && (
                     <>
                       {/* A stethoscope round the neck, its tubes and chest piece in front */}
                       <mesh
@@ -1026,8 +1075,15 @@ export function Person({
                           if (hands?.current) hands.current[x < 0 ? 'left' : 'right'] = g
                         }}
                       >
-                        {x < 0 ? hold?.left : hold?.right}
+                        {x < 0
+                          ? (hold?.left ?? (
+                              <group ref={carryAt}>
+                                <Carried wear={wear} />
+                              </group>
+                            ))
+                          : hold?.right}
                       </group>
+                      <WristWear wear={wear} side={x < 0 ? 'left' : 'right'} />
                       {/* The cuff of a long sleeve at the wrist */}
                       {sleeves === 'long' && (
                         <mesh
@@ -1039,7 +1095,7 @@ export function Person({
                       {/* Hand: a palm with four fingers and a thumb on the inside */}
                       <mesh
                         geometry={GEO.palm}
-                        material={m.skin}
+                        material={hand}
                         position={[0, -0.282, -0.004]}
                       />
                       <Detail>
@@ -1047,7 +1103,7 @@ export function Person({
                           <mesh
                             key={fx}
                             geometry={GEO.finger}
-                            material={m.skin}
+                            material={hand}
                             position={[fx, k === 0 || k === 3 ? -0.33 : -0.335, -0.006]}
                             rotation={[0.18, 0, 0]}
                             scale={[1, k === 0 || k === 3 ? 0.85 : 1, 1]}
@@ -1055,7 +1111,7 @@ export function Person({
                         ))}
                         <mesh
                           geometry={GEO.thumb}
-                          material={m.skin}
+                          material={hand}
                           position={[x > 0 ? -0.034 : 0.034, -0.285, -0.016]}
                           rotation={[0.2, 0, x > 0 ? -0.6 : 0.6]}
                         />
@@ -1191,7 +1247,7 @@ function Head({
           scale={[0.98, 1.05, 1.02]}
         />
       )}
-      {look.glasses && (
+      {look.glasses && !look.wear?.some((w) => w.slot === 'eyes') && (
         <group position={[0, c + 0.006, -0.121]}>
           {[-1, 1].map((side) => (
             <mesh
@@ -1212,15 +1268,17 @@ function Head({
           ))}
         </group>
       )}
-      {look.hardhat ? (
+      {look.hardhat && !look.wear?.some((w) => w.slot === 'head') ? (
         <group position={[0, c + 0.035, 0]}>
           {/* A hard hat over the hair, its brim a little longer at the front */}
           <mesh geometry={GEO.dome} material={m.hat} />
           <mesh geometry={GEO.brim} material={m.hat} position={[0, 0.004, -0.012]} />
         </group>
-      ) : (
+      ) : hidesHair(look.wear) ? null : (
         <Hair style={look.hair} material={m.hair} />
       )}
+      {/* Hats, glasses, headphones and earrings worn (accessories3d.tsx) */}
+      <HeadWear wear={look.wear} c={c} />
     </group>
   )
 }

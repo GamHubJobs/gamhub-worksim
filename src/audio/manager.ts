@@ -178,6 +178,11 @@ export class AudioManager {
     skipped: 0,
   }
   private engine: AudioEngine | null = null
+  /**
+   * Earbuds or headphones in (game/accessories.ts): the world around quieter,
+   * the background most (1 is nothing in the ears).
+   */
+  private hush = 1
   private scene: Scene | null = null
   private last = new Map<EffectId, number>()
   private listeners = new Set<Listener>()
@@ -195,10 +200,25 @@ export class AudioManager {
     this.now = now
   }
 
+  /** How much quieter the surroundings are (from what is worn in the ears). */
+  hushAround(factor: number): void {
+    const f = Math.min(1, Math.max(0, factor))
+    if (f === this.hush) return
+    this.hush = f
+    this.engine?.setLevels(this.levels(), this.settings.calm)
+  }
+
+  /** The surroundings' hush (for tests). */
+  hushLevel(): number {
+    return this.hush
+  }
+
   levels(): Levels {
     const out = {} as Levels
     for (const id of ['music', 'ambience', 'effects', 'character', 'voices'] as const)
-      out[id] = levelOf(this.settings, id)
+      out[id] =
+        levelOf(this.settings, id) *
+        (id === 'ambience' ? this.hush : id === 'effects' ? Math.sqrt(this.hush) : 1)
     return out
   }
 

@@ -192,6 +192,50 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-18 · Accessories, equipment and personal belongings
+
+See `docs/ACCESSORIES.md`.
+
+- **Catalogue:** 75 items in nine categories and five tiers, priced against
+  weekly pay, each with a 3D model, colours and what it does. Every career has
+  professional equipment of its own.
+- **Save:** `life.wardrobe` holds what is owned (colour, day bought, price paid,
+  condition), worn and packed, and what was bought and sold. Older saves load
+  with an empty wardrobe.
+- **Rules:** buying through the bank's ledger; selling at 40% less wear; one item
+  per place on the body; no headphone band over a hat (one comes off, with the
+  reason); bags with room for work things; wear and tear once a day.
+- **3D:** models attached to the body parts they go on (head, torso, waist,
+  wrists, hands, feet, the left hand), drawn at Low graphics too. Geometry and
+  materials are shared. Bags come off while sitting, and what is carried is put
+  down while busy, so nothing passes through chairs and desks. The player wears
+  their things in every scene.
+- **People:** colleagues by profession and workplace (fob watches and scrub caps
+  on the ward; safety glasses, boots and tool belts in the workshop; formal
+  shoes and dress watches at the law firm; headsets on the service desk; a camera
+  in the studio), site crews in full safety kit, and people in town with bags,
+  caps, earbuds and watches. Varied by person, and never clashing.
+- **Functions:** a watch's time, and a smartwatch's unread messages, beside the
+  clock (and energy, stress and bedtime); quieter ambience in earbuds or
+  headphones; the site's safety-kit check (own kit worn, the rest lent); a
+  stethoscope at the bedside; an ID badge at reception; bags carry work things.
+- **Where:** the phone's Style app; the shop and wardrobe (a product turned in 3D,
+  tried on, compared side by side, bought after a confirmation; a 3D character
+  preview, filters, condition, packing, selling, history); the pause menu's
+  Inventory and Character screens; the Wardrobe at home, and a coat stand and tray
+  by the front door for what is kept there.
+
+Tested: unit (3,438 pass, including the rules, the catalogue, older saves,
+colleagues' kit and the site check); browser (`accessories.spec.ts`: bought,
+worn, the watch display, compared, accessible, after a reload, in the inventory,
+a clash, sold), and the office, home, street, interiors, doors, site, ward, law
+firm, court, colleagues, phone and district suites. Five of those failed with two
+running at once on this machine and passed when run on their own. Screenshots
+were checked at close range on the player in four outfits, plus the shop and
+the wardrobe.
+
+---
+
 ## 2026-11-18 · Every workplace photographed at High; the doorway tests made reliable
 
 - **High graphics pictures at the equipment, for every career:** two

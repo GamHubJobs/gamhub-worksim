@@ -7,6 +7,8 @@
  * floor marker or an object moves there.
  */
 import { Anchors } from '../../world/AnchorPoints'
+import { dressed, usePlayerWear, wornUses } from '../../world/character/playerWear'
+import { withOwnKit } from './ownKit'
 import { BenchKit, CommsRack } from './itKit'
 import { Door } from '../../world/doors/Door'
 import type { AnchorSpec } from '../../world/anchors'
@@ -593,7 +595,16 @@ function OfficeWalker({
   cake: boolean
 }) {
   // The trainee dressed for the workplace (scrubs, hi-vis, a suit, office clothes).
-  const playerLook = useMemo(() => playerWorkwear(workplaceKind(), PLAYER), [])
+  // With the accessories they wear (playerWear.ts).
+  const worn = usePlayerWear()
+  const kitKey = [...wornUses(worn)].sort().join(',')
+  // (Only when what the worn things do changes.)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const kitUses = useMemo(() => wornUses(worn), [kitKey])
+  const playerLook = useMemo(
+    () => dressed(playerWorkwear(workplaceKind(), PLAYER), worn),
+    [worn],
+  )
   const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
   const hands = useRef<Hands>({ left: null, right: null })
   const [start] = useState(() => standIn(spot))
@@ -611,13 +622,17 @@ function OfficeWalker({
       const s = getScenario(id)
       return s ? [scenarioActivity(s)] : []
     })
-    return [
-      ...base.filter((a) => a.action !== 'celebration' || cake),
-      ...own,
-      ...live,
-      ...(bay ? [] : itActivities(desks)),
-    ]
-  }, [base, itJobs, scenarios, cake])
+    // With the player's own equipment (ownKit.ts): a stethoscope at the bedside, a badge at reception.
+    return withOwnKit(
+      [
+        ...base.filter((a) => a.action !== 'celebration' || cake),
+        ...own,
+        ...live,
+        ...(bay ? [] : itActivities(desks)),
+      ],
+      kitUses,
+    )
+  }, [base, itJobs, scenarios, cake, kitUses])
   // A tool open at a thing: over the shoulder, the thing to the left of the
   // frame (which takes the right of the view). Worked out once, where the
   // player stands when it opens.

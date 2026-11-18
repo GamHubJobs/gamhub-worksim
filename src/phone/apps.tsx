@@ -30,6 +30,8 @@ import {
 import { CONTACTS, canContact, friendOf, type Contact } from '../game/social'
 import { canTakePhoto, deletePhoto, photos, takePhoto, type Photo } from './photos'
 import { closePhone } from './store'
+import { openStore } from '../accessories/store'
+import { wornItems } from '../game/accessories'
 import { openMap } from '../world/map/store'
 import { setDestination } from '../game/nav'
 
@@ -843,6 +845,50 @@ export function SettingsApp({ profile, act }: { profile: ProfileData; act: Act }
       <p className="text-xs text-slate-500">
         Volumes are in Sound &amp; graphics, in the top bar.
       </p>
+    </div>
+  )
+}
+
+/**
+ * Style: what the player is wearing and carrying, and the way into the
+ * accessories shop and the wardrobe (accessories/AccessoryStore.tsx).
+ */
+export function StyleApp({ profile }: { profile: ProfileData }) {
+  const life = profile.work.life
+  const worn = wornItems(life)
+  return (
+    <div className="space-y-3" data-testid="phone-style">
+      <p className="text-slate-700">
+        {worn.length
+          ? `Wearing: ${worn.map((w) => w.item.name.toLowerCase()).join(', ')}.`
+          : 'Nothing extra on today.'}
+      </p>
+      <p className="text-xs text-slate-500">
+        {life.wardrobe.owned.length} things in your wardrobe · {formatMoney(life.money)}{' '}
+        in the bank
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            closePhone()
+            openStore('shop')
+          }}
+          className="rounded-lg bg-violet-600 px-3 py-2 font-semibold text-white"
+        >
+          Shop accessories
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            closePhone()
+            openStore('wardrobe')
+          }}
+          className="rounded-lg bg-slate-100 px-3 py-2 font-semibold text-slate-800"
+        >
+          Your wardrobe
+        </button>
+      </div>
     </div>
   )
 }

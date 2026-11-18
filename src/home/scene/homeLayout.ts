@@ -535,6 +535,15 @@ export function homeLayout(
     ],
     { sounds: [{ at: 0.5, id: 'rustle', every: 1.2 }] },
   )
+  // At the wardrobe (or the chair by the bed): the accessories kept there, to
+  // choose what to wear and carry (accessories/AccessoryStore.tsx, opened when done).
+  add(
+    'accessories',
+    'choose your accessories',
+    wardrobe ? at(wardrobe, 0.7, 0.6) : bed ? at(bed, 0, 1.8) : door,
+    [{ clip: 'reach', seconds: 1, label: 'Opening the wardrobe' }],
+    { sounds: [{ at: 0.3, id: 'door' }] },
+  )
   // A book from the shelf, or (without one) the book by the bed.
   const shelf = owned('shelf')
   add('read', 'read a book', shelf ? at(shelf, 0.6) : (seat ?? door), [

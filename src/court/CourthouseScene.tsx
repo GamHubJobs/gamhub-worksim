@@ -7,6 +7,7 @@
  * drawn while the player is at court.
  */
 import { Canvas, useFrame, type RootState } from '@react-three/fiber'
+import { dressed, usePlayerWear } from '../world/character/playerWear'
 import { SceneLook } from '../world/look/SceneLook'
 import { memo, useMemo, useRef, useState, type RefObject } from 'react'
 import { getScenario } from '../content/scenarios'
@@ -92,6 +93,8 @@ function RoomWatch({
 }
 
 function CourthouseScene(props: CourthouseSceneProps) {
+  // What the player wears (playerWear.ts).
+  const worn = usePlayerWear()
   const [software, setSoftware] = useState(false)
   const quality = useGraphicsQuality()
   const low = isLow(quality, software)
@@ -149,7 +152,7 @@ function CourthouseScene(props: CourthouseSceneProps) {
             onProgress={props.onProgress}
             onDone={(a, completed) => onDone(a.action, completed)}
             onReady={props.onReady}
-            look={playerWorkwear('courtroom', PLAYER)}
+            look={dressed(playerWorkwear('courtroom', PLAYER), worn)}
             surface="tile"
             low={low}
             now={now}

@@ -34,6 +34,7 @@ export type PhoneApp =
   | 'food'
   | 'calendar'
   | 'settings'
+  | 'style'
 
 export const APPS: Array<{ id: PhoneApp; name: string; icon: IconName; colour: string }> =
   [
@@ -47,6 +48,7 @@ export const APPS: Array<{ id: PhoneApp; name: string; icon: IconName; colour: s
     { id: 'social', name: 'Circle', icon: 'social', colour: '#db2777' },
     { id: 'browser', name: 'Browser', icon: 'globe', colour: '#0284c7' },
     { id: 'camera', name: 'Camera', icon: 'camera', colour: '#334155' },
+    { id: 'style', name: 'Style', icon: 'basket', colour: '#9333ea' },
     { id: 'settings', name: 'Settings', icon: 'settings', colour: '#475569' },
   ]
 

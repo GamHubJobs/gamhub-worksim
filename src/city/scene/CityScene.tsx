@@ -7,6 +7,8 @@
  * nothing moves, so it runs on ordinary laptops.
  */
 import { lowDpr } from '../../world/lowDpr'
+import { townWear } from '../../office/scene/npcWear'
+import { dressed, usePlayerWear } from '../../world/character/playerWear'
 import { EngineeringWorks, HospitalBlock, OfficeTower } from './architecture'
 import { Bed, CarPark, NorthbankOffice, Tree } from './workplaceGrounds'
 import { Door as BuildingDoor, type DoorProps } from '../../world/doors/Door'
@@ -155,6 +157,12 @@ const PASSERS_BY: Array<{ path: Vector[]; look: PersonLook; speed: number }> = [
     speed: 0.8,
   },
 ]
+
+/** Passers-by with what they carry and wear (npcWear.ts). */
+const PASSER_LOOKS = PASSERS_BY.map((p, i) => ({
+  ...p.look,
+  wear: townWear(`passer-${i}`, p.look),
+}))
 
 /** Where the courier waits, by the home's door on the street. */
 const COURIER_AT = { x: -38.6, z: 6.7 }
@@ -305,7 +313,7 @@ function CityScene(props: CitySceneProps) {
             <Walker
               key={i}
               path={p.path}
-              look={p.look}
+              look={PASSER_LOOKS[i]}
               speed={p.speed}
               pause={2}
               phase={i * 0.7}
@@ -566,6 +574,8 @@ function Taxi({
  * the sounds follow the part of the street they are in.
  */
 function StreetPlayer(props: CitySceneProps & { low: boolean; taxiAt: number }) {
+  // What the player wears (playerWear.ts).
+  const worn = usePlayerWear()
   const now = useRef<ActivityNow>({ id: null, t: 0, x: 0, z: 0 })
   const hands = useRef<Hands>({ left: null, right: null })
   const area = useRef<Area | null>(null)
@@ -623,11 +633,12 @@ function StreetPlayer(props: CitySceneProps & { low: boolean; taxiAt: number }) 
         else if (completed && a.action) props.onEnter(a.action.slice(6) as PlaceId)
       }}
       onReady={props.onReady}
-      look={
+      look={dressed(
         props.dressed
           ? { ...PLAYER, outfit: 'shirt', top: '#dbeafe', tie: '#1e3a8a' }
-          : PLAYER
-      }
+          : PLAYER,
+        worn,
+      )}
       surfaceAt={(_, z) => surfaceAt(z)}
       now={now}
       hands={hands}
@@ -1090,6 +1101,9 @@ const COMERS: Array<{
   },
 ]
 
+/** With what they carry and wear (npcWear.ts): bags, caps, earbuds, a watch. */
+const COMER_LOOKS = COMERS.map((c) => ({ ...c.look, wear: townWear(c.id, c.look) }))
+
 /**
  * The end of the street, the way to work: an office tower, Riverside
  * Community Hospital and Northbank Engineering's works (architecture.tsx).
@@ -1101,7 +1115,7 @@ function BusinessDistrict({ dark }: { dark: boolean }) {
         <Walker
           key={c.id}
           path={c.path}
-          look={c.look}
+          look={COMER_LOOKS[i]}
           speed={c.speed}
           pause={3 + i * 2}
           phase={i * 1.3}

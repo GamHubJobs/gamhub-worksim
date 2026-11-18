@@ -7,6 +7,7 @@
  * office is not drawn while the player is on site.
  */
 import { Canvas, useFrame, type RootState } from '@react-three/fiber'
+import { dressed, usePlayerWear, withSiteKit } from '../../world/character/playerWear'
 import { memo, useMemo, useRef, useState, type RefObject } from 'react'
 import { Path, Shape, Vector2 } from 'three'
 import { offsetOutline } from '../cad/dxf'
@@ -318,9 +319,12 @@ function ConstructionSiteScene(props: ConstructionSiteSceneProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [layout, props.measure, supervisorAt?.x, supervisorAt?.z],
   )
+  // The player's own safety kit, and the site's lent for whatever they lack
+  // (playerWear.ts, game/accessories.ts: the check at the gate).
+  const worn = usePlayerWear()
   const look = useMemo(
-    () => ({ ...playerWorkwear('workshop', PLAYER), hardhat: '#f8fafc', glasses: true }),
-    [],
+    () => dressed(playerWorkwear('workshop', PLAYER), withSiteKit(worn)),
+    [worn],
   )
   const active = (s: StageId) => stage === s && !blocked
   // Where the plant works.

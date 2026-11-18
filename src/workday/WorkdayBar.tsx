@@ -18,6 +18,7 @@ import {
 import { lunchAvailability, meetingState, meetingsOn } from '../game/workday'
 import type { Profile } from '../persistence/schemas'
 import type { ClockStatus } from './useWorkClock'
+import { WristDisplay } from '../accessories/WristDisplay'
 
 const TONE_TEXT: Record<Reading['tone'], string> = {
   good: 'text-emerald-700',
@@ -142,7 +143,7 @@ export function WorkdayBar({
       </div>
     )
 
-  return (
+  const bar = (
     <div className="relative" ref={root}>
       <button
         type="button"
@@ -186,6 +187,13 @@ export function WorkdayBar({
         </span>
       </button>
       {open && <DayPanel profile={profile} statusText={statusText} />}
+    </div>
+  )
+  // (A watch on the wrist shows the time, and a smartwatch more: WristDisplay.tsx.)
+  return (
+    <div className="flex items-center gap-2">
+      {bar}
+      <WristDisplay profile={profile} minute={minute} />
     </div>
   )
 }

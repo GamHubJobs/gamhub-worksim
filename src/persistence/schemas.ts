@@ -1368,6 +1368,51 @@ export const LifeSchema = z.object({
         }),
     })
     .prefault({}),
+  /**
+   * Accessories and equipment (see content/accessories.ts, game/accessories.ts):
+   * what the player owns (each one, with its colour, when it was bought, what
+   * was paid and its condition), what they wear, the work things packed in their
+   * bag, and what they bought and sold. Added later: older saves start empty.
+   */
+  wardrobe: z
+    .object({
+      owned: z
+        .array(
+          z.object({
+            /** This one (two of the same item are two). */
+            uid: z.string(),
+            id: z.string(),
+            colour: z.number().int().nonnegative().default(0),
+            /** The day it was bought. */
+            bought: z.number().int().nonnegative(),
+            /** What was paid, in pence. */
+            paid: z.number().int().nonnegative(),
+            /** 100 is new; it wears with use. */
+            condition: z.number().min(0).max(100).default(100),
+          }),
+        )
+        .max(200)
+        .default([]),
+      /** What is worn or carried (by uid). */
+      worn: z.array(z.string()).default([]),
+      /** Work things packed in the bag (by uid). */
+      packed: z.array(z.string()).default([]),
+      /** Bought and sold, newest last. */
+      history: z
+        .array(
+          z.object({
+            day: z.number().int().nonnegative(),
+            text: z.string(),
+            /** In pence: paid (negative) or received. */
+            amount: z.number().int(),
+          }),
+        )
+        .max(80)
+        .default([]),
+      /** The last day worn things wore a little (once a day). */
+      woreDay: z.number().int().nonnegative().default(0),
+    })
+    .prefault({}),
 })
 
 /**
