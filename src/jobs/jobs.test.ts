@@ -17,7 +17,7 @@ import { remoteok } from './providers/remoteok'
 import { remotive } from './providers/remotive'
 import type { Provider } from './providers'
 import { dedupe, feedsFor, filterJobs, searchJobs } from './search'
-import { htmlToText, safeUrl } from './text'
+import { fixDoubleEncoding, htmlToText, oneLine, safeUrl } from './text'
 import { EMPTY_QUERY, type JobListing } from './types'
 
 // Shaped as each feed's real answers (captured 19 November 2026), cut down.
@@ -161,6 +161,14 @@ describe('advert text', () => {
     expect(t).not.toMatch(/<|alert/)
     expect(t).toContain('• Ship & review code')
     expect(t.split('\n')[0]).toBe('About us')
+  })
+  it('text a source encoded twice is put right (seen live: “BogotÃ¡”)', () => {
+    expect(oneLine('Remote - from BogotÃ¡, Colombia')).toBe(
+      'Remote - from Bogotá, Colombia',
+    )
+    expect(fixDoubleEncoding('Youâ€™ll lead')).toBe('You’ll lead')
+    expect(fixDoubleEncoding('München, Côte d’Ivoire')).toBe('München, Côte d’Ivoire')
+    expect(htmlToText('<p>Gr&uuml;n &amp; BogotÃ¡</p>')).toContain('Bogotá')
   })
   it('only web addresses are links', () => {
     expect(safeUrl('javascript:alert(1)')).toBeUndefined()

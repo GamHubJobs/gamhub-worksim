@@ -1681,7 +1681,7 @@ export function Desktop({
             <button
               type="button"
               onClick={() => launch({ app: 'career' })}
-              className="hidden flex-col justify-center px-2 text-left text-[11px] leading-tight text-white hover:bg-white/10 sm:flex"
+              className="hidden flex-col justify-center px-2 text-left text-[11px] leading-tight text-white hover:bg-white/10 xl:flex"
               data-testid="player-chip"
               title={`${profile.name}, ${current.title} at ${activeEmployer().name}`}
             >

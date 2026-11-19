@@ -37,6 +37,57 @@ const ENTITIES: Record<string, string> = {
   ccedil: 'ç',
 }
 
+/**
+ * Text a source encoded twice ("BogotÃ¡" for "Bogotá", "â€™" for "’"), put
+ * right: read back as the bytes it came from. Only when that gives clean text;
+ * otherwise left as it is.
+ */
+export function fixDoubleEncoding(s: string): string {
+  if (!/[ÃÂâ][\u0080-¿€™œ“”–—˜]/.test(s)) return s
+  const codes = Array.from(s, (c) => {
+    const n = c.codePointAt(0)!
+    // Windows-1252's extra characters, as the bytes they stand for.
+    return CP1252[c] ?? n
+  })
+  if (codes.some((n) => n > 255)) return s
+  try {
+    const fixed = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(codes))
+    return fixed
+  } catch {
+    return s
+  }
+}
+
+const CP1252: Record<string, number> = {
+  '€': 0x80,
+  '‚': 0x82,
+  ƒ: 0x83,
+  '„': 0x84,
+  '…': 0x85,
+  '†': 0x86,
+  '‡': 0x87,
+  ˆ: 0x88,
+  '‰': 0x89,
+  Š: 0x8a,
+  '‹': 0x8b,
+  Œ: 0x8c,
+  Ž: 0x8e,
+  '‘': 0x91,
+  '’': 0x92,
+  '“': 0x93,
+  '”': 0x94,
+  '•': 0x95,
+  '–': 0x96,
+  '—': 0x97,
+  '˜': 0x98,
+  '™': 0x99,
+  š: 0x9a,
+  '›': 0x9b,
+  œ: 0x9c,
+  ž: 0x9e,
+  Ÿ: 0x9f,
+}
+
 export function decodeEntities(s: string): string {
   return s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, code: string) => {
     if (code[0] === '#') {
@@ -53,7 +104,8 @@ export function decodeEntities(s: string): string {
 /** HTML to plain text: paragraphs on their own lines, list items as bullets. */
 export function htmlToText(html: string, maxLength = 6000): string {
   if (!html) return ''
-  let s = html
+  // (Put right before entities become letters, so the two never mix.)
+  let s = fixDoubleEncoding(html)
     // What is never text.
     .replace(/<(script|style|noscript|iframe|svg|head)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ')
@@ -80,7 +132,7 @@ export function htmlToText(html: string, maxLength = 6000): string {
 /** One line of plain text (a title, a company name). */
 export function oneLine(s: unknown, maxLength = 200): string {
   if (typeof s !== 'string') return ''
-  const t = decodeEntities(s.replace(/<[^>]*>/g, ''))
+  const t = decodeEntities(fixDoubleEncoding(s).replace(/<[^>]*>/g, ''))
     .replace(/\s+/g, ' ')
     .trim()
   return t.length > maxLength ? `${t.slice(0, maxLength - 1)}…` : t

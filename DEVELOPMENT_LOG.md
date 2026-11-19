@@ -192,6 +192,23 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-19 · Small screens, garbled place names, and a long-session memory check
+
+- **The work computer's taskbar on small screens.** At 820 pixels wide its list of
+  apps was 0 pixels wide (no app could be opened from it), and at 1024 it showed
+  3 of 15. The search box now appears from 1024 pixels (Start searches too), the
+  name and XP in the tray from 1280 (they are in Career), and Leave desk is an
+  icon below 1024. The list is now 433 and 445 pixels wide at those sizes.
+- **Real Jobs** at 820 pixels: no sideways scrolling in any section; the phone app
+  checked by eye.
+- **Place names a source had encoded twice** (seen live: for Bogotá)
+  are put right, only when that gives clean text (tested).
+- **Memory over a long session** (five rounds of walking, turning, the phone and
+  the map, with clean-ups between): 65 MB at the start, levelling at 71 MB; page
+  elements (about 1,040) and event listeners (about 2,000) steady. No leak.
+
+---
+
 ## 2026-11-19 · Real Jobs: real vacancies, suggestions for the career, tracking, CV and letters
 
 A new app on the work computer and the phone (see docs/JOBS.md): real vacancies

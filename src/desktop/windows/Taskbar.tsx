@@ -93,8 +93,9 @@ export function Taskbar({
         {startOpen && startMenu(() => setStartOpen(false))}
       </div>
 
-      <div ref={searchArea} className="relative hidden md:flex">
-        <label className="flex w-64 items-center gap-2 bg-[#f3f3f3] px-3 text-sm text-slate-700 lg:w-80">
+      {/* On smaller screens the search gives way to the apps (Start searches too). */}
+      <div ref={searchArea} className="relative hidden lg:flex">
+        <label className="flex w-48 items-center gap-2 bg-[#f3f3f3] px-3 text-sm text-slate-700 2xl:w-80">
           <SearchGlyph />
           <span className="sr-only">Search apps</span>
           <input
@@ -190,10 +191,11 @@ export function Taskbar({
           type="button"
           onClick={onLeaveDesk}
           title="Get up from your desk and walk around the office"
+          aria-label="Leave desk"
           className="flex shrink-0 items-center gap-1.5 px-3 text-xs hover:bg-white/10"
         >
           <Icon name="back" className="h-4 w-4" />
-          Leave desk
+          <span className="hidden lg:inline">Leave desk</span>
         </button>
       </nav>
 
