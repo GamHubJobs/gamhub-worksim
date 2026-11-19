@@ -887,6 +887,9 @@ export function OfficeView({
       <div className="absolute inset-0">
         {webgl && !sceneFailed ? (
           <WalkView
+            // A new walk view for each place (the office, the court, a site): the change
+            // of place shows as such (transition/Still.tsx).
+            key={siteProject ? `site:${siteProject.id}` : away ? 'court' : 'office'}
             className="h-full rounded-none ring-0"
             testId="office-3d"
             promptClass="bottom-20"
@@ -1551,7 +1554,7 @@ function DialogueBox({
       onKeyDown={(event) => {
         if (event.key === 'Escape') onClose()
       }}
-      className="max-h-full w-[28rem] max-w-full overflow-y-auto rounded-xl bg-white p-5 shadow-lg ring-1 ring-slate-200 outline-none"
+      className="motion-rise max-h-full w-[28rem] max-w-full overflow-y-auto rounded-xl bg-white p-5 shadow-lg ring-1 ring-slate-200 outline-none"
       role="dialog"
       aria-label={dialogue.title}
       data-testid="office-dialogue"

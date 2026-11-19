@@ -213,7 +213,7 @@ export function TourOverlay({
         role="dialog"
         aria-modal="false"
         aria-labelledby="tour-title"
-        className="pointer-events-auto absolute rounded-xl bg-white p-4 shadow-2xl ring-1 ring-slate-200 transition-[left,top] duration-300"
+        className="motion-fade pointer-events-auto absolute rounded-xl bg-white p-4 shadow-2xl ring-1 ring-slate-200 transition-[left,top] duration-300"
         style={{
           left: place.left,
           top: place.top,

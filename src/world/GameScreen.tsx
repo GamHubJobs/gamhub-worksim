@@ -65,7 +65,7 @@ export function GameScreen({
         role="region"
         aria-label={label}
         data-testid="drawer"
-        className={`absolute top-3 bottom-3 left-3 z-20 flex w-[24rem] max-w-[calc(100%-1.5rem)] flex-col rounded-2xl bg-[#f4f1ec]/95 shadow-2xl ring-1 ring-black/10 ${open ? '' : 'invisible'}`}
+        className={`absolute top-3 bottom-3 left-3 z-20 flex w-[24rem] max-w-[calc(100%-1.5rem)] flex-col rounded-2xl bg-[#f4f1ec]/95 shadow-2xl ring-1 ring-black/10 transition-[opacity,translate,visibility] duration-200 ease-out ${open ? 'translate-x-0 opacity-100' : 'invisible -translate-x-4 opacity-0'}`}
       >
         <div className="flex items-center justify-between px-4 pt-3">
           <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">

@@ -4,7 +4,16 @@
  * pointer captured until Esc), and shows the "Press E to …" prompt and the
  * progress of what the character is doing. The 3D view is its child.
  */
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react'
+import { captureOnLeaving } from './transition/capture'
+import { Curtain } from './transition/Still'
 import { HudSlot } from '../ui/hud/Hud'
 import { controlFor, keyName, keymap, onKeymapChange, type Control } from './keys'
 import { dialogIsOpen, keyTarget, walkKey } from './walkKeys'
@@ -230,6 +239,22 @@ export function WalkView({
     }
   }, [])
 
+  // Changing place (transition/Still.tsx): the last picture of the place left,
+  // or a dark curtain, until this place has drawn itself; and this place's last
+  // picture kept as it closes, for the next.
+  const [drawn, setDrawn] = useState(false)
+  useEffect(() => {
+    const c = controls.current
+    c.onDrawn = () => setDrawn(true)
+    return () => {
+      c.onDrawn = undefined
+    }
+  }, [])
+  useLayoutEffect(() => {
+    const element = box.current
+    return () => captureOnLeaving(element)
+  }, [])
+
   const interact = keyName(keys.interact[0] ?? 'KeyE')
   return (
     <div
@@ -274,6 +299,7 @@ export function WalkView({
       }}
     >
       {children({ controls, onPrompt: setPrompt, onProgress: setProgress })}
+      <Curtain ready={drawn} />
 
       <HudSlot
         zone="bottom-center"

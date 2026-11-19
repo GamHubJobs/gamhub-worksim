@@ -802,7 +802,7 @@ function RemoteSession({
               role="dialog"
               aria-label={utility.name}
               onMouseDown={() => setFront(id)}
-              className="absolute flex max-h-[85%] flex-col overflow-hidden rounded-md border border-slate-300 bg-white shadow-2xl"
+              className="motion-pop absolute flex max-h-[85%] flex-col overflow-hidden rounded-md border border-slate-300 bg-white shadow-2xl"
               style={{
                 left: `calc(16.75rem + ${i * 1.25}rem)`,
                 top: `${0.75 + i * 1.25}rem`,

@@ -369,7 +369,7 @@ function ContextMenu({
       ref={root}
       role="menu"
       aria-label="Desktop menu"
-      className="absolute z-900 border border-[#a0a0a0] bg-[#f2f2f2] py-1 text-xs text-slate-900 shadow-[2px_2px_6px_rgba(0,0,0,0.3)]"
+      className="motion-drop absolute z-900 border border-[#a0a0a0] bg-[#f2f2f2] py-1 text-xs text-slate-900 shadow-[2px_2px_6px_rgba(0,0,0,0.3)]"
       style={{ left, top: Math.max(0, top), width }}
     >
       {items.map((item, n) =>
@@ -427,7 +427,7 @@ function ContextMenu({
               <div
                 role="menu"
                 aria-label={item.label}
-                className={`absolute top-0 border border-[#a0a0a0] bg-[#f2f2f2] py-1 shadow-[2px_2px_6px_rgba(0,0,0,0.3)] ${
+                className={`motion-fade absolute top-0 border border-[#a0a0a0] bg-[#f2f2f2] py-1 shadow-[2px_2px_6px_rgba(0,0,0,0.3)] ${
                   flipSubmenu ? 'right-full' : 'left-full'
                 }`}
                 style={{ width: 200 }}

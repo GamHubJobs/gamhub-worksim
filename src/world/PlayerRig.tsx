@@ -15,6 +15,7 @@
  */
 import { useFrame, useThree } from '@react-three/fiber'
 import { usePlayerWear } from './character/playerWear'
+import { prefersReducedMotion } from '../ui/motion'
 import {
   useEffect,
   useMemo,
@@ -80,6 +81,9 @@ import { setCapture } from '../phone/photos'
 import { Prop } from './props'
 import { Particles } from './vfx/Particles'
 
+/** Reduced motion: the body goes straight to its place. */
+const STILL = prefersReducedMotion()
+
 /** What is happening now, for the room's objects (a barbell, a shower) to follow. */
 export interface ActivityNow {
   id: string | null
@@ -135,6 +139,8 @@ export interface Controls {
    * once rather than at the next of those frames (set by the player rig).
    */
   wake?: () => void
+  /** The place has drawn its first frames (the curtain over it can lift; WalkView). */
+  onDrawn?: () => void
 }
 
 export interface PlayerRigProps {
@@ -665,6 +671,8 @@ export function PlayerRig(props: PlayerRigProps) {
     // The first frames after the place appears include its loading time: not
     // walked through all at once (someone coming in through a doorway would jump).
     fresh.current++
+    // A few frames in (shaders built, the place drawn): the change of place can end.
+    if (fresh.current === 3) controls.current.onDrawn?.()
     // A key pressed while the place was idle (drawing a frame or so a second):
     // the time before it was pressed is not walked, so the first step is a
     // step, not a jump forward.
@@ -901,7 +909,7 @@ export function PlayerRig(props: PlayerRigProps) {
         if (r.arrived && (to.x !== a.anchor.x || to.z !== a.anchor.z)) r.arrived = false
         if (r.arrived) {
           route.current = null
-          s = { ...s, heading: turnTowards(s.heading, a.anchor.heading, Math.PI) }
+          // (Turned to face the spot over the first moment, not all at once: below.)
           mode.current = { kind: 'acting', activity: a, t: 0, placed: 0, at: a.anchor }
           // Arrived to say goodnight: the moment with the other person starts now.
           if (
@@ -996,7 +1004,17 @@ export function PlayerRig(props: PlayerRigProps) {
           const clip = momentClips(together.moment).player
           rig.current = fitToWorld(clipFrame(clip, together.t), clip, together.t, m.at)
         }
-        s = { ...s, x: m.at.x, z: m.at.z, heading: m.at.heading, speed: 0, y: 0 }
+        // Into the exact spot and facing its way: eased over a moment (a step and a
+        // turn), not jumped to; at once with reduced motion.
+        const settle = STILL ? 1 : 1 - Math.exp(-dt * 10)
+        s = {
+          ...s,
+          x: s.x + (m.at.x - s.x) * settle,
+          z: s.z + (m.at.z - s.z) * settle,
+          heading: STILL ? m.at.heading : turnTowards(s.heading, m.at.heading, dt * 7),
+          speed: 0,
+          y: 0,
+        }
         for (const id of soundsBetween(a, before, m.t)) audio.play(id)
         const hold = heldAt(a, m.t) ?? {}
         const key = `${hold.left ?? ''}|${hold.right ?? ''}`

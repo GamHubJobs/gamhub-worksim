@@ -192,6 +192,44 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-19 · Transitions and animation, across the whole game
+
+Audit first: almost nothing in the interface animated (every window, menu,
+panel, dialog, the phone, the map and notifications appeared and vanished at
+once); only the street and its buildings had a transition between places; and
+the character snapped round (up to half a turn in one frame) on reaching a seat
+or a counter. Now one system for all of it (docs/MOTION.md):
+
+- **Timings and classes** in one place (index.css, ui/motion.ts): entrances
+  that ease out, quicker exits, opacity and transform only, and helpers for
+  something to animate out before it is removed (`usePresence`, `useAfterExit`).
+- **Windows** on the work computer pop open, shrink to the taskbar and back,
+  ease to and from maximised, and fade as they close. The Start menu, search
+  and right-click menus open with motion.
+- **Every dialog and panel** (32 of them: conversations, the phone, the map,
+  the shop, help, storage, sound, story, scenarios, tools, task results) has an
+  entrance; the phone is lowered however it is put away (P, Esc or its button),
+  and the pause menu and its screens fade out. Toasts slide in; the drawer over
+  the 3D view slides.
+- **Every change of place** (the office, home, the street, inside places, the
+  court, a site) opens under the last picture of the place left, or a dark
+  curtain, lifted once the new place has drawn itself (4 seconds at most). The
+  picture is carried only from one place straight to the next: screens between
+  (the day's end, the work computer) drop it. The work computer's screen and
+  the day's end come up gently.
+- **The character** eases into a seat or spot and turns to face it.
+- **Nothing gets in the way**: a thing leaving takes no clicks or keys, the
+  walking keys ignore dialogs on their way out, and every animation has a timer
+  as well as its end event, so nothing is left half-way. With reduced motion,
+  all of it is instant.
+
+Tested: `npm run check` (3,477 tests); `tests/e2e/transitions.spec.ts` (windows,
+a change of place, the phone and pause menu, reduced motion); 29 related browser
+suites (69 passed, 6 on a retry; 3 failed with two at once and passed alone);
+screenshots of a change of place in stages.
+
+---
+
 ## 2026-11-19 · Small screens, garbled place names, and a long-session memory check
 
 - **The work computer's taskbar on small screens.** At 820 pixels wide its list of

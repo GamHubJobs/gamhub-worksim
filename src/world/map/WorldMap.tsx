@@ -56,7 +56,7 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
       role="dialog"
       aria-label="World map"
       data-testid="world-map"
-      className="fixed inset-0 z-50 flex bg-slate-900/85 outline-none backdrop-blur-sm"
+      className="motion-pop fixed inset-0 z-50 flex bg-slate-900/85 outline-none backdrop-blur-sm"
     >
       <div className="relative min-w-0 flex-1">
         <svg

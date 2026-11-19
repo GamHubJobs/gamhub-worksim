@@ -81,7 +81,7 @@ export function HelpPanel({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6"
+      className="motion-fade fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
@@ -92,7 +92,7 @@ export function HelpPanel({
         aria-modal="true"
         aria-labelledby="help-title"
         tabIndex={-1}
-        className="flex w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl outline-none"
+        className="motion-pop flex w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl outline-none"
         data-testid="help-panel"
       >
         <header className="flex flex-wrap items-center gap-3 border-b border-slate-200 p-4">

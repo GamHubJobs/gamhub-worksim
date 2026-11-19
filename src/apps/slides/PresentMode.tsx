@@ -50,7 +50,7 @@ export function PresentMode({
     <div
       ref={root}
       tabIndex={-1}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black outline-none"
+      className="motion-fade fixed inset-0 z-[100] flex items-center justify-center bg-black outline-none"
       role="dialog"
       aria-label="Presentation"
       data-testid="presentation"

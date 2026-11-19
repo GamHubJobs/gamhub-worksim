@@ -1013,7 +1013,7 @@ export function CodeEditor({ content, readOnly = false, onUpdate }: CodeEditorPr
           <div
             role="dialog"
             aria-label={dialog === 'about' ? 'About' : 'Keyboard shortcuts'}
-            className="max-h-[80%] w-[min(30rem,90%)] overflow-y-auto rounded-md border border-slate-600 bg-slate-800 p-4 text-sm text-slate-100"
+            className="motion-pop max-h-[80%] w-[min(30rem,90%)] overflow-y-auto rounded-md border border-slate-600 bg-slate-800 p-4 text-sm text-slate-100"
           >
             {dialog === 'about' ? (
               <>

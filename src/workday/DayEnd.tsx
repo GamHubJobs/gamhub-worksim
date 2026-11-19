@@ -9,6 +9,8 @@ import {
 import { LUNCH } from '../content/workday'
 import type { DaySummary, Profile } from '../persistence/schemas'
 import { Meter } from './WorkdayBar'
+import { useEffect } from 'react'
+import { forgetStill } from '../world/transition/capture'
 
 function advice(summary: DaySummary): string[] {
   const tips: string[] = []
@@ -32,13 +34,18 @@ export function DayEnd({
   profile: Profile
   onNextDay: () => void
 }) {
+  // Between the office and home: the office's picture is not carried on to the flat.
+  useEffect(() => forgetStill(), [])
   const summary = profile.work.history.at(-1)
   const next = nextWorkday(profile.work.day)
   const weekend = next - profile.work.day > 1
   const { wellbeing } = profile.work
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-100" data-testid="day-end">
+    <div
+      className="motion-screen flex-1 overflow-y-auto bg-slate-100"
+      data-testid="day-end"
+    >
       <div className="mx-auto max-w-2xl space-y-4 p-6">
         <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <p className="text-sm text-slate-500">End of {weekdayName(profile.work.day)}</p>

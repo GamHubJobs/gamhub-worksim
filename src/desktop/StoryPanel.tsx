@@ -67,14 +67,14 @@ export function StoryPanel({
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6">
+    <div className="motion-fade fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6">
       <div
         ref={box}
         tabIndex={-1}
         role="dialog"
         aria-label="Story Mode"
         data-testid="story-panel"
-        className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl outline-none"
+        className="motion-pop w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl outline-none"
       >
         <div className="flex items-start justify-between gap-4">
           <div>

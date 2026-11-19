@@ -40,7 +40,7 @@ export function Onboarding({
       className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-blue-50 p-6"
       data-testid="onboarding"
     >
-      <div className="w-full max-w-2xl rounded-2xl bg-white p-8 shadow-xl ring-1 ring-slate-200">
+      <div className="motion-pop w-full max-w-2xl rounded-2xl bg-white p-8 shadow-xl ring-1 ring-slate-200">
         <p className="text-sm font-semibold tracking-wide text-blue-700 uppercase">
           GamHub WorkSim
         </p>

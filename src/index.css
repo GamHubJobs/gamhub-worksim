@@ -36,6 +36,140 @@
 }
 
 /*
+ * Motion (see ui/motion.ts): one set of timings and curves for the whole game,
+ * so every panel, window and scene moves alike. Entrances ease out (quick,
+ * then settling); exits are quicker still. Only opacity and transform are
+ * animated (cheap for the browser to draw). With reduced motion, the rule
+ * above makes each one instant.
+ */
+:root {
+  --motion-fast: 140ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --motion-scene: 450ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes motion-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes motion-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+@keyframes motion-pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes motion-rise-out {
+  to {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+}
+@keyframes motion-drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes motion-slide-right-in {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+@keyframes motion-slide-left-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes motion-window-min {
+  to {
+    opacity: 0;
+    transform: translateY(40%) scale(0.6);
+  }
+}
+@keyframes motion-screen-in {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+}
+
+@layer utilities {
+  /* Panels, dialogs and windows appearing (and leaving: the -out ones). */
+  .motion-fade {
+    animation: motion-fade-in var(--motion-base) var(--ease-out) both;
+  }
+  .motion-fade-out {
+    animation: motion-fade-out var(--motion-fast) var(--ease-in) both;
+  }
+  .motion-pop {
+    animation: motion-pop-in var(--motion-base) var(--ease-out) both;
+  }
+  .motion-pop-out {
+    animation: motion-pop-out var(--motion-fast) var(--ease-in) both;
+  }
+  /* The phone and sheets from the bottom of the screen. */
+  .motion-rise {
+    animation: motion-rise-in var(--motion-slow) var(--ease-out) both;
+  }
+  .motion-rise-out {
+    animation: motion-rise-out var(--motion-base) var(--ease-in) both;
+  }
+  /* Menus and lists dropping from what opened them. */
+  .motion-drop {
+    animation: motion-drop-in var(--motion-fast) var(--ease-out) both;
+  }
+  /* Drawers and side panels, from the side they sit on. */
+  .motion-slide-right {
+    animation: motion-slide-right-in var(--motion-base) var(--ease-out) both;
+  }
+  .motion-slide-left {
+    animation: motion-slide-left-in var(--motion-base) var(--ease-out) both;
+  }
+  /* A window going to the taskbar. */
+  .motion-window-min {
+    animation: motion-window-min var(--motion-base) var(--ease-in) both;
+    transform-origin: 50% 100%;
+  }
+  /* A whole screen (the work computer, the day's end) coming up. */
+  .motion-screen {
+    animation: motion-screen-in var(--motion-slow) var(--ease-out) both;
+  }
+  /* Size and place easing (maximise and restore). */
+  .motion-geometry {
+    transition-property: left, top, width, height;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--ease-out);
+  }
+  /* Something that animates only when it can afford to: no animation while hidden. */
+  .motion-paused {
+    animation-play-state: paused;
+  }
+}
+
+/*
  * Document text in Docs (the editor's own HTML). Tailwind removes browser
  * styles for headings and lists, so they are defined here.
  */

@@ -50,7 +50,7 @@ export function StartMenu({
     <div
       role="dialog"
       aria-label="Start"
-      className="absolute bottom-full left-0 flex h-[min(34rem,calc(100vh-3rem))] w-[min(40rem,100vw)] bg-[#1f1f1f]/[0.97] text-white shadow-[0_0_24px_rgba(0,0,0,0.5)]"
+      className="absolute bottom-full left-0 flex h-[min(34rem,calc(100vh-3rem))] w-[min(40rem,100vw)] bg-[#1f1f1f]/[0.97] text-white shadow-[0_0_24px_rgba(0,0,0,0.5)] motion-rise"
       data-testid="start-menu"
     >
       {/* The rail */}

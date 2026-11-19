@@ -161,7 +161,7 @@ export function OnSiteWork({
 
   return (
     <div
-      className={`absolute inset-0 z-40 flex flex-col bg-slate-950/70 backdrop-blur-sm ${leaving ? 'onsite-out' : 'onsite-in'}`}
+      className={`motion-pop absolute inset-0 z-40 flex flex-col bg-slate-950/70 backdrop-blur-sm ${leaving ? 'onsite-out' : 'onsite-in'}`}
       role="dialog"
       aria-modal="true"
       aria-label={desk ? `At ${first}’s desk` : TITLES[place]}

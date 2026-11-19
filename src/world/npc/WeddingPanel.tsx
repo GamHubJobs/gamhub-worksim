@@ -46,7 +46,7 @@ export function WeddingPanel({
       role="dialog"
       aria-label={`Your wedding with ${who.name}`}
       data-testid="wedding"
-      className="visible fixed right-4 bottom-4 z-40 w-[26rem] max-w-[calc(100%-2rem)] rounded-xl bg-white p-4 shadow-2xl ring-2 ring-pink-200 outline-none"
+      className="motion-rise visible fixed right-4 bottom-4 z-40 w-[26rem] max-w-[calc(100%-2rem)] rounded-xl bg-white p-4 shadow-2xl ring-2 ring-pink-200 outline-none"
     >
       <p className="text-xs font-semibold tracking-wide text-pink-700 uppercase">
         Your wedding · the park

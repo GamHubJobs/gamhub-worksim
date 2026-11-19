@@ -8,6 +8,7 @@
  * still (see PlayerRig). New news arrives as a banner, also when it is away.
  */
 import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react'
+import { usePresence } from '../ui/motion'
 import { Icon } from '../ui/Icon'
 import { audio } from '../audio/manager'
 import { weekdayName, formatTime } from '../game/clock'
@@ -69,6 +70,8 @@ export function PhoneHost({
   ...actions
 }: { profile: ProfileData } & PhoneActions) {
   const phone = usePhone()
+  // Kept a moment after it is put away, while it is lowered (ui/motion.ts).
+  const presence = usePresence(phone.open, 220)
   const store = useStore()
   // What the player wears, for every scene that draws them (playerWear.ts).
   const wardrobe = profile.work.life.wardrobe
@@ -99,7 +102,14 @@ export function PhoneHost({
   return (
     <>
       <Banner profile={profile} hidden={phone.open} />
-      {phone.open && <PhoneDevice profile={profile} app={phone.app} {...actions} />}
+      {presence.mounted && (
+        <PhoneDevice
+          profile={profile}
+          app={phone.app}
+          leaving={presence.leaving}
+          {...actions}
+        />
+      )}
       {store.open && (
         <Suspense fallback={null}>
           <AccessoryStore profile={profile} act={actions.act} />
@@ -137,7 +147,7 @@ function Banner({ profile, hidden }: { profile: ProfileData; hidden: boolean }) 
         done(shown.id)
         openPhone(shown.app)
       }}
-      className="phone-banner fixed top-16 left-1/2 z-50 flex w-80 -translate-x-1/2 items-start gap-3 rounded-2xl bg-white/95 p-3 text-left shadow-2xl ring-1 ring-slate-200 backdrop-blur"
+      className="phone-banner motion-drop fixed top-16 left-1/2 z-50 flex w-80 -translate-x-1/2 items-start gap-3 rounded-2xl bg-white/95 p-3 text-left shadow-2xl ring-1 ring-slate-200 backdrop-blur"
     >
       <span
         aria-hidden
@@ -163,8 +173,9 @@ function Banner({ profile, hidden }: { profile: ProfileData; hidden: boolean }) 
 function PhoneDevice({
   profile,
   app,
+  leaving = false,
   ...actions
-}: { profile: ProfileData; app: PhoneApp | null } & PhoneActions) {
+}: { profile: ProfileData; app: PhoneApp | null; leaving?: boolean } & PhoneActions) {
   // Raised into view, and lowered again before it goes.
   const [up, setUp] = useState(false)
   useEffect(() => {
@@ -197,8 +208,10 @@ function PhoneDevice({
       aria-label="Phone"
       data-testid="phone"
       className={`fixed right-6 bottom-3 z-50 outline-none transition-transform duration-200 ease-out ${
-        up ? 'translate-y-0' : 'translate-y-[110%]'
-      }`}
+        up && !leaving ? 'translate-y-0' : 'translate-y-[110%]'
+      } ${leaving ? 'pointer-events-none' : ''}`}
+      // Put away (P, Esc or a button): lowered before it goes, as by its own button.
+      data-leaving={leaving || undefined}
     >
       {/* The body */}
       <div className="relative h-[37rem] w-[19rem] rounded-[2.6rem] bg-zinc-900 p-2.5 shadow-2xl ring-1 ring-zinc-700">

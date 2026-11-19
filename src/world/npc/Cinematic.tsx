@@ -62,7 +62,7 @@ export function Cinematic({ moment, onDone }: { moment: KeyMoment; onDone: () =>
   }`
   return (
     <div
-      className="fixed inset-0 z-40"
+      className="motion-fade fixed inset-0 z-40"
       role="dialog"
       aria-label={`Chapter ${moment.number}: ${moment.chapter}`}
       data-testid="cinematic"

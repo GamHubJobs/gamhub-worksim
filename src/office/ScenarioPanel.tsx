@@ -372,7 +372,7 @@ export function ScenarioPanel({
       aria-label={scenario.title}
       data-testid="scenario"
       data-beat={beat.id}
-      className={`rounded-xl bg-white p-4 shadow-lg ring-2 ring-indigo-200 ${className}`}
+      className={`motion-rise rounded-xl bg-white p-4 shadow-lg ring-2 ring-indigo-200 ${className}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div>

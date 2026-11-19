@@ -25,7 +25,6 @@ import { openStore } from '../accessories/store'
 import { MoneyPanel, NeedsPanel } from './LifePanels'
 import { CommuteChoices } from './CommuteChoices'
 import { captureStill } from '../world/transition/capture'
-import { Still } from '../world/transition/Still'
 import { openPhone } from '../phone/store'
 import { CareerPanel } from './CareerPanel'
 import { WalkView } from '../world/WalkView'
@@ -287,7 +286,6 @@ export function HomeView({
     >
       {(api) => (
         <>
-          <Still ready={ready} />
           <SceneBoundary onFail={() => setSceneFailed(true)}>
             <Suspense
               fallback={

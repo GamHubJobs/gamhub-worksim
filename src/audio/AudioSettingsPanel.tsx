@@ -60,7 +60,7 @@ export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6"
+      className="motion-fade fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
@@ -71,7 +71,7 @@ export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
         aria-modal="true"
         aria-labelledby="sound-title"
         tabIndex={-1}
-        className="w-full max-w-lg rounded-xl bg-white p-5 shadow-2xl outline-none"
+        className="motion-pop w-full max-w-lg rounded-xl bg-white p-5 shadow-2xl outline-none"
         data-testid="sound-panel"
       >
         <div className="flex items-center justify-between gap-2">

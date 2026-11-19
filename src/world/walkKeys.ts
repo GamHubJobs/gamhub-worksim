@@ -88,5 +88,8 @@ export function keyTarget(element: Element | null, view: Element | null): KeyTar
 
 /** A dialog, panel or window open over the world (keys are not the walker's then). */
 export function dialogIsOpen(doc: Document): boolean {
-  return !!doc.querySelector('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')
+  // (Not one already on its way out: closed, playing its exit.)
+  return !!doc.querySelector(
+    '[role="dialog"]:not([data-leaving]),[role="alertdialog"]:not([data-leaving]),[aria-modal="true"]:not([data-leaving])',
+  )
 }

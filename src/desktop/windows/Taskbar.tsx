@@ -115,7 +115,7 @@ export function Taskbar({
           <div
             role="listbox"
             aria-label="Search results"
-            className="absolute bottom-full left-0 w-80 bg-[#2b2b2b] py-2 shadow-2xl"
+            className="motion-rise absolute bottom-full left-0 w-80 bg-[#2b2b2b] py-2 shadow-2xl"
           >
             {results.length === 0 ? (
               <p className="px-4 py-2 text-sm text-slate-300">No apps match “{query}”.</p>

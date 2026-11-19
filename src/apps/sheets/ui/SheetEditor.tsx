@@ -1473,7 +1473,7 @@ function FilterMenu({
   const all = values.every((v) => checked.has(v))
   return (
     <div
-      className="absolute z-40 w-56 rounded-md bg-white p-2 text-sm shadow-xl ring-1 ring-slate-200"
+      className="motion-pop absolute z-40 w-56 rounded-md bg-white p-2 text-sm shadow-xl ring-1 ring-slate-200"
       style={{ left: Math.max(4, left - 200), top }}
       role="dialog"
       aria-label="Filter"

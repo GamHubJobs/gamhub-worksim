@@ -77,7 +77,7 @@ export function EncounterPanel({
     <section
       ref={box}
       tabIndex={-1}
-      className={`visible ${className} w-[26rem] overflow-y-auto rounded-xl bg-white p-4 shadow-lg ring-1 ring-slate-200 outline-none`}
+      className={`motion-rise visible ${className} w-[26rem] overflow-y-auto rounded-xl bg-white p-4 shadow-lg ring-1 ring-slate-200 outline-none`}
       role="dialog"
       aria-label={`Talking to ${who.name}`}
       data-testid="encounter"

@@ -441,7 +441,7 @@ export function AiApp({
           <div
             role="alertdialog"
             aria-label="Personal or secret information"
-            className="border-t border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            className="motion-pop border-t border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950"
             data-testid="ai-privacy-warning"
           >
             <p>

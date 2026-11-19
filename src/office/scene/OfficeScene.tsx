@@ -447,7 +447,8 @@ function OfficeScene(props: OfficeSceneProps) {
       frameloop="demand"
       shadows={full}
       camera={{ position: start.position, fov: 45, near: 0.1, far: 80 }}
-      gl={{ antialias: true, powerPreference: 'default' }}
+      // (The drawing kept, for the picture of it as the player leaves: transition/Still.tsx.)
+      gl={{ antialias: true, powerPreference: 'default', preserveDrawingBuffer: true }}
       onCreated={({ gl }) => {
         setLowPower(isSoftwareRenderer(gl))
         setChecked(true)

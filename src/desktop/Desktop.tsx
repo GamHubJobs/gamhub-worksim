@@ -57,6 +57,7 @@ import { computerNotices } from '../game/notices'
 import { caseFor } from '../game/caseVariants'
 import { chooseDeskItem } from '../game/desk'
 import { dueReminders } from '../game/jobs'
+import { forgetStill } from '../world/transition/capture'
 import { HelpPanel } from '../ui/HelpPanel'
 import { AudioSettingsPanel, SoundCaptions } from '../audio/AudioSettingsPanel'
 import { audio } from '../audio/manager'
@@ -509,6 +510,10 @@ export function Desktop({
 
   const dayOver = profile.work.dayOver
   const atComputer = view.app !== 'office' && !dayOver
+  // The work computer is between places: leaving it, the office fades in from dark.
+  useEffect(() => {
+    if (atComputer) forgetStill()
+  }, [atComputer])
   // Sitting down at the computer and getting up again; windows opening and closing.
   const sitting = useRef(atComputer)
   useEffect(() => {
@@ -757,7 +762,7 @@ export function Desktop({
       )}
       {closing && (
         <div
-          className="fixed inset-0 z-[85] flex items-center justify-center bg-slate-900/40 p-4"
+          className="motion-pop fixed inset-0 z-[85] flex items-center justify-center bg-slate-900/40 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="close-title"
@@ -1550,7 +1555,8 @@ export function Desktop({
 
   return (
     <div
-      className="flex h-screen flex-col overflow-clip bg-[#0b4f9c]"
+      // Sitting down at the computer: its screen comes up (ui/motion.ts).
+      className="motion-screen flex h-screen flex-col overflow-clip bg-[#0b4f9c]"
       data-testid="desktop"
     >
       {guideLayer}
@@ -1913,7 +1919,7 @@ function Notices({
         <div
           key={notice.id}
           role="status"
-          className={`border-l-4 bg-[#2b2b2b] px-4 py-3 text-sm text-white shadow-[0_4px_16px_rgba(0,0,0,0.45)] ${
+          className={`motion-slide-left border-l-4 bg-[#2b2b2b] px-4 py-3 text-sm text-white shadow-[0_4px_16px_rgba(0,0,0,0.45)] ${
             notice.tone === 'warning' ? 'border-amber-400' : 'border-[#76b9ed]'
           }`}
         >

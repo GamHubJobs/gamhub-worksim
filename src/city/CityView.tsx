@@ -26,7 +26,6 @@ import { canDo, lifePhase } from '../game/life'
 import { unreadCount } from '../game/social'
 import { CommuteChoices } from '../home/CommuteChoices'
 import { captureStill } from '../world/transition/capture'
-import { Still } from '../world/transition/Still'
 import { MoneyPanel, NeedsPanel } from '../home/LifePanels'
 import { BIKE, CAR } from '../content/transport'
 import { canDeal, type TransportDeal } from '../game/transport'
@@ -532,7 +531,6 @@ export function CityView({
       >
         {(api) => (
           <>
-            <Still ready={readyIn === here.id} />
             <SceneBoundary onFail={() => setInteriorFailed(true)}>
               <Suspense
                 fallback={
@@ -579,7 +577,6 @@ export function CityView({
       >
         {(api) => (
           <>
-            <Still ready={streetReady} />
             <SceneBoundary>
               <Suspense
                 fallback={

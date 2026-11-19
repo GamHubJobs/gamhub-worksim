@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Icon } from '../ui/Icon'
+import { MOTION, useAfterExit } from '../ui/motion'
 import { HudSlot } from '../ui/hud/Hud'
 import type { Profile } from '../persistence/schemas'
 import { CareersSection } from '../apps/career/CareersSection'
@@ -188,32 +189,41 @@ function Overlay({
   wide?: boolean
 }) {
   const box = useRef<HTMLDivElement>(null)
+  // Back and Esc: it fades out, then closes (ui/motion.ts).
+  const exit = useAfterExit(MOTION.fast)
+  const close = useRef(() => exit.run(onClose))
+  useEffect(() => {
+    close.current = () => exit.run(onClose)
+  })
   useEffect(() => {
     box.current?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
-        onClose()
+        close.current()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-6 backdrop-blur-sm">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-6 backdrop-blur-sm ${exit.leaving ? 'motion-fade-out pointer-events-none' : 'motion-fade'}`}
+    >
       <div
         ref={box}
         tabIndex={-1}
         role="dialog"
         aria-label={title}
         data-testid={testId}
-        className={`max-h-full w-full ${wide ? 'max-w-4xl' : 'max-w-xl'} overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl outline-none`}
+        data-leaving={exit.leaving || undefined}
+        className={`${exit.leaving ? 'motion-pop-out' : 'motion-pop'} max-h-full w-full ${wide ? 'max-w-4xl' : 'max-w-xl'} overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl outline-none`}
       >
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-900">{title}</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => close.current()}
             className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
             Back

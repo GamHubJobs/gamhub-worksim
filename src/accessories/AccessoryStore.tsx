@@ -104,14 +104,14 @@ export function AccessoryStore({ profile, act }: { profile: ProfileData; act: Ac
   if (!store.open) return null
   const money = profile.work.life.money
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+    <div className="motion-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
       <div
         ref={box}
         tabIndex={-1}
         role="dialog"
         aria-label={store.tab === 'shop' ? 'Accessories shop' : 'Wardrobe'}
         data-testid="accessory-store"
-        className="flex max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
+        className="motion-pop flex max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none"
       >
         <header className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-5 py-3">
           <nav

@@ -63,7 +63,7 @@ export function InPlaceTool({
         <section
           role="dialog"
           aria-label={`${title}, at ${where}`}
-          className={`flex min-h-0 flex-1 flex-col shadow-2xl ${CASING[device]}`}
+          className={`motion-pop flex min-h-0 flex-1 flex-col shadow-2xl ${CASING[device]}`}
         >
           {device !== 'laptop' && (
             // The front camera, at the top of the casing.

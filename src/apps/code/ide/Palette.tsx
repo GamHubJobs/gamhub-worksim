@@ -44,7 +44,7 @@ export function Palette({
       <div
         role="dialog"
         aria-label={commands ? 'Command palette' : 'Go to file'}
-        className="h-fit w-[min(36rem,90%)] overflow-hidden rounded-md border border-slate-600 bg-slate-800 shadow-lg"
+        className="motion-pop h-fit w-[min(36rem,90%)] overflow-hidden rounded-md border border-slate-600 bg-slate-800 shadow-lg"
       >
         <input
           ref={input}

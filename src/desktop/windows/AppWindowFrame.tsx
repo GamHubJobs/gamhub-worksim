@@ -6,9 +6,11 @@
 import {
   useEffect,
   useRef,
+  useState,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react'
+import { MOTION, useAfterExit } from '../../ui/motion'
 import { HintScope } from '../../guide/appHints'
 import { Icon, type IconName } from '../../ui/Icon'
 import type { AppWindow } from './windowManager'
@@ -58,6 +60,40 @@ export function AppWindowFrame({
       element.focus({ preventScroll: true })
   }, [showing])
 
+  // Motion (ui/motion.ts): opening, going to the taskbar and back, maximising
+  // and restoring, and closing, each animate; with reduced motion, at once.
+  const [anim, setAnim] = useState<'open' | 'min' | 'restore' | null>('open')
+  const [wasMin, setWasMin] = useState(win.minimized)
+  if (wasMin !== win.minimized) {
+    setWasMin(win.minimized)
+    setAnim(win.minimized ? 'min' : 'restore')
+  }
+  const [easing, setEasing] = useState(false)
+  const [wasMax, setWasMax] = useState(win.maximized)
+  if (wasMax !== win.maximized) {
+    setWasMax(win.maximized)
+    setEasing(true)
+  }
+  // (Should an animation's end never be reported, the window is not left mid-way:
+  // dragging an easing window would lag behind the pointer.)
+  useEffect(() => {
+    if (!anim && !easing) return
+    const t = window.setTimeout(() => {
+      setAnim(null)
+      setEasing(false)
+    }, MOTION.slow + 200)
+    return () => window.clearTimeout(t)
+  }, [anim, easing])
+  const closing = useAfterExit(MOTION.fast)
+  const hidden = win.minimized && anim !== 'min'
+  const motionClass = closing.leaving
+    ? 'motion-pop-out'
+    : anim === 'min'
+      ? 'motion-window-min'
+      : anim
+        ? 'motion-pop'
+        : ''
+
   function startDrag(event: ReactPointerEvent) {
     if (win.maximized || event.button !== 0) return
     if ((event.target as HTMLElement).closest('button')) return
@@ -83,16 +119,19 @@ export function AppWindowFrame({
       onPointerDownCapture={onFocus}
       className={`pointer-events-auto absolute flex outline-none flex-col overflow-clip bg-white ${
         win.maximized
-          ? 'inset-0'
+          ? ''
           : `border shadow-[0_8px_28px_rgba(0,0,0,0.35)] ${
               active ? 'border-[#1f6fbf]' : 'border-slate-400'
             }`
-      } ${win.minimized ? 'hidden' : ''}`}
+      } ${hidden ? 'hidden' : ''} ${motionClass} ${easing ? 'motion-geometry' : ''}`}
       style={
         win.maximized
-          ? { zIndex: win.z }
+          ? // (In numbers, not inset-0, so maximising and restoring can ease between them.)
+            { left: 0, top: 0, width: '100%', height: '100%', zIndex: win.z }
           : { left: win.x, top: win.y, width: win.w, height: win.h, zIndex: win.z }
       }
+      onAnimationEnd={(e) => e.target === e.currentTarget && setAnim(null)}
+      onTransitionEnd={(e) => e.target === e.currentTarget && setEasing(false)}
     >
       {/* Title bar */}
       <div
@@ -142,7 +181,7 @@ export function AppWindowFrame({
             <span aria-hidden className="block h-2.5 w-2.5 border border-current" />
           )}
         </TitleButton>
-        <TitleButton label={`Close ${title}`} onClick={onClose} danger>
+        <TitleButton label={`Close ${title}`} onClick={() => closing.run(onClose)} danger>
           <span aria-hidden className="text-sm leading-none">
             ✕
           </span>
