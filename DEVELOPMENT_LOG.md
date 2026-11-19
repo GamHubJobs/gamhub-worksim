@@ -195,7 +195,7 @@ and S7 (social life in person, at work and in the neighbourhood).
 ## 2026-11-19 · The opening checked frame by frame: the flight's route and landing fixed
 
 The flight was looked at, not only tested: held at points along it (a
-development-only hook, ) and photographed for each landing
+development-only hook, `__worksimFlightAt`) and photographed for each landing
 (the office, home, the café, the gym, the park, Harbourside House).
 
 - **Over the rooftops.** Between a quarter and two-fifths of the way, the camera
