@@ -201,7 +201,7 @@ and S7 (social life in person, at work and in the neighbourhood).
   icon below 1024. The list is now 433 and 445 pixels wide at those sizes.
 - **Real Jobs** at 820 pixels: no sideways scrolling in any section; the phone app
   checked by eye.
-- **Place names a source had encoded twice** (seen live: for Bogotá)
+- **Place names a source had encoded twice** (seen live: "BogotÃ¡" for Bogotá)
   are put right, only when that gives clean text (tested).
 - **Memory over a long session** (five rounds of walking, turning, the phone and
   the map, with clean-ups between): 65 MB at the start, levelling at 71 MB; page
