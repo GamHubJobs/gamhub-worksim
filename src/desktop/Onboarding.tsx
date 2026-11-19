@@ -1,5 +1,6 @@
 /** The first screen for a new player: what WorkSim is, and their name. */
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { markGameLoaded, markWorldReady } from '../world/transition/ready'
 import { CAREERS } from '../content/careers'
 import { employerFor } from '../content/departments'
 import { STORY_TITLES } from '../game/story/titles'
@@ -12,6 +13,11 @@ export function Onboarding({
 }: {
   onStart: (name: string, careerId: string) => Promise<void>
 }) {
+  // The first-day screen is ready to be seen (for the game's opening).
+  useEffect(() => {
+    markGameLoaded()
+    markWorldReady()
+  }, [])
   const [name, setName] = useState('')
   const [careerId, setCareerId] = useState(CAREERS[0].id)
   const [starting, setStarting] = useState(false)

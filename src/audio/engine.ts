@@ -344,6 +344,25 @@ export function createEngine(): AudioEngine | null {
           bell(to, midi(n), t + i * 0.07, 0.11 * v, 0.6),
         )
         break
+      case 'launch':
+        // The game opening: a soft chord rising and opening out, with a shimmer.
+        ;[
+          [57, 64, 69],
+          [60, 67, 72, 76],
+        ].forEach((chord, i) =>
+          chord.forEach((n) =>
+            tone(to, midi(n), t + i * 0.55, i === 1 ? 1.8 : 0.7, {
+              gain: 0.05 * v,
+              type: 'triangle',
+              filter: 1800,
+              attack: 0.25,
+              release: 0.9,
+            }),
+          ),
+        )
+        bell(to, midi(88), t + 0.7, 0.05 * v, 1.4)
+        bell(to, midi(95), t + 0.95, 0.035 * v, 1.2)
+        break
       case 'promotion':
         ;[
           [60, 64, 67],

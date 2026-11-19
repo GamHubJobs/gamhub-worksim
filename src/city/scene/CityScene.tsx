@@ -7,6 +7,7 @@
  * nothing moves, so it runs on ordinary laptops.
  */
 import { lowDpr } from '../../world/lowDpr'
+import { worldCovered } from '../../world/transition/ready'
 import { townWear } from '../../office/scene/npcWear'
 import { dressed, usePlayerWear } from '../../world/character/playerWear'
 import { EngineeringWorks, HospitalBlock, OfficeTower } from './architecture'
@@ -25,7 +26,14 @@ import {
   useState,
   type RefObject,
 } from 'react'
-import { CanvasTexture, SRGBColorSpace, type Group, type WebGLRenderer } from 'three'
+import {
+  CanvasTexture,
+  CatmullRomCurve3,
+  SRGBColorSpace,
+  Vector3 as Point3,
+  type Group,
+  type WebGLRenderer,
+} from 'three'
 import { PLACES, type PlaceId } from '../../content/city'
 import { SceneLook } from '../../world/look/SceneLook'
 import { Fronts, StreetSurfaces } from './streetDressing'
@@ -1234,8 +1242,163 @@ function Ticker({ fps }: { fps: number }) {
   const invalidate = useThree((state) => state.invalidate)
   useEffect(() => {
     invalidate()
-    const timer = window.setInterval(() => invalidate(), 1000 / fps)
+    // (Not while the game's opening covers the place: transition/ready.ts.)
+    const timer = window.setInterval(() => {
+      if (!worldCovered()) invalidate()
+    }, 1000 / fps)
     return () => window.clearInterval(timer)
   }, [fps, invalidate])
+  return null
+}
+
+/**
+ * The game's opening (launch/): the camera flies over the real city (the
+ * street, the park, the business district, traffic and people about) and down
+ * to where the player is, the door of their building. A full flight for a first
+ * time, a short one after; `onDone` when it has arrived, `onDrawn` once the
+ * city has drawn itself (the opening does not start flying over an empty
+ * scene). Not shown on Low graphics or with reduced motion (launch/ decides).
+ */
+export function CityFlyover({
+  to,
+  full,
+  evening,
+  onDrawn,
+  onDone,
+}: {
+  /** The door the flight ends at (x, z), in the street's own coordinates. */
+  to: [number, number]
+  full: boolean
+  evening: boolean
+  onDrawn: () => void
+  onDone: () => void
+}) {
+  const sky = evening ? '#f3c99b' : '#cfe8f7'
+  // Drawn in software after all (a browser that hides its graphics, e.g. Firefox):
+  // less detail, as in the street itself, so the flight can still be drawn.
+  const [low, setLow] = useState(false)
+  return (
+    <Canvas
+      dpr={low ? lowDpr() : [1, 1.5]}
+      onCreated={({ gl }) => setLow(isSoftware(gl))}
+      frameloop="demand"
+      camera={{ position: [-80, 36, -34], fov: 50, near: 0.1, far: 220 }}
+      gl={{ antialias: !low, powerPreference: 'default', preserveDrawingBuffer: true }}
+      data-testid="flyover-3d"
+    >
+      <color attach="background" args={[sky]} />
+      <fog attach="fog" args={[sky, 60, 190]} />
+      <SceneLook look={evening ? 'street-evening' : 'street-day'} low={low} extent={60} />
+      <PeopleDetail low={low}>
+        <Street dark={false} />
+        <Park />
+        <BusinessDistrict dark={false} />
+        <Traffic />
+        {PASSERS_BY.map((p, i) => (
+          <Walker
+            key={i}
+            path={p.path}
+            look={PASSER_LOOKS[i]}
+            speed={p.speed}
+            pause={2}
+            phase={i * 0.7}
+            who={PASSER_WHO[i]}
+          />
+        ))}
+      </PeopleDetail>
+      <FlyoverCamera to={to} full={full} onDrawn={onDrawn} onDone={onDone} />
+    </Canvas>
+  )
+}
+
+/** Eased in and out: slow to start, slow to arrive. */
+const smooth = (t: number) => t * t * (3 - 2 * t)
+
+function FlyoverCamera({
+  to,
+  full,
+  onDrawn,
+  onDone,
+}: {
+  to: [number, number]
+  full: boolean
+  onDrawn: () => void
+  onDone: () => void
+}) {
+  const invalidate = useThree((s) => s.invalidate)
+  const [x, z] = to
+  // Which side of the road the door is on: the camera ends across from it.
+  const side = z >= 0 ? 1 : -1
+  const { eye, look, seconds } = useMemo(() => {
+    // Doors face the road (the buildings are behind them): the camera comes down
+    // over the road, across from the door, looking at it.
+    const arrive: Array<[number, number, number]> = [
+      [x - 14, 15, z - side * 24],
+      [x - 5, 6.5, z - side * 15],
+      [x - 1.5, 3, z - side * 9.5],
+    ]
+    const arriveLook: Array<[number, number, number]> = [
+      [x, 0, z],
+      [x, 1.2, z],
+      [x, 1.6, z],
+    ]
+    const points: Array<[number, number, number]> = full
+      ? [
+          // High over the west end, then along the south side of the road above
+          // the rooftops, looking across the whole street and the district.
+          [-80, 36, -34] as [number, number, number],
+          [-45, 28, -28],
+          [-5, 24, -24],
+          [28, 21, -22],
+          ...arrive,
+        ]
+      : arrive
+    const looks: Array<[number, number, number]> = full
+      ? [
+          [-25, 0, 6] as [number, number, number],
+          [0, 2, 6],
+          [25, 3, 6],
+          [x - 6, 2, z],
+          ...arriveLook,
+        ]
+      : arriveLook
+    const curve = (p: Array<[number, number, number]>) =>
+      new CatmullRomCurve3(
+        p.map(([a, b, c]) => new Point3(a, b, c)),
+        false,
+        'centripetal',
+      )
+    return { eye: curve(points), look: curve(looks), seconds: full ? 10 : 3.5 }
+  }, [x, z, side, full])
+  const started = useRef<number | null>(null)
+  const frames = useRef(0)
+  const done = useRef(false)
+  const target = useRef(new Point3())
+  useEffect(() => {
+    invalidate()
+  }, [invalidate])
+  useFrame(({ camera, clock }) => {
+    frames.current++
+    // The city drawn (its first frames, shaders built): the flight starts now.
+    if (frames.current === 3) {
+      started.current = clock.elapsedTime
+      onDrawn()
+    }
+    const t =
+      started.current === null
+        ? 0
+        : Math.min(1, (clock.elapsedTime - started.current) / seconds)
+    const k = smooth(t)
+    camera.position.copy(eye.getPoint(k))
+    camera.lookAt(look.getPoint(k, target.current))
+    if (t >= 1) {
+      if (!done.current) {
+        done.current = true
+        onDone()
+      }
+      return
+    }
+    invalidate()
+  })
   return null
 }

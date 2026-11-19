@@ -25,6 +25,7 @@ import { StoragePanel } from '../ui/StoragePanel'
 import { handOverAppSession } from './lifecycle'
 import { AppServicesContext, type AppServices } from './services'
 import { useCareer } from './useCareer'
+import { Launch } from '../launch/Launch'
 
 /** The desktop and the office load once there is a career to show (not for the start screen). */
 const Desktop = lazy(() =>
@@ -165,6 +166,11 @@ export function App({ session, tabLock }: AppProps) {
   return (
     <AppServicesContext.Provider value={services}>
       <AppStatus saveAll={flushAll} />
+      {/* The game's opening, over everything while the game gets ready underneath. */}
+      <Launch
+        status={career.state.status}
+        profile={career.state.status === 'ready' ? career.state.profile : null}
+      />
       {backupStatus?.reminderDue && career.state.status === 'ready' && (
         <div className="fixed inset-x-0 bottom-0 z-40 shadow-lg">
           <BackupReminder

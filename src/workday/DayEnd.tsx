@@ -11,6 +11,7 @@ import type { DaySummary, Profile } from '../persistence/schemas'
 import { Meter } from './WorkdayBar'
 import { useEffect } from 'react'
 import { forgetStill } from '../world/transition/capture'
+import { markWorldReady } from '../world/transition/ready'
 
 function advice(summary: DaySummary): string[] {
   const tips: string[] = []
@@ -35,7 +36,10 @@ export function DayEnd({
   onNextDay: () => void
 }) {
   // Between the office and home: the office's picture is not carried on to the flat.
-  useEffect(() => forgetStill(), [])
+  useEffect(() => {
+    forgetStill()
+    markWorldReady()
+  }, [])
   const summary = profile.work.history.at(-1)
   const next = nextWorkday(profile.work.day)
   const weekend = next - profile.work.day > 1

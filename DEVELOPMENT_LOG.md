@@ -192,6 +192,47 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-19 · The game's opening: the logo, real loading, a flight over the city
+
+A new opening (docs/LAUNCH.md), over the game while it starts underneath:
+
+- **The logo**: an original GamHub WorkSim emblem (a skyline rising like a chart
+  under a rising sun, drawn in code) and wordmark, out of the dark with a sweep
+  of light, drifting particles and a slowly moving sky, and a soft rising chord
+  (a new `launch` sound, at the player's volume).
+- **Loading**: the real steps (the save opened, the game loaded, the player's
+  place drawn), ticked as each happens; the bar counts steps, never a made-up
+  percentage.
+- **A flight over the real city** (the street, the park, the district, traffic
+  and people), down over the road to the door of the player's building, only
+  once their place is ready behind it; then the opening fades and they are
+  where they left off, drawn.
+- **First time**: all of it (a 10-second flight); **returning**: a short one
+  (3.5 s), or all of it or none (Sound & graphics → Opening). Skip at any moment
+  (button, Esc, Enter, Space), and "Skip the opening next time".
+- **No flight** on Low graphics, with reduced motion, without WebGL or in
+  software 3D (and less detail if a browser hides its graphics). Never stuck:
+  the flight not drawn in 8 s goes into the game, and the opening steps aside
+  after 30 s of waiting. While it covers the world, the world is not redrawn.
+- **Changing place, fixed**: the curtain over a new place now lifts when the
+  place has really drawn itself, however long it takes; it says "Arriving…"
+  after 1.5 s, and lifts anyway after 15 s (it was 4 s, which could show a slow
+  computer's place before it was drawn).
+
+Found while testing: pausing the covered world's redraws stopped it from ever
+drawing its first frames (so it was never "ready"); it now pauses only once
+ready. The flight's end was behind the building (doors face the road); it now
+comes down over the road across from the door, and the sweep runs above the
+rooftops.
+
+Tested: `npm run check` (3,481 tests); `tests/e2e/launch.spec.ts` (a fresh
+install with the flight, a returning player, refreshes, skipping and not again,
+the setting, reduced motion, the save kept throughout); 20 related browser
+suites (56 passed, 4 on a retry; 5 failed with two at once and passed alone);
+frames of the flight looked at.
+
+---
+
 ## 2026-11-19 · Transitions and animation, across the whole game
 
 Audit first: almost nothing in the interface animated (every window, menu,

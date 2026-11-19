@@ -5,6 +5,7 @@
  * Simple shapes like the office and the street, so they load instantly.
  */
 import { useAnchors, type AnchorSpec } from '../../../world/anchors'
+import { worldCovered } from '../../../world/transition/ready'
 import { surface, tiling, type SurfaceId } from '../../../world/look/surfaces'
 import { useCursor } from '@react-three/drei'
 import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
@@ -491,7 +492,10 @@ export function Ticker({ fps }: { fps: number }) {
   const invalidate = useThree((state) => state.invalidate)
   useEffect(() => {
     invalidate()
-    const timer = window.setInterval(() => invalidate(), 1000 / fps)
+    // (Not while the game's opening covers the place: transition/ready.ts.)
+    const timer = window.setInterval(() => {
+      if (!worldCovered()) invalidate()
+    }, 1000 / fps)
     return () => window.clearInterval(timer)
   }, [fps, invalidate])
   return null

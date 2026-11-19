@@ -58,6 +58,7 @@ import { caseFor } from '../game/caseVariants'
 import { chooseDeskItem } from '../game/desk'
 import { dueReminders } from '../game/jobs'
 import { forgetStill } from '../world/transition/capture'
+import { markGameLoaded, markWorldReady } from '../world/transition/ready'
 import { HelpPanel } from '../ui/HelpPanel'
 import { AudioSettingsPanel, SoundCaptions } from '../audio/AudioSettingsPanel'
 import { audio } from '../audio/manager'
@@ -512,8 +513,14 @@ export function Desktop({
   const atComputer = view.app !== 'office' && !dayOver
   // The work computer is between places: leaving it, the office fades in from dark.
   useEffect(() => {
-    if (atComputer) forgetStill()
+    if (atComputer) {
+      forgetStill()
+      // (Not a 3D place: ready to be seen at once, for the game's opening.)
+      markWorldReady()
+    }
   }, [atComputer])
+  // The game has loaded (the opening's second step).
+  useEffect(() => markGameLoaded(), [])
   // Sitting down at the computer and getting up again; windows opening and closing.
   const sitting = useRef(atComputer)
   useEffect(() => {

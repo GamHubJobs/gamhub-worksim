@@ -14,6 +14,7 @@ import {
 } from 'react'
 import { captureOnLeaving } from './transition/capture'
 import { Curtain } from './transition/Still'
+import { markWorldReady } from './transition/ready'
 import { HudSlot } from '../ui/hud/Hud'
 import { controlFor, keyName, keymap, onKeymapChange, type Control } from './keys'
 import { dialogIsOpen, keyTarget, walkKey } from './walkKeys'
@@ -245,7 +246,11 @@ export function WalkView({
   const [drawn, setDrawn] = useState(false)
   useEffect(() => {
     const c = controls.current
-    c.onDrawn = () => setDrawn(true)
+    c.onDrawn = () => {
+      setDrawn(true)
+      // (And for the game's opening: the place is ready to be seen.)
+      markWorldReady()
+    }
     return () => {
       c.onDrawn = undefined
     }

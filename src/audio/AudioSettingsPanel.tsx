@@ -7,6 +7,7 @@ import { audio, type EffectId } from './manager'
 import { CATEGORIES, type AudioSettings, type CategoryId } from './settings'
 import { useAudioSettings } from './useAudio'
 import { setGraphicsQuality, useGraphicsQuality, type Quality } from '../ui/graphics'
+import { setOpeningMode, useOpeningPrefs } from '../launch/prefs'
 import { setWeatherSetting, useWeatherSetting } from '../world/weather'
 import { Controls } from './ControlsSettings'
 
@@ -31,6 +32,7 @@ const SAMPLE: Record<CategoryId, EffectId> = {
 export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
   const settings = useAudioSettings()
   const quality = useGraphicsQuality()
+  const opening = useOpeningPrefs()
   const weather = useWeatherSetting()
   const dialog = useRef<HTMLDivElement>(null)
   const change = (next: Partial<AudioSettings>) => audio.update({ ...settings, ...next })
@@ -210,6 +212,41 @@ export function AudioSettingsPanel({ onClose }: { onClose: () => void }) {
                   className="mt-1"
                   checked={quality === id}
                   onChange={() => setGraphicsQuality(id)}
+                />
+                <span>
+                  <span className="font-medium">{name}</span>
+                  <span className="block text-xs text-slate-500">{about}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="mt-3 border-t border-slate-100 pt-3" data-testid="opening">
+          <legend className="text-sm font-semibold text-slate-900">Opening</legend>
+          <p className="text-xs text-slate-500">
+            The logo and the flight over the city when the game starts. Skip it at any
+            time with Skip, Esc or Enter.
+          </p>
+          <div className="mt-2 space-y-1">
+            {(
+              [
+                ['short', 'Short', 'The whole opening the first time, then a short one'],
+                ['full', 'Full', 'The whole opening every time'],
+                [
+                  'off',
+                  'Off',
+                  'Straight into the game (a loading screen only while it loads)',
+                ],
+              ] as const
+            ).map(([id, name, about]) => (
+              <label key={id} className="flex items-start gap-2 text-sm text-slate-800">
+                <input
+                  type="radio"
+                  name="opening"
+                  className="mt-1"
+                  checked={opening.mode === id}
+                  onChange={() => setOpeningMode(id)}
                 />
                 <span>
                   <span className="font-medium">{name}</span>

@@ -170,6 +170,105 @@
 }
 
 /*
+ * The game's opening (launch/): the logo coming out of the dark, a sweep of
+ * light across it, particles drifting up, and the sky behind slowly moving.
+ * With reduced motion, all of it is still (the rule above).
+ */
+@keyframes launch-emblem-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes launch-word-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    letter-spacing: 0.35em;
+  }
+}
+@keyframes launch-sweep {
+  from {
+    transform: translateX(-140%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(240%) skewX(-18deg);
+  }
+}
+@keyframes launch-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  15% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-38vh) scale(1);
+  }
+}
+@keyframes launch-sky {
+  from {
+    background-position: 0% 40%;
+  }
+  to {
+    background-position: 100% 60%;
+  }
+}
+@keyframes launch-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@layer utilities {
+  .launch-sky {
+    background: linear-gradient(
+      120deg,
+      #06142e,
+      #0b2a4f 30%,
+      #0e4a5a 55%,
+      #1b2f5e 80%,
+      #06142e
+    );
+    background-size: 220% 220%;
+    animation: launch-sky 16s ease-in-out infinite alternate;
+  }
+  .launch-emblem {
+    animation: launch-emblem-in 1100ms var(--ease-out) both;
+  }
+  .launch-word {
+    animation: launch-word-in 900ms var(--ease-out) 350ms both;
+  }
+  .launch-tagline {
+    animation: motion-fade-in 700ms var(--ease-out) 900ms both;
+  }
+  .launch-sweep {
+    animation: launch-sweep 1300ms cubic-bezier(0.5, 0, 0.3, 1) 700ms both;
+  }
+  .launch-particle {
+    animation: launch-float var(--dur, 7s) linear var(--delay, 0s) infinite;
+  }
+  .launch-glow {
+    animation: launch-glow 4s ease-in-out infinite;
+  }
+}
+
+/*
  * Document text in Docs (the editor's own HTML). Tailwind removes browser
  * styles for headings and lists, so they are defined here.
  */

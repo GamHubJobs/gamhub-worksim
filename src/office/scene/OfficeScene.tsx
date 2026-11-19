@@ -7,6 +7,7 @@
  * floor marker or an object moves there.
  */
 import { Anchors } from '../../world/AnchorPoints'
+import { worldCovered } from '../../world/transition/ready'
 import { dressed, usePlayerWear, wornUses } from '../../world/character/playerWear'
 import { withOwnKit } from './ownKit'
 import { BenchKit, CommsRack } from './itKit'
@@ -576,7 +577,10 @@ function Ticker({ fps }: { fps: number }) {
   const invalidate = useThree((state) => state.invalidate)
   useEffect(() => {
     invalidate()
-    const timer = window.setInterval(() => invalidate(), 1000 / fps)
+    // (Not while the game's opening covers the place: transition/ready.ts.)
+    const timer = window.setInterval(() => {
+      if (!worldCovered()) invalidate()
+    }, 1000 / fps)
     return () => window.clearInterval(timer)
   }, [fps, invalidate])
   return null
