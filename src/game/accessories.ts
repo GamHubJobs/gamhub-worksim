@@ -69,7 +69,10 @@ export function buyAccessory(profile: ProfileData, id: string, colour = 0): Prof
   const item = getAccessory(id)!
   const day = today(profile)
   const w = profile.work.life.wardrobe
-  const n = w.owned.filter((o) => o.id === id).length + w.history.length
+  // A name of its own: never one already owned (the history is capped, so its
+  // length alone can repeat after selling one and buying another).
+  let n = w.owned.filter((o) => o.id === id).length + w.history.length
+  while (w.owned.some((o) => o.uid === `${id}-${day}-${n}`)) n++
   const owned: Owned = {
     uid: `${id}-${day}-${n}`,
     id,

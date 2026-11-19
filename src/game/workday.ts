@@ -430,9 +430,17 @@ export function endDay(profile: ProfileData): ProfileData {
   return withWork(profile, {
     ...work,
     dayOver: true,
-    history: [...work.history, summary],
+    // Each day's minute-by-minute log is kept for the last few weeks only (the
+    // day's end shows the latest); the totals stay for good. A save would
+    // otherwise grow by a log every working day, and is written on every action.
+    history: [...work.history, summary].map((day, i, all) =>
+      i < all.length - KEPT_LOGS && day.log.length > 0 ? { ...day, log: [] } : day,
+    ),
   })
 }
+
+/** How many working days keep their whole log (see endDay). */
+export const KEPT_LOGS = 14
 
 /** The next morning: rested (a little or a lot), back at reception at 8:50. */
 export function startNextDay(profile: ProfileData): ProfileData {

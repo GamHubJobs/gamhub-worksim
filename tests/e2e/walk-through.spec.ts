@@ -97,7 +97,8 @@ test('into the café through its door, about inside, and out through it again', 
   // (Frame by frame: on a busy computer the doorway can pass between samples.)
   const first = (await trailOf()).slice(mark).find((p) => p.x > -5)!
   expect(first.z).toBeGreaterThan(4.3)
-  expect(arriving.at(-1)!.z).toBeLessThan(2)
+  // (If not: the last places and modes, to tell a stopped walk from a stuck one.)
+  expect(arriving.at(-1)!.z, JSON.stringify(arriving.slice(-6))).toBeLessThan(2)
 
   // About inside, with the keys.
   await page.getByTestId('city-3d').focus()

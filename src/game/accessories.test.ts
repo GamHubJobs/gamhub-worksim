@@ -108,6 +108,23 @@ describe('buying and selling', () => {
     expect(q.work.life.wardrobe.owned.map((o) => o.id)).toEqual(['hardhat'])
     expect(q.work.life.wardrobe.worn).toEqual([])
   })
+
+  it('every thing owned has a name of its own, even with the history full', () => {
+    // Over 80 purchases: the history keeps only the last 80.
+    let p = rich()
+    for (let i = 0; i < 45; i++) {
+      const q = buy(p, 'cap')
+      p = sellAccessory(q, uidOf(q, 'cap'))
+    }
+    expect(p.work.life.wardrobe.history.length).toBe(80)
+    // Two caps, the first sold, a third bought (the same day).
+    p = buy(p, 'cap', 'cap')
+    const [first] = p.work.life.wardrobe.owned
+    p = buy(sellAccessory(p, first.uid), 'cap')
+    const uids = p.work.life.wardrobe.owned.map((o) => o.uid)
+    expect(uids).toHaveLength(2)
+    expect(new Set(uids).size).toBe(2)
+  })
 })
 
 describe('wearing', () => {

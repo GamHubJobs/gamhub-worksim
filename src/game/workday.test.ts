@@ -20,6 +20,7 @@ import {
   requestExtension,
   startNextDay,
   takeCoffeeBreak,
+  KEPT_LOGS,
 } from './workday'
 import { overnight, workPace } from './wellbeing'
 
@@ -233,6 +234,19 @@ describe('the working day', () => {
     // Monday's task deadline passed while the player was away.
     expect(monday.work.deadlines[supplies.id].status).toBe('late')
     expect(monday.work.history).toHaveLength(1)
+  })
+
+  it('keeps each day’s log for the last few weeks, and every day’s totals for good', () => {
+    let p = at(fresh(), HOURS.end)
+    for (let d = 0; d < KEPT_LOGS + 6; d++) p = at(startNextDay(endDay(p)), HOURS.end)
+    p = endDay(p)
+    const days = p.work.history
+    expect(days).toHaveLength(KEPT_LOGS + 7)
+    // The latest weeks in full (the day's end shows the last one); older ones without the log.
+    expect(days.slice(-KEPT_LOGS).every((d) => d.log.length > 0)).toBe(true)
+    expect(days.slice(0, -KEPT_LOGS).every((d) => d.log.length === 0)).toBe(true)
+    // Their totals are all still there.
+    expect(days.every((d) => typeof d.meetingsAttended === 'number')).toBe(true)
   })
 
   it('does nothing once the day is over', () => {
