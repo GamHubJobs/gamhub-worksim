@@ -206,7 +206,7 @@ function HomeScene(props: HomeSceneProps) {
       shadows={!lowPower}
       onCreated={({ gl }: RootState) => setLowPower(isSoftware(gl))}
     >
-      <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 12} />
+      <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 30} />
       <color attach="background" args={[evening ? '#1e293b' : '#e0f2fe']} />
       <SceneLook
         look={evening ? 'home-evening' : 'home-morning'}

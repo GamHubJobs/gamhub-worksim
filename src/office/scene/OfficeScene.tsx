@@ -349,6 +349,46 @@ function isSoftwareRenderer(gl: WebGLRenderer): boolean {
 export default memo(OfficeScene, sameProps)
 
 /** The same scene if every prop is the same, comparing the walking settings by their contents. */
+/**
+ * The building, its rooms and furniture. Redrawn only when what they show
+ * changes (the desk, the mail alert, the work board), not every game minute
+ * as the people about are.
+ */
+const Premises = memo(function Premises({
+  playerName,
+  computerAlert,
+  desk,
+  board,
+  onInteract,
+  itJobs,
+}: {
+  playerName: string
+  computerAlert: boolean
+  desk: string
+  board: string
+  onInteract: Interact['onInteract']
+  itJobs?: string
+}) {
+  return (
+    <>
+      <Building playerName={playerName} />
+      <Reception />
+      <Workspace
+        computerAlert={computerAlert}
+        desk={desk}
+        board={board}
+        onInteract={onInteract}
+      />
+      <ManagerOffice />
+      <CornerFor itJobs={itJobs} />
+      <WingFor />
+      <ThemeDressing theme={activeTheme()} />
+      <TaskLamps theme={activeTheme()} />
+      <BreakRoom onInteract={onInteract} />
+    </>
+  )
+})
+
 function sameProps(a: OfficeSceneProps, b: OfficeSceneProps): boolean {
   for (const key of Object.keys({ ...a, ...b }) as Array<keyof OfficeSceneProps>) {
     if (key === 'walk') {
@@ -438,20 +478,14 @@ function OfficeScene(props: OfficeSceneProps) {
       )}
       <PeopleDetail low={lowPower}>
         <WorkContext.Provider value={work}>
-          <Building playerName={props.playerName} />
-          <Reception />
-          <Workspace
+          <Premises
+            playerName={props.playerName}
             computerAlert={props.computerAlert}
             desk={props.desk}
             board={props.board ?? ''}
             onInteract={props.onInteract}
+            itJobs={props.itJobs}
           />
-          <ManagerOffice />
-          <CornerFor itJobs={props.itJobs} />
-          <WingFor />
-          <ThemeDressing theme={activeTheme()} />
-          <TaskLamps theme={activeTheme()} />
-          <BreakRoom onInteract={props.onInteract} />
         </WorkContext.Provider>
         {live && (
           <ScenarioStage

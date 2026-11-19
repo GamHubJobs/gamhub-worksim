@@ -25,6 +25,15 @@ page cannot prevent it. The keys can be changed in **Sound & graphics → Contro
 choose a control, press the new key (Esc cancels), or **Reset the keys**. They are kept
 on this device (`src/world/keys.ts`).
 
+The keys work wherever keyboard focus is, without clicking the 3D view or moving
+the mouse: after closing the phone, a menu or a panel, after clicking a header or
+HUD button, or with the drawer open. They are left alone while typing in a field,
+inside an open dialog or window, and with Ctrl, Alt or Cmd (shortcuts); Space and
+Enter press a focused button (`src/world/walkKeys.ts`). Every key, drag and wheel
+turn draws the next frame at once, even where the place otherwise draws only a few
+frames a second (or one every 30 seconds with reduced motion), and a key let go
+while the window is in the background is let go in the game too.
+
 Near something usable, a small prompt says **Press E to …** (or why it cannot be done
 now). While an activity plays, a bar shows its stage and progress; pressing E or moving
 stops it, and nothing is given for an activity stopped part way. The list beside the 3D
@@ -42,6 +51,7 @@ src/world/
   interaction/activity.ts the activity format: where, the prompt, stages, sounds, effects
   PlayerRig.tsx           the player: input → movement → prompts → activities → camera
   WalkView.tsx            the page around a walkable view: keys, mouse, prompt, progress
+  walkKeys.ts             which key presses are the walker's (focus, fields, dialogs)
   props.tsx               things the character holds (a mug, a fork, a card, dumbbells…)
   vfx/                    particles (water, steam, sweat…), wet floors, activity effects
   physics/solids.ts       what is solid, read from what is drawn

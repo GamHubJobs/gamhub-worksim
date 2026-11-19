@@ -195,7 +195,7 @@ function InteriorScene(props: InteriorSceneProps) {
       shadows={!low}
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
     >
-      <Ticker fps={STILL ? 1 / 30 : low ? 4 : 12} />
+      <Ticker fps={STILL ? 1 / 30 : low ? 4 : 30} />
       <color attach="background" args={[outdoors ? sky : '#1c1917']} />
       {outdoors && <fog attach="fog" args={[sky, 18, 60]} />}
       <SceneLook

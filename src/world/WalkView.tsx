@@ -4,16 +4,10 @@
  * pointer captured until Esc), and shows the "Press E to …" prompt and the
  * progress of what the character is doing. The 3D view is its child.
  */
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-  type RefObject,
-} from 'react'
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { HudSlot } from '../ui/hud/Hud'
 import { controlFor, keyName, keymap, onKeymapChange, type Control } from './keys'
+import { dialogIsOpen, keyTarget, walkKey } from './walkKeys'
 import type { Controls, Prompt } from './PlayerRig'
 
 export interface WalkApi {
@@ -26,6 +20,9 @@ export interface WalkApi {
 const ONCE = new Set<Control>(['interact', 'jump', 'vehicle'])
 
 const VIEW_STORAGE = 'worksim.view.v1'
+
+/** The walk views on screen, newest last (only the newest takes the keys). */
+const WALKING: HTMLElement[] = []
 
 function readOverhead(): boolean {
   try {
@@ -63,11 +60,13 @@ function TouchControls({
     if (x < -0.3) held.add('left')
     if (x > 0.3) held.add('right')
     if (Math.min(1, len) > 0.92) held.add('run')
+    controls.current!.wake?.()
   }
   const release = () => {
     setKnob({ x: 0, y: 0 })
     for (const c of ['forward', 'back', 'left', 'right', 'run'] as const)
       controls.current!.held.delete(c)
+    controls.current!.wake?.()
   }
   return (
     <div
@@ -104,6 +103,7 @@ function TouchControls({
         onPointerDown={(e) => {
           e.stopPropagation()
           controls.current!.pressed.push('interact')
+          controls.current!.wake?.()
         }}
         aria-label={`Use (${interact})`}
       >
@@ -166,6 +166,7 @@ export function WalkView({
       if (document.pointerLockElement !== element) return
       controls.current.dx += e.movementX
       controls.current.dy += e.movementY
+      controls.current.wake?.()
     }
     document.addEventListener('pointerlockchange', change)
     document.addEventListener('mousemove', move)
@@ -176,24 +177,58 @@ export function WalkView({
     }
   }, [])
 
-  const keyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      const c = controlFor(keys, e.code)
-      if (!c) return
+  // The keys, from the whole window (walkKeys.ts says which are the walker's),
+  // so walking never depends on where keyboard focus or the mouse happens to be.
+  const keysRef = useRef(keys)
+  useEffect(() => {
+    keysRef.current = keys
+  }, [keys])
+  useEffect(() => {
+    const element = box.current
+    if (!element) return
+    WALKING.push(element)
+    const c = controls.current
+    const release = () => {
+      if (c.held.size === 0) return
+      c.held.clear()
+      c.wake?.()
+    }
+    const down = (e: KeyboardEvent) => {
+      // Only the newest walk view on screen takes them.
+      if (WALKING.at(-1) !== element) return
+      const control = controlFor(keysRef.current, e.code)
+      if (!control) return
+      const target = keyTarget(document.activeElement, element)
+      if (!walkKey(target, e, dialogIsOpen(document))) return
       e.preventDefault()
-      if (ONCE.has(c)) {
-        if (!e.repeat) controls.current.pressed.push(c)
-      } else controls.current.held.add(c)
-    },
-    [keys],
-  )
-  const keyUp = useCallback(
-    (e: React.KeyboardEvent) => {
-      const c = controlFor(keys, e.code)
-      if (c) controls.current.held.delete(c)
-    },
-    [keys],
-  )
+      if (ONCE.has(control)) {
+        if (!e.repeat) c.pressed.push(control)
+      } else c.held.add(control)
+      c.wake?.()
+    }
+    const up = (e: KeyboardEvent) => {
+      // A key let go releases what it held, wherever focus is.
+      const control = controlFor(keysRef.current, e.code)
+      if (control && c.held.delete(control)) c.wake?.()
+    }
+    // Keys let go while the window was not listening never arrive: let go of all.
+    const hidden = () => {
+      if (document.visibilityState !== 'visible') release()
+    }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    window.addEventListener('blur', release)
+    document.addEventListener('visibilitychange', hidden)
+    return () => {
+      const at = WALKING.indexOf(element)
+      if (at >= 0) WALKING.splice(at, 1)
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+      window.removeEventListener('blur', release)
+      document.removeEventListener('visibilitychange', hidden)
+      c.held.clear()
+    }
+  }, [])
 
   const interact = keyName(keys.interact[0] ?? 'KeyE')
   return (
@@ -205,9 +240,12 @@ export function WalkView({
       role="application"
       aria-label={label}
       tabIndex={0}
-      onKeyDown={keyDown}
-      onKeyUp={keyUp}
-      onBlur={() => controls.current.held.clear()}
+      onBlur={(e) => {
+        // Focus going into a panel or a field: stop walking. (Focus going back
+        // to the page keeps the keys: they still reach the walker.)
+        const next = e.relatedTarget as Element | null
+        if (next && !box.current?.contains(next)) controls.current.held.clear()
+      }}
       onPointerDown={(e) => {
         box.current?.focus()
         drag.current = { x: e.clientX, y: e.clientY, moved: false }
@@ -221,11 +259,15 @@ export function WalkView({
         d.moved = true
         controls.current.dx += dx
         controls.current.dy += dy
+        controls.current.wake?.()
         d.x = e.clientX
         d.y = e.clientY
       }}
       onPointerUp={() => (drag.current = null)}
-      onWheel={(e) => (controls.current.zoom += e.deltaY)}
+      onWheel={(e) => {
+        controls.current.zoom += e.deltaY
+        controls.current.wake?.()
+      }}
       onClickCapture={(e) => {
         // A drag to turn the camera is not a click on what is under the pointer.
         if (drag.current?.moved) e.stopPropagation()

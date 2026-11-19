@@ -129,6 +129,12 @@ export interface Controls {
   zoom: number
   /** The camera looks straight down on the character (a top-down view of the floor). */
   overhead?: boolean
+  /**
+   * Draws the next frame now. The places draw only a few frames a second while
+   * nothing moves, so a key, a drag or the wheel calls this to be answered at
+   * once rather than at the next of those frames (set by the player rig).
+   */
+  wake?: () => void
 }
 
 export interface PlayerRigProps {
@@ -368,6 +374,14 @@ export function PlayerRig(props: PlayerRigProps) {
       delete w.__worksimPlace
     }
   }, [invalidate])
+  // Input wakes the drawing at once (see Controls.wake).
+  useEffect(() => {
+    const c = controls.current
+    c.wake = invalidate
+    return () => {
+      if (c.wake === invalidate) c.wake = undefined
+    }
+  }, [controls, invalidate])
   // The phone case the player has in their pocket (playerWear.ts), on the phone they hold.
   const phoneCase = usePlayerWear().find((w) => w.model === 'phone-case')?.colour
   const fresh = useRef(0)
@@ -641,6 +655,7 @@ export function PlayerRig(props: PlayerRigProps) {
   }, [invalidate])
 
   useFrame((_, raw) => {
+    frameAt.current = performance.now()
     // Real time (up to a second, if the computer draws slowly), moved in
     // small steps so collisions stay exact: the same pace however fast it draws.
     if (import.meta.env.DEV) {
@@ -650,7 +665,15 @@ export function PlayerRig(props: PlayerRigProps) {
     // The first frames after the place appears include its loading time: not
     // walked through all at once (someone coming in through a doorway would jump).
     fresh.current++
-    const dt = Math.min(raw, fresh.current <= 4 ? 0.05 : 1)
+    // A key pressed while the place was idle (drawing a frame or so a second):
+    // the time before it was pressed is not walked, so the first step is a
+    // step, not a jump forward.
+    const wasHeld = heldBefore.current
+    heldBefore.current = controls.current.held.size > 0
+    const dt = Math.min(
+      raw,
+      fresh.current <= 4 || (heldBefore.current && !wasHeld) ? 0.05 : 1,
+    )
     // What is solid: read soon after the place appears, then every few seconds
     // (furniture bought, the car parked somewhere else).
     scanAt.current -= raw
@@ -1116,20 +1139,27 @@ export function PlayerRig(props: PlayerRigProps) {
       redraw()
   }
 
-  // At most 30 frames a second while something moves (20 on low graphics):
-  // smooth enough, and kind to computers that draw 3D without a graphics card.
+  // While something moves: every frame the screen shows (Medium and High), or
+  // evenly at 20 a second on Low graphics, kind to computers that draw 3D
+  // without a graphics card. Paced from when the last frame began, so slow
+  // frames are not followed by a wait as well.
   const pending = useRef(false)
   const unsettled = useRef(0)
+  const frameAt = useRef(0)
+  const heldBefore = useRef(false)
   function redraw() {
     if (pending.current) return
+    if (!latest.current.low) {
+      invalidate()
+      return
+    }
     pending.current = true
-    window.setTimeout(
-      () => {
-        pending.current = false
-        invalidate()
-      },
-      latest.current.low ? 50 : 33,
-    )
+    const now = performance.now()
+    const wait = Math.max(0, 50 - (now - frameAt.current))
+    window.setTimeout(() => {
+      pending.current = false
+      invalidate()
+    }, wait)
   }
 
   /** The first camera angle round a spot with a clear view of the character. */

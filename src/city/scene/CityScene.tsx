@@ -278,7 +278,7 @@ function CityScene(props: CitySceneProps) {
       shadows={!lowPower}
       onCreated={({ gl }) => setLowPower(isSoftware(gl))}
     >
-      <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 12} />
+      <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 30} />
       <color attach="background" args={[sky]} />
       <fog attach="fog" args={[sky, 40, 120]} />
       <SceneLook

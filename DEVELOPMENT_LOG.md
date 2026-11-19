@@ -192,6 +192,55 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-19 · Walking answers the keys at once; the profile opens the career page; far less redrawing
+
+Reported: walking sometimes stopped answering WASD until the mouse moved; the
+name and XP in the header did nothing; the game felt sluggish.
+
+- **Keys not answered without the mouse (two causes).** The places draw only a
+  few frames a second while nothing moves (one every 30 seconds with Windows'
+  reduced motion), and a key press only recorded the key: nothing was drawn, so
+  nothing moved, until the next of those frames or until the mouse caused one.
+  Measured on the old code with reduced motion: W held for 1.5 seconds moved the
+  character 0 metres. Now every key, drag and wheel turn draws the next frame
+  at once (`Controls.wake`): about 0.18 seconds to the first step on this
+  computer, one software-drawn frame. And the keys were only heard while the 3D
+  view had keyboard focus, so after closing the phone or a menu, or clicking a
+  header, HUD or drawer button, they went nowhere. They are now heard from the
+  whole window, except while typing, inside a dialog or window, and with
+  Ctrl/Alt/Cmd (`world/walkKeys.ts`, unit-tested). Keys let go while the window
+  is in the background are let go in the game too. The first step after
+  standing idle no longer counts the idle time (it jumped up to a metre).
+- **The name and XP** opened the Career app on the work computer, which is not
+  on screen in the street or at home (and at work it took the player to the
+  desk). It now opens the career page over the world, wherever the player is;
+  the links that need the work computer say so after hours.
+- **Redrawing.** Each 3D place skips redrawing when nothing it is given changes,
+  but was given functions made afresh on every render (an inline "Press E"
+  filter in the office; the street's door, ride and taxi handlers, rebuilt each
+  game minute), so any change at all redrew the whole place. They are now the
+  same functions every render (`ui/useStableCallback.ts`); the building and
+  furniture sit behind their own boundary in the office; the HUD no longer
+  redraws with every step for the minimap. Components redrawn in 10 to 20
+  seconds of walking: office 5,016 → 1,814, street 5,188 → 531.
+- **Frame pacing.** While moving, Medium and High draw every frame the screen
+  shows (it was a 33 ms wait after each frame, so fewer and uneven); Low keeps
+  an even 20 a second, timed from when each frame began. People about in the
+  street, at home and inside places move at 30 frames a second on Medium and
+  High (12 before); Low is unchanged.
+
+Tested: `npm run check` (3,445 unit tests); new browser tests in
+`tests/e2e/input.spec.ts` (keys with the mouse untouched and reduced motion,
+letting go, two keys at once, after the phone, a header button and the drawer;
+the header uncovered and the career page opening in the office, at home and in
+the street), which fail on the old code; 20 related browser suites.
+
+Known: the "Attempted to synchronously unmount a root" console message comes
+from the 3D library's page labels (drei `Html`) under React 19 and was there
+before; it is harmless.
+
+---
+
 ## 2026-11-18 · The full browser regression; a slower start found and fixed
 
 The whole browser suite was run (351 tests, 3.5 hours, two at a time): 277 passed,

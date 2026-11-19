@@ -69,14 +69,23 @@ export function setRoute(route: Array<{ x: number; z: number }>): void {
   emit()
 }
 
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
 export function useMap(): MapState {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l)
-      return () => listeners.delete(l)
-    },
-    () => state,
-  )
+  return useSyncExternalStore(subscribe, () => state)
+}
+
+/**
+ * Only whether the map is open: for what does not show the player's position
+ * (the HUD), so it is not redrawn every time they take a step.
+ */
+export function useMapOpen(): boolean {
+  return useSyncExternalStore(subscribe, () => state.open)
 }
 
 /** How a route is worked out (the street's walking grid registers it while shown). */

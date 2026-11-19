@@ -227,7 +227,7 @@ function ShopTab({ profile, act }: { profile: ProfileData; act: Act }) {
   const life = profile.work.life
   const [category, setCategory] = useState<Category | 'career'>('career')
   const [owned, setOwned] = useState<'all' | 'owned' | 'new'>('all')
-  const all = useMemo(catalogue, [])
+  const all = useMemo(() => catalogue(), [])
   const list = all.filter(
     (a) =>
       (category === 'career'

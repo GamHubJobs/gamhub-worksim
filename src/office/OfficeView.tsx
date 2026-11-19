@@ -24,6 +24,7 @@ import { AudioScene } from '../audio/useAudio'
 import { useSpokenLines } from '../audio/useSpeech'
 import { timeOfDay } from '../audio/scenes'
 import { WalkView } from '../world/WalkView'
+import type { Prompt } from '../world/PlayerRig'
 import { EncounterPanel } from '../world/npc/EncounterPanel'
 import { StoryScenePanel } from '../world/npc/StoryScenePanel'
 import { campaignFor } from '../game/story/campaigns'
@@ -668,6 +669,20 @@ export function OfficeView({
   const [live, setLive] = useState<LiveState | null>(null)
   const liveOn = useRef(false)
   liveOn.current = !!live
+  // The "Press E" prompts, held back while a scenario is played. The same function
+  // every time, so the 3D place (which skips redrawing when nothing it is given
+  // changes) is not redrawn whole every time something here changes.
+  const quietPrompt = useMemo(() => {
+    let show: ((prompt: Prompt | null) => void) | null = null
+    let quiet: (prompt: Prompt | null) => void = () => {}
+    return (next: (prompt: Prompt | null) => void) => {
+      if (next !== show) {
+        show = next
+        quiet = (prompt) => next(liveOn.current ? null : prompt)
+      }
+      return quiet
+    }
+  }, [])
   const liveScenario = live ? getScenario(live.id) : undefined
   const offered = scenariosFor(profile.careerId).filter(
     (sc) => sc.workplace === workplaceKind() && levelNumber(profile) >= sc.minLevel,
@@ -863,7 +878,12 @@ export function OfficeView({
   const meetingHere = meetingNow && meetingNow.spot === spot
 
   return (
-    <div className="relative isolate min-h-0 flex-1 overflow-hidden" data-testid="office">
+    <div
+      className="relative isolate min-h-0 flex-1 overflow-hidden"
+      data-testid="office"
+      // Its panel and buttons over the 3D view: the walking keys still walk there (walkKeys.ts).
+      data-walk-keys
+    >
       <div className="absolute inset-0">
         {webgl && !sceneFailed ? (
           <WalkView
@@ -910,7 +930,7 @@ export function OfficeView({
                     <CourthouseScene
                       controls={api.controls}
                       request={request}
-                      onPrompt={(p) => api.onPrompt(liveOn.current ? null : p)}
+                      onPrompt={quietPrompt(api.onPrompt)}
                       onProgress={api.onProgress}
                       onDone={onActivityDone}
                       onReady={onReady}
@@ -932,7 +952,7 @@ export function OfficeView({
                         controls: api.controls,
                         request,
                         // No "Press E" prompts while a scenario is being played.
-                        onPrompt: (p) => api.onPrompt(liveOn.current ? null : p),
+                        onPrompt: quietPrompt(api.onPrompt),
                         onProgress: api.onProgress,
                         onDone: onActivityDone,
                         onReady,

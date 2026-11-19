@@ -23,10 +23,10 @@ import { bondOf, interestName, STAGE_NAMES } from '../game/romance'
 import { openPhone, usePhone } from '../phone/store'
 import { openStore } from '../accessories/store'
 import { packedItems, wornItems } from '../game/accessories'
-import { openMap, useMap } from '../world/map/store'
+import { openMap, useMapOpen } from '../world/map/store'
 import { MiniMap } from '../world/map/MiniMap'
 
-export type MenuScreen = 'relationships' | 'character' | 'inventory' | null
+export type MenuScreen = 'relationships' | 'character' | 'inventory' | 'career' | null
 
 /** Six small bars: hunger, hygiene, social, fun, energy, stress. */
 const NEEDS_KEY = 'worksim.hud.needs'
@@ -138,8 +138,8 @@ export function GameHud({
   onMenu: () => void
 }) {
   const phone = usePhone()
-  const map = useMap()
-  if (phone.open || map.open) return null
+  const mapOpen = useMapOpen()
+  if (phone.open || mapOpen) return null
   const button =
     'pointer-events-auto rounded-full bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-white shadow ring-1 ring-white/15 hover:bg-slate-900'
   const content = (
@@ -178,11 +178,14 @@ function Overlay({
   onClose,
   children,
   testId,
+  wide = false,
 }: {
   title: string
   onClose: () => void
   children: ReactNode
   testId: string
+  /** A whole app's worth (the career page), not a short list. */
+  wide?: boolean
 }) {
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -204,7 +207,7 @@ function Overlay({
         role="dialog"
         aria-label={title}
         data-testid={testId}
-        className="max-h-full w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl outline-none"
+        className={`max-h-full w-full ${wide ? 'max-w-4xl' : 'max-w-xl'} overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl outline-none`}
       >
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-900">{title}</h2>
@@ -385,6 +388,24 @@ export function RelationshipsScreen({
           </ul>
         </section>
       )}
+    </Overlay>
+  )
+}
+
+/**
+ * The career page (level, XP, promotion, skills, portfolio) over the world:
+ * what the name and XP in the header open, wherever the player is.
+ */
+export function CareerScreen({
+  onClose,
+  children,
+}: {
+  onClose: () => void
+  children: ReactNode
+}) {
+  return (
+    <Overlay title="Your career" onClose={onClose} testId="career-screen" wide>
+      <div className="-mx-6 -mb-6">{children}</div>
     </Overlay>
   )
 }

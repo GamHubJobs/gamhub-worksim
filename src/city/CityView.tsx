@@ -4,6 +4,7 @@
  * going straight there; and what there is to do inside each. Everything also
  * works without 3D, from the list.
  */
+import { useStableCallback } from '../ui/useStableCallback'
 import { GameScreen } from '../world/GameScreen'
 import {
   Component,
@@ -506,6 +507,17 @@ export function CityView({
   const doingsKey = JSON.stringify(doings)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stableDoings = useMemo(() => doings, [doingsKey])
+  // What the 3D places are handed: the same functions every render (see
+  // useStableCallback), so they are not redrawn whole every game minute.
+  const sceneGo = useStableCallback(go)
+  const sceneRide = useStableCallback(onRide)
+  const sceneCourt = useStableCallback(() => setNotice(COURTHOUSE.closed))
+  const sceneBlocked = useStableCallback((id: PlaceId) => canEnter(profile, id))
+  const scenePerson = useStableCallback(meetPerson)
+  const sceneTaxi = useStableCallback(onTaxi)
+  const sceneDo = useStableCallback(doThing)
+  const sceneDone = useStableCallback(onActivityDone)
+  const insideReady = useStableCallback(() => setReadyIn(here.id))
 
   // The 3D world, full screen behind the drawer.
   const world =
@@ -536,11 +548,11 @@ export function CityView({
                   doings={stableDoings}
                   controls={api.controls}
                   request={request?.place === here.id ? request : null}
-                  onRequest={doThing}
+                  onRequest={sceneDo}
                   onPrompt={api.onPrompt}
                   onProgress={api.onProgress}
-                  onDone={onActivityDone}
-                  onReady={() => setReadyIn(here.id)}
+                  onDone={sceneDone}
+                  onReady={insideReady}
                   dressed={phase === 'morning' && life.ready.dressed}
                   raining={raining}
                   date={dating?.date.id ?? date?.id ?? null}
@@ -586,21 +598,21 @@ export function CityView({
                   onPrompt={api.onPrompt}
                   onProgress={api.onProgress}
                   onArea={onArea}
-                  onDoor={go}
-                  onCourt={() => setNotice(COURTHOUSE.closed)}
-                  onEnter={go}
-                  blocked={(id) => canEnter(profile, id)}
+                  onDoor={sceneGo}
+                  onCourt={sceneCourt}
+                  onEnter={sceneGo}
+                  blocked={sceneBlocked}
                   riding={life.city.riding}
                   car={life.vehicles.car}
                   bike={life.vehicles.bike}
-                  onRide={onRide}
+                  onRide={sceneRide}
                   raining={raining}
                   request={streetRequest}
-                  onPerson={meetPerson}
+                  onPerson={scenePerson}
                   courier={courierWaiting}
                   onReady={onStreetReady}
                   taxi={taxi}
-                  onTaxi={onTaxi}
+                  onTaxi={sceneTaxi}
                   neighbour={neighbourHere}
                   onNeighbourCalls={onNeighbourCalls}
                 />

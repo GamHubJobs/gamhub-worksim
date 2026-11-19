@@ -47,6 +47,8 @@ export function GameScreen({
     <div
       className="relative min-h-0 flex-1 overflow-hidden bg-slate-900"
       data-testid={testId}
+      // The drawer and buttons over the 3D view: the walking keys still walk there (walkKeys.ts).
+      data-walk-keys
     >
       <div className="absolute inset-0">{world}</div>
       {/* Folded away, the drawer is hidden but stays (conversations shown from it stay visible). */}

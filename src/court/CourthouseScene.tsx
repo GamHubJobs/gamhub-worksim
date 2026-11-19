@@ -126,7 +126,7 @@ function CourthouseScene(props: CourthouseSceneProps) {
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
       data-testid="courthouse-canvas"
     >
-      <Ticker fps={STILL ? 1 / 30 : low ? 2 : 24} />
+      <Ticker fps={STILL ? 1 / 30 : low ? 2 : 30} />
       <color attach="background" args={['#e6edf3']} />
       <SceneLook look="court" low={low} extent={13} center={[7, 0, 0]} />
       <World.Provider value={world}>

@@ -4,6 +4,7 @@
  * time and may cost money, and how they look after themselves shows at work
  * the next day.
  */
+import { useStableCallback } from '../ui/useStableCallback'
 import { GameScreen } from '../world/GameScreen'
 import {
   Component,
@@ -266,6 +267,17 @@ export function HomeView({
   }, [evening, talking])
 
   // The 3D world, full screen behind the drawer.
+  // What the flat in 3D is handed: the same functions and list every render
+  // (see useStableCallback), so it is not redrawn whole every game minute.
+  const sceneDo = useStableCallback(doThing)
+  const sceneDone = useStableCallback(onActivityDone)
+  const sceneReady = useStableCallback(() => setReady(true))
+  const kidsNow = life.family.children.flatMap((c, i) =>
+    homeNow(c, day, life.minute) ? [{ i, name: c.name, age: ageOf(c, day) }] : [],
+  )
+  const kidsKey = JSON.stringify(kidsNow)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const kids = useMemo(() => kidsNow, [kidsKey])
   const world = webgl && !sceneFailed && (
     <WalkView
       helpClass="top-2 left-1/2 -translate-x-1/2"
@@ -293,19 +305,15 @@ export function HomeView({
                 repair={repairStage(life)}
                 parcel={parcel}
                 partner={evening?.id ?? here?.id ?? null}
-                kids={life.family.children.flatMap((c, i) =>
-                  homeNow(c, day, life.minute)
-                    ? [{ i, name: c.name, age: ageOf(c, day) }]
-                    : [],
-                )}
+                kids={kids}
                 doings={stableDoings}
                 controls={api.controls}
                 request={request}
-                onRequest={doThing}
+                onRequest={sceneDo}
                 onPrompt={api.onPrompt}
                 onProgress={api.onProgress}
-                onDone={onActivityDone}
-                onReady={() => setReady(true)}
+                onDone={sceneDone}
+                onReady={sceneReady}
               />
             </Suspense>
           </SceneBoundary>

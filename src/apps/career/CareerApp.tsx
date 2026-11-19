@@ -366,12 +366,13 @@ export function CareerApp({
 }: {
   profile: Profile
   onSwitchCareer: (careerId: string) => Promise<void>
-  onOpenFile: (kind: PortfolioFileKind, documentId: string) => void
-  onOpenPortfolio: () => void
+  /** Opens a portfolio file (left out away from the work computer). */
+  onOpenFile?: (kind: PortfolioFileKind, documentId: string) => void
+  onOpenPortfolio?: () => void
   /** Puts an earned item on the desk, or clears the slot. */
   onChooseDesk: (slot: DeskSlot, itemId: string | null) => void
-  /** Opens a readiness assessment. */
-  onOpenReadiness: (assessmentId: string) => void
+  /** Opens a readiness assessment (left out away from the work computer). */
+  onOpenReadiness?: (assessmentId: string) => void
   /** A section to show straight away ("desk"). */
   focus?: string
 }) {
@@ -437,7 +438,10 @@ export function CareerApp({
                   met={promotion.assessmentMet}
                   text={`Pass the readiness assessment: ${promotion.assessment.title.replace(/^Readiness assessment: /, '')}`}
                 >
-                  {!promotion.assessmentMet && (
+                  {!promotion.assessmentMet && !onOpenReadiness && (
+                    <span className="text-xs text-slate-500">On your work computer</span>
+                  )}
+                  {!promotion.assessmentMet && onOpenReadiness && (
                     <button
                       type="button"
                       onClick={() => onOpenReadiness(promotion.assessment!.id)}

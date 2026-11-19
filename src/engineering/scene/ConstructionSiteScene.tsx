@@ -382,7 +382,7 @@ function ConstructionSiteScene(props: ConstructionSiteSceneProps) {
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
       data-testid="site-canvas"
     >
-      <Ticker fps={STILL ? 1 / 30 : low ? 2 : 24} />
+      <Ticker fps={STILL ? 1 / 30 : low ? 2 : 30} />
       <color attach="background" args={['#cfe3f2']} />
       <fog attach="fog" args={['#cfe3f2', 60, 160]} />
       <SceneLook look="street-day" low={low} extent={extent} />

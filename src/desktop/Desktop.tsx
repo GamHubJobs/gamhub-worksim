@@ -6,12 +6,14 @@
  * are the same WorkSim apps as before.
  */
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { PortfolioFileKind } from '../apps/career/PortfolioSection'
 import { PROJECT_TABS, type ProjectTab } from '../apps/projects/tabs'
 import { goToSite } from '../engineering/visit'
 import { StoryPanel, StoryTracker } from './StoryPanel'
 import { PhoneHost } from '../phone/PhoneDevice'
 import { MapHost } from '../world/map/MapHost'
 import {
+  CareerScreen,
   CharacterScreen,
   GameHud,
   InventoryScreen,
@@ -373,6 +375,32 @@ export function Desktop({
   useEffect(() => {
     setViewRef.current = setView
   }, [setView])
+
+  /** Opens a finished piece of work from the portfolio in its app. */
+  const openPortfolioFile = (kind: PortfolioFileKind, document: string) =>
+    setView(
+      kind === 'tool'
+        ? {
+            app: 'tool',
+            tool: getAssignment(
+              Object.values(profile.assignments).find((p) => p.documentId === document)
+                ?.assignmentId ?? '',
+            )?.tool?.id,
+            document,
+          }
+        : {
+            app: (
+              {
+                sheet: 'sheets',
+                tickets: 'helpdesk',
+                code: 'code',
+                doc: 'docs',
+                slides: 'slides',
+              } as const
+            )[kind],
+            document,
+          },
+    )
 
   /** Opens an app as Start and the desktop icons do: as it was, if it is open. */
   const launch = useCallback((next: View) => {
@@ -778,7 +806,14 @@ export function Desktop({
           )}
           <button
             type="button"
-            onClick={() => setView({ app: 'career' })}
+            // In the world (the office floor, the street, home), the career page
+            // opens over it; at the computer, as the Career app.
+            onClick={() =>
+              dayOver || view.app === 'office'
+                ? setScreen('career')
+                : setView({ app: 'career' })
+            }
+            title="Your career: level, XP and promotion"
             className="flex items-center gap-3 rounded-md px-2 py-1 text-left hover:bg-slate-50"
             data-testid="player-chip"
           >
@@ -888,6 +923,40 @@ export function Desktop({
         )}
         {screen === 'character' && (
           <CharacterScreen profile={profile} onClose={() => setScreen(null)} />
+        )}
+        {screen === 'career' && (
+          <CareerScreen onClose={() => setScreen(null)}>
+            <Suspense fallback={<p className="p-6 text-sm text-slate-500">Opening…</p>}>
+              <CareerApp
+                profile={profile}
+                onChooseDesk={(slot, itemId) =>
+                  void act((p) => chooseDeskItem(p, slot, itemId))
+                }
+                onSwitchCareer={async (careerId) => {
+                  setScreen(null)
+                  writeLastView(DEFAULT_VIEW)
+                  await career.switchCareer(careerId)
+                }}
+                // At work, files and the assessment open on the computer.
+                {...(dayOver
+                  ? {}
+                  : {
+                      onOpenReadiness: (item: string) => {
+                        setScreen(null)
+                        setView({ app: 'readiness', item })
+                      },
+                      onOpenPortfolio: () => {
+                        setScreen(null)
+                        setView({ app: 'portfolio' })
+                      },
+                      onOpenFile: (kind: PortfolioFileKind, document: string) => {
+                        setScreen(null)
+                        openPortfolioFile(kind, document)
+                      },
+                    })}
+              />
+            </Suspense>
+          </CareerScreen>
         )}
         {screen === 'inventory' && (
           <InventoryScreen profile={profile} onClose={() => setScreen(null)} />
@@ -1317,32 +1386,7 @@ export function Desktop({
               writeLastView(DEFAULT_VIEW)
               await career.switchCareer(careerId)
             }}
-            onOpenFile={(kind, document) =>
-              setView(
-                kind === 'tool'
-                  ? {
-                      app: 'tool',
-                      tool: getAssignment(
-                        Object.values(profile.assignments).find(
-                          (p) => p.documentId === document,
-                        )?.assignmentId ?? '',
-                      )?.tool?.id,
-                      document,
-                    }
-                  : {
-                      app: (
-                        {
-                          sheet: 'sheets',
-                          tickets: 'helpdesk',
-                          code: 'code',
-                          doc: 'docs',
-                          slides: 'slides',
-                        } as const
-                      )[kind],
-                      document,
-                    },
-              )
-            }
+            onOpenFile={openPortfolioFile}
           />
         )
       default:

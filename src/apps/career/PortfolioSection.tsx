@@ -37,8 +37,9 @@ export function PortfolioSection({
   onOpenPortfolio,
 }: {
   profile: Profile
-  onOpenFile: (kind: PortfolioFileKind, documentId: string) => void
-  onOpenPortfolio: () => void
+  /** Left out away from the work computer: the files are listed, not opened. */
+  onOpenFile?: (kind: PortfolioFileKind, documentId: string) => void
+  onOpenPortfolio?: () => void
 }) {
   const career = getCareer(profile.careerId)
   const items = careerAssignments(profile.careerId).flatMap((assignment) => {
@@ -64,13 +65,17 @@ export function PortfolioSection({
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-semibold text-slate-900">Portfolio</h2>
-        <button
-          type="button"
-          onClick={onOpenPortfolio}
-          className="text-sm text-blue-700 hover:underline"
-        >
-          Open Portfolio
-        </button>
+        {onOpenPortfolio ? (
+          <button
+            type="button"
+            onClick={onOpenPortfolio}
+            className="text-sm text-blue-700 hover:underline"
+          >
+            Open Portfolio
+          </button>
+        ) : (
+          <span className="text-xs text-slate-500">Files open on your work computer</span>
+        )}
       </div>
       <p className="mt-1 text-sm text-slate-600">
         Work you have completed in this career, with your working files. The Portfolio app
@@ -114,8 +119,9 @@ export function PortfolioSection({
                   <button
                     key={file.id}
                     type="button"
-                    onClick={() => onOpenFile(file.kind, file.id)}
-                    className="flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                    disabled={!onOpenFile}
+                    onClick={() => onOpenFile?.(file.kind, file.id)}
+                    className="flex items-center gap-1.5 rounded-md border border-slate-200 px-2.5 py-1 text-xs text-slate-700 hover:bg-slate-50 disabled:cursor-default disabled:hover:bg-white"
                   >
                     <Icon
                       name={
