@@ -27,6 +27,7 @@ import {
 import { audio } from '../audio/manager'
 import type { Profile } from '../persistence/schemas'
 import { arrival } from './arrival'
+import { getPlace, type PlaceId } from '../content/city'
 import { prefersReducedMotion } from '../ui/motion'
 import { setWorldCovered, useGameLoaded, useWorldReady } from '../world/transition/ready'
 import { Emblem, Particles, Wordmark } from './Logo'
@@ -71,7 +72,14 @@ export function Launch({ status, profile }: { status: Status; profile: Profile |
     status === 'error' ||
     (saveOpen && (status === 'new' || gameLoaded) && (worldReady || flat))
   const fly = useMemo(() => plan !== 'off' && plan !== 'none' && canFly(), [plan])
-  const where = arrival(profile)
+  // (Development builds: a test can choose where the flight ends, to look at each landing.)
+  const testTo = import.meta.env.DEV
+    ? (globalThis as unknown as { __worksimFlightTo?: PlaceId }).__worksimFlightTo
+    : undefined
+  const where =
+    testTo && getPlace(testTo)
+      ? { door: getPlace(testTo)!.door, name: testTo }
+      : arrival(profile)
   // The stage: worked out from what has happened (the logo shown, the game
   // ready, skipped), until the flight ends or the fade into the game begins.
   const [end, setEnd] = useState<null | 'reveal' | 'done'>(plan === 'off' ? 'done' : null)
@@ -127,7 +135,7 @@ export function Launch({ status, profile }: { status: Status; profile: Profile |
     const t = window.setTimeout(
       () => setEnd((e) => e ?? 'reveal'),
       flyDrawn
-        ? (plan === 'full' ? 10 : 3.5) * 1000 + 5000
+        ? (plan === 'full' ? 10 : 3.5) * 1000 + (forcedFlight() ? 120_000 : 5000)
         : forcedFlight()
           ? 90_000
           : 8000,

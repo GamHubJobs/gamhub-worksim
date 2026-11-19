@@ -5,7 +5,8 @@
  */
 import type { CSSProperties } from 'react'
 
-export function Emblem({ size = 112 }: { size?: number }) {
+/** Sized to the screen: larger on a large monitor, never too small on a phone. */
+export function Emblem({ size = 'clamp(96px, 13vmin, 176px)' }: { size?: string }) {
   return (
     <div
       className="launch-emblem relative overflow-hidden rounded-[28%] shadow-[0_20px_60px_rgba(14,165,233,0.35)]"
@@ -69,10 +70,10 @@ export function Emblem({ size = 112 }: { size?: number }) {
 export function Wordmark() {
   return (
     <div className="text-center">
-      <p className="launch-word text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+      <p className="launch-word text-[clamp(2.1rem,5.6vmin,4.75rem)] leading-tight font-extrabold tracking-tight text-white">
         GamHub <span className="text-sky-300">WorkSim</span>
       </p>
-      <p className="launch-tagline mt-2 text-sm tracking-[0.3em] text-sky-100/80 uppercase">
+      <p className="launch-tagline mt-2 text-[clamp(0.75rem,1.5vmin,1.1rem)] tracking-[0.3em] text-sky-100/80 uppercase">
         Learn the work · Live the day
       </p>
     </div>

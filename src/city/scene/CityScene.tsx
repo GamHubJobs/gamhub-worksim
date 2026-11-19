@@ -1282,7 +1282,7 @@ export function CityFlyover({
       dpr={low ? lowDpr() : [1, 1.5]}
       onCreated={({ gl }) => setLow(isSoftware(gl))}
       frameloop="demand"
-      camera={{ position: [-80, 36, -34], fov: 50, near: 0.1, far: 220 }}
+      camera={{ position: [0, 40, -40], fov: 50, near: 0.1, far: 220 }}
       gl={{ antialias: !low, powerPreference: 'default', preserveDrawingBuffer: true }}
       data-testid="flyover-3d"
     >
@@ -1330,38 +1330,42 @@ function FlyoverCamera({
   // Which side of the road the door is on: the camera ends across from it.
   const side = z >= 0 ? 1 : -1
   const { eye, look, seconds } = useMemo(() => {
-    // Doors face the road (the buildings are behind them): the camera comes down
-    // over the road, across from the door, looking at it.
+    // The flight starts at the far end of the street from the door and travels
+    // towards it, so it never doubles back over the buildings. High over the end
+    // of the street, then down to the road and along it (no building stands over
+    // the road), on the far side from the door, and down across from the door,
+    // looking at it (doors face the road; the buildings are behind them).
+    const dir = x >= 0 ? 1 : -1
+    const across = -side
     const arrive: Array<[number, number, number]> = [
-      [x - 14, 15, z - side * 24],
-      [x - 5, 6.5, z - side * 15],
-      [x - 1.5, 3, z - side * 9.5],
+      [x - dir * 13, 10, across * 4],
+      [x - dir * 4.5, 5.5, across * 3],
+      // (Over the far pavement, out of the traffic: a bus never passes through it.)
+      [x - dir * 1.5, 3.2, z - side * 13],
     ]
     const arriveLook: Array<[number, number, number]> = [
-      [x, 0, z],
-      [x, 1.2, z],
+      [x, 1, z],
+      [x, 1.4, z],
       [x, 1.6, z],
     ]
     const points: Array<[number, number, number]> = full
       ? [
-          // High over the west end, then along the south side of the road above
-          // the rooftops, looking across the whole street and the district.
-          [-80, 36, -34] as [number, number, number],
-          [-45, 28, -28],
-          [-5, 24, -24],
-          [28, 21, -22],
+          [-dir * 88, 38, across * 34],
+          [-dir * 55, 27, across * 14],
+          [-dir * 20, 21, across * 5],
+          [x - dir * 32, 14, across * 4.5],
           ...arrive,
         ]
-      : arrive
+      : [[x - dir * 26, 17, across * 16], ...arrive]
     const looks: Array<[number, number, number]> = full
       ? [
-          [-25, 0, 6] as [number, number, number],
-          [0, 2, 6],
-          [25, 3, 6],
-          [x - 6, 2, z],
+          [-dir * 30, 0, 0],
+          [-dir * 5, 2, 0],
+          [x - dir * 18, 3, z * 0.5],
+          [x - dir * 4, 2, z * 0.8],
           ...arriveLook,
         ]
-      : arriveLook
+      : [[x - dir * 6, 1, z * 0.6], ...arriveLook]
     const curve = (p: Array<[number, number, number]>) =>
       new CatmullRomCurve3(
         p.map(([a, b, c]) => new Point3(a, b, c)),
@@ -1388,6 +1392,17 @@ function FlyoverCamera({
       started.current === null
         ? 0
         : Math.min(1, (clock.elapsedTime - started.current) / seconds)
+    // (Development builds: a test can hold the camera at a point of the flight,
+    // __worksimFlightAt, from 0 to 1, to look at every stage of it.)
+    const held = import.meta.env.DEV
+      ? (window as unknown as { __worksimFlightAt?: number }).__worksimFlightAt
+      : undefined
+    if (typeof held === 'number') {
+      camera.position.copy(eye.getPoint(held))
+      camera.lookAt(look.getPoint(held, target.current))
+      invalidate()
+      return
+    }
     const k = smooth(t)
     camera.position.copy(eye.getPoint(k))
     camera.lookAt(look.getPoint(k, target.current))

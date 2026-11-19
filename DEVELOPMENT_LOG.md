@@ -192,6 +192,31 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-19 · The opening checked frame by frame: the flight's route and landing fixed
+
+The flight was looked at, not only tested: held at points along it (a
+development-only hook, ) and photographed for each landing
+(the office, home, the café, the gym, the park, Harbourside House).
+
+- **Over the rooftops.** Between a quarter and two-fifths of the way, the camera
+  skimmed the south side's roofs (a roof filled half the picture), and on the
+  way to a building at the west end it doubled back over the buildings. The
+  flight now starts at the far end of the street from the destination and
+  travels towards it over the road (where no building stands), high while over
+  buildings and lower only over the road.
+- **In the traffic.** The final position was in a traffic lane at the height of
+  the bus roof, so a bus could pass through the camera. It now ends over the
+  far pavement, facing the entrance.
+- **The logo on large screens** was a fixed size, small on a 1920 × 1080 monitor;
+  it is now sized to the screen (checked at 1920 × 1080, 1366 × 768, 768 × 1024
+  and 390 × 844).
+- **Measured** (returning player, development build, no graphics card): the game
+  shown after 10.9 s with the opening off and 10.4 s with the short opening (the
+  logo plays while it loads: no delay), 28.6 s with the full flight forced on;
+  memory 65 MB, 67 MB after a flight (released when it ends).
+
+---
+
 ## 2026-11-19 · The game's opening: the logo, real loading, a flight over the city
 
 A new opening (docs/LAUNCH.md), over the game while it starts underneath:
