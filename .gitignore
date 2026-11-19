@@ -35,3 +35,7 @@ blob-report
 /.cache/
 # The extracted source of the office apps, kept for reference only
 /artcraft-source/
+
+# Local settings (e.g. VITE_JOBS_PROXY): never committed.
+.env.local
+.env.*.local

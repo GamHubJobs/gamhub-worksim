@@ -1413,6 +1413,105 @@ export const LifeSchema = z.object({
       woreDay: z.number().int().nonnegative().default(0),
     })
     .prefault({}),
+  /**
+   * Real-world jobs (see jobs/, game/jobs.ts): adverts the player saved, with
+   * how their application stands, their notes and reminders; where they want
+   * to work; and their own CV details. Real dates (YYYY-MM-DD), not game days.
+   * Added later: older saves start empty.
+   */
+  jobs: z
+    .object({
+      saved: z
+        .array(
+          z.object({
+            /** The advert as it was when saved (it may be taken down later). */
+            listing: z.object({
+              id: z.string().max(300),
+              provider: z.enum(['remotive', 'jobicy', 'remoteok', 'arbeitnow', 'adzuna']),
+              sourceId: z.string().max(300),
+              title: z.string().max(300),
+              company: z.string().max(200),
+              logo: z.string().max(1000).optional(),
+              location: z.string().max(300).default(''),
+              countries: z.array(z.string().max(2)).max(60).default([]),
+              regions: z.array(z.string().max(30)).max(10).default([]),
+              worldwide: z.boolean().default(false),
+              arrangement: z.enum(['remote', 'hybrid', 'onsite']).optional(),
+              employment: z.array(z.string().max(20)).max(10).default([]),
+              level: z.string().max(20).optional(),
+              salary: z
+                .object({
+                  min: z.number().optional(),
+                  max: z.number().optional(),
+                  currency: z.string().max(5).optional(),
+                  period: z.enum(['year', 'month', 'week', 'day', 'hour']).optional(),
+                  text: z.string().max(120),
+                })
+                .optional(),
+              categories: z.array(z.string().max(80)).max(10).default([]),
+              tags: z.array(z.string().max(60)).max(20).default([]),
+              description: z.string().max(2500).default(''),
+              posted: z.string().max(40).default(''),
+              deadline: z.string().max(40).optional(),
+              url: z.string().max(2000),
+            }),
+            /** When saved (ms since 1970). */
+            savedAt: z.number().int().nonnegative(),
+            /** On the shortlist (the ones to apply for first). */
+            shortlisted: z.boolean().default(false),
+            status: z
+              .enum([
+                'saved',
+                'preparing',
+                'applied',
+                'interview',
+                'offer',
+                'rejected',
+                'withdrawn',
+              ])
+              .default('saved'),
+            /** The day the player says they applied, on the employer's own site. */
+            appliedOn: z.string().max(10).optional(),
+            notes: z.string().max(4000).default(''),
+            /** A reminder for a day (the closing date, a follow-up), with what for. */
+            remindOn: z.string().max(10).optional(),
+            remindWhat: z.string().max(120).optional(),
+            /** The cover letter written for it. */
+            letter: z.string().max(8000).optional(),
+            /** The advert was taken down (its source says it has closed). */
+            closed: z.boolean().default(false),
+            checkedAt: z.number().int().nonnegative().optional(),
+          }),
+        )
+        .max(200)
+        .default([]),
+      /** Where they want to work, and how. */
+      prefs: z
+        .object({
+          country: z.string().max(2).default(''),
+          place: z.string().max(80).default(''),
+          radiusKm: z.number().min(1).max(200).default(25),
+          arrangements: z
+            .array(z.enum(['remote', 'hybrid', 'onsite']))
+            .max(3)
+            .default([]),
+        })
+        .prefault({}),
+      /** The player's own, real details for their CV (nothing here comes from the game). */
+      cv: z
+        .object({
+          headline: z.string().max(200).default(''),
+          contact: z.string().max(400).default(''),
+          summary: z.string().max(2000).default(''),
+          experience: z.string().max(6000).default(''),
+          education: z.string().max(3000).default(''),
+          qualifications: z.string().max(2000).default(''),
+          /** Include the skills practised in GamHub WorkSim (clearly labelled as such). */
+          includePractice: z.boolean().default(true),
+        })
+        .prefault({}),
+    })
+    .prefault({}),
 })
 
 /**

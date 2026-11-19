@@ -56,6 +56,7 @@ import { openWorkbenchDocument } from '../persistence/workbench'
 import { computerNotices } from '../game/notices'
 import { caseFor } from '../game/caseVariants'
 import { chooseDeskItem } from '../game/desk'
+import { dueReminders } from '../game/jobs'
 import { HelpPanel } from '../ui/HelpPanel'
 import { AudioSettingsPanel, SoundCaptions } from '../audio/AudioSettingsPanel'
 import { audio } from '../audio/manager'
@@ -194,6 +195,9 @@ const ReadinessApp = lazy(() =>
 const ProjectsApp = lazy(() =>
   import('../apps/projects/ProjectsApp').then((m) => ({ default: m.ProjectsApp })),
 )
+const JobsApp = lazy(() =>
+  import('../apps/jobs/JobsApp').then((m) => ({ default: m.JobsApp })),
+)
 const CasesApp = lazy(() =>
   import('../apps/cases/CasesApp').then((m) => ({ default: m.CasesApp })),
 )
@@ -220,6 +224,7 @@ const APPS: Array<{ id: Exclude<View['app'], 'office'>; label: string; icon: Ico
     { id: 'career', label: 'Career', icon: 'career' },
     { id: 'readiness', label: 'Readiness', icon: 'check' },
     { id: 'portfolio', label: 'Portfolio', icon: 'portfolio' },
+    { id: 'jobs', label: 'Real Jobs', icon: 'target' },
   ]
 
 /** Tile colours for the desktop icons and Start, one per app. */
@@ -237,6 +242,7 @@ const APP_COLORS: Record<string, string> = {
   career: '#a55f00',
   readiness: '#107c10',
   portfolio: '#744da9',
+  jobs: '#0f766e',
 }
 const TOOL_COLOR = '#2d6a8f'
 
@@ -450,6 +456,8 @@ export function Desktop({
     mail: unread,
     tasks: openTasks,
     cases: Object.values(profile.work.cases).filter((c) => c.status === 'open').length,
+    // Real Jobs: reminders due (a closing date, a follow-up).
+    jobs: dueReminders(profile.work.life).length,
     // The assessment the next promotion needs, until it is passed.
     readiness:
       promotionProgress(profile).assessment && !promotionProgress(profile).assessmentMet
@@ -631,7 +639,11 @@ export function Desktop({
       view: { app: 'tool', tool: tool.id } as View,
     })),
     ...APPS.filter(
-      (app) => app.id === 'career' || app.id === 'readiness' || app.id === 'portfolio',
+      (app) =>
+        app.id === 'career' ||
+        app.id === 'readiness' ||
+        app.id === 'portfolio' ||
+        app.id === 'jobs',
     ).map((app) => ({
       key: app.id as string,
       label: app.label,
@@ -1371,6 +1383,14 @@ export function Desktop({
             onRecord={(event) => void act((p) => recordAiUse(p, event))}
           />
         )
+      case 'jobs':
+        return (
+          <JobsApp
+            profile={profile}
+            act={act}
+            onOpenPortfolio={() => setView({ app: 'portfolio', tab: 'profile' })}
+          />
+        )
       case 'career':
         return (
           <CareerApp
@@ -1487,7 +1507,8 @@ export function Desktop({
           !app.lockedUntil &&
           app.key !== 'career' &&
           app.key !== 'readiness' &&
-          app.key !== 'portfolio',
+          app.key !== 'portfolio' &&
+          app.key !== 'jobs',
       )
       .map((app) => ({
         id: app.key,
@@ -1498,7 +1519,7 @@ export function Desktop({
         onOpen: () => launch(app.view),
       })),
     ...launchables
-      .filter((app) => ['career', 'readiness', 'portfolio'].includes(app.key))
+      .filter((app) => ['career', 'readiness', 'portfolio', 'jobs'].includes(app.key))
       .map((app) => ({
         id: app.key,
         label: app.label,

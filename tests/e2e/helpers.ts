@@ -81,6 +81,7 @@ export async function openApp(
     | 'Career'
     | 'Readiness'
     | 'Portfolio'
+    | 'Real Jobs'
     | 'Cases'
     | 'Help Desk'
     | 'WorkSim AI',

@@ -50,6 +50,10 @@ import { setPlayerKept, setPlayerWear } from '../world/character/playerWear'
  * The accessories shop and wardrobe, loaded the first time they are opened (they
  * bring the 3D character and its previews: not needed to start the game).
  */
+// Real Jobs: loaded when first opened (it is not needed to start the game).
+const PhoneJobs = lazy(() =>
+  import('../apps/jobs/PhoneJobs').then((m) => ({ default: m.PhoneJobs })),
+)
 const AccessoryStore = lazy(() =>
   import('../accessories/AccessoryStore').then((m) => ({ default: m.AccessoryStore })),
 )
@@ -408,6 +412,12 @@ function AppBody({
       return <CameraApp />
     case 'style':
       return <StyleApp profile={profile} />
+    case 'realjobs':
+      return (
+        <Suspense fallback={<p className="text-xs text-slate-500">Opening…</p>}>
+          <PhoneJobs profile={profile} act={a.act} />
+        </Suspense>
+      )
     case 'settings':
       return <SettingsApp profile={profile} act={a.act} />
   }

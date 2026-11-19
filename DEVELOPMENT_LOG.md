@@ -192,6 +192,46 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-19 · Real Jobs: real vacancies, suggestions for the career, tracking, CV and letters
+
+A new app on the work computer and the phone (see docs/JOBS.md): real vacancies
+from public job sites, for the work the player is learning, where they live.
+
+- **Sources.** Free, without keys, asked from the browser: Jobicy, Remotive,
+  Remote OK (remote jobs, worldwide or by region) and Arbeitnow (Germany, on site
+  and remote). Adzuna (on-site jobs in 19 countries, by place and distance) is
+  ready but off: it needs a key, which must not be in the game, so it goes
+  through a small proxy (`server/jobs-proxy`, a Cloudflare Worker, free tier),
+  written and documented but **not deployed**. Each source's terms are followed
+  (credit and a link on every advert, how often to ask). Nothing is made up,
+  pay is shown only when the advert states it, and nothing is applied for: each
+  advert opens on its source.
+- **Suggestions** for the player's career: their kind of work by title (a word
+  in common is not enough), at a level that suits them, open to them where they
+  live, with the reasons shown. **Search** by words, country, town, field, where
+  you work, type, level, date and stated pay.
+- **Tracking.** Saved adverts, a shortlist, status, the day applied, notes and
+  reminders (real dates), in the save with defaults for older saves. Adverts
+  Jobicy says have closed are marked.
+- **Getting ready.** The advert's skills set against what the player practised
+  (always as practice in a simulation, never as experience or a qualification),
+  the real requirements it states, a CV from the player's own details, a cover
+  letter draft and interview questions. The Portfolio's profile is linked, not
+  duplicated.
+- **Found while testing**: a source that has to be asked slowly (Remotive, every
+  31 seconds) held up all the results, so results now appear as each source
+  answers and a source that just failed is not waited for; the first guess at
+  the country could overwrite the player's own choice; and dropdowns read their
+  value after React had reset them (choosing a country did nothing). All fixed
+  and covered by tests.
+
+Tested: `npm run check` (3,476 tests, 47 new); `tests/e2e/real-jobs.spec.ts` (4
+browser tests with the sources answered by the test); and live against the real
+sites for The Gambia, Germany and the UK, every link checked to open on its own
+source.
+
+---
+
 ## 2026-11-19 · Walking answers the keys at once; the profile opens the career page; far less redrawing
 
 Reported: walking sometimes stopped answering WASD until the mouse moved; the
