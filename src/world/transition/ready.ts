@@ -33,10 +33,6 @@ export function useGameLoaded(): boolean {
   return useSyncExternalStore(subscribe, () => loaded)
 }
 
-export function worldIsReady(): boolean {
-  return ready
-}
-
 function subscribe(l: () => void) {
   listeners.add(l)
   return () => {
@@ -59,11 +55,4 @@ export function setWorldCovered(on: boolean): void {
  */
 export function worldCovered(): boolean {
   return covered && ready
-}
-
-/** For tests. */
-export function resetWorldReady(): void {
-  ready = false
-  loaded = false
-  covered = false
 }

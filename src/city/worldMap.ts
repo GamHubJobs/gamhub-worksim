@@ -5,7 +5,7 @@
  * drawn on a map is where it is in 3D, because it is the same data.
  * Coordinates: x along the street (west to east), z across it (north is −z).
  */
-import { PLACES, type PlaceId } from '../content/city'
+import type { PlaceId } from '../content/city'
 import type { IconName } from '../ui/Icon'
 
 export const ROAD = { minX: -75, maxX: 75, halfWidth: 5 }
@@ -89,12 +89,6 @@ export const KINDS: Record<PlaceId, string> = {
   offices: 'Interviews',
 }
 
-/** A place's door on the street. */
-export function doorOf(id: PlaceId): { x: number; z: number } {
-  const p = PLACES.find((q) => q.id === id)!
-  return { x: p.door[0], z: p.door[1] }
-}
-
 /**
  * The business district at the end of the street (as drawn in 3D), walked
  * about to get to work: each workplace's building, and the car parks.
@@ -130,3 +124,6 @@ export const DISTRICT_PARKING = [
   { x0: 56.5, x1: 72, z0: 15.5, z1: 21.5 },
   { x0: 67.5, x1: 75, z0: -29, z1: -23 },
 ]
+
+/** The ground drawn (street coordinates): the map is kept within it. */
+export const MAP_AREA = { x: -90, z: -60, width: 215, height: 105 }

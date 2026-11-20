@@ -82,7 +82,7 @@ export function StoryPanel({
               Story Mode
             </p>
             <h2 className="text-2xl font-bold text-slate-900">
-              {campaign ? campaign.title : 'Coming soon for this career'}
+              {campaign ? campaign.title : 'No story for this career yet'}
             </h2>
           </div>
           <button

@@ -85,17 +85,6 @@ async function writeKept(key: string, kept: Kept): Promise<void> {
   }
 }
 
-/** Forgets every kept answer (Settings → "Clear saved searches"). */
-export async function clearKept(): Promise<void> {
-  memory.clear()
-  const d = await open()
-  try {
-    d?.transaction(STORE, 'readwrite').objectStore(STORE).clear()
-  } catch {
-    // Nothing kept, or storage blocked.
-  }
-}
-
 // ---- Asking ----------------------------------------------------------------
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))

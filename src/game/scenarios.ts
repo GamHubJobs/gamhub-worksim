@@ -14,7 +14,7 @@ import type {
   Place,
   Scenario,
 } from '../content/scenarios/types'
-import { advanceCareer, firstName, type ProfileData } from './career'
+import { advanceCareer, type ProfileData } from './career'
 import { joinMeeting, meetingStatus, saveCaseAnswer } from './cases'
 import { applyEffects, type Effects } from './scenes'
 import { log, passTime } from './workday'
@@ -257,10 +257,6 @@ export function applyScenario(
   }
   return advanceCareer(next, at).profile
 }
-
-/** Fills {name} in a line for this player. */
-export const fillName = (text: string, profile: ProfileData): string =>
-  text.replaceAll('{name}', firstName(profile.name))
 
 /** Where a member of the cast is at this beat (the last move before it, or their place). */
 export function placeAt(

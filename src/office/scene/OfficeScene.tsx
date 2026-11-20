@@ -446,7 +446,7 @@ function OfficeScene(props: OfficeSceneProps) {
       // Software 3D draws at a lower resolution: much faster, slightly softer.
       dpr={lowPower ? lowDpr() : [1, 1.5]}
       frameloop="demand"
-      shadows={full}
+      shadows={full ? 'percentage' : false}
       camera={{ position: start.position, fov: 45, near: 0.1, far: 80 }}
       // (The drawing kept, for the picture of it as the player leaves: transition/Still.tsx.)
       gl={{ antialias: true, powerPreference: 'default', preserveDrawingBuffer: true }}

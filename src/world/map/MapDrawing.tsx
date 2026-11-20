@@ -13,6 +13,7 @@ import {
   BUILDINGS,
   DISTRICT_BUILDINGS,
   DISTRICT_PARKING,
+  MAP_AREA,
   COURTHOUSE,
   CROSSINGS,
   ICONS,
@@ -45,7 +46,13 @@ export function MapDrawing({
   const upright = (x: number, z: number) => `rotate(${(turn * 180) / Math.PI} ${x} ${z})`
   return (
     <g>
-      <rect x={-90} y={-60} width={215} height={105} fill="#a3b18a" />
+      <rect
+        x={MAP_AREA.x}
+        y={MAP_AREA.z}
+        width={MAP_AREA.width}
+        height={MAP_AREA.height}
+        fill="#a3b18a"
+      />
       {/* The business district: its car parks and workplaces (walked to, to get to work). */}
       {DISTRICT_PARKING.map((p, i) => (
         <rect

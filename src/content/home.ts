@@ -354,15 +354,6 @@ export const FURNITURE: Furniture[] = [
   },
 ]
 
-/** What a new life starts with: the studio and the basics. */
-export const STARTING_HOME: HomeId = 'studio'
-export const STARTING_FURNITURE: Partial<Record<SlotId, string>> = {
-  bed: 'bed-basic',
-  kitchen: 'kitchen-basic',
-  shower: 'shower-basic',
-  table: 'table-small',
-}
-
 /** Second-hand furniture sells for this share of its price. */
 export const RESALE = 0.4
 

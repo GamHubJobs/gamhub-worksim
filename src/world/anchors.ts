@@ -90,10 +90,6 @@ export function seatsTakenBut(by: string): Set<string> {
   return out
 }
 
-export function seatOwner(id: string): string | undefined {
-  return claims.get(id)
-}
-
 export function allAnchors(): Anchor[] {
   return [...anchors.values()]
 }

@@ -406,10 +406,6 @@ export const WEEKLY_PAY = [38000, 46000, 56000, 68000, 82000, 98000]
 /** Weekly rent for the flat, in pence, taken each Monday morning. */
 export const WEEKLY_RENT = 16000
 
-/** Money and food at the start of a new life. */
-export const STARTING_MONEY = 30000
-export const STARTING_FOOD = 4
-
 export function formatMoney(pence: number): string {
   const sign = pence < 0 ? '−' : ''
   return `${sign}£${(Math.abs(pence) / 100).toFixed(2)}`

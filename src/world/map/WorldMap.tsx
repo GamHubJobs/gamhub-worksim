@@ -15,10 +15,10 @@ import { formatTime } from '../../game/clock'
 import type { ProfileData } from '../../game/career'
 import { minutesTo } from '../../game/city'
 import { setDestination } from '../../game/nav'
-import { ICONS, KINDS } from '../../city/worldMap'
+import { ICONS, KINDS, MAP_AREA } from '../../city/worldMap'
 import { MapDrawing } from './MapDrawing'
 import { closeMap, useMap } from './store'
-import { playerOnMap } from './where'
+import { playerOnMap, within } from './where'
 
 type Act = (change: (p: ProfileData) => ProfileData) => unknown
 
@@ -42,7 +42,28 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-  const height = view.width * 0.58
+  // The view has the map area's own shape (so nothing outside the view shows),
+  // and stays over the drawn neighbourhood (no empty edge past it).
+  const [aspect, setAspect] = useState(0.58)
+  useEffect(() => {
+    const el = svg.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const measure = () => {
+      if (el.clientWidth > 0 && el.clientHeight > 0)
+        setAspect(el.clientHeight / el.clientWidth)
+    }
+    measure()
+    const watch = new ResizeObserver(measure)
+    watch.observe(el)
+    return () => watch.disconnect()
+  }, [])
+  // (No wider than the map, nor taller: on a tall phone screen it shows less, closer.)
+  const width = Math.min(view.width, MAP_AREA.width, MAP_AREA.height / aspect)
+  const height = width * aspect
+  const shown = {
+    x: within(view.x, width, MAP_AREA.x, MAP_AREA.width),
+    z: within(view.z, height, MAP_AREA.z, MAP_AREA.height),
+  }
   const place = PLACES.find((p) => p.id === selected)
   const known = place ? nav.found.includes(place.id) : false
   const metres = place
@@ -56,19 +77,19 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
       role="dialog"
       aria-label="World map"
       data-testid="world-map"
-      className="motion-pop fixed inset-0 z-50 flex bg-slate-900/85 outline-none backdrop-blur-sm"
+      className="motion-pop fixed inset-0 z-50 flex flex-col bg-slate-900/85 outline-none backdrop-blur-sm md:flex-row"
     >
-      <div className="relative min-w-0 flex-1">
+      <div className="relative min-h-0 min-w-0 flex-1">
         <svg
           ref={svg}
           data-testid="world-map-canvas"
           className="h-full w-full cursor-grab touch-none select-none active:cursor-grabbing"
-          viewBox={`${view.x - view.width / 2} ${view.z - height / 2} ${view.width} ${height}`}
+          viewBox={`${shown.x - width / 2} ${shown.z - height / 2} ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           onWheel={(e) =>
             setView((v) => ({
               ...v,
-              width: Math.min(190, Math.max(24, v.width * (1 + e.deltaY * 0.0012))),
+              width: Math.min(190, Math.max(24, width * (1 + e.deltaY * 0.0012))),
             }))
           }
           onPointerDown={(e) => {
@@ -78,11 +99,12 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
             const d = drag.current
             const el = svg.current
             if (!d || !el || e.buttons === 0) return
-            const k = view.width / el.clientWidth
+            const k = width / el.clientWidth
+            // (From where it is shown: dragging past an edge does not build up.)
             setView((v) => ({
               ...v,
-              x: v.x - (e.clientX - d.x) * k,
-              z: v.z - (e.clientY - d.y) * k,
+              x: within(v.x, width, MAP_AREA.x, MAP_AREA.width) - (e.clientX - d.x) * k,
+              z: within(v.z, height, MAP_AREA.z, MAP_AREA.height) - (e.clientY - d.y) * k,
             }))
             drag.current = { x: e.clientX, y: e.clientY }
           }}
@@ -97,7 +119,7 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
             onSelect={setSelected}
           />
         </svg>
-        <div className="pointer-events-none absolute top-3 left-3 rounded-lg bg-black/60 px-3 py-2 text-sm text-white">
+        <div className="pointer-events-none absolute top-3 left-3 max-w-[calc(100%-1.5rem)] rounded-lg bg-black/60 px-3 py-2 text-sm text-white">
           <p className="font-semibold">The neighbourhood</p>
           <p className="text-xs text-white/80">
             {indoors
@@ -118,7 +140,7 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
               onClick={() =>
                 setView((v) => ({
                   ...v,
-                  width: Math.min(190, Math.max(24, v.width * (k as number))),
+                  width: Math.min(190, Math.max(24, width * (k as number))),
                 }))
               }
               className="h-9 w-9 rounded-full bg-white text-lg font-semibold text-slate-900 shadow hover:bg-slate-100"
@@ -135,7 +157,7 @@ export function WorldMap({ profile, act }: { profile: ProfileData; act: Act }) {
           </button>
         </div>
       </div>
-      <aside className="flex w-80 shrink-0 flex-col gap-3 overflow-y-auto bg-white p-4 text-sm text-slate-700">
+      <aside className="flex max-h-[45%] w-full shrink-0 flex-col gap-3 overflow-y-auto bg-white p-4 text-sm text-slate-700 md:max-h-none md:w-80">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900">Map</h2>
           <button

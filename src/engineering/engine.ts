@@ -152,11 +152,6 @@ export function projectAvailability(
   return { state: 'available' }
 }
 
-/** Is the career one with engineering projects? */
-export function hasProjects(profile: ProfileData): boolean {
-  return profile.careerId === 'engineering-services'
-}
-
 // ---------------------------------------------------------------------------
 // Changing the state
 // ---------------------------------------------------------------------------

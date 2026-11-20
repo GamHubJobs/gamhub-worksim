@@ -4,7 +4,7 @@
  * bridge's own environment, never in the browser.
  */
 import { z } from 'zod'
-import type { AiMode, EngineId } from './types'
+import type { EngineId } from './types'
 
 const SETTINGS_KEY = 'gamhub-worksim:ai-settings'
 const USAGE_KEY = 'gamhub-worksim:ai-usage'
@@ -87,10 +87,6 @@ export function writeAiSettings(
 /** The engine that will actually be asked, given consent. */
 export function effectiveEngine(settings: AiSettings): EngineId {
   return settings.consent ? settings.engine : 'builtin'
-}
-
-export function modeOf(settings: AiSettings): AiMode {
-  return settings.mode
 }
 
 // ---------------------------------------------------------------------------

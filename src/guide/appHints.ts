@@ -78,9 +78,3 @@ export function useAppHint(hint: AppHint | null): void {
     }
   }, [text, detail, keys])
 }
-
-/** For tests: forget every hint. */
-export function resetAppHints() {
-  entries = []
-  emit()
-}

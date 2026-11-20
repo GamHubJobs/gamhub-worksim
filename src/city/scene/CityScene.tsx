@@ -287,7 +287,7 @@ function CityScene(props: CitySceneProps) {
         powerPreference: 'default',
         preserveDrawingBuffer: true,
       }}
-      shadows={!lowPower}
+      shadows={lowPower ? false : 'percentage'}
       onCreated={({ gl }) => setLowPower(isSoftware(gl))}
     >
       <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 30} />

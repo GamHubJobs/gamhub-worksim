@@ -142,7 +142,7 @@ export function Onboarding({
                 <span className="block">
                   {story
                     ? 'A story told in missions you play in person, with choices that come back later. Free play is always there between missions.'
-                    : 'Coming soon for this career (Finance & Administration has the first story).'}
+                    : 'This career has no story yet: free play only.'}
                 </span>
               </span>
             </label>
@@ -193,7 +193,7 @@ export function Onboarding({
           <p id="player-name-hint" className="text-sm text-slate-500">
             This is what your colleagues will call you.
           </p>
-          <div className="mt-2 flex gap-3">
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <input
               id="player-name"
               value={name}

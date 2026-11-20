@@ -84,7 +84,7 @@ export default function ModelViewer({
         near: 0.1,
         far: 500,
       }}
-      shadows
+      shadows="percentage"
       className="rounded-md"
       data-testid="model-viewer"
     >

@@ -112,7 +112,3 @@ export function fieldJobsOf(
   }
   return jobs
 }
-
-/** The office person a target is at, if it is a person. */
-export const personOf = (target: string): string | null =>
-  target.startsWith('person:') ? target.slice('person:'.length) : null

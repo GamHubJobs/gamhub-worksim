@@ -192,6 +192,51 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-20 · Whole-project review: small screens, the map, dead code, console warnings
+
+A review of the whole game: code scans, a first run at phone (390 × 844),
+tablet (768 × 1024) and laptop (1366 × 768) sizes in both the development and
+production builds, with every console message and failed request collected.
+
+- **The game header** ran off the screen on a tablet and a phone. "Help" was
+  cut off, "Storage & backup" was out of reach, and the title and clock
+  overlapped.
+  - The employer's name now takes the space left and shortens when it must.
+  - Sound, Help and Storage are symbols below 1280 px. Screen readers still
+    read the same names.
+  - On a phone the title steps aside, and the buttons wrap onto a second row.
+- **The world map:**
+  - On a laptop, opening on the hospital showed empty space past the edge of
+    the map. The view now keeps to the drawn neighbourhood and takes the shape
+    of its area (`where.ts` `within`, unit-tested).
+  - On a phone the map was squeezed into a strip beside the key. The key now
+    sits below the map on narrow screens, and the map fills the space left.
+- **The first screen:** on a phone the name box sat squeezed beside the start
+  button. They now stack.
+- **Shadows:** every 3D scene asked three.js for "soft" shadows. That type has
+  been removed, so three.js warned and used standard shadows instead. The scenes
+  now ask for standard shadows directly. The picture is the same, without the
+  warning.
+- **Outdated text:** the story-mode fallback said only Finance had a story.
+  Every career has one now.
+- **Dead code removed** (nothing used it): wrappers such as `modeOf`,
+  `doorOf`, `wardrobeOf`, `ownedCount`, `personOf` and `fillName`, and
+  starting values duplicated from the save format's defaults.
+  `clearKept`'s comment promised a "Clear saved searches" button that was
+  never built; saved search results expire on their own.
+- **A map test** measured the map while it was still growing into place, and
+  read the player's position while they were still settling. It now waits for
+  both.
+- **Checked and left as they are:**
+  - **"Attempted to synchronously unmount a root":** a console error only in
+    development. React's StrictMode runs each effect twice, and drei's labels
+    each have a root of their own. The production build shows none.
+  - **THREE.Clock is deprecated:** from inside react-three-fiber itself.
+  - **The TODOs in the coding exercises:** starter code for the player to
+    complete.
+
+---
+
 ## 2026-11-20 · Each career's own workplace, walked to and entered; conversations that float
 
 Reported with screenshots: a healthcare player was sent to Northbank

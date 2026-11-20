@@ -37,10 +37,6 @@ export const MAX_OWNED = 200
 /** What a thing sells for, as a share of its price when new. */
 export const RESALE = 0.4
 
-export function wardrobeOf(life: Life): Wardrobe {
-  return life.wardrobe
-}
-
 function withWardrobe(
   profile: ProfileData,
   wardrobe: Wardrobe,
@@ -376,11 +372,6 @@ export function wornModels(life: Pick<Life, 'wardrobe'>): WornModel[] {
 /** For the shop: everything, by category, cheapest first. */
 export function catalogue(): Accessory[] {
   return [...ACCESSORIES].sort((a, b) => a.price - b.price)
-}
-
-/** How many of an item the player has. */
-export function ownedCount(life: Life, id: string): number {
-  return life.wardrobe.owned.filter((o) => o.id === id).length
 }
 
 /** Kept at home, not worn or packed, that has a place by the door (bags, hats, watches). */

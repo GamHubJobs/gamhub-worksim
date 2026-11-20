@@ -192,7 +192,7 @@ function InteriorScene(props: InteriorSceneProps) {
         far: 120,
       }}
       gl={{ antialias: !low, powerPreference: 'default', preserveDrawingBuffer: true }}
-      shadows={!low}
+      shadows={low ? false : 'percentage'}
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
     >
       <Ticker fps={STILL ? 1 / 30 : low ? 4 : 30} />

@@ -203,7 +203,7 @@ function HomeScene(props: HomeSceneProps) {
         far: 60,
       }}
       gl={{ antialias: true, powerPreference: 'default', preserveDrawingBuffer: true }}
-      shadows={!lowPower}
+      shadows={lowPower ? false : 'percentage'}
       onCreated={({ gl }: RootState) => setLowPower(isSoftware(gl))}
     >
       <Ticker fps={STILL ? 1 / 30 : lowPower ? 4 : 30} />

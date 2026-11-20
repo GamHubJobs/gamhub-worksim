@@ -37,13 +37,28 @@ test('the world map: M, the pause menu and the phone; places, a destination, a r
   test.setTimeout(400_000)
   await toTheStreet(page)
   await page.getByTestId('city-3d').focus()
+  // Standing still first (just arrived, the character may still be settling).
+  let last = await player(page)
+  await expect
+    .poll(
+      async () => {
+        const now = await player(page)
+        const still = Math.hypot(now.x - last.x, now.z - last.z) < 0.005
+        last = now
+        return still
+      },
+      { intervals: [500], timeout: 30_000 },
+    )
+    .toBe(true)
   const before = await player(page)
 
   // M opens it, full screen; keys do not move the player while it is open.
   await page.keyboard.press('m')
   await expect(map(page)).toBeVisible()
-  const box = (await map(page).boundingBox())!
-  expect(box.width).toBeGreaterThan(page.viewportSize()!.width - 2)
+  // (Once it has finished opening: it grows into place.)
+  await expect
+    .poll(async () => (await map(page).boundingBox())!.width)
+    .toBeGreaterThan(page.viewportSize()!.width - 2)
   await expect(map(page).getByTestId('map-player')).toBeVisible()
   await page.keyboard.down('w')
   await page.waitForTimeout(1000)

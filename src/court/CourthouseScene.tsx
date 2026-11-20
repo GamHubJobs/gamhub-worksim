@@ -122,7 +122,7 @@ function CourthouseScene(props: CourthouseSceneProps) {
         far: 80,
       }}
       gl={{ antialias: !low, powerPreference: 'default', preserveDrawingBuffer: true }}
-      shadows={!low}
+      shadows={low ? false : 'percentage'}
       onCreated={({ gl }: RootState) => setSoftware(isSoftware(gl))}
       data-testid="courthouse-canvas"
     >

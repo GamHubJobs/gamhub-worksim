@@ -813,14 +813,16 @@ export function Desktop({
 
   const header = (
     <>
-      <header className="flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-2">
-        <div className="flex items-baseline gap-3">
-          <span className="text-lg font-bold tracking-tight text-blue-900">
-            GamHub WorkSim
-          </span>
-          <span className="text-sm text-slate-500">{activeEmployer().name}</span>
-        </div>
-        <div className="flex items-center gap-4">
+      <header className="flex items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-2 sm:px-4 lg:gap-4">
+        {/* (On a phone the clock and who you are come first; the title steps aside.) */}
+        <span className="hidden shrink-0 text-lg font-bold tracking-tight whitespace-nowrap text-blue-900 sm:inline">
+          GamHub WorkSim
+        </span>
+        {/* Where you work, in the space left (the career page and the phone say it too). */}
+        <span className="hidden min-w-0 flex-1 truncate text-sm text-slate-500 lg:block">
+          {activeEmployer().name}
+        </span>
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 lg:flex-nowrap lg:gap-4">
           {!dayOver && (
             <WorkClock
               profile={profile}
@@ -847,7 +849,7 @@ export function Desktop({
               </span>
               <span className="block text-xs text-slate-500">{current.title}</span>
             </span>
-            <span className="w-28">
+            <span className="hidden w-28 lg:block">
               <span className="block text-right text-xs text-slate-500" data-testid="xp">
                 {profile.xp} XP
               </span>
@@ -862,7 +864,7 @@ export function Desktop({
           <button
             type="button"
             onClick={() => setStoryOpen(true)}
-            className="rounded-md border border-rose-300 px-3 py-1 text-sm text-rose-800 hover:bg-rose-50"
+            className="rounded-md border border-rose-300 px-3 py-1 text-sm whitespace-nowrap text-rose-800 hover:bg-rose-50"
             data-testid="story-button"
           >
             Story
@@ -870,23 +872,33 @@ export function Desktop({
           <button
             type="button"
             onClick={() => setSoundOpen(true)}
-            className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+            title="Sound & graphics"
+            className="rounded-md border border-slate-300 px-3 py-1 text-sm whitespace-nowrap hover:bg-slate-50"
           >
-            Sound &amp; graphics
+            <span aria-hidden className="xl:hidden">
+              ♪
+            </span>
+            <span className="sr-only xl:not-sr-only">Sound &amp; graphics</span>
           </button>
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
-            className="rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+            title="Help"
+            className="rounded-md border border-slate-300 px-3 py-1 text-sm whitespace-nowrap hover:bg-slate-50"
           >
-            Help
+            <span aria-hidden className="xl:hidden">
+              ?
+            </span>
+            <span className="sr-only xl:not-sr-only">Help</span>
           </button>
           <button
             type="button"
             onClick={onOpenStorage}
-            className="relative rounded-md border border-slate-300 px-3 py-1 text-sm hover:bg-slate-50"
+            title="Storage & backup"
+            className="relative rounded-md border border-slate-300 px-3 py-1 text-sm whitespace-nowrap hover:bg-slate-50"
           >
-            Storage &amp; backup
+            <Icon name="storage" className="inline h-4 w-4 align-[-3px] xl:hidden" />
+            <span className="sr-only xl:not-sr-only">Storage &amp; backup</span>
             {storageWarning && (
               <span
                 aria-label="needs attention"
