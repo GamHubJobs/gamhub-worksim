@@ -59,6 +59,11 @@ test('in the street: a floating conversation, apart from the drawer, minimised a
   await expect(page.getByTestId('drawer')).toBeHidden()
   await expect(encounter(page)).toBeVisible()
   await expect(layer).toHaveAttribute('data-drawer', 'closed')
+  // While talking, the "Press E to …" prompts step aside (no HUD grid here).
+  await expect(page.getByText(/Press\s*E\s*to/)).toHaveCount(0)
+  await page.screenshot({
+    path: `${process.env.WORKSIM_SHOTS ?? 'docs/screenshots'}/people/street-conversation.png`,
+  })
 
   // A reply, then another: the conversation so far is kept.
   const options = encounter(page)

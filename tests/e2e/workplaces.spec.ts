@@ -13,6 +13,15 @@ const CAREERS = [
   { radio: /^Engineering/, door: [66, 23.75], employer: 'Northbank Engineering' },
   { radio: /^Law/, door: [97, 6], employer: 'Kestrel & Vane' },
   { radio: /^IT Help Desk/, door: [78, 22], employer: 'Cobalt Ridge Consulting' },
+  {
+    radio: /^Office Administration/,
+    door: [78, 22],
+    employer: 'Cobalt Ridge Consulting',
+  },
+  { radio: /^Accounting/, door: [78, 22], employer: 'Cobalt Ridge Consulting' },
+  { radio: /^Digital Marketing/, door: [78, 22], employer: 'Cobalt Ridge Consulting' },
+  { radio: /^Data Analysis/, door: [78, 22], employer: 'Cobalt Ridge Consulting' },
+  { radio: /^Software Development/, door: [78, 22], employer: 'Cobalt Ridge Consulting' },
 ] as const
 
 const home = (page: Page) => page.getByTestId('home')
@@ -66,7 +75,7 @@ async function morningInTheStreet(page: Page, radio: RegExp) {
 }
 
 for (const career of CAREERS) {
-  test(`${career.employer}: walked to, in at its own door, a working day there, and out again`, async ({
+  test(`${career.radio.source.slice(1)} → ${career.employer}: walked to, in at its own door, a working day there, and out again`, async ({
     page,
   }) => {
     test.setTimeout(420_000)
