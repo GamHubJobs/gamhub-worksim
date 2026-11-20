@@ -73,7 +73,9 @@ export function canEnter(profile: ProfileData, id: PlaceId): string | null {
   const place = getPlace(id)
   if (!place) return 'There is no such place.'
   if (id === 'office')
-    return phase === 'morning' ? null : 'The office is closed until tomorrow morning.'
+    return phase === 'morning'
+      ? null
+      : `Your working day at ${place.name} starts tomorrow morning.`
   if (id === 'home') return null
   const arrival = life.minute + minutesTo(profile, id)
   if (arrival >= LATEST_BEDTIME - 30) return 'It is very late: time to go home.'

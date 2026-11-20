@@ -5,6 +5,7 @@
  * the next day.
  */
 import { useStableCallback } from '../ui/useStableCallback'
+import { FloatingConversation } from '../world/FloatingConversation'
 import { GameScreen } from '../world/GameScreen'
 import {
   Component,
@@ -339,80 +340,87 @@ export function HomeView({
           </header>
 
           {evening && whoOf(evening.id) && adultOf(evening.id) && (
-            <DatePanel
-              key={evening.id}
-              who={whoOf(evening.id)!}
-              adult={adultOf(evening.id)!}
-              bond={evening.bond}
-              step={evening.step}
-              place="home"
-              day={profile.work.day}
-              onSit={() => {
-                setEvening({ ...evening, step: 'talk' })
-                doThing('date-sofa')
-              }}
-              onFinish={(score, bond) => {
-                const done = finishDate(
-                  life,
-                  evening.id,
-                  bond,
-                  score,
-                  profile.work.day,
-                  'home',
-                )
-                void onCareer((p) => {
-                  const l = finishDate(
-                    p.work.life,
+            <FloatingConversation label={whoOf(evening.id)!.name}>
+              <DatePanel
+                key={evening.id}
+                who={whoOf(evening.id)!}
+                adult={adultOf(evening.id)!}
+                bond={evening.bond}
+                step={evening.step}
+                place="home"
+                day={profile.work.day}
+                onSit={() => {
+                  setEvening({ ...evening, step: 'talk' })
+                  doThing('date-sofa')
+                }}
+                onFinish={(score, bond) => {
+                  const done = finishDate(
+                    life,
                     evening.id,
                     bond,
                     score,
-                    p.work.day,
+                    profile.work.day,
                     'home',
-                  ).life
-                  return withLife(p, {
-                    ...l,
-                    minute: l.minute + 90,
-                    needs: { ...l.needs, social: Math.min(100, l.needs.social + 20) },
-                  })
-                })
-                setEvening({ ...evening, bond: done.bond })
-                return done.summary
-              }}
-              onStay={() => {
-                const a = ask(adultOf(evening.id)!, evening.bond, 'stay-over', {
-                  day: profile.work.day,
-                  public: false,
-                  colleague: false,
-                })
-                const yes = a.answer === 'yes'
-                if (yes)
-                  void onCareer((p) =>
-                    withLife(p, stayTheNight(p.work.life, evening.id, p.work.day)),
                   )
-                return { yes, line: a.line }
-              }}
-              onGoodnight={(kind) => {
-                startMoment({ kind, with: evening.id, place: 'home', seconds: 4.5 }, true)
-                doThing('date-goodnight-home')
-              }}
-              onClose={() => {
-                endMoment()
-                setEvening(null)
-              }}
-            />
+                  void onCareer((p) => {
+                    const l = finishDate(
+                      p.work.life,
+                      evening.id,
+                      bond,
+                      score,
+                      p.work.day,
+                      'home',
+                    ).life
+                    return withLife(p, {
+                      ...l,
+                      minute: l.minute + 90,
+                      needs: { ...l.needs, social: Math.min(100, l.needs.social + 20) },
+                    })
+                  })
+                  setEvening({ ...evening, bond: done.bond })
+                  return done.summary
+                }}
+                onStay={() => {
+                  const a = ask(adultOf(evening.id)!, evening.bond, 'stay-over', {
+                    day: profile.work.day,
+                    public: false,
+                    colleague: false,
+                  })
+                  const yes = a.answer === 'yes'
+                  if (yes)
+                    void onCareer((p) =>
+                      withLife(p, stayTheNight(p.work.life, evening.id, p.work.day)),
+                    )
+                  return { yes, line: a.line }
+                }}
+                onGoodnight={(kind) => {
+                  startMoment(
+                    { kind, with: evening.id, place: 'home', seconds: 4.5 },
+                    true,
+                  )
+                  doThing('date-goodnight-home')
+                }}
+                onClose={() => {
+                  endMoment()
+                  setEvening(null)
+                }}
+              />
+            </FloatingConversation>
           )}
           {talking && personAt(talking) && (
-            <EncounterPanel
-              key={talking}
-              className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
-              who={personAt(talking)!}
-              situation={{ availability: 'free', minute: life.minute }}
-              relation={relationOf(profile, talking)}
-              onSay={(outcome) =>
-                void onCareer((p) => holdEncounter(p, [talking], outcome, 'out'))
-              }
-              onClose={() => setTalking(null)}
-            />
+            <FloatingConversation label={personAt(talking)!.name}>
+              <EncounterPanel
+                key={talking}
+                className="max-h-[calc(100vh-12rem)] max-w-full"
+                who={personAt(talking)!}
+                situation={{ availability: 'free', minute: life.minute }}
+                relation={relationOf(profile, talking)}
+                onSay={(outcome) =>
+                  void onCareer((p) => holdEncounter(p, [talking], outcome, 'out'))
+                }
+                onClose={() => setTalking(null)}
+              />
+            </FloatingConversation>
           )}
           {fade && (
             <div
@@ -424,18 +432,20 @@ export function HomeView({
             </div>
           )}
           {courier && (
-            <EncounterPanel
-              className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
-              who={TOWN_PEOPLE.courier}
-              situation={{ availability: 'free', minute: life.minute }}
-              relation={relationOf(profile, TOWN_PEOPLE.courier.id)}
-              onSay={(outcome) =>
-                void onCareer((p) =>
-                  holdEncounter(p, [TOWN_PEOPLE.courier.id], outcome, 'out'),
-                )
-              }
-              onClose={() => setCourier(false)}
-            />
+            <FloatingConversation label={TOWN_PEOPLE.courier.name}>
+              <EncounterPanel
+                className="max-h-[calc(100vh-12rem)] max-w-full"
+                who={TOWN_PEOPLE.courier}
+                situation={{ availability: 'free', minute: life.minute }}
+                relation={relationOf(profile, TOWN_PEOPLE.courier.id)}
+                onSay={(outcome) =>
+                  void onCareer((p) =>
+                    holdEncounter(p, [TOWN_PEOPLE.courier.id], outcome, 'out'),
+                  )
+                }
+                onClose={() => setCourier(false)}
+              />
+            </FloatingConversation>
           )}
 
           {shop === 'career' ? (

@@ -34,12 +34,14 @@ import {
   type Group,
   type WebGLRenderer,
 } from 'three'
-import { PLACES, type PlaceId } from '../../content/city'
+import { PLACES, doorOut, getPlace, type PlaceId } from '../../content/city'
+import { CAREERS } from '../../content/careers'
+import { activeCareer, atCobaltRidge } from '../../content/departments'
 import { SceneLook } from '../../world/look/SceneLook'
 import { Fronts, StreetSurfaces } from './streetDressing'
 import { FRIEND_LOOKS } from '../../content/adultLooks'
 import { friendWho, NEIGHBOUR } from '../../game/social'
-import { BOUNDS, standAt, areaAt, surfaceAt, type Area } from '../streets'
+import { BOUNDS, DISTRICT, standAt, areaAt, surfaceAt, type Area } from '../streets'
 import { Bike, Bus, Car } from './vehicles'
 import type { Vector } from '../../content/office'
 import { Box, Plant } from '../../office/scene/parts'
@@ -68,8 +70,10 @@ const STILL = prefersReducedMotion()
 const playerAt = { x: 0, z: 0 }
 
 /** The way the player faces at a door: out towards the street. */
+/** Facing out of a place's door (towards the street, or down the path from a workplace). */
 function facingStreet(id: PlaceId): number {
-  return standAt(id)[1] > 0 ? 0 : Math.PI
+  const [ox, oz] = doorOut(getPlace(id)!)
+  return Math.atan2(-ox, -oz)
 }
 
 const PLAYER: PersonLook = {
@@ -370,7 +374,11 @@ function CityScene(props: CitySceneProps) {
           name={place.name}
           colour={place.colour}
           labelled
-          position={[place.door[0], 0.02, place.door[1] - Math.sign(place.door[1]) * 0.6]}
+          position={[
+            place.door[0] + doorOut(place)[0] * 0.6,
+            0.02,
+            place.door[1] + doorOut(place)[1] * 0.6,
+          ]}
           onClick={() => props.onDoor(place.id)}
         />
       ))}
@@ -378,16 +386,66 @@ function CityScene(props: CitySceneProps) {
   )
 }
 
-/** Solid edges of the street: the buildings on each side and its two ends (tall, for the camera). */
+/**
+ * Solid edges of the walkable world (tall, for the camera): the buildings on
+ * each side of the street as far as the business district, then the
+ * district's own edges, all round; the street's far end. Inside the district
+ * the buildings, cars and trees are solid as they are drawn.
+ */
+const D = DISTRICT
 const STREET_BOXES: Solid[] = [
-  { x: 0, z: BOUNDS.maxZ + 3, hx: 80, hz: 3, top: 14 },
-  { x: 0, z: BOUNDS.minZ - 3, hx: 80, hz: 3, top: 14 },
+  // Along the street, both sides, up to the district.
+  {
+    x: (BOUNDS.minX - 6 + D.minX) / 2,
+    z: BOUNDS.maxZ + 3,
+    hx: (D.minX - BOUNDS.minX + 6) / 2,
+    hz: 3,
+    top: 14,
+  },
+  {
+    x: (BOUNDS.minX - 6 + D.minX) / 2,
+    z: BOUNDS.minZ - 3,
+    hx: (D.minX - BOUNDS.minX + 6) / 2,
+    hz: 3,
+    top: 14,
+  },
   { x: BOUNDS.minX - 3, z: 0, hx: 3, hz: 12, top: 14 },
-  { x: BOUNDS.maxX + 3, z: 0, hx: 3, hz: 12, top: 14 },
+  // The district: its west edges (behind the street's last buildings), north,
+  // south and east.
+  {
+    x: D.minX - 3,
+    z: (BOUNDS.maxZ + D.maxZ) / 2 + 1.5,
+    hx: 3,
+    hz: (D.maxZ - BOUNDS.maxZ) / 2 + 1.5,
+    top: 14,
+  },
+  {
+    x: D.minX - 3,
+    z: (BOUNDS.minZ + D.minZ) / 2 - 1.5,
+    hx: 3,
+    hz: (BOUNDS.minZ - D.minZ) / 2 + 1.5,
+    top: 14,
+  },
+  {
+    x: (D.minX + D.maxX) / 2,
+    z: D.maxZ + 3,
+    hx: (D.maxX - D.minX) / 2 + 6,
+    hz: 3,
+    top: 14,
+  },
+  {
+    x: (D.minX + D.maxX) / 2,
+    z: D.minZ - 3,
+    hx: (D.maxX - D.minX) / 2 + 6,
+    hz: 3,
+    top: 14,
+  },
+  { x: D.maxX + 3, z: 0, hx: 3, hz: D.maxZ + 6, top: 14 },
 ]
 
 /** Going in at each door: walk up to it and push it open (the court's is shut). */
 function doorActivities(): Activity[] {
+  // (Workplaces: per career, so worked out when the street is drawn, not once.)
   const [cx, cz] = COURTHOUSE.door
   const court: Activity = {
     id: 'door-court',
@@ -402,6 +460,18 @@ function doorActivities(): Activity[] {
     ...PLACES.map((place): Activity => {
       const [x, z] = place.door
       const side = Math.sign(z)
+      const [ox, oz] = doorOut(place)
+      const facing = Math.atan2(ox, oz)
+      // A street door: up to it at the pavement's edge, then through it into the
+      // building. A workplace door (with its own way out): up to the real door,
+      // two metres in, then through it.
+      const street = !place.out
+      const anchor = street
+        ? { x, z: side * (BOUNDS.maxZ - 0.35), heading: side > 0 ? Math.PI : 0 }
+        : { x: x - ox * 1.4, z: z - oz * 1.4, heading: facing }
+      const inside = street
+        ? { x, z: side * INSIDE_DOOR, heading: side > 0 ? Math.PI : 0 }
+        : { x: x - ox * 2.9, z: z - oz * 2.9, heading: facing }
       return {
         id: `door-${place.id}`,
         action: `enter:${place.id}`,
@@ -411,10 +481,10 @@ function doorActivities(): Activity[] {
             : place.id === 'office'
               ? 'go to work'
               : `go into ${place.name}`,
-        // From the door out to about 4 m into the street.
-        spot: { x, z: z - side * 1.8, reach: 2.4 },
-        // Up to the door, at the pavement's edge (the door opens as they get there).
-        anchor: { x, z: side * (BOUNDS.maxZ - 0.35), heading: side > 0 ? Math.PI : 0 },
+        // From the door out to about 4 m (into the street, or down the path).
+        spot: { x: x + ox * 1.8, z: z + oz * 1.8, reach: 2.4 },
+        // Up to the door (it opens as they get there).
+        anchor,
         stages: [
           { clip: 'push-door', seconds: 0.8, label: `Going in: ${place.name}` },
           // Through the open door, into the building (no jump: see InteriorScene's arrive).
@@ -424,7 +494,7 @@ function doorActivities(): Activity[] {
                   clip: 'stand' as const,
                   seconds: 0.1,
                   label: `Going in: ${place.name}`,
-                  at: { x, z: side * INSIDE_DOOR, heading: side > 0 ? Math.PI : 0 },
+                  at: inside,
                   through: true,
                 },
               ]
@@ -437,18 +507,31 @@ function doorActivities(): Activity[] {
 }
 
 /** The places whose street door is walked through (they have a door: DOOR_STYLE). */
-const WALK_IN = new Set<PlaceId>(['home', 'cafe', 'shop', 'gym', 'garage', 'offices'])
+const WALK_IN = new Set<PlaceId>([
+  'home',
+  'cafe',
+  'shop',
+  'gym',
+  'garage',
+  'offices',
+  // The workplace: up the path and in at its own entrance.
+  'office',
+])
 /** How far from the road's middle the player is once through the door (the face is at 10). */
 const INSIDE_DOOR = 10.7
 
 /** Coming out of a place with a street door: in its doorway, facing the street. */
 function outOfDoor(at: PlaceId): { x: number; z: number; heading: number } | undefined {
   if (!WALK_IN.has(at)) return undefined
-  const [x, z] = PLACES.find((p) => p.id === at)!.door
+  const place = getPlace(at)!
+  const [x, z] = place.door
+  if (place.out) {
+    // In the workplace's doorway, facing out.
+    const [ox, oz] = place.out
+    return { x: x - ox * 2.9, z: z - oz * 2.9, heading: facingStreet(at) }
+  }
   return { x, z: Math.sign(z) * INSIDE_DOOR, heading: facingStreet(at) }
 }
-
-const DOORS = doorActivities()
 
 /** Where the neighbour stands: on the pavement just along from the building's door, turned to it. */
 const NEIGHBOUR_AT = { x: -38.6, z: 4.9 }
@@ -588,6 +671,9 @@ function StreetPlayer(props: CitySceneProps & { low: boolean; taxiAt: number }) 
   const hands = useRef<Hands>({ left: null, right: null })
   const area = useRef<Area | null>(null)
   const start = standAt(props.at)
+  // Every door, the workplace's for this career among them (a career is its own
+  // save: the street is drawn afresh for another).
+  const doors = useMemo(() => doorActivities(), [])
   useFrame(() => {
     playerAt.x = now.current.x
     playerAt.z = now.current.z
@@ -620,7 +706,7 @@ function StreetPlayer(props: CitySceneProps & { low: boolean; taxiAt: number }) 
       start={{ x: start[0], z: start[1], heading: facingStreet(props.at) }}
       arrive={outOfDoor(props.at)}
       boxes={STREET_BOXES}
-      activities={props.taxi === 'waiting' ? [...DOORS, taxiDoor(props.taxiAt)] : DOORS}
+      activities={props.taxi === 'waiting' ? [...doors, taxiDoor(props.taxiAt)] : doors}
       blocked={(a) =>
         // The court's door can be tried (it is shut: see onDone).
         a.action === 'court-door' || a.action === 'taxi-in'
@@ -1116,6 +1202,13 @@ const COMER_LOOKS = COMERS.map((c) => ({ ...c.look, wear: townWear(c.id, c.look)
  * The end of the street, the way to work: an office tower, Riverside
  * Community Hospital and Northbank Engineering's works (architecture.tsx).
  */
+/** Cobalt Ridge's departments, floor by floor, on the board by its doors. */
+const COBALT_FLOORS = CAREERS.filter((c) => atCobaltRidge(c.id)).map((c, i) => ({
+  careerId: c.id,
+  floor: 'Floor ' + (i + 2),
+  label: c.name,
+}))
+
 function BusinessDistrict({ dark }: { dark: boolean }) {
   return (
     <group>
@@ -1131,8 +1224,32 @@ function BusinessDistrict({ dark }: { dark: boolean }) {
           inside={c.inside}
         />
       ))}
-      <OfficeTower x={86} z={22} w={14} d={14} h={46} tint="#8fb4cc" dark={dark} />
-      <OfficeTower x={104} z={6} w={12} d={12} h={58} tint="#7fa6bf" dark={dark} />
+      {/* Cobalt Ridge Consulting's tower (its departments, floor by floor) and
+          Kestrel & Vane's, the law firm, beyond it: workplaces (content/city WORKPLACES). */}
+      <OfficeTower
+        x={86}
+        z={22}
+        w={14}
+        d={14}
+        h={46}
+        tint="#8fb4cc"
+        dark={dark}
+        name={{ text: 'COBALT RIDGE CONSULTING', colour: 'bg-blue-900' }}
+        directory={COBALT_FLOORS.map((f) => ({
+          ...f,
+          mine: f.careerId === activeCareer(),
+        }))}
+      />
+      <OfficeTower
+        x={104}
+        z={6}
+        w={12}
+        d={12}
+        h={58}
+        tint="#7fa6bf"
+        dark={dark}
+        name={{ text: 'KESTREL & VANE LLP · Solicitors', colour: 'bg-stone-800' }}
+      />
       <HospitalBlock x={86} z={-15} dark={dark} />
       <EngineeringWorks x={69} z={41} dark={dark} />
       {/* Its office block in front, the car park, the path and trees (workplaceGrounds.tsx) */}
@@ -1140,9 +1257,10 @@ function BusinessDistrict({ dark }: { dark: boolean }) {
       <CarPark
         x={57.8}
         z={18.5}
-        bays={7}
+        // (Six bays: a seventh stood in front of Cobalt Ridge's entrance.)
+        bays={6}
         facing={1}
-        taken={[0, 1, 3, 4, 6]}
+        taken={[0, 1, 3, 4]}
         dark={dark}
       />
       <Box size={[2.2, 0.03, 12]} position={[66, 0.03, 18.5]} color="#d6d3d1" />

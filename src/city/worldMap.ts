@@ -94,3 +94,39 @@ export function doorOf(id: PlaceId): { x: number; z: number } {
   const p = PLACES.find((q) => q.id === id)!
   return { x: p.door[0], z: p.door[1] }
 }
+
+/**
+ * The business district at the end of the street (as drawn in 3D), walked
+ * about to get to work: each workplace's building, and the car parks.
+ */
+export const DISTRICT_BUILDINGS: Array<{
+  name: string
+  x0: number
+  x1: number
+  z0: number
+  z1: number
+  color: string
+}> = [
+  {
+    name: 'Northbank Engineering',
+    x0: 60.5,
+    x1: 77.5,
+    z0: 25.8,
+    z1: 29,
+    color: '#cbd5e1',
+  },
+  {
+    name: 'Riverside Community Hospital',
+    x0: 79,
+    x1: 93,
+    z0: -26,
+    z1: -4,
+    color: '#f1f5f9',
+  },
+  { name: 'Cobalt Ridge Consulting', x0: 79, x1: 93, z0: 15, z1: 29, color: '#93c5fd' },
+  { name: 'Kestrel & Vane LLP', x0: 98, x1: 110, z0: 0, z1: 12, color: '#a8a29e' },
+]
+export const DISTRICT_PARKING = [
+  { x0: 56.5, x1: 72, z0: 15.5, z1: 21.5 },
+  { x0: 67.5, x1: 75, z0: -29, z1: -23 },
+]

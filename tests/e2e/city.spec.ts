@@ -61,7 +61,7 @@ test('an evening out: dinner at the café, the shop, and home again', async ({ p
   // The office is closed in the evening; the café is a short walk.
   await expect(city(page).getByTestId('place-office')).toBeDisabled()
   await expect(city(page).getByTestId('place-office')).toContainText(
-    'closed until tomorrow',
+    'starts tomorrow morning',
   )
   await expect(city(page).getByTestId('place-cafe')).toContainText('2 min walk')
 

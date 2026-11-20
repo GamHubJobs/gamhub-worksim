@@ -4,7 +4,7 @@
  * office. Where things are (in metres-ish scene units), when they are open, and
  * what the player can do inside. Times are minutes; money is in pence.
  */
-import { activeEmployer } from './departments'
+import { activeCareer, activeEmployer } from './departments'
 import type { LifeAction } from './life'
 
 export type PlaceId =
@@ -16,8 +16,16 @@ export interface Place {
   /** What kind of place it is, in a few words. */
   kind: string
   description: string
-  /** The door, on the edge of the street (x, z). */
+  /**
+   * Where the player stands to go in (x, z): on the street's doors, at the edge
+   * of the pavement; about two metres in front of the real door.
+   */
   door: [number, number]
+  /**
+   * The way out of the door, along the ground (a unit vector), for a door that
+   * does not face the street (the workplaces in the business district).
+   */
+  out?: [number, number]
   /** Open from and until (minutes since midnight; past 24:00 is after midnight), or always. */
   open: [number, number] | null
   /** The colour it is known by (its awning, sign or front). */
@@ -25,6 +33,42 @@ export interface Place {
 }
 
 const HOUR = 60
+
+/**
+ * The workplaces in the business district, at the end of the street: each
+ * employer has its own building, its own entrance and sign (city/scene).
+ * `door` is where the player stands to go in, two metres out from the real
+ * door; `out` the way out of it.
+ */
+export type WorkplaceId = 'hospital' | 'northbank' | 'cobalt' | 'kestrel'
+
+export const WORKPLACES: Record<
+  WorkplaceId,
+  { door: [number, number]; out: [number, number]; building: string }
+> = {
+  // Riverside Community Hospital's main entrance, on its west face.
+  hospital: { door: [77, -19], out: [-1, 0], building: 'Riverside Community Hospital' },
+  // Northbank Engineering's reception, across its car park.
+  northbank: { door: [66, 23.75], out: [0, -1], building: 'Northbank Engineering' },
+  // Cobalt Ridge Consulting's tower (its departments: finance, accounting, IT,
+  // marketing, data and software), on its west face.
+  cobalt: { door: [78, 22], out: [-1, 0], building: 'Cobalt Ridge Consulting' },
+  // Kestrel & Vane LLP, the law firm, in the tower beyond.
+  kestrel: { door: [97, 6], out: [-1, 0], building: 'Kestrel & Vane LLP' },
+}
+
+/** Which building a career works in. */
+export function workplaceFor(careerId: string): WorkplaceId {
+  if (careerId === 'healthcare') return 'hospital'
+  if (careerId === 'engineering-services') return 'northbank'
+  if (careerId === 'legal') return 'kestrel'
+  return 'cobalt'
+}
+
+/** The way out of a place's door (towards the street for the street's own doors). */
+export function doorOut(place: Pick<Place, 'door' | 'out'>): [number, number] {
+  return place.out ?? [0, place.door[1] > 0 ? -1 : 1]
+}
 
 export const PLACES: Place[] = [
   {
@@ -101,7 +145,13 @@ export const PLACES: Place[] = [
     get description() {
       return `The way to work: ${activeEmployer().name}.`
     },
-    door: [62, 8],
+    // The player's own workplace building (WORKPLACES), for the career being played.
+    get door() {
+      return WORKPLACES[workplaceFor(activeCareer())].door
+    },
+    get out() {
+      return WORKPLACES[workplaceFor(activeCareer())].out
+    },
     open: null,
     colour: '#475569',
   },

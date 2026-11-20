@@ -11,6 +11,8 @@ import {
   BUILDING_DEPTH,
   BUILDING_FRONT,
   BUILDINGS,
+  DISTRICT_BUILDINGS,
+  DISTRICT_PARKING,
   COURTHOUSE,
   CROSSINGS,
   ICONS,
@@ -43,7 +45,33 @@ export function MapDrawing({
   const upright = (x: number, z: number) => `rotate(${(turn * 180) / Math.PI} ${x} ${z})`
   return (
     <g>
-      <rect x={-90} y={-60} width={180} height={100} fill="#a3b18a" />
+      <rect x={-90} y={-60} width={215} height={105} fill="#a3b18a" />
+      {/* The business district: its car parks and workplaces (walked to, to get to work). */}
+      {DISTRICT_PARKING.map((p, i) => (
+        <rect
+          key={i}
+          x={p.x0}
+          y={p.z0}
+          width={p.x1 - p.x0}
+          height={p.z1 - p.z0}
+          fill="#9ca3af"
+        />
+      ))}
+      {DISTRICT_BUILDINGS.map((b) => (
+        <rect
+          key={b.name}
+          x={b.x0}
+          y={b.z0}
+          width={b.x1 - b.x0}
+          height={b.z1 - b.z0}
+          fill={b.color}
+          stroke="#64748b"
+          strokeWidth={0.3}
+          data-testid="map-workplace"
+        >
+          <title>{b.name}</title>
+        </rect>
+      ))}
       <rect
         x={PARK.minX}
         y={PARK.minZ}

@@ -5,6 +5,7 @@
  * the page, as before. The drawer's state is kept on this device.
  */
 import { useState, type ReactNode } from 'react'
+import { ConversationLayer } from './FloatingConversation'
 
 const KEY = 'worksim.drawer.v1'
 
@@ -51,36 +52,39 @@ export function GameScreen({
       data-walk-keys
     >
       <div className="absolute inset-0">{world}</div>
-      {/* Folded away, the drawer is hidden but stays (conversations shown from it stay visible). */}
-      {!open && (
-        <button
-          type="button"
-          onClick={toggle}
-          className="absolute top-3 left-3 z-20 rounded-full bg-black/60 px-3 py-1.5 text-sm font-medium text-white shadow ring-1 ring-white/20 hover:bg-black/70"
-        >
-          ▸ {label}
-        </button>
-      )}
-      <div
-        role="region"
-        aria-label={label}
-        data-testid="drawer"
-        className={`absolute top-3 bottom-3 left-3 z-20 flex w-[24rem] max-w-[calc(100%-1.5rem)] flex-col rounded-2xl bg-[#f4f1ec]/95 shadow-2xl ring-1 ring-black/10 transition-[opacity,translate,visibility] duration-200 ease-out ${open ? 'translate-x-0 opacity-100' : 'invisible -translate-x-4 opacity-0'}`}
-      >
-        <div className="flex items-center justify-between px-4 pt-3">
-          <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-            {label}
-          </p>
+      {/* Conversations float over the world, apart from the drawer (FloatingConversation.tsx). */}
+      <ConversationLayer drawerOpen={open}>
+        {/* Folded away, the drawer is hidden but stays. */}
+        {!open && (
           <button
             type="button"
             onClick={toggle}
-            className="rounded-md px-2 py-0.5 text-xs text-slate-600 hover:bg-black/5"
+            className="absolute top-3 left-3 z-20 rounded-full bg-black/60 px-3 py-1.5 text-sm font-medium text-white shadow ring-1 ring-white/20 hover:bg-black/70"
           >
-            Hide ◂
+            ▸ {label}
           </button>
+        )}
+        <div
+          role="region"
+          aria-label={label}
+          data-testid="drawer"
+          className={`absolute top-3 bottom-3 left-3 z-20 flex w-[24rem] max-w-[calc(100%-1.5rem)] flex-col rounded-2xl bg-[#f4f1ec]/95 shadow-2xl ring-1 ring-black/10 transition-[opacity,translate,visibility] duration-200 ease-out ${open ? 'translate-x-0 opacity-100' : 'invisible -translate-x-4 opacity-0'}`}
+        >
+          <div className="flex items-center justify-between px-4 pt-3">
+            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              {label}
+            </p>
+            <button
+              type="button"
+              onClick={toggle}
+              className="rounded-md px-2 py-0.5 text-xs text-slate-600 hover:bg-black/5"
+            >
+              Hide ◂
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">{children}</div>
         </div>
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">{children}</div>
-      </div>
+      </ConversationLayer>
     </div>
   )
 }

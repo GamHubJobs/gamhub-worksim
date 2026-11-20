@@ -61,6 +61,10 @@ export function EncounterPanel({
     }
   }, [])
   const lines = said ? said.outcome.lines : start.opening
+  // The conversation so far: what they said, what the player said back, and so on.
+  const [log, setLog] = useState<Array<{ you?: string; lines: Line[] }>>(() => [
+    { lines: start.opening },
+  ])
   // Read aloud, if chosen, in their own voice (each person keeps theirs).
   useSpokenLines(
     lines.filter((l) => l.speaker === who.name).map((l) => l.text),
@@ -83,14 +87,35 @@ export function EncounterPanel({
       data-testid="encounter"
       data-person={who.id}
     >
-      <p className="font-semibold text-slate-900">{who.name}</p>
-      <p className="text-xs text-slate-500">{who.role}</p>
+      <div className="flex items-center gap-3 pr-6">
+        <Avatar name={who.name} />
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-slate-900">{who.name}</p>
+          <p className="truncate text-xs text-slate-500">
+            {who.role} · {standingWith(relation)}
+          </p>
+        </div>
+      </div>
       <div
-        className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-700"
+        className="mt-2 max-h-64 space-y-1.5 overflow-y-auto text-sm leading-relaxed text-slate-700"
         aria-live="polite"
+        data-testid="encounter-history"
       >
-        {lines.map((line, i) => (
-          <SpokenLine key={`${said ? 'r' : 'o'}${i}`} line={line} />
+        {log.map((turn, t) => (
+          <div
+            key={t}
+            className={`space-y-1.5 ${t < log.length - 1 ? 'opacity-60' : ''}`}
+          >
+            {turn.you && (
+              <p className="rounded-lg bg-blue-50 px-2 py-1 text-right text-blue-900">
+                <span className="sr-only">You: </span>
+                {turn.you}
+              </p>
+            )}
+            {turn.lines.map((line, i) => (
+              <SpokenLine key={i} line={line} />
+            ))}
+          </div>
         ))}
       </div>
       {said && said.outcome.notes.length > 0 && (
@@ -118,6 +143,7 @@ export function EncounterPanel({
               onClick={() => {
                 const outcome = respond(who, situation, relation, option.id)
                 setSaid({ outcome, ids: [...(said?.ids ?? []), option.id] })
+                setLog((l) => [...l, { you: option.label, lines: outcome.lines }])
                 onSay(outcome, option.id)
               }}
               className={`block w-full rounded-md border px-3 py-1.5 text-left text-sm hover:bg-blue-50 ${
@@ -153,4 +179,34 @@ function SpokenLine({ line }: { line: Line }) {
       {line.text}”
     </p>
   )
+}
+
+/** Their initials in a circle of their own colour (the same each time). */
+function Avatar({ name }: { name: string }) {
+  const initials = name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+  let hash = 0
+  for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) % 360
+  return (
+    <span
+      aria-hidden
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white shadow-inner"
+      style={{ background: `hsl(${hash} 45% 38%)` }}
+    >
+      {initials}
+    </span>
+  )
+}
+
+/** How the player stands with them, in a few words. */
+function standingWith(relation: Relation): string {
+  if (relation.talks === 0) return 'First time you have met'
+  if (relation.trust >= 70) return 'Gets on well with you'
+  if (relation.trust >= 50) return 'Friendly'
+  if (relation.trust >= 35) return 'A bit wary of you'
+  return 'Cool towards you'
 }

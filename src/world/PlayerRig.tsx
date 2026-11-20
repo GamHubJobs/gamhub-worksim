@@ -361,7 +361,7 @@ export function PlayerRig(props: PlayerRigProps) {
     if (!import.meta.env.DEV) return
     const w = window as unknown as { __worksimPlace?: unknown }
     // (And the camera: round to a yaw, at a distance and pitch, to look at them.)
-    w.__worksimPlace = (
+    const place = (
       x: number,
       z: number,
       heading: number,
@@ -376,8 +376,10 @@ export function PlayerRig(props: PlayerRigProps) {
       })
       invalidate()
     }
+    w.__worksimPlace = place
     return () => {
-      delete w.__worksimPlace
+      // (Only its own: the next place's may already be set.)
+      if (w.__worksimPlace === place) delete w.__worksimPlace
     }
   }, [invalidate])
   // Input wakes the drawing at once (see Controls.wake).

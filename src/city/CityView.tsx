@@ -5,6 +5,7 @@
  * works without 3D, from the list.
  */
 import { useStableCallback } from '../ui/useStableCallback'
+import { FloatingConversation } from '../world/FloatingConversation'
 import { GameScreen } from '../world/GameScreen'
 import {
   Component,
@@ -517,6 +518,14 @@ export function CityView({
   const sceneDo = useStableCallback(doThing)
   const sceneDone = useStableCallback(onActivityDone)
   const insideReady = useStableCallback(() => setReadyIn(here.id))
+  // Walked in at a door in 3D: at the workplace's own entrance in the morning the
+  // working day starts (they walked there); elsewhere, as going in from the list.
+  const sceneEnter = useStableCallback((id: PlaceId) => {
+    if (id !== 'office') return go(id)
+    const blocked = canEnter(profile, id)
+    setNotice(blocked)
+    if (!blocked) onEnter(id)
+  })
 
   // The 3D world, full screen behind the drawer.
   const world =
@@ -597,7 +606,7 @@ export function CityView({
                   onArea={onArea}
                   onDoor={sceneGo}
                   onCourt={sceneCourt}
-                  onEnter={sceneGo}
+                  onEnter={sceneEnter}
                   blocked={sceneBlocked}
                   riding={life.city.riding}
                   car={life.vehicles.car}
@@ -647,152 +656,160 @@ export function CityView({
           </header>
 
           {storyScene && (
-            <StoryScenePanel
-              key={storyScene.scene.id}
-              className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
-              scene={storyScene.scene}
-              moment={keyMoment(campaignFor(profile.careerId)!, storyScene.scene.id)}
-              name={storyScene.name}
-              mission={storyScene.mission}
-              lines={storyScene.lines}
-              onChoose={(choice) =>
-                void onAct((p) => playScene(p, storyScene.scene.id, choice))
-              }
-              onClose={() => setStoryScene(null)}
-            />
+            <FloatingConversation label={storyScene.name}>
+              <StoryScenePanel
+                key={storyScene.scene.id}
+                className="max-h-[calc(100vh-12rem)] max-w-full"
+                scene={storyScene.scene}
+                moment={keyMoment(campaignFor(profile.careerId)!, storyScene.scene.id)}
+                name={storyScene.name}
+                mission={storyScene.mission}
+                lines={storyScene.lines}
+                onChoose={(choice) =>
+                  void onAct((p) => playScene(p, storyScene.scene.id, choice))
+                }
+                onClose={() => setStoryScene(null)}
+              />
+            </FloatingConversation>
           )}
           {wedding && whoOf(wedding) && (
-            <WeddingPanel
-              who={whoOf(wedding)!}
-              onVows={() => {
-                // Married: their history, and an evening to remember.
-                void onAct((p) => {
-                  const l = marry(p.work.life, wedding, p.work.day)
-                  return withLife(p, {
-                    ...l,
-                    minute: l.minute + 60,
-                    needs: {
-                      ...l.needs,
-                      social: 100,
-                      fun: Math.min(100, l.needs.fun + 30),
-                    },
+            <FloatingConversation label={whoOf(wedding)!.name}>
+              <WeddingPanel
+                who={whoOf(wedding)!}
+                onVows={() => {
+                  // Married: their history, and an evening to remember.
+                  void onAct((p) => {
+                    const l = marry(p.work.life, wedding, p.work.day)
+                    return withLife(p, {
+                      ...l,
+                      minute: l.minute + 60,
+                      needs: {
+                        ...l.needs,
+                        social: 100,
+                        fun: Math.min(100, l.needs.fun + 30),
+                      },
+                    })
                   })
-                })
-              }}
-              onKiss={() => {
-                const b = bondOf(life, wedding)
-                const a = ask(
-                  adultOf(wedding)!,
-                  { ...b, stage: 'married', dates: Math.max(2, b.dates) },
-                  'kiss',
-                  {
-                    day: profile.work.day,
-                    public: false,
-                    colleague: false,
-                  },
-                )
-                startMoment(
-                  {
-                    kind: a.answer === 'yes' ? 'kiss' : 'hug',
-                    with: wedding,
-                    place: 'park',
-                    seconds: 5,
-                  },
-                  true,
-                )
-                doThing('date-wedding')
-                return a.answer === 'yes'
-              }}
-              onDance={() => {
-                startMoment(
-                  { kind: 'dance', with: wedding, place: 'park', seconds: 8 },
-                  true,
-                )
-                doThing('date-dance')
-              }}
-              onClose={() => {
-                endMoment()
-                setWedding(null)
-                release()
-              }}
-            />
+                }}
+                onKiss={() => {
+                  const b = bondOf(life, wedding)
+                  const a = ask(
+                    adultOf(wedding)!,
+                    { ...b, stage: 'married', dates: Math.max(2, b.dates) },
+                    'kiss',
+                    {
+                      day: profile.work.day,
+                      public: false,
+                      colleague: false,
+                    },
+                  )
+                  startMoment(
+                    {
+                      kind: a.answer === 'yes' ? 'kiss' : 'hug',
+                      with: wedding,
+                      place: 'park',
+                      seconds: 5,
+                    },
+                    true,
+                  )
+                  doThing('date-wedding')
+                  return a.answer === 'yes'
+                }}
+                onDance={() => {
+                  startMoment(
+                    { kind: 'dance', with: wedding, place: 'park', seconds: 8 },
+                    true,
+                  )
+                  doThing('date-dance')
+                }}
+                onClose={() => {
+                  endMoment()
+                  setWedding(null)
+                  release()
+                }}
+              />
+            </FloatingConversation>
           )}
           {dating && (
-            <DatePanel
-              key={dating.date.id}
-              who={whoOf(dating.date.id)!}
-              adult={dating.date.adult}
-              bond={dating.date.bond}
-              step={dating.step}
-              place={dating.date.bond.date!.place}
-              day={profile.work.day}
-              onSit={() => {
-                setDating({ ...dating, step: 'greet' })
-                doThing(sitAction)
-              }}
-              onFinish={(score, bond) => {
-                const done = finishDate(
-                  profile.work.life,
-                  dating.date.id,
-                  bond,
-                  score,
-                  profile.work.day,
-                  dating.date.bond.date!.place,
-                )
-                void onAct((p) => {
-                  const life = finishDate(
-                    p.work.life,
+            <FloatingConversation label={whoOf(dating.date.id)!.name}>
+              <DatePanel
+                key={dating.date.id}
+                who={whoOf(dating.date.id)!}
+                adult={dating.date.adult}
+                bond={dating.date.bond}
+                step={dating.step}
+                place={dating.date.bond.date!.place}
+                day={profile.work.day}
+                onSit={() => {
+                  setDating({ ...dating, step: 'greet' })
+                  doThing(sitAction)
+                }}
+                onFinish={(score, bond) => {
+                  const done = finishDate(
+                    profile.work.life,
                     dating.date.id,
                     bond,
                     score,
-                    p.work.day,
+                    profile.work.day,
                     dating.date.bond.date!.place,
-                  ).life
-                  // An evening out: time passes, and it is good company.
-                  return withLife(p, {
-                    ...life,
-                    minute: life.minute + 60,
-                    needs: {
-                      ...life.needs,
-                      social: Math.min(100, life.needs.social + 20),
-                    },
+                  )
+                  void onAct((p) => {
+                    const life = finishDate(
+                      p.work.life,
+                      dating.date.id,
+                      bond,
+                      score,
+                      p.work.day,
+                      dating.date.bond.date!.place,
+                    ).life
+                    // An evening out: time passes, and it is good company.
+                    return withLife(p, {
+                      ...life,
+                      minute: life.minute + 60,
+                      needs: {
+                        ...life.needs,
+                        social: Math.min(100, life.needs.social + 20),
+                      },
+                    })
                   })
-                })
-                return done.summary
-              }}
-              onGoodnight={(kind) => {
-                // Standing up, face to face: a kiss, a hug or a wave; then they go.
-                const place = dating.date.bond.date!.place
-                // It starts when the player gets there, and the date ends when it is done.
-                startMoment({ kind, with: dating.date.id, place, seconds: 4.5 }, true)
-                doThing(place === 'park' ? 'date-goodnight-park' : 'date-goodnight')
-              }}
-              onClose={() => {
-                endMoment()
-                setDating(null)
-              }}
-            />
+                  return done.summary
+                }}
+                onGoodnight={(kind) => {
+                  // Standing up, face to face: a kiss, a hug or a wave; then they go.
+                  const place = dating.date.bond.date!.place
+                  // It starts when the player gets there, and the date ends when it is done.
+                  startMoment({ kind, with: dating.date.id, place, seconds: 4.5 }, true)
+                  doThing(place === 'park' ? 'date-goodnight-park' : 'date-goodnight')
+                }}
+                onClose={() => {
+                  endMoment()
+                  setDating(null)
+                }}
+              />
+            </FloatingConversation>
           )}
           {encounter && (
-            <EncounterPanel
-              key={encounter.who.id}
-              className="fixed right-4 bottom-4 z-40 max-h-[calc(100%-7rem)] max-w-[calc(100%-2rem)]"
-              who={encounter.who}
-              situation={encounter.situation}
-              relation={relationOf(profile, encounter.who.id)}
-              onSay={(outcome) => {
-                void onAct((p) => holdEncounter(p, [encounter.who.id], outcome, 'out'))
-                // Ordering from the barista, say: the character goes and does it.
-                if (outcome.action) {
-                  const action = outcome.action
-                  window.setTimeout(() => {
-                    setEncounter(null)
-                    doThing(action)
-                  }, 900)
-                }
-              }}
-              onClose={() => setEncounter(null)}
-            />
+            <FloatingConversation label={encounter.who.name}>
+              <EncounterPanel
+                key={encounter.who.id}
+                className="max-h-[calc(100vh-12rem)] max-w-full"
+                who={encounter.who}
+                situation={encounter.situation}
+                relation={relationOf(profile, encounter.who.id)}
+                onSay={(outcome) => {
+                  void onAct((p) => holdEncounter(p, [encounter.who.id], outcome, 'out'))
+                  // Ordering from the barista, say: the character goes and does it.
+                  if (outcome.action) {
+                    const action = outcome.action
+                    window.setTimeout(() => {
+                      setEncounter(null)
+                      doThing(action)
+                    }, 900)
+                  }
+                }}
+                onClose={() => setEncounter(null)}
+              />
+            </FloatingConversation>
           )}
 
           <p

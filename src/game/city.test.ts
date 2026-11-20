@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PLACES, PLACE_ACTIONS, closedReason, getPlace } from '../content/city'
-import { BOUNDS, nearestDoor, standAt } from '../city/streets'
+import { BOUNDS, DISTRICT, nearestDoor, standAt } from '../city/streets'
 import { newProfileData, type ProfileData } from './career'
 import {
   canEnter,
@@ -89,7 +89,7 @@ describe('the neighbourhood', () => {
     expect(closedReason(getPlace('park')!, 3 * 60)).toBeNull()
     const out = goOutside(evening())
     expect(canEnter(at(out, 22 * 60), 'cafe')).toContain('closed')
-    expect(canEnter(out, 'office')).toContain('closed until tomorrow')
+    expect(canEnter(out, 'office')).toContain('starts tomorrow morning')
     expect(canEnter(at(out, 25 * 60 + 30), 'park')).toContain('time to go home')
     expect(canEnter(at(out, 25 * 60 + 30), 'home')).toBeNull()
     expect(canEnter(evening(), 'cafe')).toBe('Go outside first.')
@@ -126,14 +126,42 @@ describe('the neighbourhood', () => {
 })
 
 describe('walking the street', () => {
-  it('starts at a door, knows which door is near, and keeps to the street', () => {
+  it('starts at a door, knows which door is near, and keeps to where can be walked', () => {
     for (const place of PLACES) {
       const [x, z] = standAt(place.id)
       expect(nearestDoor(x, z)).toBe(place.id)
-      expect(x).toBeGreaterThanOrEqual(BOUNDS.minX)
-      expect(x).toBeLessThanOrEqual(BOUNDS.maxX)
-      expect(Math.abs(z)).toBeLessThanOrEqual(BOUNDS.maxZ)
+      // The street's doors on the street; the workplace's in the business district.
+      const area = place.out ? DISTRICT : BOUNDS
+      expect(x).toBeGreaterThanOrEqual(area.minX)
+      expect(x).toBeLessThanOrEqual(area.maxX)
+      expect(z).toBeGreaterThanOrEqual(area.minZ)
+      expect(z).toBeLessThanOrEqual(area.maxZ)
     }
     expect(nearestDoor(-20, 0)).toBeNull()
+  })
+})
+
+describe('each career has its own workplace', () => {
+  it('the way to work leads to its own building, for every career', async () => {
+    const { setActiveCareer } = await import('../content/departments')
+    const { WORKPLACES, workplaceFor, getPlace: place } = await import('../content/city')
+    const expected: Record<string, keyof typeof WORKPLACES> = {
+      healthcare: 'hospital',
+      'engineering-services': 'northbank',
+      legal: 'kestrel',
+      'office-admin-finance': 'cobalt',
+      accounting: 'cobalt',
+      'it-support': 'cobalt',
+      'digital-marketing': 'cobalt',
+      'data-analytics': 'cobalt',
+      'software-development': 'cobalt',
+    }
+    for (const [career, building] of Object.entries(expected)) {
+      expect(workplaceFor(career), career).toBe(building)
+      setActiveCareer(career)
+      expect(place('office')!.door, career).toEqual(WORKPLACES[building].door)
+      expect(place('office')!.out, career).toEqual(WORKPLACES[building].out)
+    }
+    setActiveCareer('office-admin-finance')
   })
 })

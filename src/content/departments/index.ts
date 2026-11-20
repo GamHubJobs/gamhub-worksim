@@ -41,6 +41,11 @@ export function setActiveCareer(careerId: string): void {
   activeCareerId = DEPARTMENTS[careerId] ? careerId : finance.careerId
 }
 
+/** The career of the save being played. */
+export function activeCareer(): string {
+  return activeCareerId
+}
+
 export function activeDepartment(): Department {
   return DEPARTMENTS[activeCareerId] ?? finance
 }

@@ -89,6 +89,8 @@ export function OfficeTower({
   h,
   tint,
   dark,
+  name,
+  directory,
 }: {
   x: number
   z: number
@@ -97,6 +99,10 @@ export function OfficeTower({
   h: number
   tint: string
   dark: boolean
+  /** Who works here, on the canopy over its doors. */
+  name?: { text: string; colour: string }
+  /** A board by the doors: the departments, floor by floor (the player's marked). */
+  directory?: Array<{ floor: string; label: string; mine: boolean }>
 }) {
   const floor = 3.6
   const floors = Math.floor((h - 6) / floor)
@@ -206,6 +212,38 @@ export function OfficeTower({
           color="#64748b"
         />
       ))}
+      {name && (
+        <Sign
+          position={[face - 2.85, 3.95, z]}
+          rotation={-Math.PI / 2}
+          className={`${name.colour} text-[14px] font-semibold tracking-wide text-white`}
+        >
+          {name.text}
+        </Sign>
+      )}
+      {directory && (
+        <group position={[face - 3.4, 0, z + 3.6]}>
+          {/* A board on two posts, beside the way in */}
+          <Box size={[0.12, 1.2, 0.12]} position={[0, 0.6, -0.55]} color="#475569" />
+          <Box size={[0.12, 1.2, 0.12]} position={[0, 0.6, 0.55]} color="#475569" />
+          <Box size={[0.1, 1.0, 1.4]} position={[0, 1.6, 0]} color="#1e293b" />
+          <Sign
+            position={[-0.07, 1.6, 0]}
+            rotation={-Math.PI / 2}
+            className="bg-slate-800 px-2 py-1 text-[9px] leading-snug text-slate-100"
+          >
+            {directory.map((d) => (
+              <span
+                key={d.label}
+                className={`block ${d.mine ? 'font-bold text-amber-300' : ''}`}
+              >
+                {d.floor} · {d.label}
+                {d.mine ? ' (you)' : ''}
+              </span>
+            ))}
+          </Sign>
+        </group>
+      )}
       {/* The crown: a plant screen and a lift motor room on the roof */}
       <Box size={[w - 2, 2.4, d - 2]} position={[x, h + 1.2, z]} color="#94a3b8" />
       <Box size={[3, 3.6, 3]} position={[x + w / 5, h + 1.8, z]} color="#64748b" />

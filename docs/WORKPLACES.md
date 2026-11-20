@@ -51,13 +51,51 @@ their workplaces, and how the street outside relates to them.
 ## The street's workplace buildings
 
 The end of the street is the business district. It has the office towers,
-Riverside Community Hospital and Northbank Engineering's works, and they are
-seen from the street. In the street the player goes to work at "the road to
-work" (the commute), and arrives at the workplace through its doors (the
-office's automatic entrance).
+Riverside Community Hospital and Northbank Engineering's works.
 
-The towers, hospital and works were exteriors with nothing in front of them.
-They now have the following (`city/scene/workplaceGrounds.tsx`, `architecture.tsx`):
+**Since 2026-11-20 the district can be walked in, and each career goes to its
+own building.** Before this, the walkable street stopped at x = 66 and
+|z| ≤ 8.6, with invisible walls round it, and "go to work" was the same spot on
+the pavement for every career. A healthcare player was sent to Northbank's car
+park and could never reach the hospital's door.
+
+- **The career-to-workplace map** (`content/city.ts`: `WORKPLACES`,
+  `workplaceFor`): one table gives each employer its entrance (`door`) and the
+  way out of it (`out`).
+
+  | Career                                             | Building                                  | Entrance    |
+  | -------------------------------------------------- | ----------------------------------------- | ----------- |
+  | Healthcare                                         | Riverside Community Hospital              | [77, −19]   |
+  | Engineering                                        | Northbank Engineering (its office block)  | [66, 23.75] |
+  | Legal                                              | Kestrel & Vane LLP (the east tower)       | [97, 6]     |
+  | Finance, Accounting, IT, Marketing, Data, Software | Cobalt Ridge Consulting (the north tower) | [78, 22]    |
+
+  The `office` place's door follows the active career, so "Go to work", the
+  route on the map, the door marker and the walk all lead to that building.
+  Saves are unaffected: nothing new is stored, and the door comes from the
+  career.
+
+- **The walkable world** (`city/streets.ts` `DISTRICT`, `CityScene.tsx`
+  `STREET_BOXES`): the invisible walls now enclose the whole district (x 52–112,
+  z −34 to 34), behind its buildings. The buildings themselves are solid
+  (the rig scans their meshes), so the character walks round them, along the
+  pavements and through the car parks, up to the entrances. There is no
+  teleport: the character walks the whole way.
+- **In at the door** (`doorActivities`, `outOfDoor`): a door with an `out`
+  direction is entered the same way as the street's doors. The character walks up
+  to it, and the automatic doors open. Walking in at your own workplace starts
+  the working day (`CityView` `sceneEnter`). In the evening it says when the
+  working day there starts.
+- **The buildings say whose they are** (`architecture.tsx` `OfficeTower`): Cobalt
+  Ridge's and Kestrel & Vane's towers have a sign over the entrance. Cobalt Ridge
+  has a directory board listing its six departments by floor, and the player's
+  own department is marked "(you)". The hospital and Northbank already had
+  their signs.
+- **On the map** (`worldMap.ts` `DISTRICT_BUILDINGS`, `MapDrawing.tsx`): the
+  district's buildings and car parks are drawn and named.
+
+Earlier work gave the buildings the following (`city/scene/workplaceGrounds.tsx`,
+`architecture.tsx`):
 
 - **Northbank:** an office block on the works' street side: two storeys of
   glazing with the design office seen inside (desks, twin screens, engineers at
@@ -69,10 +107,11 @@ They now have the following (`city/scene/workplaceGrounds.tsx`, `architecture.ts
 
 ## Limits
 
-- The district's buildings are seen from the street, not entered from it: each
-  career's workplace is its own scene, reached by the commute. A walkable
-  district (every interior inside the street scene) would mean rebuilding the
-  scene structure. That was not done.
+- Each workplace's interior is its own scene. You walk up to the entrance in
+  the street and go in, and the working day continues inside. The interiors
+  are not built into the street scene.
+- The end of the day takes you home through the day-end screen ("Go home"),
+  not by walking back out of the entrance.
 - No education career exists, so no school or laboratory was invented.
 - The six Cobalt Ridge careers share one office building, with a department
   corner each. That is the design: one consultancy with six departments.

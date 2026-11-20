@@ -98,8 +98,9 @@ export function HudSlot({
 }) {
   const hud = useHud()
   const el = hud?.zones[zone]
+  // (Steps aside with or without the grid: the city and home have none.)
+  if (hideWhen && hud?.mode === hideWhen) return null
   if (!el) return <>{fallback ? fallback(children) : children}</>
-  if (hideWhen && hud.mode === hideWhen) return null
   return createPortal(
     <div
       className={`hud-slot ${passive ? 'pointer-events-none' : 'pointer-events-auto'}`}

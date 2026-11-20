@@ -192,6 +192,63 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-20 · Each career's own workplace, walked to and entered; conversations that float
+
+Reported with screenshots: a healthcare player was sent to Northbank
+Engineering's car park, where it said "The office is closed until tomorrow
+morning". The hospital could not be entered, and a conversation with Marco
+appeared inside the Neighbourhood drawer.
+
+- **Root cause (workplaces):** the walkable street was a corridor (x ≤ 66,
+  |z| ≤ 8.6) with invisible walls round it. Every district building was outside
+  those walls, and "go to work" was one spot on the pavement ([62, 8]) for every
+  career.
+- **Fix:**
+  - The walls now enclose the whole district (`DISTRICT`). The buildings stay
+    solid, so the character walks round them.
+  - One table (`WORKPLACES`, `workplaceFor`) maps each career to its employer's
+    entrance: Healthcare → the hospital, Engineering → Northbank, Legal →
+    Kestrel & Vane, the six office careers → Cobalt Ridge's tower.
+  - The `office` place's door follows the career, so the list, the map route
+    and the door marker all lead there.
+  - Walking in starts the working day. No teleport.
+- **Buildings and map:**
+  - Cobalt Ridge's and Kestrel & Vane's towers have signs over their entrances.
+  - Cobalt Ridge has a floor directory with the player's department marked
+    "(you)".
+  - The district's buildings and car parks are on the map.
+  - A parked car that blocked Cobalt Ridge's entrance was removed (Northbank's
+    car park now has 6 bays).
+- **Decision:** the six office careers stay departments of Cobalt Ridge
+  Consulting, one floor each, rather than six new companies. That is the
+  established story world (its people, emails and tasks). No buildings were
+  duplicated.
+- **Root cause (conversations):** the conversation panels were rendered inside
+  the drawer. They were hidden when it folded, and the drawer's transform
+  trapped their fixed positioning.
+- **Fix:** one floating layer (`world/FloatingConversation.tsx`) outside the
+  drawer. Every existing conversation (street people, story scenes, dates, the
+  wedding, the courier, home visits, colleagues at work) is shown there. It is
+  the same `EncounterPanel`, not a second system.
+  - It sits at the lower left, beside the drawer, or in the corner when the
+    drawer is folded, clear of the HUD.
+  - It shows an avatar, the person's role and how they feel about you, and the
+    conversation so far. It can be minimised and brought back.
+  - It stays when the phone or the map is opened.
+- **"Press E" during a conversation:** in the city and at home (no HUD grid),
+  prompts ignored the conversation mode. `HudSlot` now steps aside with or
+  without the grid.
+- **Tests:** new `tests/e2e/workplaces.spec.ts` covers 4 careers:
+  - from home, the character walks to its own entrance, with no step longer
+    than 2.5 m, goes in, and works there;
+  - a separate test walks up to each entrance with the W key.
+
+  New `tests/e2e/conversations.spec.ts` covers the street and the office. Unit
+  tests check that every career's door matches its workplace and lies inside
+  the district.
+
+---
+
 ## 2026-11-19 · The opening checked frame by frame: the flight's route and landing fixed
 
 The flight was looked at, not only tested: held at points along it (a

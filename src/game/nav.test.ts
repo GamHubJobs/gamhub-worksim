@@ -10,6 +10,8 @@ describe('the map is the world', () => {
   it('every place has an icon, and its door is at the edge of a pavement, on the street', () => {
     for (const p of PLACES) {
       expect(ICONS[p.id], p.id).toBeTruthy()
+      // (The workplace's door is in the business district: tested in city.test.ts.)
+      if (p.out) continue
       const [x, z] = p.door
       expect(x).toBeGreaterThanOrEqual(BOUNDS.minX)
       expect(x).toBeLessThanOrEqual(BOUNDS.maxX)
