@@ -9,7 +9,9 @@ import { analyse, clearWidth, GUIDANCE, type StudioAnalysis } from '../../studio
 import { catalogEntry } from '../../studio/catalog'
 import { samePoint } from '../../studio/geometry'
 import { material } from '../../studio/materials'
+import { activeDepartment } from '../../content/departments'
 import { projectFromJson } from '../../studio/documents'
+import { reviewDesign, reviewText, type ReviewerRole } from '../../studio/review'
 import {
   emptyProject,
   ROOM_USES,
@@ -278,6 +280,25 @@ function gradeCheck(
   }
 }
 
+/** The colleague who gives each review, in the player's own department where there is one. */
+export function reviewerName(role: ReviewerRole, s: StudioState): string {
+  const department = activeDepartment()
+  const byRole = (title: string) =>
+    Object.values(department.team ?? {}).find((t) => t.role === title)?.name
+  switch (role) {
+    case 'lead':
+      return /architect/i.test(department.manager.role)
+        ? department.manager.name
+        : 'The architect'
+    case 'interior':
+      return byRole('Interior Designer') ?? 'The interior designer'
+    case 'pm':
+      return byRole('Project Manager') ?? 'The project manager'
+    case 'client':
+      return s.project.client ? `${s.project.client}` : 'The client'
+  }
+}
+
 export const studio: ToolDefinition<StudioState, StudioCheck> = {
   id: 'studio',
   name: 'Space Studio',
@@ -321,6 +342,14 @@ export const studio: ToolDefinition<StudioState, StudioCheck> = {
     const a = analyse(player)
     return checks.map((c) => gradeCheck(c, player, a, start))
   },
+  review: (player, { checks }) =>
+    reviewText(
+      reviewDesign(
+        player,
+        checks.map((c) => ({ title: c.title, met: c.status === 'passed' })),
+      ),
+      (role) => reviewerName(role, player),
+    ),
   projects: {
     starters: [
       {

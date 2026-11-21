@@ -137,6 +137,54 @@ export function studioActivities(): Activity[] {
   ]
 }
 
+// Architecture & Interior Design: the design studio ------------------------
+export const DESIGN = {
+  table: { x: 9.2, z: 3.0 },
+  plotter: { x: 11.45, z: 1.2 },
+  samples: { x: 11.65, z: 6.6 },
+  model: { x: 8.6, z: 7.0 },
+}
+export const DESIGN_BOXES: Solid[] = [
+  { x: DESIGN.table.x, z: DESIGN.table.z, hx: 0.75, hz: 1.25, top: 0.95 },
+  { x: DESIGN.plotter.x, z: DESIGN.plotter.z, hx: 0.35, hz: 0.75, top: 1.1 },
+  { x: DESIGN.samples.x, z: DESIGN.samples.z, hx: 0.25, hz: 1.4, top: 2.0 },
+  { x: DESIGN.model.x, z: DESIGN.model.z, hx: 0.45, hz: 0.45, top: 1.0 },
+]
+export function designActivities(): Activity[] {
+  return [
+    {
+      id: 'plan-table',
+      action: 'open:tool:studio',
+      prompt: 'lay out the plans on the plan table (Space Studio)',
+      spot: { x: DESIGN.table.x - 1.35, z: DESIGN.table.z, reach: 1.2 },
+      anchor: { x: DESIGN.table.x - 1.2, z: DESIGN.table.z, heading: FACE_WALL },
+      stages: [
+        { clip: 'reach', seconds: 1.0, label: 'Unrolling the floor plan' },
+        { clip: 'present', seconds: 1.3, label: 'Checking the dimensions' },
+      ],
+    },
+    {
+      id: 'samples-library',
+      action: 'open:tool:studio',
+      prompt: 'choose finishes in the samples library (Space Studio)',
+      spot: { x: DESIGN.samples.x - 0.95, z: DESIGN.samples.z, reach: 1.2 },
+      anchor: { x: DESIGN.samples.x - 0.85, z: DESIGN.samples.z, heading: FACE_WALL },
+      stages: [
+        { clip: 'reach', seconds: 1.0, label: 'Taking down the tile samples' },
+        { clip: 'present', seconds: 1.2, label: 'Comparing them in daylight' },
+      ],
+    },
+    {
+      id: 'model-plinth',
+      action: 'open:tool:studio',
+      prompt: 'talk through the model with the team (Space Studio)',
+      spot: { x: DESIGN.model.x - 1.0, z: DESIGN.model.z, reach: 1.2 },
+      anchor: { x: DESIGN.model.x - 0.9, z: DESIGN.model.z, heading: FACE_WALL },
+      stages: [{ clip: 'talk', seconds: 1.3, label: 'Walking the team round the model' }],
+    },
+  ]
+}
+
 // Data & Insights: the insights wall ----------------------------------------
 export const INSIGHTS = {
   console: { x: 11.55, z: 4.0 },

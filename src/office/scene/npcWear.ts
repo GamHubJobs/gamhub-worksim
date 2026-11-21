@@ -80,6 +80,10 @@ export function workWear(kind: string, id: string, look: PersonLook): Wear[] {
       if (!look.glasses) out.push(oneOf(id, 'eyes', 0.3, ['glasses-reading']))
       out.push(oneOf(id, 'bracelet', 0.25, ['bracelet-chain', 'bangle-silver']))
       break
+    case 'design':
+      watch(['watch-classic', 'watch-smart'])
+      if (!look.glasses) out.push(oneOf(id, 'eyes', 0.3, ['glasses-reading']))
+      break
     case 'insights':
       watch(['watch-smart', 'watch-classic'])
       if (!look.glasses) out.push(oneOf(id, 'eyes', 0.3, ['glasses-computer']))

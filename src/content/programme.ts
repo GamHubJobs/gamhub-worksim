@@ -85,6 +85,14 @@ export const PROGRAMME = {
       doneAfterDays: 2,
     },
     {
+      department: 'design',
+      careerId: 'architecture-interiors',
+      title: 'Office layout and interiors',
+      owner: 'Spaces & Interiors',
+      delivers: 'The floor plan and furniture plan for 25 people',
+      doneAfterDays: 3,
+    },
+    {
       department: 'engineering',
       careerId: 'software-development',
       title: 'System changes',

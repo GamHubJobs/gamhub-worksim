@@ -21,6 +21,8 @@ import {
   recordsActivities,
   STUDIO_BOXES,
   studioActivities,
+  DESIGN_BOXES,
+  designActivities,
 } from './cornersLayout'
 import { COURTROOM_BOXES, courtroomActivities } from './courtroomLayout'
 import { IT_BENCH, IT_CABINET, OFFICE_BOXES } from './officeLayout'
@@ -136,6 +138,17 @@ const BAYS: Record<Bay['kind'], Bay> = {
     tone: { box: 'bg-rose-50', title: 'text-rose-900', button: 'text-rose-800' },
     boxes: STUDIO_BOXES,
     activities: studioActivities,
+  },
+  design: {
+    kind: 'design',
+    room: 'The design studio',
+    opens: tool('studio'),
+    title: 'The design studio',
+    button: 'Go to the plan table (Space Studio)',
+    goTo: 'plan-table',
+    tone: { box: 'bg-teal-50', title: 'text-teal-900', button: 'text-teal-800' },
+    boxes: DESIGN_BOXES,
+    activities: designActivities,
   },
   insights: {
     kind: 'insights',

@@ -97,6 +97,30 @@ describe('submitting work', () => {
     expect(feedback.attemptIndex).toBe(0)
   })
 
+  it('quotes colleagues’ review of the work in the reply, before the signature', () => {
+    const profile = started(newProfileData('Alex', 0))
+    const review =
+      'Sana (Interior Designer): changes needed.\n  – Bedroom 2 has nowhere to store clothes.'
+    const { profile: after } = recordSubmission(
+      profile,
+      assignment,
+      grade(60),
+      5000,
+      undefined,
+      undefined,
+      review,
+    )
+    const body = after.inbox.find((m) => m.kind === 'feedback')!.body
+    expect(body).toContain(
+      "The team's review of your design:\n\nSana (Interior Designer): changes needed.",
+    )
+    // The notes come first, the review next, and the manager still signs off.
+    expect(body.indexOf('What to look at')).toBeLessThan(
+      body.indexOf("The team's review"),
+    )
+    expect(body.trim().split('\n').pop()).not.toContain('Bedroom')
+  })
+
   it('only rewards passing work, and only improvements when resubmitted', () => {
     let profile = started(newProfileData('Alex', 0))
     const first = recordSubmission(profile, assignment, grade(60), 1)

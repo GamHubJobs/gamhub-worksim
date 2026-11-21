@@ -75,6 +75,13 @@ export const ORG_DEPARTMENTS: OrgDepartment[] = [
     quarterBudget: 26000,
     committed: 0.8,
   },
+  {
+    id: 'design',
+    name: 'Spaces & Interiors',
+    head: { name: 'Marguerite Achebe', role: 'Architecture Lead' },
+    quarterBudget: 22000,
+    committed: 0.8,
+  },
   // Not part of Cobalt Ridge: the engineering career's team at Northbank Engineering Ltd.
   {
     id: 'works',

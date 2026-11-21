@@ -5,7 +5,7 @@
  */
 import { Box } from './parts'
 import { useWork } from './workState'
-import { DEVTEAM, INSIGHTS, POST, RECORDS, STUDIO } from './cornersLayout'
+import { DESIGN, DEVTEAM, INSIGHTS, POST, RECORDS, STUDIO } from './cornersLayout'
 import { ON_RIGHT_WALL, RoomSign, Sign } from './signs'
 
 /** A floor finish for the corner, so it reads as its own room. */
@@ -554,6 +554,125 @@ export function DevTeamArea() {
         </group>
       ))}
       <RoomSign position={[8.2, 2.45, -0.89]}>Dev team area</RoomSign>
+    </group>
+  )
+}
+
+/**
+ * Spaces & Interiors' design studio: the plan table with drawings spread out,
+ * the plotter, the samples library (tiles, wood, fabrics) and a model of the
+ * current project on its plinth.
+ */
+export function DesignStudio() {
+  const work = useWork()
+  const { table, plotter, samples, model } = DESIGN
+  return (
+    <group>
+      <CornerFloor color="#ece7df" />
+      {/* The plan table, its drawings and a scale rule */}
+      <Box
+        size={[1.5, 0.06, 2.5]}
+        position={[table.x, 0.92, table.z]}
+        color="#d6c3a5"
+        radius={0.01}
+      />
+      {[-1, 1].map((i) =>
+        [-1, 1].map((j) => (
+          <Box
+            key={`${i}${j}`}
+            size={[0.05, 0.9, 0.05]}
+            position={[table.x + i * 0.68, 0.45, table.z + j * 1.18]}
+            color="#334155"
+          />
+        )),
+      )}
+      <Box
+        size={[0.84, 0.005, 1.19]}
+        position={[table.x - 0.15, 0.955, table.z - 0.55]}
+        color="#f8fafc"
+      />
+      <Box
+        size={[0.6, 0.005, 0.84]}
+        position={[table.x + 0.25, 0.956, table.z + 0.7]}
+        color="#e0f2fe"
+      />
+      <Box
+        size={[0.03, 0.02, 0.3]}
+        position={[table.x + 0.45, 0.97, table.z - 0.2]}
+        color="#f59e0b"
+      />
+      {/* Plan lines on the drawing: one wall per piece of work handed in */}
+      {Array.from({ length: Math.min(6, work.done + 2) }, (_, i) => (
+        <Box
+          key={i}
+          size={[0.6 - i * 0.05, 0.006, 0.012]}
+          position={[table.x - 0.15, 0.96, table.z - 0.95 + i * 0.16]}
+          color="#1e293b"
+        />
+      ))}
+      {/* The plotter */}
+      <Box
+        size={[0.6, 0.85, 1.4]}
+        position={[plotter.x, 0.42, plotter.z]}
+        color="#e5e7eb"
+      />
+      <Box
+        size={[0.66, 0.2, 1.5]}
+        position={[plotter.x, 0.95, plotter.z]}
+        color="#374151"
+      />
+      <Box
+        size={[0.4, 0.01, 1.1]}
+        position={[plotter.x - 0.35, 0.8, plotter.z]}
+        rotation={0.3}
+        color="#f8fafc"
+      />
+      {/* The samples library: tiles, wood and fabrics */}
+      <Shelf
+        x={samples.x}
+        z={samples.z}
+        depth={0.45}
+        length={2.7}
+        height={2.0}
+        rows={4}
+        colors={[
+          '#c49a6c',
+          '#9a9c9d',
+          '#e7e2d8',
+          '#4f7d6b',
+          '#a0673f',
+          '#d9d0c1',
+          '#46597a',
+          '#a9533c',
+        ]}
+      />
+      {/* The model of the current project, on its plinth */}
+      <Box size={[0.9, 0.85, 0.9]} position={[model.x, 0.42, model.z]} color="#fafaf9" />
+      <Box size={[0.7, 0.02, 0.7]} position={[model.x, 0.86, model.z]} color="#a3b18a" />
+      <Box
+        size={[0.42, 0.18, 0.3]}
+        position={[model.x, 0.96, model.z - 0.05]}
+        color="#f5f5f4"
+      />
+      <Box
+        size={[0.22, 0.1, 0.3]}
+        position={[model.x + 0.11, 1.1, model.z - 0.05]}
+        color="#f5f5f4"
+      />
+      <Box
+        size={[0.44, 0.02, 0.32]}
+        position={[model.x, 1.06, model.z - 0.05]}
+        rotation={0}
+        color="#9c4f36"
+      />
+      <RoomSign position={[8.2, 2.45, -0.89]}>Design studio</RoomSign>
+      <Sign
+        position={[12.0, 2.2, samples.z]}
+        rotation={ON_RIGHT_WALL}
+        className="bg-white text-[10px] text-slate-800"
+      >
+        Samples library · please put tiles back
+      </Sign>
     </group>
   )
 }

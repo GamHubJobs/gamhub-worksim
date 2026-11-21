@@ -727,6 +727,73 @@ CAREERS.push({
   ],
 })
 
+/** Skills of the architecture and interior design career. */
+SKILLS.push(
+  {
+    id: 'space-planning',
+    name: 'Space planning',
+    description:
+      'Laying out rooms, doors and circulation so a building works for the people who use it.',
+  },
+  {
+    id: 'interior-design',
+    name: 'Interior design',
+    description:
+      'Choosing furniture, finishes, colour and light, and leaving room to move.',
+  },
+  {
+    id: 'building-design',
+    name: 'Building design',
+    description:
+      'Walls, openings, floors, stairs and roofs drawn to exact sizes, the way they can be built.',
+  },
+  {
+    id: 'client-briefs',
+    name: 'Working to a brief',
+    description:
+      'Turning what a client needs, and can afford, into a design, and explaining it.',
+  },
+)
+
+CAREERS.push({
+  id: 'architecture-interiors',
+  name: 'Architecture & Interior Design',
+  department: 'Spaces & Interiors',
+  description:
+    'Plan homes, offices, receptions and shops for clients: floor plans to exact sizes, furniture and finishes, in 2D and 3D, within the brief and the budget.',
+  toolsIntro:
+    'Your designs are drawn in Space Studio, our planning and interior design software, with reports in Word Craft and presentations in Deck Craft.',
+  skills: [
+    'space-planning',
+    'interior-design',
+    'building-design',
+    'client-briefs',
+    'technical-writing',
+    'accuracy',
+    'ai-use',
+  ],
+  apps: ['docs', 'slides', 'sheets'],
+  tools: [{ tool: 'studio' }],
+  levels: [
+    { id: 'junior-designer', title: 'Junior Designer', xpRequired: 0, minReputation: 0 },
+    { id: 'designer', title: 'Designer', xpRequired: 300, minReputation: 35 },
+    {
+      id: 'senior-designer',
+      title: 'Senior Designer',
+      xpRequired: 700,
+      minReputation: 50,
+      minReview: 'solid',
+    },
+    {
+      id: 'design-lead',
+      title: 'Design Lead',
+      xpRequired: 1050,
+      minReputation: 60,
+      minReview: 'strong',
+    },
+  ],
+})
+
 export function getCareer(id: string): Career {
   return CAREERS.find((career) => career.id === id) ?? CAREERS[0]
 }

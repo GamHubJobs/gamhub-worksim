@@ -36,7 +36,9 @@ import {
 } from '../../studio/units'
 import type { ToolWorkspaceProps } from '../ui'
 import { SIcon, type StudioIconName } from './icons'
-import { ChecksPanel, LibraryPanel, ProjectTree } from './Panels'
+import { reviewDesign } from '../../studio/review'
+import { reviewerName } from './definition'
+import { ChecksPanel, LibraryPanel, ProjectTree, ReviewsPanel } from './Panels'
 import { PlanCanvas, type CanvasApi, type Tool } from './PlanCanvas'
 import { Properties } from './Properties'
 import { DEFAULT_LAYERS, roomUseName, type Layers } from './shared'
@@ -199,7 +201,9 @@ export default function StudioWorkspace({
   >(null)
   const [mode, setMode] = useState<Mode>('plan')
   const [library, setLibrary] = useState(false)
-  const [panel, setPanel] = useState<'properties' | 'project' | 'checks'>('properties')
+  const [panel, setPanel] = useState<'properties' | 'project' | 'checks' | 'reviews'>(
+    'properties',
+  )
   const [wallStyle, setWallStyle] = useState<WallStyle>(WALL_PRESETS.interior)
   const [roomUse, setRoomUse] = useState<RoomUse>('other')
   const [layers, setLayers] = useState<Layers>(DEFAULT_LAYERS)
@@ -873,6 +877,7 @@ export default function StudioWorkspace({
                     'checks',
                     `Checks${analysis.issues.filter((i) => i.severity !== 'info').length ? ` (${analysis.issues.filter((i) => i.severity !== 'info').length})` : ''}`,
                   ],
+                  ['reviews', 'Reviews'],
                 ] as const
               ).map(([id, label]) => (
                 <button
@@ -916,6 +921,12 @@ export default function StudioWorkspace({
                   analysis={analysis}
                   state={state}
                   onSelect={(refs) => (setSelection(refs), setPanel('properties'))}
+                />
+              )}
+              {panel === 'reviews' && (
+                <ReviewsPanel
+                  reviews={reviewDesign(state)}
+                  name={(role) => reviewerName(role, state)}
                 />
               )}
             </div>

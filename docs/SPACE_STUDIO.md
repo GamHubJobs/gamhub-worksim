@@ -244,3 +244,91 @@ Every edit is a function `state → state`, so undo and redo are exact.
 | 7     | Exports and the report                                       |
 | 8     | The career: its tasks, checks, reviews and content           |
 | 9     | Browser tests, performance, documentation                    |
+
+## 4. What was built
+
+### Space Studio (`src/studio`, `src/tools/studio`)
+
+| Area             | What the player can do                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Projects         | New (blank, a furnished flat, a two-storey house), open, duplicate, rename, delete with confirmation, import a JSON backup. Task files and the practice file sit alongside. Autosave, Save now, Version history (restore any earlier state).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 2D plan          | Rooms by drag or typed size (`4200x3600`); walls corner by corner with typed lengths and 45° locking; doors, windows and pass-throughs placed where they fit (refused with the reason where not), opening towards the side clicked; stairs, columns, balconies and terraces, roofs, labels, dimensions, a measuring tape. Snapping to corners, walls and the grid (Alt to place freely). Select, box-select, Shift-click, Select all; move, rotate (handle, `[` `]`, exact angle), resize (handle or fields), copy, paste (also into another project), duplicate, delete; undo and redo. Floors: add (copying the outside walls), rename, heights, delete with confirmation, Alt+Up/Down. Units: mm, cm, m, feet and inches. Layers. |
+| 3D               | The same model: walls in pieces round their openings, a finish per face, floors, doors (open), windows, stairs, columns, balconies with railings, flat, gable and hip roofs, procedural furniture and finishes. Orbit, pan, zoom; 3D, Top, Front and Side; saved views; Day, Evening and Night light (lamps lit at night); low walls; all floors or up to this one; roof on or off; select in 3D and edit in the panel; screenshot.                                                                                                                                                                                                                                                                                                  |
+| Walkthrough      | Starts in the selected (or largest) room at eye height. W A S D or arrows, Q and E to turn, drag to look, Shift to hurry. Walls always stop you, doorways let you through, windows do not; furniture stops you unless G is pressed. Stairs carry you to the floor above and back. The room you are in is named; room buttons jump between rooms; P takes a photo; Esc returns to 3D.                                                                                                                                                                                                                                                                                                                                                 |
+| Library          | 71 items in 12 groups, searchable, each with real sizes, a price, a plan symbol and a procedural 3D build; 11 doors and windows.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Finishes         | 37 procedural materials (paint, wood, tiles, stone, concrete, textiles, glass, metal, roofs) with prices per m², for walls (each face), floors, ceilings, furniture, balconies and roofs, shown in 3D at once.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Checks and costs | Rooms that cannot be reached, a missing way in, rooms without windows, small or narrow bedrooms, narrow doors, openings that no longer fit, furniture in walls, overlapping or blocking a door, stairs that land nowhere, cost against budget.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Reviews          | The Architecture Lead, Interior Designer, Project Manager and the client review the design live (Reviews tab) and again when a task is submitted, in the manager's reply. Every comment is worked out from the file.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Exports          | PDF (each floor to a standard scale on A3 with a title block and scale bar, then the report), SVG (1:100), PNG, DXF (layered, mm), project report (HTML), JSON backup; 3D screenshot (PNG).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+
+### The career: Architecture & Interior Design
+
+- **The practice:** Spaces & Interiors at Cobalt Ridge Consulting. Its people:
+  - Marguerite Achebe, the Architecture Lead (the manager);
+  - Tobias Lindqvist, the Senior Designer;
+  - Sana Haddad (Interior Designer), Callum Reid (Project Manager), Wen Zhou (Architectural Technologist), Ola Adeyemi (Junior Designer) and others.
+- **The office:** its own corner, the design studio, has a plan table, a plotter, the samples library and a model on a plinth. They open Space Studio, and colleagues work there through the day.
+- **Levels:**
+  - Junior Designer, then Designer, then Senior Designer, then Design Lead.
+  - Four new skills: space planning, interior design, building design and working to a brief.
+- **Nine tasks in Space Studio**, each graded on the design itself:
+
+  | Level           | Task                                                                                   |
+  | --------------- | -------------------------------------------------------------------------------------- |
+  | Junior Designer | A two-bedroom flat in a fixed shell                                                    |
+  | Junior Designer | Furnishing an office for eight within a budget                                         |
+  | Junior Designer | Redesigning a reception: accessible doors, clear swings, seating, a hard-wearing floor |
+  | Designer        | Making an overcrowded office work                                                      |
+  | Designer        | Correcting a supervisor's review                                                       |
+  | Designer        | Planning a shop unit with an accessible WC                                             |
+  | Senior Designer | Adding a storey with a stair                                                           |
+  | Senior Designer | An interior proposal with a design statement, on budget                                |
+  | Design Lead     | Value-engineering an over-budget fit-out                                               |
+
+- **Fifteen cases**, in the same mix as every career:
+  - a client who wants a wall removed;
+  - the paint order;
+  - the studio's requests;
+  - the survey handover to a contractor, and its follow-up;
+  - the reception design review (a meeting);
+  - a blocked escape route on site (an incident);
+  - the Manchester office space plan and its review (the programme part);
+  - leading the Harbour Housing block;
+  - a daylight check;
+  - a fit-out estimate;
+  - three cases on using AI responsibly.
+
+  Four of them have variants.
+
+- **Readiness assessments:**
+  - level 2: is it a double bedroom?
+  - level 3: how many desks fit?
+
+  Each has two versions with practical work in Space Studio.
+
+- **Equipment:** a tape measure, a laser distance meter, a hard hat, a work tablet and a staff ID badge.
+- **Other professions:** Space Studio is also on the dock for Engineering (from Graduate Engineer) and for Office Administration (from Junior), for office layouts and facilities work.
+
+### Tests
+
+- **Unit tests:**
+  - `src/studio/studio.test.ts`: the model, units, geometry, every edit, collision and the analysis;
+  - `src/studio/review.test.ts`: the reviews;
+  - `src/tools/studio/three/building.test.ts`: the 3D build from the model;
+  - the shared tool, case, assessment, variant, workplace and achievement tests now cover the career;
+  - every task's model answer scores 100%, and an untouched file fails.
+- **Browser tests:** `tests/e2e/space-studio.spec.ts`:
+  - drawing, sizing, a door refused where it does not fit, furnishing, rotating, undo and redo;
+  - 3D, light, the walkthrough stopped by a wall and out through the doorway, and the project kept after a reload;
+  - every export downloaded and read back; duplicate, rename and delete;
+  - the corrections task fixed in Space Studio, marked 100%, and the team's review in the manager's reply.
+
+## 5. Limits
+
+- **Roofs** are built over the outline's bounding rectangle: an L-shaped plan gets a rectangular roof.
+- **Walls** are straight, and only rectangular rooms can be resized by typing their size; other rooms are reshaped by dragging their corners.
+- **Rooms and walls:** rooms are drawn as rooms, or made by closing a chain of walls. Walls drawn one at a time do not become a room until their outline is closed.
+- **Doors** are shown open in 3D. They do not swing as you walk.
+- **The PDF** places each plan as a high-resolution image at true scale; the text of the title block and report is vector.
+- **DXF** is exported, not imported.
+- **Space guidance and prices** are simplified and fictional, and every screen says so.

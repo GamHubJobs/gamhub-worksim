@@ -52,7 +52,14 @@ import { LawWing } from './lawWing.view'
 import { overShoulder } from './overShoulder'
 import type { Activity } from '../../world/interaction/activity'
 import { deskStyleFor, deskTop } from './deskStyle'
-import { DevTeamArea, InsightsWall, PostRoom, RecordsRoom, Studio } from './corners'
+import {
+  DesignStudio,
+  DevTeamArea,
+  InsightsWall,
+  PostRoom,
+  RecordsRoom,
+  Studio,
+} from './corners'
 import { PALETTE } from './themeLayout'
 import { ThemeDressing } from './themes'
 import { ScenarioStage } from './ScenarioStage'
@@ -1488,6 +1495,8 @@ function CornerFor({ itJobs }: { itJobs?: string }) {
       return <RecordsRoom />
     case 'studio':
       return <Studio />
+    case 'design':
+      return <DesignStudio />
     case 'insights':
       return <InsightsWall />
     case 'devteam':

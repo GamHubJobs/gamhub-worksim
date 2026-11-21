@@ -663,7 +663,12 @@ export const PlanDrawing = memo(function PlanDrawing({
       {layers.dimensions &&
         walls.map((w) => {
           const len = wallLength(w)
-          if (len < 300) return null
+          // The outside walls' lengths, and any selected wall's (inside ones would crowd the rooms).
+          if (
+            len < 300 ||
+            (w.type !== 'exterior' && !isSelected(selection, 'walls', w.id))
+          )
+            return null
           const n = wallNormal(w)
           const mid = pointAlong(w, len / 2)
           const off = w.thickness / 2 + text * 0.9

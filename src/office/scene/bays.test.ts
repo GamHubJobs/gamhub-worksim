@@ -15,7 +15,15 @@ import { THEME_BOXES, themeOf, type Theme } from './themeLayout'
 
 /** In front of the player's own desk: where they usually start. */
 const DESK = { x: 2.4, z: 2.4 }
-const CAREER_TOOLS = ['clinical', 'engineering', 'legal', 'books', 'social', 'datastudio']
+const CAREER_TOOLS = [
+  'clinical',
+  'engineering',
+  'legal',
+  'books',
+  'social',
+  'datastudio',
+  'studio',
+]
 
 describe.each(BAY_KINDS)('the %s workplace', (kind) => {
   const bay = bayFor(kind)

@@ -46,7 +46,7 @@ import { applyServiceOutcomes, serviceOutcomes } from '../game/incidents'
 import { disruptionsOf } from '../game/incidents'
 import { buildProjectContent } from '../game/code/grading'
 import { gradeCodeSafely } from '../game/code/runInWorker'
-import { gradeToolTask } from '../tools/grading'
+import { gradeToolTask, reviewToolTask } from '../tools/grading'
 import { buildStartingContent } from '../game/workbooks'
 import { checkEvents } from '../game/events'
 import { checkAchievements } from '../game/achievements'
@@ -346,6 +346,15 @@ export function useCareer() {
         ...codeChecks,
         ...toolChecks,
       ])
+      // Colleagues' review of a design (Space Studio), quoted in the manager's reply.
+      const review =
+        assignment.kind === 'tool'
+          ? reviewToolTask(
+              assignment,
+              main?.kind === 'tool' ? main.content : null,
+              toolChecks,
+            )
+          : undefined
       // Guidance hints opened in the queue reduce the XP a little (game/guidance.ts).
       const grade =
         main?.kind === 'tickets'
@@ -393,6 +402,7 @@ export function useCareer() {
             submittedAt,
             main ? versionId : undefined,
             { doc: versionOf('doc'), slides: versionOf('slides') },
+            review,
           )
           const result = outcomes.length
             ? {

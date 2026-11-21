@@ -27,6 +27,7 @@ export interface Department {
     | 'studio'
     | 'insights'
     | 'devteam'
+    | 'design'
   /** The workplace's own names for the office's areas (reception, desk, manager, break room). */
   places?: Partial<
     Record<

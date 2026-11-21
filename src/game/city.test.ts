@@ -155,6 +155,7 @@ describe('each career has its own workplace', () => {
       'digital-marketing': 'cobalt',
       'data-analytics': 'cobalt',
       'software-development': 'cobalt',
+      'architecture-interiors': 'cobalt',
     }
     for (const [career, building] of Object.entries(expected)) {
       expect(workplaceFor(career), career).toBe(building)

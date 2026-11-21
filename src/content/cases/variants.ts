@@ -17,6 +17,62 @@ export interface CaseVariant {
 }
 
 export const CASE_VARIANTS: Record<string, CaseVariant[]> = {
+  // Architecture & Interior Design -----------------------------------------
+  'arch-paint-order': [
+    {
+      id: 'longer-room',
+      text: [
+        ['4.0 m by 3.5 m', '5.0 m by 3.5 m'],
+        [
+          'The perimeter is 2 × (4.0 + 3.5) = 15 m; × 2.5 m = 37.5 m²; less 1.8 and 1.5 = 34.2 m².',
+          'The perimeter is 2 × (5.0 + 3.5) = 17 m; × 2.5 m = 42.5 m²; less 1.8 and 1.5 = 39.2 m².',
+        ],
+        [
+          'Two coats need 68.4 m², or 5.7 litres.',
+          'Two coats need 78.4 m², or about 6.5 litres.',
+        ],
+        ['5.7 litres needs three tins', '6.5 litres needs three tins'],
+        [
+          'the walls are 34.2 m² (37.5 m² less the door and window). Two coats is 68.4 m², about 5.7 litres',
+          'the walls are 39.2 m² (42.5 m² less the door and window). Two coats is 78.4 m², about 6.5 litres',
+        ],
+        ['34.2', '39.2'],
+      ],
+      numbers: [[34.2, 39.2]],
+    },
+  ],
+  'arch-adv-daylight': [
+    {
+      id: 'wider-study',
+      text: [
+        ['4.2 × 3.6 m', '4.5 × 3.6 m'],
+        ['4.2 × 3.6 = 15.12 m²; 20% is 3.02 m².', '4.5 × 3.6 = 16.2 m²; 20% is 3.24 m².'],
+        ['It meets 3.02 m²', 'It meets 3.24 m²'],
+        [
+          'the study is 15.12 m², so it needs 3.02 m²',
+          'the study is 16.2 m², so it needs 3.24 m²',
+        ],
+        ['3.02', '3.24'],
+      ],
+      numbers: [[3.02, 3.24]],
+    },
+  ],
+  'arch-client-wall': [
+    {
+      id: 'dining',
+      text: [
+        ['Naomi Pryce', 'Theo Lindsay'],
+        ['Naomi', 'Theo'],
+        ['the kitchen and living room', 'the dining room and living room'],
+      ],
+    },
+  ],
+  'arch-handover': [
+    {
+      id: 'other-reference',
+      text: [['NG-114', 'NG-121']],
+    },
+  ],
   // Engineering -------------------------------------------------------------
   'eng-steel-order': [
     {

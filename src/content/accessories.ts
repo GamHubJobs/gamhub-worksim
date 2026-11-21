@@ -219,6 +219,7 @@ const MKT = 'digital-marketing'
 const ACC = 'accounting'
 const DATA = 'data-analytics'
 const DEV = 'software-development'
+const ARCH = 'architecture-interiors'
 
 /** £ to pence. */
 const p = (pounds: number) => Math.round(pounds * 100)
@@ -468,7 +469,7 @@ export const ACCESSORIES: Accessory[] = [
     description:
       'A vented safety helmet with a ratchet harness: required on site and in the yard.',
     uses: ['ppe-head'],
-    careers: [ENG],
+    careers: [ENG, ARCH],
     crown: true,
   },
   {
@@ -926,7 +927,7 @@ export const ACCESSORIES: Accessory[] = [
     colours: ['#facc15'],
     description: 'A steel tape with a magnetic hook.',
     uses: ['tool'],
-    careers: [ENG],
+    careers: [ENG, ARCH],
   },
   {
     id: 'laser-measure',
@@ -939,7 +940,7 @@ export const ACCESSORIES: Accessory[] = [
     colours: ['#ea580c'],
     description: 'Measures up to 50 m to a millimetre or two.',
     uses: ['tool'],
-    careers: [ENG],
+    careers: [ENG, ARCH],
   },
   {
     id: 'multimeter',
@@ -1125,7 +1126,7 @@ export const ACCESSORIES: Accessory[] = [
     colours: ['#1d4ed8', '#16a34a', '#ea580c'],
     description: 'Your photo ID and door pass on a lanyard.',
     uses: ['id'],
-    careers: [IT, FIN, ACC, MKT, DATA, DEV, ENG],
+    careers: [IT, FIN, ACC, MKT, DATA, DEV, ENG, ARCH],
   },
   // Professional: finance and administration, accounting
   {
@@ -1152,7 +1153,7 @@ export const ACCESSORIES: Accessory[] = [
     colours: ['#334155', '#e5e7eb'],
     description: 'A tablet with a keyboard cover, for notes in meetings.',
     uses: ['tool'],
-    careers: [FIN, ACC, DATA, LAW, MKT],
+    careers: [FIN, ACC, DATA, LAW, MKT, ARCH],
   },
   // Professional: digital marketing
   {

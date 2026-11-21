@@ -39,6 +39,25 @@ export function gradeToolTask(
   }
 }
 
+/** Colleagues' review of a tool task's file, for the manager's reply (tools that give one). */
+export function reviewToolTask(
+  assignment: Assignment,
+  content: ToolContent | null,
+  checks: CheckResult[],
+): string | undefined {
+  const task = assignment.tool
+  const tool = task && getTool(task.id)
+  if (!task || !tool?.review || !content || content.tool !== task.id) return undefined
+  const parsed = tool.state.safeParse(content.state)
+  if (!parsed.success) return undefined
+  try {
+    return tool.review(parsed.data, { start: task.start, checks })
+  } catch {
+    // A review that cannot be written never stops the work being marked.
+    return undefined
+  }
+}
+
 /** The task's starting file and its model answer, as tool documents' content. */
 export function toolTaskContent(assignment: Assignment): {
   start: ToolContent

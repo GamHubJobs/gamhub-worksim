@@ -289,17 +289,22 @@ function feedbackMessage(
   name: string,
   attemptIndex: number,
   now: number,
+  review?: string,
 ): MailMessage {
   const greeting = personalise(assignment.feedback[grade.rating], name)
   const notes = grade.checks
     .filter((check) => check.status !== 'passed')
     .map((check) => `• ${check.title}: ${check.hint}`)
+  const sections = [
+    notes.length > 0 ? `What to look at:\n${notes.join('\n')}` : '',
+    review ? `The team's review of your design:\n\n${review}` : '',
+  ].filter(Boolean)
   const body =
-    notes.length > 0
-      ? greeting.replace(
-          /\n\n({manager}|[^\n]+)$/,
-          `\n\nWhat to look at:\n${notes.join('\n')}\n\n$1`,
-        )
+    sections.length > 0
+      ? greeting.replace(/\n\n({manager}|[^\n]+)$/, () => {
+          const signature = greeting.match(/\n\n({manager}|[^\n]+)$/)![1]
+          return `\n\n${sections.join('\n\n')}\n\n${signature}`
+        })
       : greeting
   return message({
     from: assignment.from,
@@ -404,6 +409,8 @@ export function recordSubmission(
   versionId?: string,
   /** The version-history copies of the report and presentation handed in. */
   fileVersions?: { doc?: string; slides?: string },
+  /** Colleagues' review of the work, quoted in the manager's reply. */
+  review?: string,
 ): { profile: ProfileData; reward: Reward; attempt: Attempt } {
   const progress = profile.assignments[assignment.id]
   if (!progress) throw new Error('This assignment has not been started.')
@@ -469,7 +476,7 @@ export function recordSubmission(
     },
     inbox: [
       ...profile.inbox,
-      feedbackMessage(assignment, grade, profile.name, attemptIndex, now),
+      feedbackMessage(assignment, grade, profile.name, attemptIndex, now, review),
     ],
   }
 

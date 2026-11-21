@@ -37,7 +37,9 @@ export async function sitAtComputer(page: Page) {
   if (await office.isVisible()) {
     await page
       .getByRole('navigation', { name: 'Places' })
-      .getByRole('button', { name: /^(Your desk|Nurses’ station|Design office)$/ })
+      .getByRole('button', {
+        name: /^(Your desk|Nurses’ station|Design office|Design studio)$/,
+      })
       .click()
     await page
       .getByTestId('office-panel')

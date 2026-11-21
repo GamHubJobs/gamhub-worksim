@@ -192,6 +192,48 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-21 · Space Studio, and the Architecture & Interior Design career
+
+A space-planning, architecture and interior-design application on the work
+computer, and a career that uses it. SpacePlanner (spaceplanner.co) was
+studied first as a functional reference (REA and a driven guest session; see
+docs/SPACE_STUDIO.md). Nothing of it was copied.
+
+- **One building model** (`src/studio`): the 2D plan, the 3D view, the
+  walkthrough, the checks, the reviews and the exports all read the same saved
+  file. Every edit is a pure function, so undo and redo are exact.
+- **The 2D editor:** rooms and walls to exact sizes, doors and windows placed
+  where they fit, stairs, floors, roofs, balconies, labels and dimensions;
+  snapping, selection, copy and paste, keyboard shortcuts, four units.
+- **3D and the walkthrough:**
+  - procedural geometry with finishes per wall face and three kinds of light;
+  - walk through in first person: walls stop you, doorways let you through, and
+    stairs climb between floors.
+- **Library and finishes:** 71 items of furniture and fittings, 11 doors and
+  windows, and 37 materials, all procedural and priced (fictional).
+- **Projects and exports:**
+  - projects are made, duplicated, renamed, deleted and imported; they are
+    ordinary tool files, so autosave, versions and backups apply;
+  - exports to PDF (to scale), SVG, PNG, DXF, an HTML report and a JSON backup.
+- **The career** at Cobalt Ridge's Spaces & Interiors:
+  - four levels and four skills;
+  - nine design tasks graded on the design itself;
+  - fifteen cases (with its part in the Manchester office programme), two
+    readiness assessments, equipment, and its own design studio in the office.
+- **Reviews:** the Architecture Lead, Interior Designer, Project Manager and
+  client comment on the actual file, live and in the manager's reply. A new
+  tool hook, `review`, makes this available to any tool.
+- **Other careers:** Space Studio is also on the dock for Engineering, and for
+  Office Administration from Junior level.
+- **Tests:**
+  - new unit tests for the model, the 3D build and the reviews;
+  - the shared content tests now include the career;
+  - three new browser tests, all passing.
+- **Not done:** the career has no story yet (the story panel says so). Roofs
+  follow the bounding rectangle. DXF is exported, not imported.
+
+---
+
 ## 2026-11-20 · Whole-project review: small screens, the map, dead code, console warnings
 
 A review of the whole game: code scans, a first run at phone (390 × 844),

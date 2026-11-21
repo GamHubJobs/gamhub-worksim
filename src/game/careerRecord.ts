@@ -38,6 +38,7 @@ export const CAREER_DEPARTMENT: Record<string, string> = {
   healthcare: 'ward',
   legal: 'law',
   'engineering-services': 'works',
+  'architecture-interiors': 'design',
 }
 
 export interface RecordStat {

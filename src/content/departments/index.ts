@@ -18,6 +18,7 @@ import { marketing } from './marketing'
 import { healthcare } from './healthcare'
 import { legal } from './legal'
 import { engineeringServices } from './engineeringServices'
+import { architecture } from './architecture'
 import type { Department } from './types'
 
 export type { Department } from './types'
@@ -32,6 +33,7 @@ export const DEPARTMENTS: Record<string, Department> = {
   [healthcare.careerId]: healthcare,
   [legal.careerId]: legal,
   [engineeringServices.careerId]: engineeringServices,
+  [architecture.careerId]: architecture,
 }
 
 let activeCareerId = finance.careerId

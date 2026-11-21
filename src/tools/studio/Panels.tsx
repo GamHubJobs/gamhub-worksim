@@ -378,3 +378,56 @@ export function ChecksPanel({
     </div>
   )
 }
+
+/** The team's review of the design, live: each colleague's verdict, what works and what to change. */
+export function ReviewsPanel({
+  reviews,
+  name,
+}: {
+  reviews: import('../../studio/review').Review[]
+  name: (role: import('../../studio/review').ReviewerRole) => string
+}) {
+  return (
+    <div className="space-y-3 p-3 text-sm" data-testid="reviews-panel">
+      <p className="text-xs text-slate-500">
+        Your colleagues read the design as it is now. They review it again when you submit
+        a task.
+      </p>
+      {reviews.map((r) => (
+        <section
+          key={r.role}
+          className="rounded-md border border-slate-200 p-2.5"
+          data-testid={`review-${r.role}`}
+        >
+          <header className="flex items-baseline justify-between gap-2">
+            <h3 className="font-semibold text-slate-900">{name(r.role)}</h3>
+            <span
+              className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-medium ${r.verdict === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}
+            >
+              {r.verdict === 'approved' ? 'Approved' : 'Changes needed'}
+            </span>
+          </header>
+          <p className="text-xs text-slate-500">{r.title}</p>
+          {r.praise.length > 0 && (
+            <ul className="mt-1.5 space-y-1">
+              {r.praise.map((p, i) => (
+                <li key={i} className="text-emerald-800">
+                  + {p}
+                </li>
+              ))}
+            </ul>
+          )}
+          {r.changes.length > 0 && (
+            <ul className="mt-1.5 space-y-1">
+              {r.changes.map((c, i) => (
+                <li key={i} className="text-amber-900">
+                  – {c}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ))}
+    </div>
+  )
+}

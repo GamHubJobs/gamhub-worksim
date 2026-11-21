@@ -65,6 +65,12 @@ const PROGRAMME_PARTS: Array<
     'the system changes',
     ['prog-dev-systems', 'prog-dev-review'],
   ],
+  [
+    'architecture-interiors',
+    'senior-designer',
+    'the office layout and interiors',
+    ['prog-arch-layout', 'prog-arch-review'],
+  ],
 ]
 
 const PROGRAMME_PROJECTS: z.input<typeof ProjectSchema>[] = PROGRAMME_PARTS.map(

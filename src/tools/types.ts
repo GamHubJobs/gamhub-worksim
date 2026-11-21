@@ -58,6 +58,11 @@ export interface ToolDefinition<State = unknown, Check = unknown> {
   ) => CheckResult[]
   guide: ToolGuide
   /**
+   * Colleagues' review of the work handed in, added to the manager's reply
+   * (worked out from the file itself, e.g. Space Studio's design reviews).
+   */
+  review?: (player: State, context: { start: State; checks: CheckResult[] }) => string
+  /**
    * Tools in which players make their own files (Space Studio): starting
    * points for a new project, reading a backup, and naming a project.
    */

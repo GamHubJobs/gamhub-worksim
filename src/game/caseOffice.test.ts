@@ -59,7 +59,7 @@ describe('cases in the office', () => {
     expect(lines.at(-1)).toContain('Company dashboard: client satisfaction 70')
     const started = arriveCase(fresh, getCase('prog-it-equipment')!, 1)
     expect(dialogueFor('noticeboard', started).lines.at(-1)).toBe(
-      'Opening the Manchester office: 0 of 8 workstreams done.',
+      'Opening the Manchester office: 0 of 9 workstreams done.',
     )
   })
 })
