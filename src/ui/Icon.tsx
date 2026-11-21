@@ -90,6 +90,7 @@ const PATHS = {
   legal:
     'M12 4v16M8 20h8M5 7h14M5 7l-2 6a3 3 0 0 0 4 0L5 7Zm14 0-2 6a3 3 0 0 0 4 0l-2-6Z',
   activity: 'M3 12h4l3-7 4 14 3-7h4',
+  studio: 'M3 3h18v18H3V3Zm0 10h7m4 0h7M12 3v7m0 5v6M15 3v3',
 } as const
 
 export type IconName = keyof typeof PATHS

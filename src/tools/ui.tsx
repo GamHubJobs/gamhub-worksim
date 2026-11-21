@@ -29,6 +29,12 @@ export interface ToolWorkspaceProps<State> {
   onOpenSection?: (section: string) => void
   /** Opened in person at the equipment (in the office), not from the Help Desk computer. */
   onSite?: boolean
+  /** The file's undo and redo, for tools with their own toolbar and shortcuts. */
+  history?: { undo: () => void; redo: () => void; canUndo: boolean; canRedo: boolean }
+  /** Saves now (a tool's own Save button); resolves false if it could not be saved. */
+  onSave?: () => Promise<boolean>
+  /** The file's title, e.g. for the names of exported files. */
+  title?: string
 }
 
 // oxlint-disable-next-line no-explicit-any -- each tool has its own state type
@@ -51,6 +57,7 @@ const WORKSPACES: Record<string, Workspace> = {
   analytics: lazy(() => import('./analytics/AnalyticsWorkspace')),
   datastudio: lazy(() => import('./datastudio/DataStudioWorkspace')),
   api: lazy(() => import('./api/ApiWorkspace')),
+  studio: lazy(() => import('./studio/StudioWorkspace')),
 }
 
 export function getWorkspace(toolId: string): Workspace | undefined {

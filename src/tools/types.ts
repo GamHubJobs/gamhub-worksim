@@ -57,6 +57,18 @@ export interface ToolDefinition<State = unknown, Check = unknown> {
     context: { start: State; solution: State },
   ) => CheckResult[]
   guide: ToolGuide
+  /**
+   * Tools in which players make their own files (Space Studio): starting
+   * points for a new project, reading a backup, and naming a project.
+   */
+  projects?: {
+    starters: Array<{ id: string; name: string; description: string; make: () => State }>
+    fromBackup?: (
+      text: string,
+    ) => { ok: true; state: State } | { ok: false; error: string }
+    /** The state with its project name set (kept in step with the file name). */
+    named?: (state: State, name: string) => State
+  }
 }
 
 /** Any registered tool. */

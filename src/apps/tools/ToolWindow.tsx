@@ -101,6 +101,18 @@ export function ToolWindow({
             : (change) =>
                 file.update((latest) => ({ ...latest, state: change(latest.state) }))
         }
+        history={
+          readOnly
+            ? undefined
+            : {
+                undo: file.undo,
+                redo: file.redo,
+                canUndo: file.canUndo,
+                canRedo: file.canRedo,
+              }
+        }
+        onSave={readOnly ? undefined : file.flush}
+        title={state.status === 'ready' ? state.document.title : undefined}
       />
     </Suspense>
   )

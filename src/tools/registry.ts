@@ -20,6 +20,7 @@ import { directory } from './directory/definition'
 import { network } from './network/definition'
 import { seo } from './seo/definition'
 import { social } from './social/definition'
+import { studio } from './studio/definition'
 import type { AnyTool, CareerTool } from './types'
 
 const TOOLS: AnyTool[] = [
@@ -39,6 +40,7 @@ const TOOLS: AnyTool[] = [
   analytics,
   dataStudio,
   apiClient,
+  studio,
 ]
 
 export function getTool(id: string): AnyTool | undefined {

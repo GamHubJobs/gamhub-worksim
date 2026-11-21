@@ -186,6 +186,8 @@ export const CAREERS: Career[] = [
       'ai-use',
     ],
     apps: ['sheets', 'docs', 'slides'],
+    // Office layouts, moves and facilities requests are planned in Space Studio.
+    tools: [{ tool: 'studio', fromLevel: 'junior' }],
     levels: [
       { id: 'intern', title: 'Finance & Admin Intern', xpRequired: 0, minReputation: 0 },
       {
@@ -697,6 +699,8 @@ CAREERS.push({
         environment: 'senior-engineer',
       },
     },
+    // Building layouts and fit-outs for the firm's clients.
+    { tool: 'studio' },
   ],
   levels: [
     {

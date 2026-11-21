@@ -10,6 +10,7 @@ import type { Profile } from '../../persistence/schemas'
 import type { ToolAccess } from '../../tools/registry'
 import { Icon } from '../../ui/Icon'
 import { GuideContent } from './ToolGuide'
+import { ToolProjects } from './ToolProjects'
 
 export function ToolHome({
   profile,
@@ -72,8 +73,14 @@ export function ToolHome({
           })}
         </section>
 
+        {tool.projects && (
+          <ToolProjects tool={tool} profileId={profile.id} onOpen={onOpen} />
+        )}
+
         <section className="rounded-xl border border-slate-200 bg-white p-4">
-          <h2 className="font-semibold text-slate-900">Your files</h2>
+          <h2 className="font-semibold text-slate-900">
+            {tool.projects ? 'Task files' : 'Your files'}
+          </h2>
           {files.length === 0 ? (
             <p className="mt-1 text-sm text-slate-600">
               Tasks that use {tool.name} create their file here when you start them in
