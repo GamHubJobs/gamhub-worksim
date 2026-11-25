@@ -21,6 +21,7 @@ import { getAction } from './actions'
 import { assess, history, toAttempt } from './assessment'
 import { getCase, casesFor } from './cases'
 import { goodCare } from './demo'
+import { DIFF_RANK, gradeAttempts, type CaseCheckResult } from './grade'
 import { act, advance, finish, phaseOf, say, startEncounter } from './engine'
 import type { CaseDef, Difficulty, Measure, Role } from './model'
 import { ROLE_OF_LEVEL, RUBRIC_NAMES, type Rubric } from './model'
@@ -336,13 +337,6 @@ export function finishCase(
 export const lastAttempt = (s: ClinicalState): Attempt | null =>
   casesOf(s).attempts.at(-1) ?? null
 
-export const DIFF_RANK: Record<Difficulty, number> = {
-  beginner: 0,
-  intermediate: 1,
-  advanced: 2,
-  expert: 3,
-}
-
 // ---------------------------------------------------------------------------
 // Grace's assignments and the educator dashboard
 // ---------------------------------------------------------------------------
@@ -518,39 +512,13 @@ export function solvedState(
   return done.state
 }
 
-export interface CaseCheckResult {
-  fraction: number
-  problems: string[]
-}
-
 /** Grades "pass this case at this difficulty or harder" from the saved attempts. */
 export function gradeCase(
   s: ClinicalState | null,
   caseId: string,
   difficulty: Difficulty,
 ): CaseCheckResult {
-  const def = getCase(caseId)
-  const title = def?.title ?? caseId
-  const attempts = (s ? casesOf(s).attempts : []).filter(
-    (a) => a.caseId === caseId && DIFF_RANK[a.difficulty] >= DIFF_RANK[difficulty],
-  )
-  if (!attempts.length)
-    return {
-      fraction: 0,
-      problems: [
-        `The patient case "${title}" has not been completed at ${difficulty} level or harder.`,
-      ],
-    }
-  if (attempts.some((a) => a.passed)) return { fraction: 1, problems: [] }
-  const best = attempts.reduce((b, a) => (a.score > b.score ? a : b))
-  const missed = best.criticalMissed.map((id) => getAction(id)?.label ?? id)
-  const harmful = best.harmful.map((id) => getAction(id)?.label ?? id)
-  return {
-    fraction: Math.min(0.6, best.score / 100),
-    problems: [
-      `Best attempt at "${title}": ${best.score}%, not yet a pass.`,
-      ...harmful.map((h) => `Harmful: ${h}.`),
-      ...missed.map((m) => `Missed: ${m}.`),
-    ],
-  }
+  return gradeAttempts(s?.cases, caseId, difficulty, getCase(caseId)?.title ?? caseId)
 }
+
+export { DIFF_RANK }

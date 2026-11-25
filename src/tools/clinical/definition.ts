@@ -1,7 +1,7 @@
 /** Ward Systems: its registration with the tools framework (checks, grading, guide). */
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
-import { gradeCase } from '../../clinical/ward'
+import { gradeAttempts } from '../../clinical/grade'
 import { checkResult } from '../checks'
 import type { ToolDefinition } from '../types'
 import { sampleClinical } from './data'
@@ -96,7 +96,12 @@ const has = (text: string, groups: string[][]) =>
 function gradeCheck(check: ClinicalCheck, s: ClinicalState) {
   switch (check.type) {
     case 'case': {
-      const r = gradeCase(s, check.case, check.difficulty)
+      const r = gradeAttempts(
+        s.cases,
+        check.case,
+        check.difficulty,
+        check.title.replace(/: passed$/, ''),
+      )
       return checkResult(check, r.fraction, r.problems)
     }
     case 'privacy': {
