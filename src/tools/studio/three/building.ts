@@ -36,6 +36,7 @@ import {
   wallPieces,
 } from '../../../studio/geometry'
 import { materialOrDefault, type Material } from '../../../studio/materials'
+import { isRectilinear, rectangles, type Rect } from '../../../studio/outline'
 import type { Floor, Point, Ref, StudioState } from '../../../studio/model'
 
 const M = 0.001
@@ -53,10 +54,22 @@ export interface BuildOptions {
   shadows: boolean
 }
 
+/** A door leaf that swings: its pivot, its closed and open turns, and where the doorway is (m). */
+export interface DoorLeaf {
+  pivot: Object3D
+  closed: number
+  open: number
+  x: number
+  y: number
+  z: number
+}
+
 export interface Built {
   group: Group
   /** Lights inside (lamps at night). */
   lights: PointLight[]
+  /** Hinged door leaves, which open as someone comes near (shown open in the plan). */
+  doors: DoorLeaf[]
   dispose: () => void
 }
 
@@ -293,6 +306,7 @@ export function buildBuilding(state: StudioState, o: BuildOptions): Built {
   const owned: BufferGeometry[] = []
   const ownedMaterials: ThreeMaterial[] = []
   const lights: PointLight[] = []
+  const doors: DoorLeaf[] = []
   const glow = o.lighting !== 'day'
   const floors = [...state.floors].sort((a, b) => a.elevation - b.elevation)
   const currentIndex = Math.max(
@@ -469,11 +483,14 @@ export function buildBuilding(state: StudioState, o: BuildOptions): Built {
                   },
                 ]
           for (const leaf of leaves) {
-            // Open at 90° into its side, like the plan.
+            // Open at 90° into its side, like the plan (closed, it lies along the wall).
             const pivot = new Object3D()
             const hp = at(leaf.hinge, side * (wall.thickness / 2))
             pivot.position.set(hp.x, base, hp.z)
-            pivot.rotation.y = angle + leaf.dir * side * (Math.PI / 2)
+            const open = angle + leaf.dir * side * (Math.PI / 2)
+            pivot.rotation.y = open
+            const mid = at(op.offset)
+            doors.push({ pivot, closed: angle, open, x: mid.x, y: base, z: mid.z })
             const mesh = new Mesh(unitBox, leafMat)
             mesh.scale.set((leaf.w - 60) * M, h - 0.05, 0.04)
             mesh.position.set((leaf.dir * (leaf.w - 60) * M) / 2, (h - 0.05) / 2, 0)
@@ -627,6 +644,7 @@ export function buildBuilding(state: StudioState, o: BuildOptions): Built {
   return {
     group,
     lights,
+    doors,
     dispose: () => {
       for (const g of owned) g.dispose()
       for (const m of ownedMaterials) m.dispose()
@@ -634,45 +652,81 @@ export function buildBuilding(state: StudioState, o: BuildOptions): Built {
   }
 }
 
-/** A flat roof (with a parapet), a gable or a hip, over the outline's bounding rectangle. */
+/**
+ * A roof over its outline: flat roofs follow the outline exactly; pitched
+ * roofs (gable or hip) are built over each rectangle of a square-cornered
+ * outline, so an L-shaped plan gets two roofs meeting at the corner (a
+ * cross-gable), and over the outline's bounding rectangle otherwise.
+ */
 function roofMesh(
   roof: StudioState['roofs'][number],
   _floor: Floor,
   eaves: number,
 ): Mesh {
-  const b = bounds(roof.outline)
-  const o = roof.overhang
-  const x0 = (b.minX - o) * M
-  const x1 = (b.maxX + o) * M
-  const z0 = (b.minY - o) * M
-  const z1 = (b.maxY + o) * M
   const mat = finishMaterial(roof.finish)
+  const material = mat.clone()
+  material.side = DoubleSide
   if (roof.kind === 'flat') {
-    const g = sizedBox(x1 - x0, 0.25, z1 - z0, repeatOf(roof.finish))
-    const mesh = new Mesh(g, mat)
-    mesh.position.set((x0 + x1) / 2, eaves + 0.125, (z0 + z1) / 2)
+    const g = new ExtrudeGeometry(shapeOf(roof.outline), {
+      depth: 0.25,
+      bevelEnabled: false,
+    })
+    scaleUv(g, repeatOf(roof.finish))
+    const mesh = new Mesh(g, material)
+    mesh.rotation.x = -Math.PI / 2
+    mesh.position.y = eaves
     return mesh
   }
+  const pieces = isRectilinear(roof.outline)
+    ? rectangles(roof.outline)
+    : (() => {
+        const b = bounds(roof.outline)
+        return [{ x0: b.minX, y0: b.minY, x1: b.maxX, y1: b.maxY }]
+      })()
+  const v: number[] = []
+  for (const r of pieces) pitchedPiece(v, r, roof, eaves)
+  const g = new BufferGeometry()
+  g.setAttribute('position', new BufferAttribute(new Float32Array(v), 3))
+  // UVs from plan position, so the covering's pattern runs across the roof.
+  const uv = new Float32Array((v.length / 3) * 2)
+  const rep = repeatOf(roof.finish)
+  for (let i = 0; i < v.length / 3; i++) {
+    uv[i * 2] = v[i * 3] / rep
+    uv[i * 2 + 1] = (v[i * 3 + 1] + v[i * 3 + 2]) / rep
+  }
+  g.setAttribute('uv', new BufferAttribute(uv, 2))
+  g.computeVertexNormals()
+  return new Mesh(g, material)
+}
+
+/** One gable or hip roof over a rectangle (mm), its ridge along the longer side. */
+function pitchedPiece(
+  v: number[],
+  r: Rect,
+  roof: StudioState['roofs'][number],
+  eaves: number,
+) {
+  const o = roof.overhang
+  const x0 = (r.x0 - o) * M
+  const x1 = (r.x1 + o) * M
+  const z0 = (r.y0 - o) * M
+  const z1 = (r.y1 + o) * M
   const w = x1 - x0
   const d = z1 - z0
   const pitch = (roof.pitch * Math.PI) / 180
   const alongX = w >= d
   const half = (alongX ? d : w) / 2
-  const rise = Math.tan(pitch) * half
-  const top = eaves + rise
-  const v: number[] = []
+  const top = eaves + Math.tan(pitch) * half
   const tri = (a: number[], b2: number[], c: number[]) => v.push(...a, ...b2, ...c)
   if (alongX) {
     const zm = (z0 + z1) / 2
     const inset = roof.kind === 'hip' ? Math.min(half, w / 2) : 0
     const r0 = [x0 + inset, top, zm]
     const r1 = [x1 - inset, top, zm]
-    // Two long slopes.
     tri([x0, eaves, z0], r1, [x1, eaves, z0])
     tri([x0, eaves, z0], r0, r1)
     tri([x1, eaves, z1], r0, [x0, eaves, z1])
     tri([x1, eaves, z1], r1, r0)
-    // Ends: gable walls or hipped slopes.
     tri([x0, eaves, z1], r0, [x0, eaves, z0])
     tri([x1, eaves, z0], r1, [x1, eaves, z1])
   } else {
@@ -687,20 +741,6 @@ function roofMesh(
     tri([x0, eaves, z0], r0, [x1, eaves, z0])
     tri([x1, eaves, z1], r1, [x0, eaves, z1])
   }
-  const g = new BufferGeometry()
-  g.setAttribute('position', new BufferAttribute(new Float32Array(v), 3))
-  // UVs from plan position, so the covering's pattern runs across the roof.
-  const uv = new Float32Array((v.length / 3) * 2)
-  const rep = repeatOf(roof.finish)
-  for (let i = 0; i < v.length / 3; i++) {
-    uv[i * 2] = v[i * 3] / rep
-    uv[i * 2 + 1] = (v[i * 3 + 1] + v[i * 3 + 2]) / rep
-  }
-  g.setAttribute('uv', new BufferAttribute(uv, 2))
-  g.computeVertexNormals()
-  const material = mat.clone()
-  material.side = DoubleSide
-  return new Mesh(g, material)
 }
 
 /** The point the camera looks at and how big the building is (m). */

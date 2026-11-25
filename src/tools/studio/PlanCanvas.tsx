@@ -36,7 +36,9 @@ import {
   addRoom,
   addSlab,
   addStair,
+  addArcWall,
   addWall,
+  arcPoints,
   hitTest,
   lockAngle,
   moveVertex,
@@ -57,6 +59,7 @@ export type Tool =
   | 'select'
   | 'pan'
   | 'wall'
+  | 'arc'
   | 'room'
   | 'door'
   | 'window'
@@ -124,6 +127,8 @@ export const PlanCanvas = forwardRef<CanvasApi, Props>(function PlanCanvas(props
   const [hover, setHover] = useState<Point | null>(null)
   const [snapped, setSnapped] = useState<string>('none')
   const [chain, setChain] = useState<Point[]>([])
+  // A curved wall: its two ends, then the pointer bends it.
+  const [arc, setArc] = useState<Point[]>([])
   const [dimStart, setDimStart] = useState<Point | null>(null)
   const [typed, setTyped] = useState('')
   const [shift, setShift] = useState(false)
@@ -161,6 +166,7 @@ export const PlanCanvas = forwardRef<CanvasApi, Props>(function PlanCanvas(props
   // Leaving a tool clears what it was doing.
   useEffect(() => {
     setChain([])
+    setArc([])
     setDimStart(null)
     setTyped('')
     setMeasure(null)
@@ -368,8 +374,9 @@ export const PlanCanvas = forwardRef<CanvasApi, Props>(function PlanCanvas(props
         }
         if (e.key === 'Escape') {
           if (typed) return (setTyped(''), true)
-          if (chain.length || dimStart || drag || measure) {
+          if (chain.length || arc.length || dimStart || drag || measure) {
             setChain([])
+            setArc([])
             setDimStart(null)
             setMeasure(null)
             if (drag && 'base' in drag) showDraft(null)
@@ -539,6 +546,20 @@ export const PlanCanvas = forwardRef<CanvasApi, Props>(function PlanCanvas(props
       case 'wall':
         placeWallPoint(chain.length ? snap(world, chain[chain.length - 1]) : p)
         return true
+      case 'arc': {
+        if (arc.length < 2) {
+          if (arc.length === 1 && dist(arc[0], p) < 100) return true
+          setArc([...arc, p])
+          if (arc.length === 1) props.notify('Now move to bend the wall, and click.')
+          return true
+        }
+        const r = addArcWall(state, floor, arc[0], arc[1], world, wallStyle)
+        props.apply(r.state)
+        props.onSelect(r.ids.map((id) => ({ kind: 'walls' as const, id })))
+        setArc([])
+        props.notify(`Curved wall added (${r.ids.length} pieces).`)
+        return true
+      }
     }
     return false
   }
@@ -593,6 +614,7 @@ export const PlanCanvas = forwardRef<CanvasApi, Props>(function PlanCanvas(props
         'roof',
         'dimension',
         'wall',
+        'arc',
       ].includes(tool)
     ) {
       placeAt(world)
@@ -655,6 +677,7 @@ export const PlanCanvas = forwardRef<CanvasApi, Props>(function PlanCanvas(props
         ? snapInfo(world, chain[chain.length - 1])
         : [
               'wall',
+              'arc',
               'room',
               'balcony',
               'measure',
@@ -1100,6 +1123,22 @@ export const PlanCanvas = forwardRef<CanvasApi, Props>(function PlanCanvas(props
             ))}
           </g>
         )}
+        {tool === 'arc' && arc.length > 0 && hover && (
+          <polyline
+            data-testid="arc-preview"
+            points={(arc.length === 1
+              ? [arc[0], snap(hover)]
+              : arcPoints(arc[0], arc[1], hover)
+            )
+              .map((p) => `${p.x},${p.y}`)
+              .join(' ')}
+            fill="none"
+            stroke="#1d4ed8"
+            strokeOpacity={0.5}
+            strokeWidth={wallStyle.thickness / view.scale}
+            strokeLinejoin="round"
+          />
+        )}
         {dimStart && hover && (
           <line
             x1={dimStart.x}
@@ -1141,6 +1180,7 @@ export const PlanCanvas = forwardRef<CanvasApi, Props>(function PlanCanvas(props
         {hover &&
           [
             'wall',
+            'arc',
             'room',
             'balcony',
             'measure',

@@ -71,6 +71,13 @@ const TOOLS: Array<{
         hint: 'Click corner by corner; type a length and Enter; Esc to finish.',
       },
       {
+        id: 'arc',
+        name: 'Curved wall',
+        icon: 'arc',
+        key: '⇧W',
+        hint: 'Click both ends, then move to bend it and click.',
+      },
+      {
         id: 'room',
         name: 'Room',
         icon: 'room',
@@ -379,6 +386,7 @@ export default function StudioWorkspace({
     if (k === 'b') return (done(), setLibrary((v) => !v))
     if (k === 'f' && mode === 'plan') return (done(), canvas.current?.fit())
     if (e.shiftKey && k === 'r') return (done(), pickTool('roof'))
+    if (e.shiftKey && k === 'w') return (done(), pickTool('arc'))
     if (KEYS[k] && !e.shiftKey) return (done(), pickTool(KEYS[k]))
   }
 
@@ -706,7 +714,7 @@ export default function StudioWorkspace({
                 ))}
               </div>
             ))}
-            {(tool === 'wall' || tool === 'room') && !readOnly && (
+            {(tool === 'wall' || tool === 'arc' || tool === 'room') && !readOnly && (
               <div
                 className="mx-2 mt-1 space-y-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-xs"
                 data-testid="wall-style"

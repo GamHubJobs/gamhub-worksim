@@ -83,10 +83,13 @@ export function ToolProjects({
         throw new Error('That file is too large to be a project backup.')
       const read = projects.fromBackup(await f.text())
       if (!read.ok) throw new Error(read.error)
+      // A drawing is named after its file; a backup keeps its project's name.
+      const fromFile = f.name.replace(/\.[^.]+$/, '')
       const base =
-        ((read.state as { project?: { name?: string } }).project?.name ??
-          f.name.replace(/\.[^.]+$/, '')) ||
-        'Imported project'
+        (/\.dxf$/i.test(f.name)
+          ? fromFile
+          : ((read.state as { project?: { name?: string } }).project?.name ??
+            fromFile)) || 'Imported project'
       const title = `${base} (imported)`
       const id = await createToolProject(
         profileId,
@@ -114,12 +117,12 @@ export function ToolProjects({
                 onClick={() => file.current?.click()}
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-60"
               >
-                Import a backup
+                Import a backup or DXF
               </button>
               <input
                 ref={file}
                 type="file"
-                accept=".json,application/json"
+                accept=".json,.dxf,application/json"
                 className="hidden"
                 data-testid="import-project"
                 onChange={(e) => {

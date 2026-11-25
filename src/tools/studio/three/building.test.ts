@@ -5,6 +5,7 @@ import {
   addItem,
   addOpening,
   addRectRoom,
+  addRoof,
   WALL_PRESETS,
 } from '../../../studio/ops'
 import { emptyProject } from '../../../studio/model'
@@ -99,5 +100,42 @@ describe('the 3D building, from the model', () => {
     const s = addFloor(sampleApartment()).state
     const low = buildBuilding(s, options('f0', { walls: 'low', floors: 'up-to-current' }))
     expect(worldY(low.group, 'walls').max).toBeLessThanOrEqual(1.2001)
+  })
+})
+
+describe('doors and roofs in 3D', () => {
+  it('has a swinging leaf for every hinged door leaf, shown open as on the plan', () => {
+    const s = sampleApartment()
+    const built = buildBuilding(s, options('f0'))
+    const hinged = s.openings.filter((o) => o.kind === 'door' && o.style !== 'sliding')
+    const leaves = hinged.reduce((n, o) => n + (o.style === 'double' ? 2 : 1), 0)
+    expect(built.doors).toHaveLength(leaves)
+    for (const d of built.doors) {
+      expect(d.pivot.rotation.y).toBeCloseTo(d.open)
+      expect(Math.abs(d.open - d.closed)).toBeCloseTo(Math.PI / 2)
+    }
+  })
+  it('builds a roof over each wing of an L-shaped plan', () => {
+    let s = addRectRoom(
+      emptyProject(),
+      'f0',
+      { x: 0, y: 0 },
+      { x: 10000, y: 5000 },
+      { walls: WALL_PRESETS.exterior },
+    ).state
+    s = addRectRoom(
+      s,
+      'f0',
+      { x: 0, y: 5000 },
+      { x: 4000, y: 9000 },
+      { walls: WALL_PRESETS.exterior },
+    ).state
+    s = addRoof(s, 'f0', 'gable').state
+    const built = buildBuilding(s, options('f0'))
+    const roof = built.group.children.find(
+      (c) => c.userData.ref?.kind === 'roofs',
+    ) as Mesh
+    // Two gables of 6 triangles each.
+    expect(roof.geometry.getAttribute('position').count).toBe(2 * 6 * 3)
   })
 })

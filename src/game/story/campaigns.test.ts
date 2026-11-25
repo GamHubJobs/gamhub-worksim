@@ -3,6 +3,8 @@ import { TOWN_PEOPLE } from '../../content/townPeople'
 import { officeWho } from '../../office/scene/officeCast'
 import { newProfileData, type ProfileData } from '../career'
 import { caseFor } from '../caseVariants'
+import { getAssignment } from '../../content/assignments'
+import { getCareer } from '../../content/careers'
 import { CAMPAIGNS } from './campaigns'
 import { STORY_TITLES } from './titles'
 import {
@@ -58,6 +60,24 @@ function playAll(
           },
         },
       })
+    else if (o.kind === 'task') {
+      // The task handed in and passed.
+      const progress = p.assignments[o.assignment]
+      p = checkStory({
+        ...p,
+        assignments: {
+          ...p.assignments,
+          [o.assignment]: {
+            assignmentId: o.assignment,
+            assignmentVersion: 1,
+            documentId: progress?.documentId ?? 'doc',
+            startedAt: 1,
+            completedSteps: [],
+            attempts: [{ score: 100, submittedAt: 2, checks: [] } as never],
+          },
+        },
+      })
+    } else if (o.kind === 'level') p = checkStory({ ...p, levelId: o.level })
     else if (o.kind === 'meeting')
       p = checkStory({
         ...p,
@@ -92,11 +112,11 @@ describe('every career has its own story', () => {
     )
   })
 
-  it('nine campaigns, one per career, each with its own title and people', () => {
-    expect(CAMPAIGNS).toHaveLength(9)
-    expect(new Set(CAMPAIGNS.map((c) => c.careerId)).size).toBe(9)
-    expect(new Set(CAMPAIGNS.map((c) => c.title)).size).toBe(9)
-    expect(new Set(CAMPAIGNS.map((c) => c.cast.manager)).size).toBe(9)
+  it('ten campaigns, one per career, each with its own title and people', () => {
+    expect(CAMPAIGNS).toHaveLength(10)
+    expect(new Set(CAMPAIGNS.map((c) => c.careerId)).size).toBe(10)
+    expect(new Set(CAMPAIGNS.map((c) => c.title)).size).toBe(10)
+    expect(new Set(CAMPAIGNS.map((c) => c.cast.manager)).size).toBe(10)
   })
 
   for (const c of CAMPAIGNS)
@@ -111,6 +131,13 @@ describe('every career has its own story', () => {
               expect(people.has(o.person), o.person).toBe(true)
               used.add(o.scene)
             }
+            if (o.kind === 'task')
+              expect(getAssignment(o.assignment)?.careerId, o.assignment).toBe(c.careerId)
+            if (o.kind === 'level')
+              expect(
+                getCareer(c.careerId).levels.map((l) => l.id),
+                o.level,
+              ).toContain(o.level)
             if (o.kind === 'case')
               expect(
                 caseFor(newProfileData('A', 0, c.careerId), o.case),

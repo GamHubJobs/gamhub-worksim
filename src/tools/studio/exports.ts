@@ -25,6 +25,7 @@ import {
 import { stairCorners } from '../../studio/ops'
 import { PlanDefs, PlanDrawing } from './PlanDrawing'
 import { DEFAULT_LAYERS } from './shared'
+import { drawPlanVector } from './pdfPlan'
 
 export type ExportKind = 'pdf' | 'svg' | 'png' | 'dxf' | 'json' | 'report'
 
@@ -171,10 +172,10 @@ export async function projectPdf(
       SCALES[SCALES.length - 1]
     const pw = b.w / scale
     const ph = b.h / scale
-    const canvas = await rasterise(floorSvg(state, f.id, scale), pw * 8, ph * 8)
     const x = margin + (area.w - pw) / 2
     const y = margin + (area.h - ph) / 2
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, pw, ph, undefined, 'FAST')
+    // The plan as vectors, to scale (sharp at any zoom and in print).
+    drawPlanVector(pdf, state, f.id, { x: b.x, y: b.y }, { x, y }, scale)
     // Border and title block.
     pdf.setDrawColor(30, 41, 59)
     pdf.setLineWidth(0.5)

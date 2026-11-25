@@ -4,6 +4,7 @@
  * 2D plan, the 3D view and the checks always agree.
  */
 import { catalogEntry, type OpeningPreset } from './catalog'
+import { isRectilinear, unionOutline } from './outline'
 import {
   bounds,
   dist,
@@ -360,8 +361,6 @@ export function setRoomSize(
 ): { state: StudioState; error?: string } {
   const room = state.rooms.find((r) => r.id === roomId)
   if (!room) return { state, error: 'The room is missing.' }
-  if (!isRectangle(room.outline))
-    return { state, error: 'Only a rectangular room can be resized by typing its size.' }
   if (width < 500 || depth < 500)
     return { state, error: 'A room must be at least 500 mm each way.' }
   const b = bounds(room.outline)
@@ -373,10 +372,20 @@ export function setRoomSize(
     Math.abs(p.x - b.maxX) < EPS && p.y > b.minY - EPS && p.y < b.maxY + EPS
   const onBottom = (p: Point) =>
     Math.abs(p.y - b.maxY) < EPS && p.x > b.minX - EPS && p.x < b.maxX + EPS
-  const move = (p: Point): Point => ({
-    x: onRight(p) ? b.minX + width : p.x,
-    y: onBottom(p) ? b.minY + depth : p.y,
-  })
+  // A rectangle: its right and bottom sides move out (or in). Any other shape
+  // is stretched: every point on its outline keeps its place in proportion.
+  const onOutline = (p: Point) =>
+    room.outline.some((a, i) => {
+      const q = room.outline[(i + 1) % room.outline.length]
+      return projectOnSegment(p, a, q).distance < EPS
+    })
+  const rect = isRectangle(room.outline)
+  const move = (p: Point): Point =>
+    rect
+      ? { x: onRight(p) ? b.minX + width : p.x, y: onBottom(p) ? b.minY + depth : p.y }
+      : onOutline(p)
+        ? { x: moveX(p.x), y: moveY(p.y) }
+        : p
   const floor = room.floor
   const inside = (x: number, y: number) => pointInPolygon({ x, y }, room.outline)
   const walls = state.walls.map((w) =>
@@ -615,8 +624,12 @@ export function addRoof(
     const pts = state.walls.filter((w) => w.floor === floor).flatMap((w) => [w.a, w.b])
     if (pts.length < 2)
       return { state, error: 'Draw the walls first: the roof covers them.' }
+    // The building's own outline (an L-shaped plan gets an L-shaped roof),
+    // when its rooms are drawn square; otherwise the rectangle round its walls.
+    const rooms = state.rooms.filter((r) => r.floor === floor).map((r) => r.outline)
+    const union = rooms.length && rooms.every(isRectilinear) ? unionOutline(rooms) : null
     const b = bounds(pts)
-    outline = [
+    outline = union ?? [
       { x: b.minX, y: b.minY },
       { x: b.maxX, y: b.minY },
       { x: b.maxX, y: b.maxY },
@@ -1209,4 +1222,56 @@ export function roomAt(state: StudioState, floor: string, p: Point): Room | unde
   return state.rooms
     .filter((r) => r.floor === floor && pointInPolygon(p, r.outline))
     .sort((a, b) => area(a.outline) - area(b.outline))[0]
+}
+
+// ---------------------------------------------------------------- curved walls
+
+/**
+ * Points along the arc from a to b that passes through `through`, about every
+ * `segment` mm (4 to 32 pieces). A straight line if the three are in line.
+ */
+export function arcPoints(a: Point, b: Point, through: Point, segment = 400): Point[] {
+  const c = through
+  const d = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y))
+  if (Math.abs(d) < 1e-6 || dist(a, b) < 1) return [a, b]
+  const sq = (p: Point) => p.x * p.x + p.y * p.y
+  const ux = (sq(a) * (b.y - c.y) + sq(b) * (c.y - a.y) + sq(c) * (a.y - b.y)) / d
+  const uy = (sq(a) * (c.x - b.x) + sq(b) * (a.x - c.x) + sq(c) * (b.x - a.x)) / d
+  const r = Math.hypot(a.x - ux, a.y - uy)
+  // A bend too slight to see (or a circle bigger than 100 m): keep it straight.
+  if (r > 100_000) return [a, b]
+  const angle = (p: Point) => Math.atan2(p.y - uy, p.x - ux)
+  const turn = (from: number, to: number) =>
+    (((to - from) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)
+  const ta = angle(a)
+  const toB = turn(ta, angle(b))
+  const sweep = turn(ta, angle(c)) < toB ? toB : toB - 2 * Math.PI
+  const n = Math.max(4, Math.min(32, Math.ceil((Math.abs(sweep) * r) / segment)))
+  const pts: Point[] = [a]
+  for (let i = 1; i < n; i++) {
+    const t = ta + (sweep * i) / n
+    pts.push({ x: Math.round(ux + r * Math.cos(t)), y: Math.round(uy + r * Math.sin(t)) })
+  }
+  pts.push(b)
+  return pts
+}
+
+/** A curved wall from a to b through a point: short straight walls along the arc. */
+export function addArcWall(
+  state: StudioState,
+  floor: string,
+  a: Point,
+  b: Point,
+  through: Point,
+  style: WallStyle,
+): { state: StudioState; ids: string[] } {
+  const pts = arcPoints(a, b, through)
+  let next = state
+  const ids: string[] = []
+  for (let i = 0; i < pts.length - 1; i++) {
+    const r = addWall(next, floor, pts[i], pts[i + 1], style)
+    next = r.state
+    ids.push(...r.ids)
+  }
+  return { state: next, ids }
 }

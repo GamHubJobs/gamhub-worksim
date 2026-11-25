@@ -45,6 +45,10 @@ export type Objective = {
   | { kind: 'meeting'; meeting: string }
   /** Answer a case on the computer (it arrives when the mission starts). */
   | { kind: 'case'; case: string }
+  /** Pass a career task (in its own app or tool); a task passed before counts too. */
+  | { kind: 'task'; assignment: string }
+  /** Be promoted to this career level (or beyond). */
+  | { kind: 'level'; level: string }
 )
 
 export interface Reward {

@@ -192,6 +192,43 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-21 · The Headquarters Transformation, and Space Studio's limits lifted
+
+- **The story:**
+  - Architecture & Interior Design's Story Mode, "The Headquarters
+    Transformation". Four chapters, thirteen main missions and three side
+    missions.
+  - The player joins Spaces & Interiors as Cobalt Ridge decides to redesign
+    its own headquarters. Finance, Office Administration and Northbank
+    Engineering pull in different directions, the budget is cut by 15%, the
+    studio argues about open-plan, and the deadline is moved forward.
+  - It builds to the board presentation and a promotion opportunity.
+  - Progress follows real work: three Space Studio tasks passed, two cases,
+    and the promotion to Designer. Five decisions decide how the board goes.
+- **The story engine** gained two objective kinds, `task` (a career task
+  passed, including before the story reached it) and `level` (a promotion).
+  The story is now checked again whenever a task is submitted. Saves are
+  unchanged.
+- **Roofs** follow the building's outline: L-shaped plans get cross-gables.
+- **Curved walls** (Shift+W), made of short walls.
+- **Rooms of any shape** can be resized by typing their size.
+- **Doors** swing open as you walk up to them; in 3D they are shown open or
+  closed.
+- **The PDF plans** are vector drawings to scale.
+- **DXF import:** Space Studio's own DXF reads back with floors, rooms, doors
+  and windows; other drawings come in as walls and rooms.
+- **A test hook,** `__worksim.solveTask` (development builds only), puts a
+  started tool task's model answer in its file.
+- **Tests:**
+  - new unit tests for the story, the outline and roofs, curved walls, typed
+    sizes, DXF round trips, swinging doors and the vector PDF;
+  - a browser test plays the story from the first screen to the ending,
+    including a reload and a task marked in Space Studio;
+  - the Space Studio browser tests now cover swinging doors, DXF import and
+    curved walls.
+
+---
+
 ## 2026-11-21 · Space Studio, and the Architecture & Interior Design career
 
 A space-planning, architecture and interior-design application on the work

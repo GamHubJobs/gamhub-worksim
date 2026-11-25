@@ -2,7 +2,7 @@
  * The story campaigns, one per career: "Short Delivery" (Finance &
  * Administration), "The Halden Account" (Accounting), "Ticket Zero" (IT Help
  * Desk), "Launch Week" (Digital Marketing), "Signal and Noise" (Data
- * Analysis), "Release Day" (Software Development) "Bay A" (Healthcare) "Good Law" (Law) and "Safe Hands" (Engineering). See
+ * Analysis), "Release Day" (Software Development) "Bay A" (Healthcare) "Good Law" (Law) and "Safe Hands" (Engineering) and "The Headquarters Transformation" (Architecture & Interior Design). See
  * docs/STORY_MODE_PLAN.md.
  */
 import { campaignFor, registerCampaigns } from '../registry'
@@ -16,6 +16,7 @@ import { MARKETING_STORY } from './marketing'
 import { HEALTHCARE_STORY } from './healthcare'
 import { LEGAL_STORY } from './legal'
 import { ENGINEERING_SERVICES_STORY } from './engineeringServices'
+import { ARCHITECTURE_STORY } from './architecture'
 
 export const CAMPAIGNS: Campaign[] = [
   FINANCE_STORY,
@@ -27,6 +28,7 @@ export const CAMPAIGNS: Campaign[] = [
   HEALTHCARE_STORY,
   LEGAL_STORY,
   ENGINEERING_SERVICES_STORY,
+  ARCHITECTURE_STORY,
 ]
 
 // Known to the game from now on (see ../registry.ts).

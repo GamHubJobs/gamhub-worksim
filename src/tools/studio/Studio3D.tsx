@@ -24,7 +24,12 @@ import { downloadFile, safeFileName } from '../../lib/download'
 import { isLow, useGraphicsQuality } from '../../ui/graphics'
 import { prefersReducedMotion } from '../../ui/motion'
 import { SIcon } from './icons'
-import { buildBuilding, buildingFrame, type BuildOptions } from './three/building'
+import {
+  buildBuilding,
+  buildingFrame,
+  type BuildOptions,
+  type DoorLeaf,
+} from './three/building'
 
 interface Props {
   state: StudioState
@@ -55,6 +60,7 @@ declare global {
       height: number
     }
     __studioScene?: import('three').Group
+    __studioDoorsOpen?: number
   }
 }
 
@@ -72,14 +78,73 @@ function softwareRenderer(): boolean {
   }
 }
 
+/** Where the walker is (plan mm and floor height), shared with the doors. */
+type WalkerAt = { x: number; y: number; height: number } | null
+
+/**
+ * Doors swing: in the walkthrough each opens as the walker comes within
+ * 1.6 m and closes behind them; in 3D they are shown open or closed.
+ */
+function DoorSwing({
+  doors,
+  walk,
+  open,
+  walker,
+}: {
+  doors: DoorLeaf[]
+  walk: boolean
+  open: boolean
+  walker: React.RefObject<WalkerAt>
+}) {
+  const { invalidate } = useThree()
+  useEffect(() => {
+    if (walk) return
+    setDoors(doors, open)
+    invalidate()
+  }, [doors, walk, open, invalidate])
+  useFrame((_, dtRaw) => {
+    if (!walk) return
+    const opened = swingDoors(doors, walker.current, Math.min(dtRaw, 0.05))
+    if (import.meta.env.DEV) window.__studioDoorsOpen = opened
+  })
+  return null
+}
+
+/** Every door shown open or closed at once (the 3D view). */
+function setDoors(doors: DoorLeaf[], open: boolean) {
+  for (const d of doors) d.pivot.rotation.y = open ? d.open : d.closed
+}
+
+/** Doors swing towards open when the walker is near, closed otherwise. Returns how many are open. */
+function swingDoors(doors: DoorLeaf[], w: WalkerAt, dt: number): number {
+  let opened = 0
+  for (const d of doors) {
+    const near =
+      !!w &&
+      Math.hypot(w.x - d.x / M, w.y - d.z / M) < 1600 &&
+      Math.abs(w.height - d.y / M) < 1500
+    const target = near ? d.open : d.closed
+    const now = d.pivot.rotation.y
+    d.pivot.rotation.y = now + (target - now) * Math.min(1, dt * 5)
+    if (Math.abs(d.pivot.rotation.y - d.open) < 0.2) opened++
+  }
+  return opened
+}
+
 function Building({
   state,
   options,
   onPick,
+  walk,
+  doorsOpen,
+  walker,
 }: {
   state: StudioState
   options: BuildOptions
   onPick: (ref: Ref | null) => void
+  walk: boolean
+  doorsOpen: boolean
+  walker: React.RefObject<WalkerAt>
 }) {
   const built = useMemo(() => buildBuilding(state, options), [state, options])
   useEffect(() => {
@@ -88,16 +153,19 @@ function Building({
     return () => built.dispose()
   }, [built])
   return (
-    <primitive
-      object={built.group}
-      onClick={(e: ThreeEvent<MouseEvent>) => {
-        if (e.delta > 4) return // a drag to orbit, not a click
-        e.stopPropagation()
-        let o: Object3D | null = e.object
-        while (o && !o.userData.ref) o = o.parent
-        onPick((o?.userData.ref as Ref | undefined) ?? null)
-      }}
-    />
+    <>
+      <DoorSwing doors={built.doors} walk={walk} open={doorsOpen} walker={walker} />
+      <primitive
+        object={built.group}
+        onClick={(e: ThreeEvent<MouseEvent>) => {
+          if (e.delta > 4) return // a drag to orbit, not a click
+          e.stopPropagation()
+          let o: Object3D | null = e.object
+          while (o && !o.userData.ref) o = o.parent
+          onPick((o?.userData.ref as Ref | undefined) ?? null)
+        }}
+      />
+    </>
   )
 }
 
@@ -238,12 +306,14 @@ function Walker({
   solidFurniture,
   onMove,
   keys,
+  at,
 }: {
   state: StudioState
   start: { x: number; y: number; floor: string; yaw: number }
   solidFurniture: boolean
   onMove: (info: { room: string | null; floor: string }) => void
   keys: React.RefObject<Set<string>>
+  at: React.RefObject<WalkerAt>
 }) {
   const { camera, gl } = useThree()
   const pos = useRef({ ...start, pitch: -0.05, height: 0 })
@@ -352,6 +422,7 @@ function Walker({
     camera.position.set(p.x * M, (p.height + EYE) * M, p.y * M)
     camera.rotation.set(p.pitch, p.yaw, 0, 'YXZ')
     const room = roomAt(state, p.floor, p)
+    at.current = { x: p.x, y: p.y, height: p.height }
     window.__studioWalker = {
       x: Math.round(p.x),
       y: Math.round(p.y),
@@ -387,6 +458,8 @@ export default function Studio3D({
   const [walls, setWalls] = useState<'full' | 'low'>('full')
   const [roof, setRoof] = useState(false)
   const [furniture, setFurniture] = useState(true)
+  const [doorsOpen, setDoorsOpen] = useState(true)
+  const walkerAt = useRef<WalkerAt>(null)
   const [solid, setSolid] = useState(true)
   const [preset, setPreset] = useState<Parameters<typeof CameraRig>[0]['preset']>({
     kind: '3d',
@@ -555,6 +628,9 @@ export default function Studio3D({
           state={state}
           options={options}
           onPick={(ref) => !walk && onSelect(ref ? [ref] : [])}
+          walk={walk}
+          doorsOpen={doorsOpen}
+          walker={walkerAt}
         />
         {!walk && (
           <OrbitControls
@@ -582,6 +658,7 @@ export default function Studio3D({
             solidFurniture={solid}
             keys={keys}
             onMove={setWalkInfo}
+            at={walkerAt}
           />
         )}
         <Shooter
@@ -770,6 +847,16 @@ export default function Studio3D({
               className={`rounded px-2 py-1 ${furniture ? 'bg-slate-800 text-white' : 'hover:bg-slate-100'}`}
             >
               Furniture
+            </button>
+            <button
+              type="button"
+              aria-pressed={doorsOpen}
+              onClick={() => setDoorsOpen(!doorsOpen)}
+              className={`rounded px-2 py-1 ${doorsOpen ? 'bg-slate-800 text-white' : 'hover:bg-slate-100'}`}
+              data-testid="doors-open"
+              title="Show doors open (as on the plan) or closed"
+            >
+              Doors open
             </button>
             <span className="mx-1 h-5 w-px bg-slate-200" />
             <button

@@ -4,14 +4,17 @@
  * what a finished mission is worth. A campaign is data (campaigns/); this
  * works it out. Objectives are done by the game's own systems: being dressed
  * or somewhere (checked after every change), a meeting attended, a case
- * answered, or a scene played on walking up to someone. Rewards are given
+ * answered, a career task passed, a promotion, or a scene played on walking
+ * up to someone. Rewards are given
  * once, by mission. Pure.
  */
+import { getAssignment } from '../../content/assignments'
+import { getCareer } from '../../content/careers'
 import type { Story, WorkState } from '../../persistence/schemas'
 import type { ProfileData } from '../career'
 import { arriveCase } from '../cases'
 import { caseFor } from '../caseVariants'
-import { firstName } from '../career'
+import { firstName, isPassed } from '../career'
 import { earn } from '../lifeTime'
 import { changeTrust } from '../relationships'
 import { campaignFor } from './registry'
@@ -131,6 +134,15 @@ export function isTrue(profile: ProfileData, o: Objective): boolean {
     }
     case 'case':
       return profile.work.cases[o.case]?.status === 'submitted'
+    case 'task': {
+      const assignment = getAssignment(o.assignment)
+      return !!assignment && isPassed(assignment, profile.assignments[o.assignment])
+    }
+    case 'level': {
+      const levels = getCareer(profile.careerId).levels
+      const want = levels.findIndex((l) => l.id === o.level)
+      return want >= 0 && levels.findIndex((l) => l.id === profile.levelId) >= want
+    }
     case 'talk':
       return false
   }

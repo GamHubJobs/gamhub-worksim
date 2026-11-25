@@ -11,6 +11,7 @@ import { samePoint } from '../../studio/geometry'
 import { material } from '../../studio/materials'
 import { activeDepartment } from '../../content/departments'
 import { projectFromJson } from '../../studio/documents'
+import { isDxf, projectFromDxf } from '../../studio/dxfImport'
 import { reviewDesign, reviewText, type ReviewerRole } from '../../studio/review'
 import {
   emptyProject,
@@ -371,7 +372,8 @@ export const studio: ToolDefinition<StudioState, StudioCheck> = {
         make: sampleHouse,
       },
     ],
-    fromBackup: projectFromJson,
+    // A JSON backup, or a DXF plan from Space Studio or another CAD program.
+    fromBackup: (text) => (isDxf(text) ? projectFromDxf(text) : projectFromJson(text)),
     named: (s, name) => ({ ...s, project: { ...s.project, name } }),
   },
   guide: {

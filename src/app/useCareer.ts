@@ -416,13 +416,16 @@ export function useCareer() {
           reward = result.reward
           return {
             ...latest,
-            ...checkAchievements(
-              checkCases(
-                checkEvents(
-                  afterSubmission(result.profile, assignment, grade, result.reward),
+            // The story moves on when a task it waits for is passed.
+            ...checkStory(
+              checkAchievements(
+                checkCases(
+                  checkEvents(
+                    afterSubmission(result.profile, assignment, grade, result.reward),
+                  ),
                 ),
+                submittedAt,
               ),
-              submittedAt,
             ),
           }
         },

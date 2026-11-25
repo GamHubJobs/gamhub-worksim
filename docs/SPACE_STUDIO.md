@@ -323,12 +323,73 @@ Every edit is a function `state → state`, so undo and redo are exact.
   - every export downloaded and read back; duplicate, rename and delete;
   - the corrections task fixed in Space Studio, marked 100%, and the team's review in the manager's reply.
 
-## 5. Limits
+## 5. The story: “The Headquarters Transformation”
 
-- **Roofs** are built over the outline's bounding rectangle: an L-shaped plan gets a rectangular roof.
-- **Walls** are straight, and only rectangular rooms can be resized by typing their size; other rooms are reshaped by dragging their corners.
-- **Rooms and walls:** rooms are drawn as rooms, or made by closing a chain of walls. Walls drawn one at a time do not become a room until their outline is closed.
-- **Doors** are shown open in 3D. They do not swing as you walk.
-- **The PDF** places each plan as a high-resolution image at true scale; the text of the title block and report is vector.
-- **DXF** is exported, not imported.
-- **Space guidance and prices** are simplified and fictional, and every screen says so.
+The career's Story Mode (`src/game/story/campaigns/architecture.ts`), built on
+the same campaign engine as every other career.
+
+| Chapter               | Missions (main, side)                                                                   | What moves it on                                                                                                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 · New in the studio | A scale rule and a desk; Your first plan; _Which way is north?_                         | Meeting Marguerite and Tobias; **the flat B task passed in Space Studio**; Sana's critique                                                                                                               |
+| 2 · The brief         | Our own floor; Everyone wants something; First impressions; _The numbers do not add up_ | The headquarters redesign announced; Finance, Office Administration (Tom) and People & Culture's competing needs; **the Lumen fit-out and the Brightsmile reception passed**; Nina's front-of-house list |
+| 3 · Revisions         | Your own zone; The riser; Fifteen per cent; _Open plan, closed doors_                   | **Promotion to Designer**; Northbank Engineering's riser (Ingrid); **the Northgate re-plan passed**; Finance's 15% cut (Priya) and **the studio's requests case**; Sana and Tobias's disagreement        |
+| 4 · The presentation  | A week early; Pictures or the truth; The board; What comes next                         | The deadline moved forward with Tobias called away; **the Brightsmile design review case** as a rehearsal; Hamid's renders or the real walkthrough; the board; the promotion opportunity                 |
+
+- **Two new objective kinds** were added to the engine, used by this story and
+  open to any career's:
+  - `task`: a career task passed; work passed before the story reached it
+    counts too;
+  - `level`: a promotion.
+
+  The story is checked again after every task is submitted, so it moves on as
+  soon as the work is marked.
+
+- **Decisions:** five decisions make a sound design:
+  1. listening to Sana's critique;
+  2. keeping Office Administration's post room;
+  3. moving the meeting suite clear of the riser;
+  4. phasing the works rather than cutting accessibility;
+  5. showing the real model instead of flattering renders.
+
+  The board raises exactly the problems left in. Four or more good decisions
+  earn approval and a recommendation for Senior Designer; two or three bring
+  conditions; fewer, a design sent back.
+
+- **Integrity:** missions open in order, a chapter only after the last one's
+  main missions, and objectives are done in order, so nothing essential can be
+  skipped. Progress is part of the save, so it survives reloads. No case was
+  added, so the career's cases stay balanced with every other career's.
+
+## 6. Limits lifted (2026-11-21)
+
+- **Roofs follow the building:**
+  - a roof drawn over square-cornered rooms takes their joined outline;
+  - pitched roofs are built over each rectangle of it, so an L-shaped plan
+    gets a cross-gable;
+  - flat roofs follow the outline exactly (`src/studio/outline.ts`).
+- **Curved walls (Shift+W):** click both ends, then bend. The curve is made of
+  short straight walls, so doors, 3D, collision and the checks work on it as
+  on any wall.
+- **Typed sizes for any room:** a non-rectangular room is stretched in
+  proportion, and its walls and furniture follow.
+- **Doors swing:**
+  - in the walkthrough each door opens as you come within 1.6 m, and closes
+    behind you;
+  - in 3D a _Doors open_ button shows them open or closed.
+- **Vector PDF:** plans are drawn as lines, fills and text, to scale
+  (`src/tools/studio/pdfPlan.ts`).
+- **DXF import:** _Import a backup or DXF_ reads Space Studio's own DXF back
+  (floors, walls, named rooms, doors, windows, labels), or any other ASCII DXF
+  (lines become walls, closed outlines become rooms, in the drawing's units)
+  (`src/studio/dxfImport.ts`).
+
+## 7. Limits that remain
+
+- **Roofs on angled outlines:** a roof over rooms that are not square-cornered
+  covers their bounding rectangle.
+- **Curved walls** are faceted (pieces of about 40 cm).
+- **DXF import from other programs** brings walls and rooms. Their doors,
+  windows and furniture are not recognised, because every program draws them
+  differently.
+- **Space guidance and prices** are simplified and fictional, and every screen
+  says so.

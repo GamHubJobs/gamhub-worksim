@@ -7,6 +7,7 @@ const PATHS = {
   door: 'M5 21V4h9v17M5 21h14M11 12.5h.01M14 4a10 10 0 0 1 5 8.7',
   window: 'M4 4h16v16H4V4Zm8 0v16M4 12h16',
   pass: 'M5 21V8a7 7 0 0 1 14 0v13M3 21h18',
+  arc: 'M4 19C4 10 10 5 20 5M4 19h.01M20 5h.01',
   stairs: 'M3 20h4v-4h4v-4h4V8h4V4h2',
   column: 'M8 3h8M8 21h8M9 3v18m6-18v18',
   balcony: 'M3 10h18M3 10v10h18V10M7 10v10m5-10v10m5-10v10M6 10V4h12v6',

@@ -104,7 +104,7 @@ import { Icon, type IconName } from '../ui/Icon'
 import { DayEnd } from '../workday/DayEnd'
 import { useWorkClock } from '../workday/useWorkClock'
 import { WorkdayBar } from '../workday/WorkdayBar'
-import { createDocument } from '../persistence/documentsRepo'
+import { createDocument, updateDocument } from '../persistence/documentsRepo'
 import { AppWindowFrame } from './windows/AppWindowFrame'
 import {
   readSettings,
@@ -613,6 +613,20 @@ export function Desktop({
             p,
           )
         }),
+      /** Puts a started tool task's model answer in its file (then handed in as usual). */
+      solveTask: async (assignmentId: string) => {
+        const assignment = getAssignment(assignmentId)
+        let documentId: string | undefined
+        await act((p) => {
+          documentId = p.assignments[assignmentId]?.documentId
+          return p
+        })
+        if (!assignment?.tool || !documentId) return false
+        await updateDocument(documentId, {
+          content: { tool: assignment.tool.id, state: assignment.tool.solution },
+        } as Parameters<typeof updateDocument>[1])
+        return true
+      },
       /** Fills in a case's model answers (documents excepted). */
       answerCase: (caseId: string) =>
         act((p) => {

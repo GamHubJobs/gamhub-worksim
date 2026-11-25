@@ -143,16 +143,36 @@ test('Space Studio: draw, size, furnish, see in 3D, walk through, and keep it af
   })
   const start = await walker(page)
   // Backwards into the south wall (its window is solid): stopped inside.
+  // (Walking speed depends on the frame rate under load, so it waits for the movement.)
   await page.keyboard.down('s')
-  await page.waitForTimeout(4000)
+  await expect
+    .poll(async () => (await walker(page)).y, { timeout: 60_000 })
+    .toBeGreaterThan(start.y + 500)
+  // Keep pressing: the wall stops the walker.
+  let last = (await walker(page)).y
+  await expect
+    .poll(
+      async () => {
+        const now = (await walker(page)).y
+        const still = Math.abs(now - last) < 2
+        last = now
+        return still
+      },
+      { intervals: [1500], timeout: 60_000 },
+    )
+    .toBe(true)
   await page.keyboard.up('s')
-  const back = await walker(page)
-  expect(back.y).toBeGreaterThan(start.y + 500)
-  expect(back.y).toBeLessThanOrEqual(4600 - 75 - 250 + 2)
+  expect((await walker(page)).y).toBeLessThanOrEqual(4600 - 75 - 250 + 2)
   await page.screenshot({ path: `${shots}/space-studio/walk.png` })
   // Forwards through the door in the north wall: outside.
   await page.keyboard.down('w')
-  await expect.poll(async () => (await walker(page)).room, { timeout: 30_000 }).toBeNull()
+  // The door swings open as the walker comes up to it.
+  await expect
+    .poll(() => page.evaluate<number>('window.__studioDoorsOpen ?? 0'), {
+      timeout: 90_000,
+    })
+    .toBeGreaterThan(0)
+  await expect.poll(async () => (await walker(page)).room, { timeout: 90_000 }).toBeNull()
   await page.keyboard.up('w')
   expect((await walker(page)).y).toBeLessThan(1000)
   await expect(page.getByTestId('walk-room')).toContainText('Outside the rooms')
@@ -230,6 +250,34 @@ test('Space Studio: projects are duplicated, renamed, exported and deleted', asy
   await list.getByTestId('delete-project').first().click()
   await page.getByTestId('confirm-delete-project').click()
   await expect(list.getByTestId('open-project')).toHaveCount(before - 1)
+
+  // The DXF, imported back as a new project: walls, named rooms, doors and windows.
+  await page.getByTestId('import-project').setInputFiles({
+    name: 'Show flat.dxf',
+    mimeType: 'application/dxf',
+    buffer: Buffer.from(dxf.text),
+  })
+  const studio = page.getByTestId('studio')
+  await expect(studio).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByTestId('studio-project-name')).toHaveText('Show flat (imported)')
+  await expect(studio.getByTestId('room-label')).toHaveCount(5)
+  await expect(
+    studio.getByTestId('room-label').filter({ hasText: 'Bedroom 1' }),
+  ).toHaveCount(1)
+  await expect(
+    studio.locator('[data-testid=plan-drawing] [data-kind=window]'),
+  ).toHaveCount(4)
+
+  // A curved wall: two ends, then bent, in short straight pieces.
+  const walls = studio.getByTestId('studio-canvas').getByTestId('plan-wall')
+  const wallsBefore = await walls.count()
+  await page.getByTestId('tool-arc').click()
+  await clickPlan(page, 600, 5200)
+  await clickPlan(page, 3600, 5200)
+  await expect(studio.getByTestId('arc-preview')).toHaveCount(1)
+  await clickPlan(page, 2100, 6200)
+  await expect.poll(() => walls.count()).toBeGreaterThanOrEqual(wallsBefore + 4)
+  await page.screenshot({ path: `${shots}/space-studio/imported-curved.png` })
 })
 
 test('Architecture: the supervisor’s corrections, fixed in Space Studio, marked 100% and reviewed', async ({

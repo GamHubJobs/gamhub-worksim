@@ -694,7 +694,7 @@ export function Properties({
                 label="Width"
                 value={size.width}
                 units={units}
-                disabled={disabled || !rect}
+                disabled={disabled}
                 testId="room-width-input"
                 onChange={(v) => resize(v, size.depth)}
               />
@@ -702,7 +702,7 @@ export function Properties({
                 label="Depth"
                 value={size.depth}
                 units={units}
-                disabled={disabled || !rect}
+                disabled={disabled}
                 testId="room-depth-input"
                 onChange={(v) => resize(size.width, v)}
               />
@@ -711,7 +711,8 @@ export function Properties({
               Area {formatArea(polygonArea(r.outline), units)}
               {!rect && (
                 <span className="block text-xs text-slate-500">
-                  Drag its corners to reshape it.
+                  Typed sizes stretch the whole shape; drag a corner to move just that
+                  corner.
                 </span>
               )}
             </p>
