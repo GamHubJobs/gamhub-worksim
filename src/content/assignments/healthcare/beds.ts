@@ -42,7 +42,7 @@ export const wardBeds: AssignmentInput = {
   version: 1,
   careerId: 'healthcare',
   levelId: 'senior-healthcare-assistant',
-  order: 5,
+  order: 7,
   kind: 'tool',
   title: 'A discharge and an admission',
   summary:

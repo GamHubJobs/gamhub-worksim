@@ -11,6 +11,7 @@ import {
   LabView,
   PharmacyView,
 } from './ClinicalSections'
+import { CasesView, ProgressView } from './CasesSection'
 import { MEDICINES } from './data'
 import {
   acknowledgeResult,
@@ -36,6 +37,8 @@ const SECTIONS = [
   ['lab', 'Laboratory'],
   ['pharmacy', 'Pharmacy'],
   ['beds', 'Beds and admissions'],
+  ['cases', 'Patient cases'],
+  ['progress', 'Case progress'],
   ['audit', 'Audit log'],
 ] as const
 type SectionId = (typeof SECTIONS)[number][0]
@@ -46,7 +49,9 @@ export default function ClinicalWorkspace({
   onUpdate,
   lockedSections,
   initialSection,
+  player,
 }: ToolWorkspaceProps<ClinicalState>) {
+  const who = player ?? { levelId: 'healthcare-trainee', day: 1 }
   const [section, setSection] = useState<SectionId>(
     (SECTIONS.find(([id]) => id === initialSection)?.[0] ?? 'record') as SectionId,
   )
@@ -64,6 +69,16 @@ export default function ClinicalWorkspace({
     }
     onUpdate?.(() => result.state)
     setDone(result.state.audit.at(-1)?.action ?? 'Done')
+    return true
+  }
+  /** At the bedside: the case shows what happened, so no banner after each step. */
+  const runCase: Run = (fn) => {
+    if (!canEdit) return false
+    const result = fn(state)
+    setProblems(result.problems)
+    setDone(null)
+    if (result.problems.length) return false
+    onUpdate?.(() => result.state)
     return true
   }
 
@@ -138,6 +153,12 @@ export default function ClinicalWorkspace({
           <PharmacyView state={state} canEdit={canEdit} run={run} />
         )}
         {section === 'beds' && <BedsView state={state} canEdit={canEdit} run={run} />}
+        {section === 'cases' && (
+          <CasesView state={state} canEdit={canEdit} run={runCase} player={who} />
+        )}
+        {section === 'progress' && (
+          <ProgressView state={state} canEdit={canEdit} run={run} player={who} />
+        )}
         {section === 'audit' && <AuditView state={state} />}
       </div>
     </div>

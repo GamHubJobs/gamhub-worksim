@@ -10,6 +10,7 @@
  * doctors, and the player's job is the safe process around them.
  */
 import { z } from 'zod'
+import { CasesStateSchema } from '../../clinical/schema'
 
 const Id = z.string().min(1).max(40)
 const Time = z.string().regex(/^\d{2}:\d{2}$/)
@@ -161,6 +162,8 @@ export const ClinicalStateSchema = z.object({
   meds: z.array(MedOrderSchema).max(200).default([]),
   beds: z.array(BedSchema).max(60).default([]),
   audit: z.array(AuditSchema).max(1000).default([]),
+  /** Patient cases: the one in progress, every attempt, and assigned cases (absent in older files). */
+  cases: CasesStateSchema.optional(),
 })
 
 export type Patient = z.infer<typeof PatientSchema>

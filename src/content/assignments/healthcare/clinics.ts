@@ -51,7 +51,7 @@ export const wardClinics: AssignmentInput = {
   version: 1,
   careerId: 'healthcare',
   levelId: 'healthcare-trainee',
-  order: 3,
+  order: 4,
   kind: 'tool',
   title: 'A clinic morning in outpatients',
   summary:

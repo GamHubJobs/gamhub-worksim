@@ -1,6 +1,7 @@
 /** Ward Systems: its registration with the tools framework (checks, grading, guide). */
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
+import { gradeCase } from '../../clinical/ward'
 import { checkResult } from '../checks'
 import type { ToolDefinition } from '../types'
 import { sampleClinical } from './data'
@@ -75,6 +76,14 @@ export const ClinicalCheckSchema = z.discriminatedUnion('type', [
   FileCheckBaseSchema.extend({ type: z.literal('no-unsafe-medicine') }),
   /** A specimen was labelled with exactly the patient's name and date of birth. */
   FileCheckBaseSchema.extend({ type: z.literal('lab-label'), order: z.string() }),
+  /** A patient case was passed at this difficulty or harder (Patient cases). */
+  FileCheckBaseSchema.extend({
+    type: z.literal('case'),
+    case: z.string(),
+    difficulty: z
+      .enum(['beginner', 'intermediate', 'advanced', 'expert'])
+      .default('beginner'),
+  }),
 ])
 
 export type ClinicalCheck = z.infer<typeof ClinicalCheckSchema>
@@ -86,6 +95,10 @@ const has = (text: string, groups: string[][]) =>
 
 function gradeCheck(check: ClinicalCheck, s: ClinicalState) {
   switch (check.type) {
+    case 'case': {
+      const r = gradeCase(s, check.case, check.difficulty)
+      return checkResult(check, r.fraction, r.problems)
+    }
     case 'privacy': {
       const breaches = privacyBreaches(s)
       return checkResult(
@@ -278,6 +291,18 @@ export const clinical: ToolDefinition<ClinicalState, ClinicalCheck> = {
       description: 'The bed board: admissions, moves, cleaning and discharge.',
     },
     {
+      id: 'cases',
+      name: 'Patient cases',
+      description:
+        'Simulated patients at the bedside: talk, observe, escalate and document; scored and debriefed.',
+    },
+    {
+      id: 'progress',
+      name: 'Case progress',
+      description:
+        'Your attempts (first, latest, best), weakest areas, recurring gaps and the cases Grace has assigned.',
+    },
+    {
       id: 'audit',
       name: 'Audit log',
       description: 'Every action, who did it and when: records are checked.',
@@ -315,6 +340,14 @@ export const clinical: ToolDefinition<ClinicalState, ClinicalCheck> = {
       {
         title: 'Specimens and results',
         body: 'Label specimens at the bedside from what the patient tells you. The laboratory rejects any specimen whose label does not match the request exactly, and a new one is taken. A critical result is phoned through to the doctor responsible straight away, and you record who you told.',
+      },
+      {
+        title: 'Patient cases',
+        body: 'In Patient cases you look after a fictional patient at the bedside. Talk to them in your own words (they only tell you what you ask about), use the equipment and the actions for your grade, and watch: the patient changes with time and with what you do. Anything beyond your role (oxygen, medicines, reading an ECG, diagnosing) is done by asking a nurse or doctor. Finish the case for a score and a debrief from Grace; replay as often as you like, and your first, latest and best attempts are kept in Case progress.',
+      },
+      {
+        title: 'Difficulty',
+        body: 'Beginner shows the objectives, the score and hints, and allows more time; expert shows none of them, allows less time and needs a higher mark. The patient and their story are the same at every level.',
       },
       {
         title: 'Beds and discharge',

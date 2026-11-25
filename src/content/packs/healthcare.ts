@@ -6,6 +6,11 @@
 import type { CareerPack } from '../loader'
 import { aiCases } from '../cases/ai'
 import { wardBeds } from '../assignments/healthcare/beds'
+import {
+  wardDeteriorating,
+  wardEmergencies,
+  wardFirstCase,
+} from '../assignments/healthcare/cases'
 import { wardClinics } from '../assignments/healthcare/clinics'
 import { wardMedicines } from '../assignments/healthcare/medicines'
 import { wardObservations } from '../assignments/healthcare/observations'
@@ -15,7 +20,16 @@ import { ASSESSMENTS_HEALTHCARE } from '../assessments/healthcare'
 
 export const PACK: CareerPack = {
   careerId: 'healthcare',
-  assignments: [wardObservations, wardSpecimens, wardClinics, wardMedicines, wardBeds],
+  assignments: [
+    wardObservations,
+    wardFirstCase,
+    wardSpecimens,
+    wardClinics,
+    wardMedicines,
+    wardDeteriorating,
+    wardBeds,
+    wardEmergencies,
+  ],
   cases: [...aiCases('healthcare'), ...HEALTHCARE_CASES],
   assessments: ASSESSMENTS_HEALTHCARE,
 }

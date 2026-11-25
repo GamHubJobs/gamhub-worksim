@@ -4,7 +4,7 @@
  * trolley, the observations round at the vital signs stand, the research in
  * the library, disclosure at the scanner, the failing lamp circuit on the test
  * bench, the mezzanine beam on the beam rig. TaskLamps.tsx puts a status lamp
- * there, lit from the save (amber in hand, red sent back, green done), so the
+ * there (the patient cases at the patients’ bedsides), lit from the save (amber in hand, red sent back, green done), so the
  * work in the Tasks app is seen where it is done. Tasks not tied to one place
  * (the shared ones: privacy, conflicts) have no spot.
  */
@@ -59,6 +59,28 @@ export const TASK_SPOTS: Record<Theme, TaskSpot[]> = {
       z: ADMISSION_BED.z,
     },
     { task: 'ward-clinics', label: 'Clinic list', ...RECEPTION, y: 1.3 },
+    // Patient cases (Ward Systems → Patient cases) at Bay B's patients' bedsides.
+    {
+      task: 'ward-first-case',
+      label: 'Your first patients',
+      x: WING_BED_X - 1.2,
+      y: 1.35,
+      z: BAY_B_BEDS[0].z,
+    },
+    {
+      task: 'ward-deteriorating',
+      label: 'Patients who get worse',
+      x: WING_BED_X - 1.2,
+      y: 1.35,
+      z: BAY_B_BEDS[1].z,
+    },
+    {
+      task: 'ward-emergencies',
+      label: 'Emergencies',
+      x: WING_BED_X - 1.2,
+      y: 1.35,
+      z: BAY_B_BEDS[3].z,
+    },
   ],
   law: [
     { task: 'legal-intake', label: 'New enquiries', ...RECEPTION, y: 1.3 },

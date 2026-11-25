@@ -152,7 +152,7 @@ describe('each task at its equipment (the themed workplaces)', () => {
       // Every one of the career's own tasks that has a place has a lamp there.
       expect(TASK_SPOTS[theme].length, career.id).toBeGreaterThanOrEqual(5)
     }
-    expect(spots).toBe(15)
+    expect(spots).toBe(18)
   })
 
   it("each task's state comes from the save, through to the scene", () => {

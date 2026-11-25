@@ -57,7 +57,7 @@ export const wardSpecimens: AssignmentInput = {
   version: 1,
   careerId: 'healthcare',
   levelId: 'healthcare-trainee',
-  order: 2,
+  order: 3,
   kind: 'tool',
   title: 'Specimens and a critical result',
   summary:

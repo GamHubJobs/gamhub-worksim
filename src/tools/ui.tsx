@@ -33,6 +33,8 @@ export interface ToolWorkspaceProps<State> {
   history?: { undo: () => void; redo: () => void; canUndo: boolean; canRedo: boolean }
   /** Saves now (a tool's own Save button); resolves false if it could not be saved. */
   onSave?: () => Promise<boolean>
+  /** The player (career level and office day), for tools whose content depends on them (Ward Systems' patient cases). */
+  player?: { levelId: string; day: number }
   /** The file's title, e.g. for the names of exported files. */
   title?: string
 }

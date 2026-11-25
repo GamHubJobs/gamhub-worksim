@@ -95,6 +95,7 @@ export function ToolWindow({
         state={content.state}
         readOnly={readOnly}
         lockedSections={lockedSections}
+        player={profile ? { levelId: profile.levelId, day: profile.work.day } : undefined}
         onUpdate={
           readOnly
             ? undefined

@@ -192,6 +192,81 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-25 · Patient cases: a clinical simulation on Ward 4
+
+**What:** a patient-case simulator inside the Healthcare career, run by one
+engine for every case. It lives in Ward Systems as two new sections, Patient
+cases and Case progress, and adds three tasks to the career path. Design and
+the Phase 0 investigation: `docs/CLINICAL_SIMULATION.md`.
+
+- **22 fictional cases** from beginner to expert, in five rooms:
+  - observations;
+  - specimens;
+  - pressure areas;
+  - nil by mouth;
+  - hydration;
+  - isolation;
+  - consent and refusal;
+  - patient identity;
+  - falls;
+  - new confusion;
+  - bleeding after surgery;
+  - low blood glucose;
+  - chest pain;
+  - breathlessness;
+  - signs of stroke and of sepsis;
+  - an allergic reaction;
+  - abdominal pain;
+  - fainting;
+  - high blood pressure in clinic;
+  - a night chart that crept up.
+- **At the bedside:**
+  - talk to the patient in your own words (they answer only what you ask);
+  - 59 actions limited to your grade, with clinicians' work only ever
+    referred;
+  - a 3D bedside with working equipment;
+  - a monitor with the score;
+  - a timeline, hints and a tutor.
+- **Patients change.** Their stage moves on with time, with what you do, and
+  with what you do _not_ do in time.
+- **Scoring:**
+  - ten areas, with critical, recommended, unnecessary and harmful actions
+    judged on timing;
+  - a debrief with the patient's course;
+  - Grace's feedback quoting the ward times;
+  - first, latest and best attempts, replayable at any difficulty.
+- **One hospital record.** Cases write into Ward Systems: the chart, notes,
+  laboratory, clock and audit log.
+- **Supervision.** Case progress shows the weakest areas, recurring gaps, and
+  cases Grace assigns with due days (done and overdue tracked).
+- **Career tasks:** _Your first patients_ (trainee), _When a patient gets
+  worse_ (assistant) and _Emergencies on the ward_ (senior assistant). They
+  are slotted into the path; existing tasks and saves are unchanged.
+
+**Decisions:**
+
+- The engine is the authority. An optional AI model (the player's own) may
+  only reword the patient or expand the tutor, and is never saved.
+- Full Code Medical's licence forbids reverse engineering its app, so only its
+  public website was read. Shadow Health could not be reached.
+- No paid services; no real patient data.
+
+**Tests:**
+
+- unit tests for the engine, every case (each one is passed by an automatic
+  good-care player), the assessment, saving and old files, the shared record,
+  grading, Grace and the dashboard;
+- a browser test playing the first case task end to end, with a reload.
+
+**Limits:**
+
+- the patient understands keywords and phrases, not free language;
+- the bedside uses simple shapes;
+- there is no voice input;
+- scoring is simplified for learning.
+
+---
+
 ## 2026-11-21 · The Headquarters Transformation, and Space Studio's limits lifted
 
 - **The story:**

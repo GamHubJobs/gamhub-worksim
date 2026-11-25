@@ -65,7 +65,7 @@ export const wardMedicines: AssignmentInput = {
   version: 1,
   careerId: 'healthcare',
   levelId: 'healthcare-assistant',
-  order: 4,
+  order: 5,
   kind: 'tool',
   title: 'The medicines round, and two prescriptions',
   summary:
