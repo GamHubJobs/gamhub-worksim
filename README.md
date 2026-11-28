@@ -40,6 +40,23 @@ Stop the app with `Ctrl+C` in the terminal.
 
 First-time setup for browser tests: `npx playwright install chromium`.
 
+**If browser tests fail on a busy computer.** The tests use the development server,
+which prepares each part of the game the first time it is asked for. On a heavily
+loaded machine the game can take longer than a check's 5-second wait to open, so
+tests fail right after a start or a reload, still showing "Opening GamHub WorkSim…".
+To tell this apart from a real fault:
+
+1. Close other programs, and stop other development servers (ports 5173, 5174, 4173).
+2. Rerun only the failed files, one at a time, with no retries:
+   `npx playwright test tests/e2e/<file>.spec.ts --workers=1 --retries=0`
+3. Open the failure's `test-results/<test>/error-context.md`. A page that still
+   reads "Opening GamHub WorkSim…" means the machine was slow; anything else is
+   worth investigating.
+4. To check that a failure is not new, run the same test on an earlier commit
+   (for example in a `git worktree`) on the same machine.
+
+Do not lengthen the waits to make such a run pass.
+
 ## Documentation
 
 - **[Player handbook](docs/PLAYER_HANDBOOK.md): start here**
