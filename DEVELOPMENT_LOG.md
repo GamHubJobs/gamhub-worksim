@@ -192,6 +192,30 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-28 · WorkSim AI from inside each professional tool
+
+**What:**
+
+- Every professional tool's window has the **WorkSim AI** button that the other
+  apps have, with:
+  - _Summarise this file_;
+  - _How should I approach this task?_ (when the file belongs to a task);
+  - _What can you help with in …?_
+- The built-in guide summarises a tool file from what the tool works out from it
+  (its reports and charts), and says how to put them into a report or a
+  presentation. Before, it picked sentences, which reads badly on tables.
+
+**Tests:**
+
+- Unit: the summary of a Books file lists its reports and points to _Insert from
+  a professional tool_.
+- Browser: from the Books window's own button, _Summarise this file_ answers with
+  the trial balance among its reports.
+- The Word Craft insertion test now waits for the game to start again after its
+  reload, as other tests do. Its checks on the document are unchanged.
+
+---
+
 ## 2026-11-28 · The stories move with the work
 
 **Why:** the audit found that nine of the ten career stories could be finished by

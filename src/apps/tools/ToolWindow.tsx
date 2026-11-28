@@ -11,6 +11,7 @@ import { getPerson } from '../../content/departments'
 import { toolContext } from '../../tools/outputs'
 import { getTool } from '../../tools/registry'
 import { getWorkspace } from '../../tools/ui'
+import { AskAiMenu } from '../ai/AskAiMenu'
 import { useAiContext } from '../ai/hub'
 import { DocumentFrame } from '../shared/DocumentFrame'
 import { useSavedDocument } from '../shared/useSavedDocument'
@@ -173,6 +174,25 @@ export function ToolWindow({
                 Task
               </button>
             )}
+            <AskAiMenu
+              app={`tool:${toolId}`}
+              compact
+              actions={[
+                { label: 'Summarise this file', action: 'summarise' },
+                ...(assignment
+                  ? [
+                      {
+                        label: 'How should I approach this task?',
+                        action: 'approach',
+                      },
+                    ]
+                  : []),
+                {
+                  label: `What can you help with in ${tool.name}?`,
+                  question: `What can you help me with in ${tool.name}?`,
+                },
+              ]}
+            />
           </>
         }
         sidePanel={

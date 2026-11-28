@@ -193,6 +193,16 @@ describe('WorkSim AI in a professional tool', () => {
     const answer = ask('How do I record a journal in here?', [books])
     expect(answer.source.model).toBe(false)
     expect(answer.text).toContain('Record a journal')
+    // "Summarise this file": what the tool works out, not sentences picked from tables.
+    const summary = builtinAnswer({
+      messages: [{ role: 'user', text: 'Summarise this file' }],
+      context: { items: [books], trimmed: 0 },
+      mode: 'learning',
+      action: 'summarise',
+    })
+    expect(summary.text).toContain('What Books works out from this file')
+    expect(summary.text).toContain('Trial balance')
+    expect(summary.text).toContain('Insert from a professional tool')
     // Not about the tool: the usual answers.
     expect(ask('tips for writing a good prompt', [books]).text).toContain('Good prompts')
   })

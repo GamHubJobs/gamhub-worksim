@@ -44,6 +44,19 @@ test('WorkSim AI knows the open Books file and answers from its guide', async ({
   const answer = ai(page).getByTestId('ai-answer').first()
   await expect(answer).toContainText('Books: Record a journal')
   await expect(answer.getByTestId('ai-source')).toContainText('not an AI model')
+
+  // From the Books window itself: its own WorkSim AI button.
+  await apps(page)
+    .getByRole('button', { name: /^Books/ })
+    .click()
+  await page
+    .getByTestId('window-tool:books')
+    .getByRole('button', { name: 'WorkSim AI' })
+    .click()
+  await page.getByRole('menuitem', { name: 'Summarise this file' }).click()
+  const summary = ai(page).getByTestId('ai-answer').nth(1)
+  await expect(summary).toContainText('What Books works out from this file')
+  await expect(summary).toContainText('Trial balance')
 })
 
 test("Books' reports and charts go into a report in Word Craft", async ({ page }) => {
@@ -80,6 +93,8 @@ test("Books' reports and charts go into a report in Word Craft", async ({ page }
   // Both are kept with the document.
   await waitUntilSaved(page)
   await page.reload()
+  // The game starts again (as after any reload), then the document reopens.
+  await expect(page.getByTestId('desktop')).toBeVisible({ timeout: 30_000 })
   await expect(body.locator('table').first()).toContainText('Total')
   await expect(body.getByRole('img', { name: /Expenses by account/ })).toBeVisible()
 })

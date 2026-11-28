@@ -161,6 +161,7 @@ function formulaAnswer(item: ContextItem | undefined, mode: AiMode): string {
 function summaryAnswer(item: ContextItem | undefined): string {
   if (!item)
     return 'Open the email or document you want summarised (or select some text), then ask again.'
+  if (item.kind === 'tool') return toolSummary(item)
   const points = summarise(item.text)
   return points.length
     ? `The main points of ${item.label.toLowerCase()}:\n\n${list(points)}\n\nThis is the opening sentence of each paragraph, picked by simple rules: read the full text before you act on it.`
@@ -471,4 +472,22 @@ export function toolGuideAnswer(
     `From ${tool}'s own guide (the Guide button in the tool has the rest). Check it against your file: the figures in your work are what count.`,
   )
   return parts.join('\n\n')
+}
+
+/**
+ * A professional tool's open file, summarised from what the tool works out
+ * (its first line and the reports it produces), not by picking sentences.
+ */
+function toolSummary(item: ContextItem): string {
+  const tool = typeof item.data?.tool === 'string' ? item.data.tool : 'the tool'
+  const outputs = strings(item.data?.outputs)
+  const first = item.text.split('\n')[0]
+  return [
+    `**${item.label}**`,
+    first,
+    outputs.length
+      ? `What ${tool} works out from this file:\n\n${list(outputs)}`
+      : `${tool} has nothing worked out from this file yet.`,
+    'Each of these can go into a report or a presentation: in Word Craft or Deck Craft, choose Insert from a professional tool. Check the figures in the tool itself before you rely on them.',
+  ].join('\n\n')
 }
