@@ -192,6 +192,45 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-28 · The stories move with the work
+
+**Why:** the audit found that nine of the ten career stories could be finished by
+talking to people and answering a case, without doing any of the career's work.
+Only Architecture's story waited for passed tasks and a promotion.
+
+**What:**
+
+- In each of the nine, the mission that closes chapter 1 also needs one of the
+  career's tasks passed (Healthcare's is *Your first patients*, the new patient
+  cases).
+- The mission that closes chapter 2 (and Finance's chapter 3) needs the promotion
+  that the work earns.
+- The full list is in [docs/STORY_MODE_PLAN.md](docs/STORY_MODE_PLAN.md) (Story 12).
+
+**Decisions:**
+
+- The engine's existing `task` and `level` objectives are used; the story tracker
+  already shows them ("Pass “Reply to users” (Tasks)", "Be promoted to…").
+- They come after the manager's closing talk, so the conversation still happens
+  when the player reaches it, and the chapter ends when the work is done.
+- Saves:
+  - missions already finished stay finished;
+  - a mission in progress keeps the steps already done;
+  - nothing is reset.
+
+**Tests:**
+
+- Unit:
+  - every campaign's chapter 1 needs a task, and a later chapter a promotion;
+  - Finance's chapter test checks that the manager's talk alone no longer closes
+    the month, and passing the invoice check does;
+  - all ten campaigns still play to their endings.
+- Browser: the story suite passes. The chapter 2–3 test now earns the promotions
+  at work, through the development shortcut that passes earlier tasks. The first
+  test failed once under load and passed on its own.
+
+---
+
 ## 2026-11-28 · IT tools' records in reports; a campaign forecast that answers decisions
 
 **What:**

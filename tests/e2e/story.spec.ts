@@ -221,6 +221,9 @@ test('chapters 2 and 3: the supplier review with new people, and an ending that 
   test.setTimeout(600_000)
   await newFinanceCareer(page)
   await page.evaluate("window.__worksim.storyAt('supplier-review', ['knows-gap'])")
+  // The review ends with a promotion earned at work: the tasks before the
+  // budget report passed, and the level that brings (development shortcut).
+  await page.evaluate("window.__worksim.skipTo('budget-report')")
   await expect(tracker(page)).toContainText('Ask Leila')
   await play(page, 'backM', 'leila-suppliers', /who chose Brightline/)
   await play(page, 'admin', 'ben-contracts', /sign it out/)
@@ -259,6 +262,8 @@ test('chapters 2 and 3: the supplier review with new people, and an ending that 
   await page.evaluate(
     "window.__worksim.storyAt('next-step', ['marcus-tells', 'helped-maya', 'audit-truth'])",
   )
+  // The last step of the story is the next promotion, to Finance Assistant.
+  await page.evaluate("window.__worksim.skipTo('savings-proposal')")
   await talkTo(page, 'manager')
   await expect(scene(page)).toHaveAttribute('data-scene', 'priya-offer', {
     timeout: 120_000,

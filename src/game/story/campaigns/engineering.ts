@@ -66,6 +66,13 @@ export const ENGINEERING_STORY: Campaign = {
             ),
             answer('case', 'dev-vague-bug', 'Reply to the bug report (Cases)'),
             talk('rosa', 'senior', 'dev-rosa-bug', 'Tell Rosa what you found', 'desk'),
+            {
+              id: 'work-invoice-bug',
+              kind: 'task',
+              assignment: 'invoice-bug',
+              label: 'Pass “Fix the invoice totals” (Tasks)',
+              where: 'desk',
+            },
           ],
           reward: { xp: 40 },
           summary: (flags) =>
@@ -155,6 +162,13 @@ export const ENGINEERING_STORY: Campaign = {
               'Samuel, after the release',
               'manager',
             ),
+            {
+              id: 'promoted-software-developer',
+              kind: 'level',
+              level: 'software-developer',
+              label: 'Be promoted to Software Developer',
+              where: 'desk',
+            },
           ],
           flags: ['story-complete'],
           reward: { xp: 70 },

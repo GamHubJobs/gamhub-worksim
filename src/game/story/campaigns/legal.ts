@@ -75,6 +75,13 @@ export const LEGAL_STORY: Campaign = {
               'reception',
             ),
             answer('client', 'law-will-i-win', 'Reply to Maya Brightwater (Cases)'),
+            {
+              id: 'work-legal-intake',
+              kind: 'task',
+              assignment: 'legal-intake',
+              label: 'Pass “Two new enquiries” (Tasks)',
+              where: 'desk',
+            },
           ],
           reward: { xp: 40, trust: { manager: 1 } },
           summary: (flags) =>
@@ -146,6 +153,13 @@ export const LEGAL_STORY: Campaign = {
               'Talk to Eleanor after the hearing',
               'manager',
             ),
+            {
+              id: 'promoted-paralegal',
+              kind: 'level',
+              level: 'paralegal',
+              label: 'Be promoted to Paralegal',
+              where: 'desk',
+            },
           ],
           flags: ['story-complete'],
           reward: { xp: 60, trust: { manager: 2 } },

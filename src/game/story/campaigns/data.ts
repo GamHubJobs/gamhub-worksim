@@ -72,6 +72,13 @@ export const DATA_STORY: Campaign = {
               'desk',
             ),
             answer('case', 'data-numbers-mismatch', 'Explain the difference (Cases)'),
+            {
+              id: 'work-sales-summary',
+              kind: 'task',
+              assignment: 'sales-summary',
+              label: 'Pass “Sales by region and product” (Tasks)',
+              where: 'desk',
+            },
           ],
           reward: { xp: 40, trust: { manager: 1 } },
           summary: () =>
@@ -155,6 +162,13 @@ export const DATA_STORY: Campaign = {
               'See Amara after the stand-up',
               'manager',
             ),
+            {
+              id: 'promoted-data-analyst',
+              kind: 'level',
+              level: 'data-analyst',
+              label: 'Be promoted to Data Analyst',
+              where: 'desk',
+            },
           ],
           flags: ['story-complete'],
           reward: { xp: 70 },

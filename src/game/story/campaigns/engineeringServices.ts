@@ -75,6 +75,13 @@ export const ENGINEERING_SERVICES_STORY: Campaign = {
               'breakroom',
             ),
             answer('steel', 'eng-steel-order', 'Work out the steel order (Cases)'),
+            {
+              id: 'work-eng-circuit',
+              kind: 'task',
+              assignment: 'eng-circuit',
+              label: 'Pass “The indicator lamp that keeps failing” (Tasks)',
+              where: 'desk',
+            },
           ],
           reward: { xp: 40, trust: { facilities: 1 } },
           summary: (flags) =>
@@ -148,6 +155,13 @@ export const ENGINEERING_SERVICES_STORY: Campaign = {
               'See Helena in her office',
               'manager',
             ),
+            {
+              id: 'promoted-engineer',
+              kind: 'level',
+              level: 'engineer',
+              label: 'Be promoted to Engineer',
+              where: 'desk',
+            },
           ],
           flags: ['story-complete'],
           reward: { xp: 60, trust: { manager: 2 } },

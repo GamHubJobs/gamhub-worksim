@@ -71,6 +71,13 @@ export const MARKETING_STORY: Campaign = {
               'Reply to the client about the changed brief (Cases)',
             ),
             talk('leo', 'senior', 'mkt-leo-brief', 'Tell Leo how you handled it', 'desk'),
+            {
+              id: 'work-content-calendar',
+              kind: 'task',
+              assignment: 'content-calendar',
+              label: 'Pass “Content calendar and launch email” (Tasks)',
+              where: 'desk',
+            },
           ],
           reward: { xp: 40 },
           summary: (flags) =>
@@ -144,6 +151,13 @@ export const MARKETING_STORY: Campaign = {
             standup('Be at the stand-up: the results are the only topic'),
             answer('case', 'mkt-unhappy-results', 'Reply to the unhappy client (Cases)'),
             talk('sofia', 'manager', 'mkt-sofia-end', 'Sofia wants a word', 'manager'),
+            {
+              id: 'promoted-digital-marketing-executive',
+              kind: 'level',
+              level: 'digital-marketing-executive',
+              label: 'Be promoted to Digital Marketing Executive',
+              where: 'desk',
+            },
           ],
           flags: ['story-complete'],
           reward: { xp: 70 },

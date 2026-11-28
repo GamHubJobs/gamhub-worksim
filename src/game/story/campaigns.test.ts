@@ -145,6 +145,14 @@ describe('every career has its own story', () => {
               ).toBeDefined()
           }
         expect(Object.keys(c.scenes).filter((s) => !used.has(s))).toEqual([])
+        // The story moves with the work: the first chapter needs a task passed,
+        // and a later one a promotion, so talking alone never finishes it.
+        const kinds = (m: (typeof c.chapters)[number]) =>
+          m.missions
+            .filter((x) => x.type === 'main')
+            .flatMap((x) => x.objectives.map((o) => o.kind))
+        expect(kinds(c.chapters[0])).toContain('task')
+        expect(c.chapters.slice(1).flatMap(kinds)).toContain('level')
         // At least two chapters, side missions, and a choice that changes things.
         expect(c.chapters.length).toBeGreaterThanOrEqual(2)
         expect(missionsOf(c).some((m) => m.type !== 'main')).toBe(true)

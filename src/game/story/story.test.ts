@@ -26,6 +26,24 @@ import {
 
 const fresh = () => newProfileData('Alex Rivera', 0, 'office-admin-finance')
 const story = (p: ProfileData) => storyOf(p)!
+
+/** The task handed in and passed (100%), as the career records it. */
+function passed(p: ProfileData, assignment: string): ProfileData {
+  return checkStory({
+    ...p,
+    assignments: {
+      ...p.assignments,
+      [assignment]: {
+        assignmentId: assignment,
+        assignmentVersion: 1,
+        documentId: p.assignments[assignment]?.documentId ?? 'doc',
+        startedAt: 1,
+        completedSteps: [],
+        attempts: [{ score: 100, submittedAt: 2, checks: [] } as never],
+      },
+    },
+  })
+}
 const status = (p: ProfileData, id: string) =>
   statusOf(FINANCE_STORY, story(p), missionById(FINANCE_STORY, id)!)
 
@@ -212,6 +230,10 @@ describe('decisions change what happens later', () => {
       work: { ...p.work, today: { ...p.work.today, meetings: { standup: 'attended' } } },
     })
     p = playScene(p, 'priya-month-end', 'own')
+    // Talking is not enough: the month closes when the invoice check is passed.
+    expect(story(p).flags).not.toContain('chapter1-done')
+    expect(currentObjective(FINANCE_STORY, story(p))?.kind).toBe('task')
+    p = passed(p, 'invoice-check')
     expect(story(p).flags).toContain('chapter1-done')
     expect(progressOf(FINANCE_STORY, story(p))).toEqual({ done: 3, of: 6 })
     expect(story(p).chapter).toBe('ch2')
@@ -291,6 +313,8 @@ describe('the whole of “Short Delivery”', () => {
         const scene = FINANCE_STORY.scenes[o.scene]
         p = playScene(p, o.scene, pick[o.scene] ?? scene.choices[0].id)
       } else if (o.kind === 'case') p = submitted(p, o.case)
+      else if (o.kind === 'task') p = passed(p, o.assignment)
+      else if (o.kind === 'level') p = checkStory({ ...p, levelId: o.level })
       else if (o.kind === 'meeting') {
         // A new day's stand-up.
         p = atStandup({

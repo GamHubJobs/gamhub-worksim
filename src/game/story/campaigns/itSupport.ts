@@ -70,6 +70,13 @@ export const IT_STORY: Campaign = {
               'Reply to the colleague chasing their ticket (Cases)',
             ),
             talk('jess', 'senior', 'it-jess-closed', 'Tell Jess it is fixed', 'desk'),
+            {
+              id: 'work-user-replies',
+              kind: 'task',
+              assignment: 'user-replies',
+              label: 'Pass “Reply to users” (Tasks)',
+              where: 'desk',
+            },
           ],
           reward: { xp: 40 },
           summary: (flags) =>
@@ -162,6 +169,13 @@ export const IT_STORY: Campaign = {
               'desk',
             ),
             talk('ravi', 'manager', 'it-ravi-phish', 'Report to Ravi', 'manager'),
+            {
+              id: 'promoted-service-desk-analyst',
+              kind: 'level',
+              level: 'service-desk-analyst',
+              label: 'Be promoted to Service Desk Analyst',
+              where: 'desk',
+            },
           ],
           flags: ['story-complete'],
           reward: { xp: 70 },

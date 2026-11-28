@@ -84,6 +84,13 @@ export const ACCOUNTING_STORY: Campaign = {
               'Tell Daniel what you found',
               'manager',
             ),
+            {
+              id: 'work-books-journals',
+              kind: 'task',
+              assignment: 'books-journals',
+              label: 'Pass “Post March’s journals in Books” (Tasks)',
+              where: 'desk',
+            },
           ],
           reward: { xp: 40, trust: { manager: 1 } },
           summary: (flags) =>
@@ -176,6 +183,13 @@ export const ACCOUNTING_STORY: Campaign = {
               'Daniel wants to see you',
               'manager',
             ),
+            {
+              id: 'promoted-assistant-accountant',
+              kind: 'level',
+              level: 'assistant-accountant',
+              label: 'Be promoted to Assistant Accountant',
+              where: 'desk',
+            },
           ],
           flags: ['story-complete'],
           reward: { xp: 70 },

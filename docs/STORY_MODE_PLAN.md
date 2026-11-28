@@ -131,3 +131,27 @@ and can be played to more than one ending).
   in the office, 22 MB after the editors are opened and 23 MB after five rounds of
   opening and closing them (no growth to speak of). The memory script had fallen
   behind the apps' names and the production build's markup; fixed.
+
+### Story 12 · The stories move with the work
+
+An audit found that every campaign except Architecture's could be finished by
+conversations and case replies alone. Each of the other nine now waits for real work
+at two points:
+
+- **The end of chapter 1** also needs one of the career's tasks passed, after the
+  manager's closing talk. The tasks are:
+  - Finance: *Check a supplier invoice*;
+  - Accounting: *Post March's journals in Books*;
+  - IT Help Desk: *Reply to users*;
+  - Digital Marketing: *Content calendar and launch email*;
+  - Data Analysis: *Sales by region and product*;
+  - Software Development: *Fix the invoice totals*;
+  - Healthcare: *Your first patients* (the patient cases);
+  - Law: *Two new enquiries*;
+  - Engineering: *The indicator lamp that keeps failing*.
+- **The end of chapter 2** (and of Finance's chapter 3) needs the promotion the work
+  earns: the career's second level (Finance's third for chapter 3).
+
+These are the engine's existing `task` and `level` objectives. Missions already
+finished stay finished, and a mission in progress keeps the steps already done. A unit
+test checks every campaign: chapter 1 needs a task, and a later chapter a promotion.
