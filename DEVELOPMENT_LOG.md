@@ -192,6 +192,50 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-28 · IT tools' records in reports; a campaign forecast that answers decisions
+
+**What:**
+
+- **Four more tools give their work to reports, slides and WorkSim AI** (14 of
+  17 now):
+  - Security Console: the incident record as the analyst wrote it, and the alerts;
+  - Network Tools: the faults the player recorded, and the actions taken;
+  - Directory: the user accounts, and the player's own changes;
+  - IT Operations: software licences and their use.
+- **Ad Campaigns: the rest of the month, if nothing changes.** Under the pacing
+  figures (on the overview and the ad sets screen), a forecast of spend,
+  conversions, revenue and return. It is worked out from each active ad set's
+  daily budget at the cost per conversion and return of its last 14 days.
+  - Pausing an ad set or moving budget changes it at once, so the player sees
+    a decision's effect on results, not only on spend.
+  - It is also one of the tool's outputs, so it can go into a report and
+    WorkSim AI reads it.
+
+**Decisions:**
+
+- The troubleshooting tools give out only the player's own records and what
+  their screens already show:
+  - the Security Console's hidden scenario truth is never included;
+  - Network Tools gives only the faults the player has found;
+  - Devices, Communications and the API Client have no outputs: their work is
+    conversations and diagnosis, not reports.
+- The forecast does not change the saved account, so tasks are graded exactly as
+  before.
+
+**Tests:**
+
+- Unit:
+  - all 14 tools' outputs are valid;
+  - the Security Console's truth never appears in its outputs or in WorkSim AI's
+    context;
+  - the forecast equals each ad set's recent return times its spend;
+  - pausing the losing ad sets raises the forecast return, and moving budget to
+    the best one raises conversions.
+- Browser: the Ad Campaigns task shows a higher forecast return after the
+  changes, and still scores 100%.
+
+---
+
 ## 2026-11-28 · The tools' work used elsewhere: in reports, slides and WorkSim AI
 
 **Why:** an audit of the whole product found two gaps.
