@@ -201,7 +201,7 @@ Only Architecture's story waited for passed tasks and a promotion.
 **What:**
 
 - In each of the nine, the mission that closes chapter 1 also needs one of the
-  career's tasks passed (Healthcare's is *Your first patients*, the new patient
+  career's tasks passed (Healthcare's is _Your first patients_, the new patient
   cases).
 - The mission that closes chapter 2 (and Finance's chapter 3) needs the promotion
   that the work earns.

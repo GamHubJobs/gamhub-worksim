@@ -140,15 +140,15 @@ at two points:
 
 - **The end of chapter 1** also needs one of the career's tasks passed, after the
   manager's closing talk. The tasks are:
-  - Finance: *Check a supplier invoice*;
-  - Accounting: *Post March's journals in Books*;
-  - IT Help Desk: *Reply to users*;
-  - Digital Marketing: *Content calendar and launch email*;
-  - Data Analysis: *Sales by region and product*;
-  - Software Development: *Fix the invoice totals*;
-  - Healthcare: *Your first patients* (the patient cases);
-  - Law: *Two new enquiries*;
-  - Engineering: *The indicator lamp that keeps failing*.
+  - Finance: _Check a supplier invoice_;
+  - Accounting: _Post March's journals in Books_;
+  - IT Help Desk: _Reply to users_;
+  - Digital Marketing: _Content calendar and launch email_;
+  - Data Analysis: _Sales by region and product_;
+  - Software Development: _Fix the invoice totals_;
+  - Healthcare: _Your first patients_ (the patient cases);
+  - Law: _Two new enquiries_;
+  - Engineering: _The indicator lamp that keeps failing_.
 - **The end of chapter 2** (and of Finance's chapter 3) needs the promotion the work
   earns: the career's second level (Finance's third for chapter 3).
 
