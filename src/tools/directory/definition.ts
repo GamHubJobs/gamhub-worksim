@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { sampleDirectory } from './data'
 import {
   DirectoryStateSchema,
@@ -302,6 +302,7 @@ export const directory: ToolDefinition<DirectoryState, DirectoryCheck> = {
     const changes = state.audit.filter((a) => a.byYou).length
     return `${state.users.length} accounts, ${state.assets.length} assets${changes ? `, ${changes} change${changes === 1 ? '' : 's'} made` : ''}`
   },
+  outputs: (state) => directoryOutputs(state),
   check: DirectoryCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -360,4 +361,37 @@ export const directory: ToolDefinition<DirectoryState, DirectoryCheck> = {
       },
     ],
   },
+}
+
+/** The accounts and the player's own changes: for reports, audits and WorkSim AI. */
+export function directoryOutputs(state: DirectoryState): ToolOutput[] {
+  const yes = (b: boolean) => (b ? 'Yes' : 'No')
+  return [
+    {
+      id: 'users',
+      title: `User accounts (${state.domain}, ${state.today})`,
+      table: [
+        ['Name', 'Username', 'Department', 'Job title', 'Status', 'Locked', 'MFA'],
+        ...state.users.map((u) => [
+          u.name,
+          u.username,
+          u.department,
+          u.title,
+          u.status,
+          yes(u.locked),
+          yes(u.mfa),
+        ]),
+      ],
+    },
+    {
+      id: 'changes',
+      title: `Your changes (${state.domain})`,
+      table: [
+        ['#', 'Action', 'Target', 'Detail'],
+        ...state.audit
+          .filter((a) => a.byYou)
+          .map((a) => [String(a.seq), a.action, a.target, a.detail]),
+      ],
+    },
+  ]
 }

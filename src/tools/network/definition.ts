@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { officeNetwork } from './data'
 import { FAULT_NAMES, FAULTS, NetworkStateSchema, type NetworkState } from './schema'
 import { devicesAt, reachable, resolve } from './simulation'
@@ -164,6 +164,7 @@ export const network: ToolDefinition<NetworkState, NetworkCheck> = {
   practice: () => officeNetwork(),
   summary: (state) =>
     `${state.console.length} command${state.console.length === 1 ? '' : 's'} run, ${state.findings.length} finding${state.findings.length === 1 ? '' : 's'}`,
+  outputs: (state) => networkOutputs(state),
   check: NetworkCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -225,3 +226,28 @@ export const network: ToolDefinition<NetworkState, NetworkCheck> = {
 }
 
 export { FAULT_NAMES }
+
+/**
+ * The faults the player has recorded and the actions taken: for the
+ * incident write-up and WorkSim AI (never the faults not yet found).
+ */
+export function networkOutputs(state: NetworkState): ToolOutput[] {
+  return [
+    {
+      id: 'findings',
+      title: `Findings recorded (${state.domain})`,
+      table: [
+        ['Device', 'Fault', 'Note'],
+        ...state.findings.map((f) => [f.device, FAULT_NAMES[f.fault], f.note]),
+      ],
+    },
+    {
+      id: 'actions',
+      title: `Actions taken (${state.domain})`,
+      table: [
+        ['Action', 'Target', 'Detail'],
+        ...state.actions.map((a) => [a.action, a.target, a.detail]),
+      ],
+    },
+  ]
+}

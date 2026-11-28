@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { companyItops } from './data'
 import { BUILD_NAMES } from './deployment'
 import { registerProblems } from './model'
@@ -135,6 +135,7 @@ export const itops: ToolDefinition<ItopsState, ItopsCheck> = {
     const changes = state.log.length
     return `${state.nodes.length} network devices, ${state.assets.length} assets${changes ? `, ${changes} action${changes === 1 ? '' : 's'}` : ''}`
   },
+  outputs: (state) => itopsOutputs(state),
   check: ItopsCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -181,4 +182,24 @@ export const itops: ToolDefinition<ItopsState, ItopsCheck> = {
       },
     ],
   },
+}
+
+/** Software licences and their use: for the asset report and WorkSim AI. */
+export function itopsOutputs(state: ItopsState): ToolOutput[] {
+  return [
+    {
+      id: 'licences',
+      title: `Software licences (${state.company})`,
+      table: [
+        ['Product', 'Seats', 'Assigned', 'Free', 'For departments'],
+        ...state.licences.map((l) => [
+          l.product,
+          String(l.seats),
+          String(l.assigned.length),
+          String(l.seats - l.assigned.length),
+          l.forDepartments.join(', '),
+        ]),
+      ],
+    },
+  ]
 }

@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { securityScenario } from './data'
 import { mistakes, STAGE_NAMES } from './model'
 import { SocStateSchema, STAGES, type SocState } from './schema'
@@ -95,6 +95,7 @@ export const soc: ToolDefinition<SocState, SocCheck> = {
   practice: () => SocStateSchema.parse(securityScenario()),
   summary: (state) =>
     `Incident ${state.incident.id}: ${STAGE_NAMES[state.incident.stage]}`,
+  outputs: (state) => socOutputs(state),
   check: SocCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -135,4 +136,43 @@ export const soc: ToolDefinition<SocState, SocCheck> = {
       },
     ],
   },
+}
+
+/**
+ * The incident record as the analyst wrote it, and the console's alerts:
+ * for the post-incident report, a briefing and WorkSim AI. The scenario's
+ * truth is never included.
+ */
+export function socOutputs(state: SocState): ToolOutput[] {
+  const i = state.incident
+  return [
+    {
+      id: 'incident',
+      title: `Incident record: ${i.title}`,
+      table: [
+        ['', ''],
+        ['Stage', i.stage],
+        ['Severity', i.severity || 'Not set'],
+        ['Category', i.category || 'Not set'],
+        ['Report', i.report || 'Not written yet'],
+        ['Lessons learned', i.lessons || 'Not written yet'],
+        ...i.timeline.map((t, n) => [`Timeline ${n + 1} (${t.stage})`, t.text]),
+      ],
+    },
+    {
+      id: 'alerts',
+      title: 'Security alerts',
+      table: [
+        ['Time', 'Severity', 'Alert', 'Source', 'Entity', 'Status'],
+        ...state.alerts.map((a) => [
+          a.time,
+          a.severity,
+          a.title,
+          a.source,
+          a.entity,
+          a.status,
+        ]),
+      ],
+    },
+  ]
 }

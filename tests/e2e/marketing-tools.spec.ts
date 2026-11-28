@@ -87,6 +87,9 @@ test('Ad Campaigns: losers paused, budget moved, the month on budget', async ({
     .getByRole('button', { name: 'Campaigns' })
     .click()
   await expect(page.getByTestId('pacing')).toContainText('over budget')
+  // The forecast for the rest of the month, before the changes.
+  const roas = page.getByTestId('forecast-roas')
+  const roasBefore = Number(await roas.textContent())
   for (const name of [
     'Social: lookalike audience',
     'Display: business news sites',
@@ -98,6 +101,10 @@ test('Ad Campaigns: losers paused, budget moved, the month on budget', async ({
   await budget.fill('300')
   await budget.press('Enter')
   await expect(page.getByTestId('pacing')).toContainText('under budget (97%)')
+  // The money now goes where it earns more: the forecast return is higher.
+  await expect
+    .poll(async () => Number(await roas.textContent()))
+    .toBeGreaterThan(roasBefore)
   await expect(await submit(page)).toHaveText('100%')
 })
 

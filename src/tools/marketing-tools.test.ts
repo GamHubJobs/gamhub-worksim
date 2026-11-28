@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { springTraffic } from './analytics/data'
 import { breakdown, totals } from './analytics/model'
 import { aprilAccount } from './campaigns/data'
-import { metrics, pacing, setDailyBudget, setStatus } from './campaigns/model'
+import {
+  FORECAST_DAYS,
+  forecast,
+  metrics,
+  pacing,
+  recent,
+  setDailyBudget,
+  setStatus,
+} from './campaigns/model'
 import { companySite } from './seo/data'
 import { addRedirect, crawl, findIssues, updatePage } from './seo/model'
 import { launchWeek } from './social/definition'
@@ -97,6 +105,29 @@ describe('Ad Campaigns', () => {
     expect(p.projected).toBeLessThanOrEqual(18000)
     expect(setDailyBudget(s, 'search-advisory', 900).problems[0]).toContain('daily limit')
     expect(s.changes).toHaveLength(4)
+  })
+
+  it('forecasts the rest of the month from recent results, and decisions move it', () => {
+    const s = aprilAccount()
+    const before = forecast(s)
+    const p = pacing(s)
+    expect(before.spend).toBeCloseTo(p.daily * p.remainingDays, 2)
+    // Each ad set at its own recent cost per conversion and return.
+    for (const row of before.adSets) {
+      const m = metrics(recent(row.adSet, FORECAST_DAYS))
+      expect(row.revenue).toBeCloseTo(row.spend * m.roas, 1)
+    }
+    // Pausing the ad sets that lose money: less spend, a better return.
+    let after = s
+    for (const id of ['social-lookalike', 'display-news', 'social-jobtitles'])
+      after = setStatus(after, id, 'paused').state
+    const better = forecast(after)
+    expect(better.spend).toBeLessThan(before.spend)
+    expect(better.roas).toBeGreaterThan(before.roas)
+    expect(better.adSets.find((a) => a.adSet.id === 'display-news')?.spend).toBe(0)
+    // Moving the money to the best ad set brings conversions back.
+    const moved = forecast(setDailyBudget(after, 'search-advisory', 300).state)
+    expect(moved.conversions).toBeGreaterThan(better.conversions)
   })
 
   it('works out ratios from totals', () => {

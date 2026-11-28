@@ -85,6 +85,40 @@ export function pacing(state: CampaignsState) {
   }
 }
 
+/** How many recent days the forecast learns from. */
+export const FORECAST_DAYS = 14
+
+/**
+ * The rest of the month if nothing changes: each active ad set spends its
+ * daily budget at the cost per conversion and return it has had over the
+ * last FORECAST_DAYS days. Pausing an ad set or moving budget changes it at
+ * once, which is how a marketer weighs a decision before making it. A guide,
+ * not a promise: real results vary from day to day.
+ */
+export function forecast(state: CampaignsState) {
+  const { remainingDays } = pacing(state)
+  const adSets = allAdSets(state).map((adSet) => {
+    const m = metrics(recent(adSet, FORECAST_DAYS))
+    const spend =
+      adSet.status === 'active' ? round2(adSet.dailyBudget * remainingDays) : 0
+    return {
+      adSet,
+      spend,
+      conversions: m.spend > 0 ? Math.round((spend / m.spend) * m.conversions) : 0,
+      revenue: round2(spend * m.roas),
+    }
+  })
+  const spend = round2(adSets.reduce((s, a) => s + a.spend, 0))
+  const revenue = round2(adSets.reduce((s, a) => s + a.revenue, 0))
+  return {
+    adSets,
+    spend,
+    conversions: adSets.reduce((s, a) => s + a.conversions, 0),
+    revenue,
+    roas: spend > 0 ? round2(revenue / spend) : 0,
+  }
+}
+
 type Result = { state: CampaignsState; problems: string[] }
 
 function changeAdSet(

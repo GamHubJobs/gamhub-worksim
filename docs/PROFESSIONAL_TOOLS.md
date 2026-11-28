@@ -139,7 +139,7 @@ src/tools/
   players can explore without affecting a task.
 - **Outputs** (`outputs` on the definition, `src/tools/outputs.ts`): what a file
   produces for the rest of the work, worked out from the file by its own tool.
-  Ten tools have them:
+  Fourteen tools have them:
   - Books: trial balance, profit and loss, balance sheet, expenses chart;
   - Campaigns: ad set results, month pacing, ROAS chart;
   - Site Analytics: traffic by source, the player's saved reports;
@@ -149,7 +149,10 @@ src/tools/
   - Ward Systems: the ward list, observation charts, early-warning score trends,
     laboratory results;
   - Legal (matters, time and billing), Engineering (work orders), SEO (the last
-    crawl's issues), Social Planner (the content calendar).
+    crawl's issues), Social Planner (the content calendar);
+  - Security Console (the incident record and alerts, never the scenario's
+    truth), Network Tools (the faults found and actions taken), Directory
+    (accounts and the player's changes), IT Operations (licences).
 
   They are used in two places:
   - **Word Craft and Deck Craft**: "Insert from a professional tool" (also a tab

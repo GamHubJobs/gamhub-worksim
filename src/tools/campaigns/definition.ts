@@ -4,7 +4,7 @@ import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult, formatMoney } from '../checks'
 import type { ToolDefinition, ToolOutput } from '../types'
 import { aprilAccount } from './data'
-import { findAdSet, metrics, pacing } from './model'
+import { findAdSet, forecast, FORECAST_DAYS, metrics, pacing } from './model'
 import { CampaignsStateSchema, type CampaignsState } from './schema'
 
 export const CampaignsCheckSchema = z.discriminatedUnion('type', [
@@ -160,6 +160,7 @@ export function campaignsOutputs(state: CampaignsState): ToolOutput[] {
     c.adSets.map((a) => ({ campaign: c.name, adSet: a, m: metrics(a.results) })),
   )
   const p = pacing(state)
+  const f = forecast(state)
   return [
     {
       id: 'ad-sets',
@@ -205,6 +206,34 @@ export function campaignsOutputs(state: CampaignsState): ToolOutput[] {
           formatMoney(Math.abs(p.over)),
         ],
         ['Daily budget to land on budget', formatMoney(p.sustainableDaily)],
+      ],
+    },
+    {
+      id: 'forecast',
+      title: `Forecast for the rest of the month (${state.account})`,
+      table: [
+        ['Ad set', 'Status', 'Spend', 'Conversions', 'Revenue'],
+        ...f.adSets.map((a) => [
+          a.adSet.name,
+          a.adSet.status,
+          formatMoney(a.spend),
+          String(a.conversions),
+          formatMoney(a.revenue),
+        ]),
+        [
+          'Total',
+          '',
+          formatMoney(f.spend),
+          String(f.conversions),
+          formatMoney(f.revenue),
+        ],
+        [
+          `At each ad set's last ${FORECAST_DAYS} days' results`,
+          '',
+          '',
+          '',
+          `ROAS ${f.roas.toFixed(2)}`,
+        ],
       ],
     },
     {

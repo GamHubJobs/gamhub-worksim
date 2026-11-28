@@ -4,7 +4,17 @@ import { Icon } from '../../ui/Icon'
 import { formatMoney } from '../checks'
 import type { ToolWorkspaceProps } from '../ui'
 import { campaigns as tool } from './definition'
-import { findAdSet, metrics, pacing, recent, setDailyBudget, setStatus } from './model'
+import {
+  allAdSets,
+  findAdSet,
+  FORECAST_DAYS,
+  forecast,
+  metrics,
+  pacing,
+  recent,
+  setDailyBudget,
+  setStatus,
+} from './model'
 import type { CampaignsState } from './schema'
 
 type Props = ToolWorkspaceProps<CampaignsState>
@@ -116,7 +126,64 @@ function Card({
   )
 }
 
+/** What the rest of the month brings at today's settings: it moves with every change. */
+function ForecastRow({ state }: { state: CampaignsState }) {
+  const f = forecast(state)
+  const before = metrics(allAdSets(state).flatMap((a) => recent(a, FORECAST_DAYS)))
+  return (
+    <section
+      className="mt-3 rounded-lg border border-slate-200 bg-white p-3"
+      aria-label="Forecast for the rest of the month"
+      data-testid="forecast"
+    >
+      <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">
+        Rest of the month, if nothing changes
+      </p>
+      <div className="mt-1 flex flex-wrap gap-x-8 gap-y-1 text-sm">
+        <span>
+          <strong className="tabular-nums">{formatMoney(f.spend)}</strong> spend
+        </span>
+        <span>
+          <strong className="tabular-nums" data-testid="forecast-conversions">
+            {f.conversions}
+          </strong>{' '}
+          conversions
+        </span>
+        <span>
+          <strong className="tabular-nums">{formatMoney(f.revenue)}</strong> revenue
+        </span>
+        <span className={f.roas > 0 && f.roas < 1 ? 'text-red-700' : ''}>
+          ROAS{' '}
+          <strong className="tabular-nums" data-testid="forecast-roas">
+            {f.roas.toFixed(2)}
+          </strong>
+          {before.roas > 0 && (
+            <span className="text-slate-500">
+              {' '}
+              (last {FORECAST_DAYS} days: {before.roas.toFixed(2)})
+            </span>
+          )}
+        </span>
+      </div>
+      <p className="mt-1 text-xs text-slate-500">
+        Each active ad set's daily budget at the cost per conversion and return it has had
+        over the last {FORECAST_DAYS} days. Pausing an ad set or moving budget changes
+        this at once; real results vary from day to day.
+      </p>
+    </section>
+  )
+}
+
 function PacingCards({ state }: { state: CampaignsState }) {
+  return (
+    <>
+      <PacingFigures state={state} />
+      <ForecastRow state={state} />
+    </>
+  )
+}
+
+function PacingFigures({ state }: { state: CampaignsState }) {
   const p = pacing(state)
   const share = p.projected / p.budget
   return (

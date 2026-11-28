@@ -20,6 +20,8 @@ import {
 import { allTools, getTool } from './registry'
 import { seoOutputs } from './seo/definition'
 import { crawl } from './seo/model'
+import { socOutputs } from './soc/definition'
+import type { SocState } from './soc/schema'
 import type { SeoState } from './seo/schema'
 import { studioOutputs } from './studio/definition'
 import { sampleApartment } from '../studio/samples'
@@ -28,7 +30,7 @@ import type { ProfileData } from '../game/career'
 const WITH_OUTPUTS = allTools().filter((t) => t.outputs)
 
 describe("professional tools' outputs", () => {
-  it('ten tools offer their work to documents, slides and WorkSim AI', () => {
+  it('fourteen tools offer their work to documents, slides and WorkSim AI', () => {
     expect(WITH_OUTPUTS.map((t) => t.id).sort()).toEqual(
       [
         'analytics',
@@ -36,10 +38,14 @@ describe("professional tools' outputs", () => {
         'campaigns',
         'clinical',
         'datastudio',
+        'directory',
         'engineering',
+        'itops',
         'legal',
+        'network',
         'seo',
         'social',
+        'soc',
         'studio',
       ].sort(),
     )
@@ -113,6 +119,19 @@ describe("professional tools' outputs", () => {
     const crawled = crawl(state)
     const issues = seoOutputs(crawled).find((o) => o.id === 'crawl')?.table ?? []
     expect(issues).toHaveLength((crawled.crawl?.issues.length ?? 0) + 1)
+  })
+
+  it("the security console's outputs never give away the scenario's truth", () => {
+    const state = getTool('soc')?.practice() as SocState
+    const marked = {
+      ...state,
+      truth: { ...state.truth, process: 'SECRET-PROCESS-MARKER' },
+    }
+    const text = JSON.stringify(socOutputs(marked))
+    expect(text).not.toContain('SECRET-PROCESS-MARKER')
+    expect(JSON.stringify(toolContext('soc', 'Incident', marked))).not.toContain(
+      'SECRET-PROCESS-MARKER',
+    )
   })
 
   it('a file that cannot be read offers nothing, and tables are limited', () => {
