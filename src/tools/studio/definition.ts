@@ -10,7 +10,7 @@ import { catalogEntry } from '../../studio/catalog'
 import { samePoint } from '../../studio/geometry'
 import { material } from '../../studio/materials'
 import { activeDepartment } from '../../content/departments'
-import { projectFromJson } from '../../studio/documents'
+import { projectFromJson, reportData } from '../../studio/documents'
 import { isDxf, projectFromDxf } from '../../studio/dxfImport'
 import { reviewDesign, reviewText, type ReviewerRole } from '../../studio/review'
 import {
@@ -21,7 +21,7 @@ import {
 } from '../../studio/model'
 import { sampleApartment, sampleHouse } from '../../studio/samples'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 
 const Use = z.enum(ROOM_USES)
 
@@ -336,6 +336,7 @@ export const studio: ToolDefinition<StudioState, StudioCheck> = {
     const a = analyse(s)
     return `${plural(a.rooms.length, 'room')}, ${a.totalArea.toFixed(1)} m², ${plural(s.floors.length, 'floor')}`
   },
+  outputs: (s) => studioOutputs(s),
   check: StudioCheckSchema,
   grade: (checks, player, { start }) => {
     if (!player)
@@ -446,4 +447,90 @@ export const studio: ToolDefinition<StudioState, StudioCheck> = {
       },
     ],
   },
+}
+
+const pounds = (n: number) =>
+  `£${n.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+
+/**
+ * The project's schedules, costs and floor plan: for the client report,
+ * the presentation, and WorkSim AI.
+ */
+export function studioOutputs(s: StudioState): ToolOutput[] {
+  const data = reportData(s)
+  const name = s.project.name
+  const { costs } = data.analysis
+  return [
+    {
+      id: 'plan',
+      title: `Floor plan to scale (${name})`,
+      image: async () => {
+        const [{ projectPng }, { bytesToBase64 }] = await Promise.all([
+          import('./exports'),
+          import('../../lib/base64'),
+        ])
+        return `data:image/png;base64,${bytesToBase64(await projectPng(s))}`
+      },
+    },
+    {
+      id: 'rooms',
+      title: `Room schedule (${name})`,
+      table: [
+        ['Floor', 'Room', 'Use', 'Area', 'Size', 'Floor finish', 'Doors', 'Windows'],
+        ...data.rooms.map((r) => [
+          r.floor,
+          r.name,
+          r.use,
+          r.area,
+          r.size,
+          r.floorFinish,
+          String(r.doors),
+          String(r.windows),
+        ]),
+        ['', 'Total', '', `${data.analysis.totalArea.toFixed(1)} m²`, '', '', '', ''],
+      ],
+    },
+    {
+      id: 'furniture',
+      title: `Furniture schedule (${name})`,
+      table: [
+        ['Item', 'Room', 'Size', 'Material', 'Price'],
+        ...data.furniture.map((f) => [
+          f.name,
+          f.room,
+          f.size,
+          f.material,
+          pounds(f.price),
+        ]),
+      ],
+    },
+    {
+      id: 'costs',
+      title: `Cost estimate (${name})`,
+      table: [
+        ['', 'Estimate'],
+        ['Furniture', pounds(costs.furniture)],
+        ['Fixtures', pounds(costs.fixtures)],
+        ['Doors and windows', pounds(costs.openings)],
+        ['Finishes', pounds(costs.finishes)],
+        ['Total', pounds(costs.total)],
+        ...(s.project.budget ? [['Client budget', pounds(s.project.budget)]] : []),
+      ],
+    },
+    {
+      id: 'cost-chart',
+      title: `Where the money goes (${name})`,
+      chart: {
+        type: 'pie',
+        title: 'Cost estimate',
+        labels: ['Furniture', 'Fixtures', 'Doors and windows', 'Finishes'],
+        series: [
+          {
+            name: 'Estimate (£)',
+            values: [costs.furniture, costs.fixtures, costs.openings, costs.finishes],
+          },
+        ],
+      },
+    },
+  ]
 }

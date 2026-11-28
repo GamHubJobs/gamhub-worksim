@@ -38,6 +38,8 @@ interface DocEditorProps {
 export interface SheetsInsert {
   chart: (chart: ChartSpec) => void
   table: (rows: string[][]) => void
+  /** Pictures (a professional tool's floor plan), where the editor can take them. */
+  image?: (dataUrl: string, alt: string) => void
 }
 
 export function DocEditor({

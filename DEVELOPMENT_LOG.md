@@ -192,6 +192,73 @@ and S7 (social life in person, at work and in the neighbourhood).
 
 ---
 
+## 2026-11-28 · The tools' work used elsewhere: in reports, slides and WorkSim AI
+
+**Why:** an audit of the whole product found two gaps.
+
+- The professional tools' work stayed inside each tool. Word Craft and Deck Craft
+  could take charts and tables only from Grid Craft, so Books' reports, a
+  campaign's results or Space Studio's plan could not go into a report or a
+  client presentation.
+- WorkSim AI knew only that the player was in "a professional tool": not which
+  tool, which file, or any of its figures.
+
+**What:**
+
+- Each tool can say what its file **produces** (`outputs` on the tool's
+  definition). Ten tools do:
+  - Books: trial balance, profit and loss, balance sheet, an expenses chart;
+  - Campaigns: ad set results, the month's pacing, a ROAS chart;
+  - Site Analytics: traffic by source, the player's saved reports;
+  - Data Studio: dashboard charts, query results, cleaned datasets;
+  - Space Studio: the floor plan as a picture, room and furniture schedules, the
+    cost estimate and a chart of it;
+  - Ward Systems: the ward list, observation charts, early-warning score trends,
+    laboratory results;
+  - Legal, Engineering, SEO and Social Planner: matters with time and billing,
+    work orders, the last crawl's issues, the content calendar.
+- **Insert from a professional tool**, in Word Craft and Deck Craft (and as a tab
+  of the insert picker in the basic editors):
+  - tables, charts and the floor plan go in as copies;
+  - Deck Craft keeps a plan's proportions;
+  - tables are limited to 50 rows and 12 columns, as from Grid Craft.
+- **WorkSim AI in a tool:**
+  - it is told the tool's name, the open file, its summary and its outputs as
+    text (within the usual size limits, with the player's name taken out);
+  - the built-in guide answers "how do I…" and "what is…" questions from the
+    tool's own guide and glossary, and summarises the open file.
+- Data Studio's dashboard chart helper is shared by the workspace and the
+  outputs (one copy instead of two).
+
+**Decisions:**
+
+- Only what the player can see in the tool is given out, never a task's model
+  answer or its checks. SEO shows the issues of the crawl the player ran, not a
+  fresh crawl.
+- What is inserted is a copy, as with Grid Craft: it does not change when the
+  file changes.
+
+**Tests:**
+
+- `src/tools/outputs.test.ts` (20 tests):
+  - every tool's outputs are valid tables, charts or pictures;
+  - Books' trial balance is the ledger's and balances;
+  - the Space Studio and Ward Systems outputs;
+  - SEO shows only the crawl the player ran;
+  - unreadable files offer nothing;
+  - table limits;
+  - WorkSim AI's context names the tool and carries the figures;
+  - the built-in guide's tool answers.
+- `tests/e2e/tool-outputs.spec.ts`, in the real app:
+  - WorkSim AI knows the open Books file and answers from its guide;
+  - Books' trial balance and expenses chart go into a Word Craft document, and
+    are still there after a reload.
+- The full unit suite and the related browser specs (documents, the picker,
+  multi-app tasks, tools) pass. Five of them first failed under load and passed
+  when rerun on their own.
+
+---
+
 ## 2026-11-25 · Patient cases: a clinical simulation on Ward 4
 
 **What:** a patient-case simulator inside the Healthcare career, run by one

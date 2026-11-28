@@ -1,19 +1,21 @@
 /**
- * Takes data from Sheets into a document or presentation: a chart from any
- * workbook, or a range of cells as a table (as it is displayed, with its
- * number formats). What is inserted is a copy: it does not change when the
- * workbook changes, just like pasting into a report.
+ * Takes data into a document or presentation: a chart from any Grid Craft
+ * workbook, a range of cells as a table (as it is displayed, with its number
+ * formats), or a report, chart or plan from a professional tool's file (see
+ * ToolOutputsTab). What is inserted is a copy: it does not change when the
+ * source changes, just like pasting into a report.
  */
 import { useEffect, useMemo, useState } from 'react'
 import { listDocuments } from '../../persistence/documentsRepo'
-import type { ChartSpec, SheetDocument } from '../../persistence/schemas'
+import type { ChartSpec, SheetDocument, ToolDocument } from '../../persistence/schemas'
 import { ChartView } from '../../ui/ChartView'
 import { visibleTo } from './ownership'
+import { ToolOutputsTab } from './ToolOutputsTab'
 import { createCalculator } from '../sheets/engine/workbook'
 import { chartSpec, rangeAsText } from '../sheets/features'
 import { rangeToText, usedSize } from '../sheets/model'
 
-export type PickerMode = 'chart' | 'table'
+export type PickerMode = 'chart' | 'table' | 'tool'
 
 interface SheetsPickerProps {
   mode: PickerMode
@@ -23,6 +25,8 @@ interface SheetsPickerProps {
   ownerId: string
   onChart: (chart: ChartSpec) => void
   onTable: (rows: string[][]) => void
+  /** Inserts a picture (a tool's floor plan); without it, pictures are not offered. */
+  onImage?: (dataUrl: string, alt: string) => void
   onClose: () => void
 }
 export function SheetsPicker({
@@ -31,10 +35,12 @@ export function SheetsPicker({
   chartsOnly = false,
   ownerId,
   onTable,
+  onImage,
   onClose,
 }: SheetsPickerProps) {
   const [mode, setMode] = useState(initialMode)
   const [workbooks, setWorkbooks] = useState<SheetDocument[] | null>(null)
+  const [toolFiles, setToolFiles] = useState<ToolDocument[]>([])
   const [workbookId, setWorkbookId] = useState('')
   const [sheetId, setSheetId] = useState('')
   const [rangeText, setRangeText] = useState('')
@@ -47,6 +53,9 @@ export function SheetsPicker({
         (d): d is SheetDocument => d.kind === 'sheet' && visibleTo(ownerId)(d),
       )
       setWorkbooks(sheets)
+      setToolFiles(
+        all.filter((d): d is ToolDocument => d.kind === 'tool' && visibleTo(ownerId)(d)),
+      )
       const first = sheets[0]
       if (first) {
         setWorkbookId(first.id)
@@ -89,30 +98,35 @@ export function SheetsPicker({
       className="motion-pop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Insert from Grid Craft"
+      aria-label="Insert data"
       data-testid="sheets-picker"
     >
       <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
           <div className="flex gap-1" role="tablist">
-            {(chartsOnly ? (['chart'] as const) : (['chart', 'table'] as const)).map(
-              (tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="tab"
-                  aria-selected={mode === tab}
-                  onClick={() => setMode(tab)}
-                  className={`rounded px-3 py-1 text-sm ${
-                    mode === tab
-                      ? 'bg-blue-50 font-medium text-blue-900'
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {tab === 'chart' ? 'A chart' : 'A table of cells'}
-                </button>
-              ),
-            )}
+            {(chartsOnly
+              ? (['chart', 'tool'] as const)
+              : (['chart', 'table', 'tool'] as const)
+            ).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={mode === tab}
+                onClick={() => setMode(tab)}
+                className={`rounded px-3 py-1 text-sm ${
+                  mode === tab
+                    ? 'bg-blue-50 font-medium text-blue-900'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {tab === 'chart'
+                  ? 'A chart'
+                  : tab === 'table'
+                    ? 'A table of cells'
+                    : 'From a professional tool'}
+              </button>
+            ))}
           </div>
           <button
             type="button"
@@ -124,7 +138,15 @@ export function SheetsPicker({
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
           {workbooks === null ? (
-            <p className="text-sm text-slate-500">Loading your workbooks…</p>
+            <p className="text-sm text-slate-500">Loading your files…</p>
+          ) : mode === 'tool' ? (
+            <ToolOutputsTab
+              files={toolFiles}
+              chartsOnly={chartsOnly}
+              onChart={onChart}
+              onTable={onTable}
+              onImage={onImage}
+            />
           ) : mode === 'chart' ? (
             charts.length === 0 ? (
               <p className="text-sm text-slate-600">

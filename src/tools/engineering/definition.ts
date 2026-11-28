@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { sampleEngineering } from './data'
 import { analyseCircuit, beamCheck, outputRpm, partConforms, schedule } from './model'
 import { EngineeringStateSchema, type EngineeringState } from './schema'
@@ -185,6 +185,7 @@ export const engineering: ToolDefinition<EngineeringState, EngineeringCheck> = {
   practice: sampleEngineering,
   summary: (s) =>
     `${s.workOrders.filter((w) => w.status !== 'closed').length} open work orders · ${s.audit.length} actions logged`,
+  outputs: (s) => engineeringOutputs(s),
   check: EngineeringCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -249,4 +250,23 @@ export const engineering: ToolDefinition<EngineeringState, EngineeringCheck> = {
       },
     ],
   },
+}
+
+/** Work orders and their progress: for reports, handovers and WorkSim AI. */
+export function engineeringOutputs(s: EngineeringState): ToolOutput[] {
+  return [
+    {
+      id: 'work-orders',
+      title: `Work orders (${s.firm})`,
+      table: [
+        ['Equipment', 'Fault', 'Status', 'Steps recorded'],
+        ...s.workOrders.map((w) => [
+          w.equipment,
+          w.fault,
+          w.status,
+          w.steps.join(', ').replace(/-/g, ' '),
+        ]),
+      ],
+    },
+  ]
 }

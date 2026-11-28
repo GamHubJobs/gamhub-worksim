@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { atBestTime, channelOf } from './model'
 import { SocialStateSchema, type SocialState } from './schema'
 
@@ -160,6 +160,7 @@ export const social: ToolDefinition<SocialState, SocialCheck> = {
     const scheduled = state.posts.filter((p) => p.status === 'scheduled').length
     return `${scheduled} scheduled, ${state.posts.length - scheduled} draft${state.posts.length - scheduled === 1 ? '' : 's'}`
   },
+  outputs: (state) => socialOutputs(state),
   check: SocialCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -201,4 +202,27 @@ export const social: ToolDefinition<SocialState, SocialCheck> = {
       { term: 'Blackout', meaning: 'A period when nothing should be published.' },
     ],
   },
+}
+
+/** The week's content calendar: for reports, presentations and WorkSim AI. */
+export function socialOutputs(state: SocialState): ToolOutput[] {
+  const posts = [...state.posts].sort((a, b) =>
+    (a.scheduledAt || '9').localeCompare(b.scheduledAt || '9'),
+  )
+  return [
+    {
+      id: 'calendar',
+      title: `Content calendar, week of ${state.weekStart}`,
+      table: [
+        ['When', 'Channel', 'Status', 'Post', 'Image'],
+        ...posts.map((p) => [
+          p.scheduledAt ? p.scheduledAt.replace('T', ' ') : 'Not scheduled',
+          channelOf(state, p)?.name ?? p.channel,
+          p.status,
+          p.text.length > 120 ? `${p.text.slice(0, 117)}…` : p.text,
+          p.image,
+        ]),
+      ],
+    },
+  ]
 }

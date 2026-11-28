@@ -45,10 +45,14 @@ export interface WordCraftEditorProps {
   onFailed: (reason: string) => void
   registerSave: (save: (() => Promise<boolean>) | null) => void
   onPending?: (pending: boolean) => void
-  /** Opens the picker of charts and tables from Grid Craft. */
+  /** Opens the picker of charts and tables (from Grid Craft and the professional tools). */
   onPickFromSheets?: (
     mode: PickerMode,
-    insert: { chart: (chart: ChartSpec) => void; table: (rows: string[][]) => void },
+    insert: {
+      chart: (chart: ChartSpec) => void
+      table: (rows: string[][]) => void
+      image?: (dataUrl: string, alt: string) => void
+    },
   ) => void
   hidden?: boolean
 }
@@ -212,6 +216,15 @@ export function WordCraftEditor({
     setNotice(null)
   }
 
+  async function insertImage(dataUrl: string, alt: string) {
+    if (!api) return
+    await api.execute('insert.picture', {
+      data: dataUrl.slice(dataUrl.indexOf(',') + 1),
+      width: 440,
+      alt,
+    })
+  }
+
   async function insertTable(rows: string[][]) {
     if (!api || rows.length === 0) return
     const columns = Math.max(...rows.map((row) => row.length))
@@ -268,6 +281,10 @@ export function WordCraftEditor({
         void insertTable(rows).catch((error: unknown) =>
           setNotice(`The table could not be inserted: ${String(error)}`),
         ),
+      image: (dataUrl, alt) =>
+        void insertImage(dataUrl, alt).catch((error: unknown) =>
+          setNotice(`The picture could not be inserted: ${String(error)}`),
+        ),
     })
 
   return (
@@ -282,6 +299,7 @@ export function WordCraftEditor({
       actions={[
         { label: 'Insert chart from Grid Craft', run: () => fromSheets('chart') },
         { label: 'Insert table from Grid Craft', run: () => fromSheets('table') },
+        { label: 'Insert from a professional tool', run: () => fromSheets('tool') },
         { label: 'Download .docx', run: () => void download('docx') },
         { label: 'Export PDF', run: () => void download('pdf') },
       ]}

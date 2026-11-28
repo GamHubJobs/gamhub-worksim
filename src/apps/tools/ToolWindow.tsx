@@ -8,8 +8,10 @@ import { z } from 'zod'
 import type { Career, SubmissionResult } from '../../app/useCareer'
 import { getAssignment } from '../../content/assignments'
 import { getPerson } from '../../content/departments'
+import { toolContext } from '../../tools/outputs'
 import { getTool } from '../../tools/registry'
 import { getWorkspace } from '../../tools/ui'
+import { useAiContext } from '../ai/hub'
 import { DocumentFrame } from '../shared/DocumentFrame'
 import { useSavedDocument } from '../shared/useSavedDocument'
 import { AssignmentPane } from '../sheets/ui/AssignmentPane'
@@ -64,6 +66,14 @@ export function ToolWindow({
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<SubmissionResult | null>(null)
   const manager = assignment ? getPerson(assignment.from) : null
+
+  // WorkSim AI reads the open file through the tool's own outputs.
+  useAiContext(
+    `tool:${toolId}`,
+    state.status === 'ready'
+      ? () => toolContext(toolId, state.document.title, state.content.state)
+      : null,
+  )
 
   async function submit() {
     if (!assignment) return

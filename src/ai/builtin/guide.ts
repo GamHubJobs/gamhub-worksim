@@ -281,6 +281,9 @@ function otherAnswer(request: AiRequest): string {
     kinds.has('slides') ? '**review** the slides or suggest an **outline**' : '',
     kinds.has('code') ? '**explain the code** and its failing tests' : '',
     kinds.has('ticket') ? '**summarise** the ticket and suggest a **resolution**' : '',
+    kinds.has('tool')
+      ? 'explain **how to do something** in the open tool, or what one of its **terms** means, and **summarise** the open file'
+      : '',
     kinds.has('assignment') || kinds.has('case')
       ? 'help you **plan your approach** to the task'
       : '',
@@ -301,12 +304,28 @@ ${list(advice)}
 Worked out by WorkSim's rules from your save, not by an AI model.`
 }
 
+/** Questions that may be about the open tool rather than another app. */
+const TOOL_GUIDE_INTENTS = new Set<Intent>([
+  'other',
+  'approach',
+  'explain-formula',
+  'review',
+])
+
 export function builtinAnswer(request: AiRequest): AiAnswer {
   const { context, mode } = request
   const intent = intentOf(request)
   if (intent === 'suggest-formula') {
     const { text, proposal } = suggestFormula(itemOf(context, 'formula'), mode)
     return { text, source: SOURCE, ...(proposal ? { proposal } : {}) }
+  }
+  // In a professional tool, a question about the tool is answered from its guide.
+  const tool = itemOf(context, 'tool')
+  if (tool && !request.action && TOOL_GUIDE_INTENTS.has(intent)) {
+    const last =
+      [...request.messages].reverse().find((m) => m.role === 'user')?.text ?? ''
+    const answer = toolGuideAnswer(tool, last)
+    if (answer) return { text: answer, source: SOURCE }
   }
   const text = (() => {
     switch (intent) {
@@ -338,7 +357,8 @@ export function builtinAnswer(request: AiRequest): AiAnswer {
             itemOf(context, 'email') ??
             itemOf(context, 'ticket') ??
             itemOf(context, 'document') ??
-            itemOf(context, 'slides'),
+            itemOf(context, 'slides') ??
+            itemOf(context, 'tool'),
         )
       case 'action-items':
         return actionAnswer(itemOf(context, 'email') ?? itemOf(context, 'document'))
@@ -375,4 +395,80 @@ export const builtinEngine: Engine = {
   id: 'builtin',
   check: async () => ({ ready: true }),
   answer: async (request) => builtinAnswer(request),
+}
+
+// ---------------------------------------------------------------------------
+// Professional tools: answers from the open tool's own guide
+// ---------------------------------------------------------------------------
+
+const COMMON = new Set(
+  'the and for how what does with this that from into can should would when where which who why are was you your have has not but about there their them then than its it is do did my me our out use used using get make'.split(
+    ' ',
+  ),
+)
+
+function keywords(text: string): string[] {
+  return (text.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
+    (w) => w.length > 2 && !COMMON.has(w),
+  )
+}
+
+function guideEntries<T>(value: unknown, keys: string[]): T[] {
+  return Array.isArray(value)
+    ? (value.filter(
+        (v) =>
+          typeof v === 'object' &&
+          v !== null &&
+          keys.every((k) => typeof (v as Record<string, unknown>)[k] === 'string'),
+      ) as T[])
+    : []
+}
+
+/**
+ * When a question is about the open professional tool ("how do I post a
+ * journal?", "what is ROAS?"), the answer from that tool's own guide and
+ * glossary; null when nothing in them fits.
+ */
+export function toolGuideAnswer(
+  item: ContextItem | undefined,
+  question: string,
+): string | null {
+  if (!item) return null
+  const tool = typeof item.data?.tool === 'string' ? item.data.tool : 'the tool'
+  const topics = guideEntries<{ title: string; body: string }>(item.data?.topics, [
+    'title',
+    'body',
+  ])
+  const glossary = guideEntries<{ term: string; meaning: string }>(item.data?.glossary, [
+    'term',
+    'meaning',
+  ])
+  const asked = new Set(keywords(question))
+  if (!asked.size) return null
+  // A glossary term is asked about when it appears as whole words.
+  const padded = ` ${question.toLowerCase().replace(/[^a-z0-9]+/g, ' ')} `
+  const terms = glossary.filter((g) => {
+    const term = g.term
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+    return term.length > 1 && padded.includes(` ${term} `)
+  })
+  const best = topics
+    .map((t) => {
+      const inTitle = new Set(keywords(t.title).filter((w) => asked.has(w))).size
+      const inBody = new Set(keywords(t.body).filter((w) => asked.has(w))).size
+      return { t, score: inTitle * 3 + inBody, inTitle, inBody }
+    })
+    .filter((s) => s.inTitle > 0 || s.inBody >= 3)
+    .sort((a, b) => b.score - a.score)[0]
+  if (!best && !terms.length) return null
+  const parts: string[] = []
+  if (best) parts.push(`**${tool}: ${best.t.title}**`, best.t.body)
+  if (terms.length)
+    parts.push(list(terms.slice(0, 4).map((g) => `**${g.term}**: ${g.meaning}`)))
+  parts.push(
+    `From ${tool}'s own guide (the Guide button in the tool has the rest). Check it against your file: the figures in your work are what count.`,
+  )
+  return parts.join('\n\n')
 }

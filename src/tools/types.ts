@@ -14,6 +14,7 @@
  */
 import type { z } from 'zod'
 import type { CheckResult } from '../game/grading'
+import type { ChartSpec } from '../persistence/schemas'
 import type { IconName } from '../ui/Icon'
 
 export interface ToolSection {
@@ -29,6 +30,21 @@ export interface ToolGuide {
   /** How to do the common jobs, step by step. */
   topics: Array<{ title: string; body: string }>
   glossary: Array<{ term: string; meaning: string }>
+}
+
+/**
+ * One thing a tool's file produces for other work: a table (a report, a
+ * schedule), a chart, or a picture made on demand (a floor plan). Copies,
+ * like a pasted report: they do not change when the file changes.
+ */
+export interface ToolOutput {
+  id: string
+  title: string
+  /** Rows of cells as displayed, the first row being the headings. */
+  table?: string[][]
+  chart?: ChartSpec
+  /** A picture (a PNG data URL), made only when it is inserted. */
+  image?: () => Promise<string>
 }
 
 export interface ToolDefinition<State = unknown, Check = unknown> {
@@ -62,6 +78,13 @@ export interface ToolDefinition<State = unknown, Check = unknown> {
    * (worked out from the file itself, e.g. Space Studio's design reviews).
    */
   review?: (player: State, context: { start: State; checks: CheckResult[] }) => string
+  /**
+   * What the file produces that other work can use: reports, schedules and
+   * charts worked out from the file itself. They can be inserted into Word
+   * Craft and Deck Craft, and WorkSim AI reads them as the open file's
+   * context (see src/tools/outputs.ts).
+   */
+  outputs?: (state: State) => ToolOutput[]
   /**
    * Tools in which players make their own files (Space Studio): starting
    * points for a new project, reading a backup, and naming a project.

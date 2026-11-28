@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { companySite } from './data'
 import { findIssues, ISSUE_INFO } from './model'
 import { ISSUE_TYPES, SeoStateSchema, type SeoState } from './schema'
@@ -103,6 +103,7 @@ export const seo: ToolDefinition<SeoState, SeoCheck> = {
     const issues = findIssues(state).length
     return `${state.pages.length} pages, ${issues} issue${issues === 1 ? '' : 's'}`
   },
+  outputs: (state) => seoOutputs(state),
   check: SeoCheckSchema,
   grade: (checks, player, { start }) =>
     checks.map((check) =>
@@ -160,4 +161,36 @@ export const seo: ToolDefinition<SeoState, SeoCheck> = {
       },
     ],
   },
+}
+
+/**
+ * The last crawl's issues (what the player has seen, not a fresh crawl) and
+ * the tracked keywords: for reports, presentations and WorkSim AI.
+ */
+export function seoOutputs(state: SeoState): ToolOutput[] {
+  const crawl = state.crawl
+  return [
+    ...(crawl
+      ? [
+          {
+            id: 'crawl',
+            title: `Site crawl ${crawl.number}: issues (${state.domain})`,
+            table: [
+              ['Page', 'Issue', 'Detail', 'Why it matters'],
+              ...crawl.issues.map((i) => [
+                i.page,
+                ISSUE_INFO[i.type].name,
+                i.detail,
+                ISSUE_INFO[i.type].why,
+              ]),
+            ],
+          },
+        ]
+      : []),
+    {
+      id: 'pages',
+      title: `Pages (${state.domain})`,
+      table: [['Page', 'Title'], ...state.pages.map((p) => [p.url, p.title])],
+    },
+  ]
 }

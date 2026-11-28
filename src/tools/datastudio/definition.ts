@@ -2,13 +2,14 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { sampleStudio } from './data'
 import {
   COLUMN_TYPES,
   DataStudioStateSchema,
   Value,
   type DataStudioState,
+  type Tile,
 } from './schema'
 import { sameResult } from './sql'
 import { cleanTable } from './transform'
@@ -235,6 +236,7 @@ export const dataStudio: ToolDefinition<DataStudioState, DataStudioCheck> = {
   practice: () => sampleStudio(),
   summary: (state) =>
     `${state.datasets.length} dataset${state.datasets.length === 1 ? '' : 's'}, ${state.queries.length} quer${state.queries.length === 1 ? 'y' : 'ies'}, ${state.dashboard.tiles.length} chart${state.dashboard.tiles.length === 1 ? '' : 's'}`,
+  outputs: (state) => dataStudioOutputs(state),
   check: DataStudioCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -295,4 +297,74 @@ export const dataStudio: ToolDefinition<DataStudioState, DataStudioCheck> = {
       },
     ],
   },
+}
+
+/** A dashboard chart's labels and values, from its query's last result. */
+export function tileChart(state: DataStudioState, tile: Tile) {
+  const result = state.queries.find((q) => q.id === tile.query)?.result
+  if (!result) return null
+  const li = result.columns.indexOf(tile.label)
+  const vi = result.columns.indexOf(tile.value)
+  if (vi === -1) return null
+  return {
+    labels: result.rows.map((r) => String(li === -1 ? '' : (r[li] ?? ''))),
+    values: result.rows.map((r) =>
+      typeof r[vi] === 'number' ? (r[vi] as number) : Number(r[vi]) || 0,
+    ),
+  }
+}
+
+const cell = (v: Value) =>
+  v === null ? '' : typeof v === 'number' ? v.toLocaleString('en-GB') : v
+
+/**
+ * The dashboard's charts, the results of the queries that have been run, and
+ * the datasets as cleaned:
+ * for reports, presentations and WorkSim AI.
+ */
+export function dataStudioOutputs(state: DataStudioState): ToolOutput[] {
+  const results: ToolOutput[] = state.queries.flatMap((q) =>
+    q.result
+      ? [
+          {
+            id: `query-${q.id}`,
+            title: `Query result: ${q.name}`,
+            table: [q.result.columns, ...q.result.rows.map((r) => r.map(cell))],
+          },
+        ]
+      : [],
+  )
+  const charts: ToolOutput[] = state.dashboard.tiles.flatMap((tile): ToolOutput[] => {
+    const data = tileChart(state, tile)
+    if (!data) return []
+    if (tile.chart === 'number')
+      return [
+        {
+          id: `tile-${tile.id}`,
+          title: `Dashboard figure: ${tile.title}`,
+          table: [[tile.title], [cell(data.values[0] ?? null)]],
+        },
+      ]
+    return [
+      {
+        id: `tile-${tile.id}`,
+        title: `Dashboard chart: ${tile.title}`,
+        chart: {
+          type: tile.chart,
+          title: tile.title,
+          labels: data.labels.slice(0, 200),
+          series: [{ name: tile.value, values: data.values.slice(0, 200) }],
+        },
+      },
+    ]
+  })
+  const datasets: ToolOutput[] = state.datasets.map((d, i) => {
+    const { table } = cleanTable(d)
+    return {
+      id: `dataset-${i}`,
+      title: `Dataset${d.steps.length ? ' (cleaned)' : ''}: ${d.name}`,
+      table: [table.columns.map((c) => c.name), ...table.rows.map((r) => r.map(cell))],
+    }
+  })
+  return [...charts, ...results, ...datasets]
 }

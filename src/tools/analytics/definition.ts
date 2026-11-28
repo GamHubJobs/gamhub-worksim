@@ -2,9 +2,9 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { springTraffic } from './data'
-import { DIMENSION_NAMES } from './model'
+import { breakdown, DIMENSION_NAMES } from './model'
 import { AnalyticsStateSchema, DIMENSIONS, type AnalyticsState } from './schema'
 
 export const AnalyticsCheckSchema = z.discriminatedUnion('type', [
@@ -105,6 +105,7 @@ export const analytics: ToolDefinition<AnalyticsState, AnalyticsCheck> = {
   practice: () => springTraffic(),
   summary: (state) =>
     `${state.reports.length} saved report${state.reports.length === 1 ? '' : 's'}${state.questions.length ? `, ${state.questions.filter((q) => q.answer).length} of ${state.questions.length} answered` : ''}`,
+  outputs: (state) => analyticsOutputs(state),
   check: AnalyticsCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -145,4 +146,59 @@ export const analytics: ToolDefinition<AnalyticsState, AnalyticsCheck> = {
       { term: 'Landing page', meaning: 'The first page a visitor sees.' },
     ],
   },
+}
+
+const pct = (n: number) => `${(n * 100).toFixed(1)}%`
+
+function breakdownTable(
+  state: AnalyticsState,
+  dimension: (typeof DIMENSIONS)[number],
+  filters: { source?: string; device?: string } = {},
+): string[][] {
+  return [
+    [
+      DIMENSION_NAMES[dimension],
+      'Sessions',
+      'Engagement rate',
+      'Bookings',
+      'Conversion rate',
+    ],
+    ...breakdown(state, dimension, filters).map((r) => [
+      r.value,
+      String(r.sessions),
+      pct(r.engagementRate),
+      String(r.bookings),
+      pct(r.conversionRate),
+    ]),
+  ]
+}
+
+/**
+ * Traffic by source and the player's saved reports: for reports,
+ * presentations and WorkSim AI.
+ */
+export function analyticsOutputs(state: AnalyticsState): ToolOutput[] {
+  const bySource = breakdown(state, 'source')
+  return [
+    {
+      id: 'by-source',
+      title: `Traffic by source (${state.site}, ${state.period})`,
+      table: breakdownTable(state, 'source'),
+    },
+    {
+      id: 'sessions-chart',
+      title: `Sessions and bookings by source (${state.site})`,
+      chart: {
+        type: 'column',
+        title: `Sessions by source, ${state.period}`,
+        labels: bySource.map((r) => r.value),
+        series: [{ name: 'Sessions', values: bySource.map((r) => r.sessions) }],
+      },
+    },
+    ...state.reports.map((report, i) => ({
+      id: `report-${i}`,
+      title: `Saved report: ${report.name}`,
+      table: breakdownTable(state, report.dimension, report.filters),
+    })),
+  ]
 }

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ChartView } from '../../ui/ChartView'
 import { Icon } from '../../ui/Icon'
 import type { ToolWorkspaceProps } from '../ui'
-import { dataStudio } from './definition'
+import { dataStudio, tileChart } from './definition'
 import { runSql } from './runSql'
 import {
   COLUMN_TYPES,
@@ -780,20 +780,6 @@ function Stats({ state }: { state: DataStudioState }) {
 // ---------------------------------------------------------------------------
 // Dashboard and questions
 // ---------------------------------------------------------------------------
-
-function tileChart(state: DataStudioState, tile: Tile) {
-  const result = state.queries.find((q) => q.id === tile.query)?.result
-  if (!result) return null
-  const li = result.columns.indexOf(tile.label)
-  const vi = result.columns.indexOf(tile.value)
-  if (vi === -1) return null
-  return {
-    labels: result.rows.map((r) => String(li === -1 ? '' : (r[li] ?? ''))),
-    values: result.rows.map((r) =>
-      typeof r[vi] === 'number' ? (r[vi] as number) : Number(r[vi]) || 0,
-    ),
-  }
-}
 
 function Dashboard({
   state,

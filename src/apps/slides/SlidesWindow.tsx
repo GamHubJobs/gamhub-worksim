@@ -29,6 +29,7 @@ interface SlidesWindowProps {
 interface PickerInsert {
   chart: (chart: ChartSpec) => void
   table: (rows: string[][]) => void
+  image?: (dataUrl: string, alt: string) => void
 }
 
 export function SlidesWindow({
@@ -44,6 +45,8 @@ export function SlidesWindow({
   const [picker, setPicker] = useState<{ mode: PickerMode; insert: PickerInsert } | null>(
     null,
   )
+  // Pictures (a tool's floor plan) are offered only where the editor takes them.
+  const insertImage = picker?.insert.image
 
   // Deck Craft, when it can be used here ('checking' until known).
   const [craft, setCraft] = useState<Installed | null | 'checking'>('checking')
@@ -171,6 +174,14 @@ export function SlidesWindow({
             picker.insert.table(rows)
             setPicker(null)
           }}
+          onImage={
+            insertImage
+              ? (dataUrl, alt) => {
+                  insertImage(dataUrl, alt)
+                  setPicker(null)
+                }
+              : undefined
+          }
           onClose={() => setPicker(null)}
         />
       )}

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { gradeAttempts } from '../../clinical/grade'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { sampleClinical } from './data'
 import {
   labelMatches,
@@ -319,6 +319,7 @@ export const clinical: ToolDefinition<ClinicalState, ClinicalCheck> = {
     const admitted = s.patients.filter((p) => p.status === 'admitted').length
     return `${admitted} patient${admitted === 1 ? '' : 's'} on the ward · ${s.audit.length} actions logged`
   },
+  outputs: (s) => clinicalOutputs(s),
   check: ClinicalCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -391,4 +392,98 @@ export const clinical: ToolDefinition<ClinicalState, ClinicalCheck> = {
       },
     ],
   },
+}
+
+/**
+ * The ward list, each patient's observation chart and the laboratory
+ * results, as recorded (fictional patients): for handover documents,
+ * teaching slides and WorkSim AI.
+ */
+export function clinicalOutputs(s: ClinicalState): ToolOutput[] {
+  const admitted = s.patients.filter((p) => p.status === 'admitted')
+  const latest = (id: string) => s.vitals.filter((v) => v.patientId === id).at(-1)
+  const charted = s.patients.filter((p) => s.vitals.some((v) => v.patientId === p.id))
+  const resulted = s.labs.flatMap((l) =>
+    l.status === 'resulted' && l.result ? [{ ...l, result: l.result }] : [],
+  )
+  const name = (id: string) => s.patients.find((p) => p.id === id)?.name ?? id
+  const outputs: ToolOutput[] = [
+    {
+      id: 'ward-list',
+      title: `Ward list (${s.hospital})`,
+      table: [
+        [
+          'Bed',
+          'Patient',
+          'Hospital number',
+          'Reason',
+          'Latest score',
+          'Alerts',
+          'Allergies',
+        ],
+        ...admitted.map((p) => {
+          const v = latest(p.id)
+          return [
+            p.bed ?? '',
+            p.name,
+            p.id,
+            p.reason,
+            v ? `${v.score} at ${v.at}` : 'No observations',
+            p.alerts.join(', '),
+            p.allergies.length
+              ? p.allergies.map((a) => `${a.substance} (${a.reaction})`).join(', ')
+              : 'None known',
+          ]
+        }),
+      ],
+    },
+  ]
+  for (const p of charted) {
+    const readings = s.vitals.filter((v) => v.patientId === p.id)
+    outputs.push({
+      id: `obs-${p.id}`,
+      title: `Observation chart: ${p.name}`,
+      table: [
+        ['Time', 'Resp', 'SpO₂ %', 'Temp °C', 'BP', 'Pulse', 'Alert', 'Score', 'By'],
+        ...readings.map((v) => [
+          v.at,
+          String(v.resp),
+          String(v.spo2),
+          v.temp.toFixed(1),
+          `${v.sys}/${v.dia}`,
+          String(v.pulse),
+          v.alert ? 'Yes' : 'No',
+          String(v.score),
+          v.by,
+        ]),
+      ],
+    })
+    if (readings.length >= 2)
+      outputs.push({
+        id: `score-${p.id}`,
+        title: `Early-warning score over time: ${p.name}`,
+        chart: {
+          type: 'line',
+          title: `Early-warning score: ${p.name}`,
+          labels: readings.map((v) => v.at).slice(-200),
+          series: [{ name: 'Score', values: readings.map((v) => v.score).slice(-200) }],
+        },
+      })
+  }
+  if (resulted.length)
+    outputs.push({
+      id: 'labs',
+      title: `Laboratory results (${s.hospital})`,
+      table: [
+        ['Patient', 'Test', 'Result', 'Range', 'Flag'],
+        ...resulted.map((l) => [
+          name(l.patientId),
+          l.test,
+          `${l.result.value} ${l.result.unit}`,
+          `${l.result.low}–${l.result.high}`,
+          l.result.flag,
+        ]),
+      ],
+    })
+  return outputs
 }

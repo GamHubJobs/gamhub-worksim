@@ -91,6 +91,8 @@ export function DocWindow({
   const [picker, setPicker] = useState<{ mode: PickerMode; insert: SheetsInsert } | null>(
     null,
   )
+  // Pictures (a tool's floor plan) are offered only where the editor takes them.
+  const insertImage = picker?.insert.image
 
   return (
     <>
@@ -181,6 +183,14 @@ export function DocWindow({
             picker.insert.table(rows)
             setPicker(null)
           }}
+          onImage={
+            insertImage
+              ? (dataUrl, alt) => {
+                  insertImage(dataUrl, alt)
+                  setPicker(null)
+                }
+              : undefined
+          }
           onClose={() => setPicker(null)}
         />
       )}

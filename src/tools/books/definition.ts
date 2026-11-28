@@ -5,9 +5,15 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult, formatMoney, sameMoney } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { openingBooks } from './data'
-import { accountBalance, findAccount, trialBalance } from './ledger'
+import {
+  accountBalance,
+  balanceSheet,
+  findAccount,
+  profitAndLoss,
+  trialBalance,
+} from './ledger'
 import { reconciliation } from './banking'
 import { payRunTotals } from './payroll'
 import { BooksStateSchema, type BooksState, type Journal } from './schema'
@@ -337,6 +343,7 @@ export const books: ToolDefinition<BooksState, BooksCheck> = {
     const drafts = state.journals.length - posted
     return `${posted} journal${posted === 1 ? '' : 's'} posted${drafts ? `, ${drafts} draft${drafts === 1 ? '' : 's'}` : ''}`
   },
+  outputs: (state) => booksOutputs(state),
   check: BooksCheckSchema,
   grade: (checks, player, { start, solution }) =>
     checks.map((check) =>
@@ -429,4 +436,64 @@ export const books: ToolDefinition<BooksState, BooksCheck> = {
       },
     ],
   },
+}
+
+/** The reports, as of the books' date: for reports, presentations and WorkSim AI. */
+export function booksOutputs(state: BooksState): ToolOutput[] {
+  const asAt = `${state.settings.companyName}, as at ${state.settings.today}`
+  const tb = trialBalance(state)
+  const money = (n: number) => (n ? formatMoney(n) : '')
+  const pl = profitAndLoss(state)
+  const bs = balanceSheet(state)
+  const lines = (title: string, items: Array<{ name: string; amount: number }>) => [
+    [title, ''],
+    ...items.map((l) => [`  ${l.name}`, formatMoney(l.amount)]),
+  ]
+  return [
+    {
+      id: 'trial-balance',
+      title: `Trial balance (${asAt})`,
+      table: [
+        ['Code', 'Account', 'Debit', 'Credit'],
+        ...tb.rows.map((r) => [r.code, r.name, money(r.debit), money(r.credit)]),
+        ['', 'Total', formatMoney(tb.debit), formatMoney(tb.credit)],
+      ],
+    },
+    {
+      id: 'profit-and-loss',
+      title: `Profit and loss (${asAt})`,
+      table: [
+        ['', 'Amount'],
+        ...lines('Income', pl.income),
+        ['Total income', formatMoney(pl.totalIncome)],
+        ...lines('Expenses', pl.expenses),
+        ['Total expenses', formatMoney(pl.totalExpenses)],
+        ['Net profit', formatMoney(pl.netProfit)],
+      ],
+    },
+    {
+      id: 'balance-sheet',
+      title: `Balance sheet (${asAt})`,
+      table: [
+        ['', 'Amount'],
+        ...lines('Assets', bs.assets),
+        ['Total assets', formatMoney(bs.totalAssets)],
+        ...lines('Liabilities', bs.liabilities),
+        ['Total liabilities', formatMoney(bs.totalLiabilities)],
+        ...lines('Equity', bs.equity),
+        ['  Profit for the period', formatMoney(bs.profit)],
+        ['Total equity', formatMoney(bs.totalEquity)],
+      ],
+    },
+    {
+      id: 'expenses-chart',
+      title: `Expenses by account (${asAt})`,
+      chart: {
+        type: 'bar',
+        title: 'Expenses by account',
+        labels: pl.expenses.map((l) => l.name),
+        series: [{ name: 'Amount (£)', values: pl.expenses.map((l) => l.amount) }],
+      },
+    },
+  ]
 }

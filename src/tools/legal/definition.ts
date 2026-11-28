@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { sampleLegal } from './data'
 import { billableHours } from './jurisdiction'
 import { clientById, conflictHits, matterById } from './model'
@@ -261,6 +261,7 @@ export const legal: ToolDefinition<LegalState, LegalCheck> = {
     const open = s.matters.filter((m) => m.status === 'open').length
     return `${open} open matter${open === 1 ? '' : 's'} · ${s.audit.length} actions logged`
   },
+  outputs: (s) => legalOutputs(s),
   check: LegalCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -331,4 +332,58 @@ export const legal: ToolDefinition<LegalState, LegalCheck> = {
       },
     ],
   },
+}
+
+/** Matters, and time recorded and billed on each: for reports and WorkSim AI. */
+export function legalOutputs(s: LegalState): ToolOutput[] {
+  const money = (n: number) =>
+    `£${n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return [
+    {
+      id: 'matters',
+      title: `Matters (${s.firm})`,
+      table: [
+        ['Matter', 'Client', 'Kind', 'Status', 'Conflict check', 'Next key date'],
+        ...s.matters.map((m) => {
+          const next = [...m.keyDates]
+            .filter((d) => d.date >= s.today)
+            .sort((a, b) => a.date.localeCompare(b.date))[0]
+          return [
+            m.title,
+            clientById(s, m.clientId)?.name ?? '',
+            m.kind,
+            m.status,
+            m.conflictChecked ? 'Done' : 'Not done',
+            next ? `${next.date}: ${next.label}` : '',
+          ]
+        }),
+      ],
+    },
+    {
+      id: 'time',
+      title: `Time and billing by matter (${s.firm})`,
+      table: [
+        ['Matter', 'Hours recorded', 'Billable hours', 'Not yet invoiced', 'Invoiced'],
+        ...s.matters
+          .filter((m) => s.time.some((t) => t.matterId === m.id))
+          .map((m) => {
+            const entries = s.time.filter((t) => t.matterId === m.id)
+            const hours = (list: typeof entries) =>
+              (list.reduce((sum, t) => sum + t.minutes, 0) / 60).toFixed(1)
+            const billable = entries.filter((t) => t.billable)
+            return [
+              m.title,
+              hours(entries),
+              hours(billable),
+              hours(billable.filter((t) => !t.invoiced)),
+              money(
+                s.invoices
+                  .filter((i) => i.matterId === m.id)
+                  .reduce((sum, i) => sum + i.total, 0),
+              ),
+            ]
+          }),
+      ],
+    },
+  ]
 }

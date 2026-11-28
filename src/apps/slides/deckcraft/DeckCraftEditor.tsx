@@ -52,10 +52,14 @@ export interface DeckCraftEditorProps {
   onFailed: (reason: string) => void
   registerSave: (save: (() => Promise<boolean>) | null) => void
   onPending?: (pending: boolean) => void
-  /** Opens the picker of charts and tables from Grid Craft. */
+  /** Opens the picker of charts and tables (from Grid Craft and the professional tools). */
   onPickFromSheets?: (
     mode: PickerMode,
-    insert: { chart: (chart: ChartSpec) => void; table: (rows: string[][]) => void },
+    insert: {
+      chart: (chart: ChartSpec) => void
+      table: (rows: string[][]) => void
+      image?: (dataUrl: string, alt: string) => void
+    },
   ) => void
   hidden?: boolean
 }
@@ -286,6 +290,29 @@ export function DeckCraftEditor({
       await api.execute('chart.options', { title: chart.title || null, id: reply.id })
   }
 
+  async function insertImage(dataUrl: string, alt: string) {
+    if (!api) return
+    // Fitted into the slide's middle at its own proportions (a plan is never stretched).
+    const picture = new Image()
+    picture.src = dataUrl
+    await picture.decode()
+    const box = { x: 140, y: 100, w: 680, h: 380 }
+    const scale = Math.min(box.w / picture.naturalWidth, box.h / picture.naturalHeight)
+    const w = Math.round(picture.naturalWidth * scale)
+    const h = Math.round(picture.naturalHeight * scale)
+    const reply = (await api.execute('insert.picture', {
+      data: dataUrl.slice(dataUrl.indexOf(',') + 1),
+      rect: [
+        box.x + Math.round((box.w - w) / 2),
+        box.y + Math.round((box.h - h) / 2),
+        w,
+        h,
+      ],
+    })) as { id?: number }
+    if (reply.id !== undefined)
+      await api.execute('shape.altText', { text: alt, ids: [reply.id] })
+  }
+
   async function insertTable(rows: string[][]) {
     if (!api || rows.length === 0) return
     const columns = Math.max(...rows.map((row) => row.length))
@@ -389,6 +416,10 @@ export function DeckCraftEditor({
         void insertTable(rows).catch((error: unknown) =>
           setNotice(`The table could not be inserted: ${String(error)}`),
         ),
+      image: (dataUrl, alt) =>
+        void insertImage(dataUrl, alt).catch((error: unknown) =>
+          setNotice(`The picture could not be inserted: ${String(error)}`),
+        ),
     })
 
   return (
@@ -405,6 +436,7 @@ export function DeckCraftEditor({
         { label: 'Present from this slide', run: () => present('current') },
         { label: 'Insert chart from Grid Craft', run: () => fromSheets('chart') },
         { label: 'Insert table from Grid Craft', run: () => fromSheets('table') },
+        { label: 'Insert from a professional tool', run: () => fromSheets('tool') },
         { label: 'Download .pptx', run: () => void download('pptx') },
         { label: 'Export PDF', run: () => void download('pdf') },
       ]}

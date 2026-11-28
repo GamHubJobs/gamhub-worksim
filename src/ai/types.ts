@@ -57,6 +57,7 @@ export interface ContextItem {
     | 'budget'
     | 'plan'
     | 'learning'
+    | 'tool'
   /** A short label shown to the player, e.g. "Email: Your first task". */
   label: string
   /** The content itself (plain text). */

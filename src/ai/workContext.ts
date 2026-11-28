@@ -18,6 +18,7 @@ import {
   type ProfileData,
 } from '../game/career'
 import type { View } from '../persistence/lastView'
+import { getTool } from '../tools/registry'
 import type { ContextItem } from './types'
 
 const APP_NAMES: Partial<Record<View['app'], string>> = {
@@ -138,7 +139,12 @@ export function workContext(profile: ProfileData, view: View | null): ContextIte
     const task = id ? assignmentItem(profile, id) : null
     if (task) items.push(task)
   }
-  const app = view ? APP_NAMES[view.app] : undefined
+  const tool = view?.app === 'tool' && view.tool ? getTool(view.tool) : undefined
+  const app = tool
+    ? `${tool.name} (${tool.category})`
+    : view
+      ? APP_NAMES[view.app]
+      : undefined
   if (app)
     items.push({
       kind: 'app',

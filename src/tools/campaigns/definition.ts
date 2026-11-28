@@ -2,9 +2,9 @@
 import { z } from 'zod'
 import { FileCheckBaseSchema } from '../../content/schemas'
 import { checkResult, formatMoney } from '../checks'
-import type { ToolDefinition } from '../types'
+import type { ToolDefinition, ToolOutput } from '../types'
 import { aprilAccount } from './data'
-import { findAdSet, pacing } from './model'
+import { findAdSet, metrics, pacing } from './model'
 import { CampaignsStateSchema, type CampaignsState } from './schema'
 
 export const CampaignsCheckSchema = z.discriminatedUnion('type', [
@@ -107,6 +107,7 @@ export const campaigns: ToolDefinition<CampaignsState, CampaignsCheck> = {
     const p = pacing(state)
     return `Projected ${formatMoney(p.projected)} of ${formatMoney(p.budget)}`
   },
+  outputs: (state) => campaignsOutputs(state),
   check: CampaignsCheckSchema,
   grade: (checks, player) =>
     checks.map((check) =>
@@ -149,4 +150,72 @@ export const campaigns: ToolDefinition<CampaignsState, CampaignsCheck> = {
       },
     ],
   },
+}
+
+const percent = (n: number) => `${(n * 100).toFixed(1)}%`
+
+/** Ad set results and the month's pacing: for reports, presentations and WorkSim AI. */
+export function campaignsOutputs(state: CampaignsState): ToolOutput[] {
+  const rows = state.campaigns.flatMap((c) =>
+    c.adSets.map((a) => ({ campaign: c.name, adSet: a, m: metrics(a.results) })),
+  )
+  const p = pacing(state)
+  return [
+    {
+      id: 'ad-sets',
+      title: `Ad set results (${state.account}, to ${state.today})`,
+      table: [
+        [
+          'Campaign',
+          'Ad set',
+          'Channel',
+          'Status',
+          'Daily budget',
+          'Spend',
+          'Conversions',
+          'CTR',
+          'CPA',
+          'ROAS',
+        ],
+        ...rows.map(({ campaign, adSet, m }) => [
+          campaign,
+          adSet.name,
+          adSet.channel,
+          adSet.status,
+          formatMoney(adSet.dailyBudget),
+          formatMoney(m.spend),
+          String(m.conversions),
+          percent(m.ctr),
+          m.conversions ? formatMoney(m.cpa) : '',
+          m.spend ? m.roas.toFixed(2) : '',
+        ]),
+      ],
+    },
+    {
+      id: 'pacing',
+      title: `Month pacing (${state.account})`,
+      table: [
+        ['', 'Amount'],
+        ['Monthly budget', formatMoney(p.budget)],
+        ['Spent so far', formatMoney(p.spent)],
+        ['Active daily budget', formatMoney(p.daily)],
+        [`Projected (${p.remainingDays} days left)`, formatMoney(p.projected)],
+        [
+          p.over > 0 ? 'Over budget by' : 'Under budget by',
+          formatMoney(Math.abs(p.over)),
+        ],
+        ['Daily budget to land on budget', formatMoney(p.sustainableDaily)],
+      ],
+    },
+    {
+      id: 'roas-chart',
+      title: `Return on ad spend by ad set (${state.account})`,
+      chart: {
+        type: 'bar',
+        title: 'Return on ad spend (revenue ÷ spend)',
+        labels: rows.map((r) => r.adSet.name),
+        series: [{ name: 'ROAS', values: rows.map((r) => r.m.roas) }],
+      },
+    },
+  ]
 }
